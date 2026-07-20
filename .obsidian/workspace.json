@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/dev_logs/README.md",
+                "file": "README.md",
                 "mode": "source",
                 "source": false
               },
@@ -183,12 +183,19 @@
       "bases:建立新的 base": false
     }
   },
-  "active": "f98287c4e6f4e6a2",
+  "active": "d90d7e41a10555a7",
   "lastOpenFiles": [
+    "docs/dev_logs/20260720_實作與驗證Python數據抓取.md",
+    "reports/metadata.json",
+    "reports/2024-09-15.html",
+    "reports",
+    "fetch_mlb.py",
+    "docs/dev_logs/README.md",
+    "docs/progress.md",
     "docs/dev_logs/20260720_實作與精簡HTML靜態網頁設計.md",
+    "docs/dev_logs/20260720_初始化專案說明文件與開發守則.md",
     "index.html",
     "templates/report_template.html",
-    "docs/dev_logs/20260720_初始化專案說明文件與開發守則.md",
     "README.md"
   ]
 }
