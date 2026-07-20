@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MLB 每日戰報首頁</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #111827 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover-border: rgba(59, 130, 246, 0.4);
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --accent-blue: #3b82f6;
+      --accent-blue-glow: rgba(59, 130, 246, 0.15);
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-glow: 0 20px 25px -5px rgba(59, 130, 246, 0.15), 0 10px 10px -5px rgba(59, 130, 246, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-primary);
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 3rem 1.5rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      margin-bottom: 4rem;
+      position: relative;
+    }
+
+    .hero-badge {
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      color: var(--accent-blue);
+      margin-bottom: 1rem;
+      display: inline-block;
+      border: 1.5px solid var(--accent-blue);
+      padding: 0.35rem 1rem;
+      border-radius: 6px;
+      text-shadow: 0 0 10px var(--accent-blue-glow);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 850;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+      background: linear-gradient(to right, #ffffff, #9ca3af);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-description {
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 0 auto 2.5rem auto;
+      font-weight: 300;
+    }
+
+    /* Latest Report Quick Link Hero Card */
+    .latest-card-anchor {
+      text-decoration: none;
+      display: block;
+      margin-bottom: 4rem;
+    }
+
+    .latest-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid var(--accent-blue);
+      border-radius: 24px;
+      padding: 2.5rem;
+      text-align: left;
+      box-shadow: var(--shadow-glow);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .latest-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .latest-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 25px 35px -5px rgba(59, 130, 246, 0.25), 0 15px 15px -5px rgba(59, 130, 246, 0.1);
+    }
+
+    .latest-tag {
+      background: var(--accent-blue);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+
+    .latest-date {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .latest-summary {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .latest-stats-row {
+      display: flex;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 850;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-value.blue { color: var(--accent-blue); }
+    .stat-value.red { color: var(--accent-red); }
+
+    .open-btn-container {
+      position: absolute;
+      right: 2.5rem;
+      bottom: 2.5rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+      transition: transform 0.3s ease, background-color 0.2s ease;
+    }
+
+    .latest-card:hover .open-btn-container {
+      transform: scale(1.1) translateX(4px);
+      background: #2563eb;
+    }
+
+    .open-btn-container svg {
+      width: 22px;
+      height: 22px;
+      transition: transform 0.3s ease;
+    }
+
+    /* History Reports Section */
+    .history-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.75rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 640px) {
+      .history-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .history-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* History Card */
+    .history-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 150px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .history-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--card-hover-border);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .history-date {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .history-date::before {
+      content: "📅";
+      font-size: 1.1rem;
+    }
+
+    .history-details {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .history-details span {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .history-link-text {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 1rem;
+      transition: color 0.2s ease;
+    }
+
+    .history-card:hover .history-link-text {
+      color: #60a5fa;
+    }
+
+    .history-link-text svg {
+      width: 14px;
+      height: 14px;
+      transition: transform 0.2s ease;
+    }
+
+    .history-card:hover .history-link-text svg {
+      transform: translateX(3px);
+    }
+
+    /* Footer styling */
+    footer {
+      text-align: center;
+      margin-top: 6rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    footer p {
+      margin-bottom: 0.5rem;
+    }
+
+    footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <header class="hero">
+      <span class="hero-badge">MLB Daily Report Archive</span>
+      <h1>MLB 每日戰報存檔</h1>
+      <p class="hero-description">透過自動化排程技術，每日台北時間中午 12:00 定時擷取 MLB Stats API 昨日最新賽況，生成焦點戰報，提供最直觀、流暢的戰報閱讀體驗。</p>
+    </header>
+
+    <main>
+      <!-- LATEST_REPORT_START -->
+      <a href="reports/2026-07-19.html" class="latest-card-anchor">
+        <div class="latest-card">
+          <span class="latest-tag">最新戰報</span>
+          <div class="latest-date">2026 年 07 月 19 日</div>
+          <div class="latest-summary">昨日共進行了 15 場賽事。洋基大戰紅襪，洋基 6:4 險勝紅襪，Aaron Judge 敲出第 32 轟；道奇與巨人纏鬥至延長賽第 11 局，道奇靠著大谷翔平雙響炮以 5:4 擊敗巨人；大都會與勇士之戰因雨延賽。</div>
+          <div class="latest-stats-row">
+            <div class="stat-box">
+              <span class="stat-label">總場數</span>
+              <span class="stat-value blue">15</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">延賽場數</span>
+              <span class="stat-value red">1</span>
+            </div>
+          </div>
+          <div class="open-btn-container">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </div>
+        </div>
+      </a>
+      <!-- /LATEST_REPORT_END -->
+
+      <section>
+        <div class="history-section-header">
+          <h2 class="section-title">歷史戰報存檔</h2>
+        </div>
+        
+        <div class="history-grid">
+          <!-- REPORTS_LIST_START -->
+          
+          <!-- History Item 1 -->
+          <a href="reports/2026-07-19.html" class="history-card">
+            <div>
+              <div class="history-date">2026-07-19</div>
+              <div class="history-details">
+                <span><span>總比賽場數：</span><strong>15 場</strong></span>
+                <span><span>延賽場數：</span><strong>1 場</strong></span>
+              </div>
+            </div>
+            <div class="history-link-text">
+              開啟焦點戰報
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+          </a>
+          
+          <!-- History Item 2 -->
+          <a href="reports/2026-07-18.html" class="history-card">
+            <div>
+              <div class="history-date">2026-07-18</div>
+              <div class="history-details">
+                <span><span>總比賽場數：</span><strong>14 場</strong></span>
+                <span><span>延賽場數：</span><strong>0 場</strong></span>
+              </div>
+            </div>
+            <div class="history-link-text">
+              開啟焦點戰報
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+          </a>
+          
+          <!-- History Item 3 -->
+          <a href="reports/2026-07-17.html" class="history-card">
+            <div>
+              <div class="history-date">2026-07-17</div>
+              <div class="history-details">
+                <span><span>總比賽場數：</span><strong>15 場</strong></span>
+                <span><span>延賽場數：</span><strong>0 場</strong></span>
+              </div>
+            </div>
+            <div class="history-link-text">
+              開啟焦點戰報
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+          </a>
+
+          <!-- REPORTS_LIST_END -->
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>MLB Daily 每日戰報系統</p>
+      <p>資料來源: MLB Stats API | 台北時間中午 12:00 自動更新</p>
+      <p><a href="https://github.com/haolun588/MLB-daily">GitHub 專案庫</a></p>
+    </footer>
+
+  </div>
+
+</body>
+</html>

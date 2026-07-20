@@ -24,7 +24,7 @@ graph TD
 ### 1. 開工檢查與數據抓取模組 (`fetch_mlb.py`)
 - **API 來源**：MLB Stats API (`https://statsapi.mlb.com/api/v1/schedule`)。
 - **開工檢查**：每日台北時間 12:00 PM 執行時，腳本會先查詢昨日所有比賽的 `abstractGameState` 是否皆為 `Final` 或 `Postponed`。若有任何比賽仍處於 `Live` / `Pre-Game` / `Warmup`，則腳本進入休眠（30 分鐘後重新檢查），直到確認全部結束。
-- **資料解析**：抓取勝負隊伍名稱、比分、各局得分（Linescore）、安打數、失誤數、勝投、敗投及救援投手資訊。
+- **資料解析**：抓取勝負隊伍名稱、最終比分與 R/H/E 數據（不抓取逐局 Linescore 數據）、勝投、敗投及救援投手資訊，並篩選雙方投打的表現焦點（Highlights）。
 
 ### 2. HTML 報表生成模組 (`fetch_mlb.py` + `templates/`)
 - **日戰報模板**：將解析後的數據填入 `templates/report_template.html`，輸出為 `reports/YYYY-MM-DD.html`。
@@ -32,6 +32,7 @@ graph TD
 - **設計風格**：
   - 現代深色模式 (Modern Dark Mode)。
   - 純 CSS 響應式佈局 (Mobile-Friendly)。
+  - 專注於即時重點：移除逐局數據，以卡片形式直接呈現最終得分與關鍵表現球員。
   - 利用微動畫與柔和漸層提升視覺體驗。
 
 ### 3. Git 推送與託管模組 (GitHub Actions + GitHub Pages)
