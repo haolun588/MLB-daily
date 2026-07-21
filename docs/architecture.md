@@ -32,8 +32,12 @@ graph TD
 - **設計風格**：
   - 現代深色模式 (Modern Dark Mode)。
   - 純 CSS 響應式佈局 (Mobile-Friendly)。
-  - 專注於即時重點：移除逐局數據，以卡片形式直接呈現最終得分與關鍵表現球員。
+  - 採用 **方案 B 上下分層佈局**：
+    - **上半部（滿版寬度）**：展示對戰組合、R-H-E 記分板與賽事狀態 badge。
+    - **下半部（分割雙欄）**：左欄展示「投手決定（勝/敗/救援）」，右欄展示「單場傑出表現球員」。
+    - 這能完美避免因右側球員名單過長而導致左側比分區塊拉伸或產生過多視覺空白。
   - 利用微動畫與柔和漸層提升視覺體驗。
+
 
 ### 3. Git 推送與託管模組 (GitHub Actions + GitHub Pages)
 - **環境**：GitHub Actions Runner。
@@ -84,3 +88,47 @@ graph TD
 3. **網頁生成**：產出 `reports/YYYY-MM-DD.html` 並更新 `index.html`。
 4. **Git 自動提交**：推送變更，觸發 Pages 部署。
 5. **發送 Discord 訊息**：傳送包含 Pages URL 的精美 Embed 訊息。
+
+---
+
+## 📂 進階維護與視覺設計 (Advanced Maintenance & Design)
+
+針對專案長期運作及美觀度，規畫以下擴充與優化設計：
+
+### 1. 歷史戰報存檔管理 (Archive Management)
+- **目錄結構分層**：當累計報告變多時，腳本將自動按年/月分層儲存 HTML 報告，路徑改為：`reports/YYYY/MM/YYYY-MM-DD.html`（例如：`reports/2026/07/2026-07-18.html`），避免單一資料夾下檔案過多。
+- **首頁動態索引選單**：
+  - `index.html` 預設僅列出「最新 7 天」的戰報以保持頁面簡潔。
+  - 歷史存檔改用選單或摺疊面板（Accordion）呈現。腳本會自動將所有歷史報告的清單彙整成一個輕量 JSON 檔（`reports/archive_index.json`），首頁前端 JavaScript 再根據此 JSON 檔動態繪製年份/月份選單。
+
+### 2. 賽季結束自動休眠與重新開工機制 (Off-season Smart Pause)
+- **昨日無賽事自動跳過（動態適應與高穩定度方案）**：
+  - **問題考量**：年度世界大賽的確切結束日期是動態的（根據系列賽打到第 4 至 7 場決定），且每年開幕戰的日期也可能變動，因此使用硬編碼日期或預設日期進行比對容易產生邊界錯誤。
+  - **解決方案**：直接利用「昨天的賽事數量」作為動態判斷核心。
+  - 腳本每天中午 12:00 啟動時，會先查詢昨天的 MLB 賽事。如果 API 回傳的 **總比賽場次 (totalGames) 為 0**，則腳本直接輸出 `[INFO] 昨日無任何 MLB 賽事，跳過戰報生成與 Discord 發送。` 並安全結束運行（Exit Code 0）。
+  - **自動化效果**：
+    - **非賽季期間 (11 月至隔年 3 月)**：GitHub Actions 每天會定時啟動，但在 5 秒內就會因「昨日無賽事」而自動結束，不會產生空白的 HTML、不會提交 Git Commit，也不會發送任何 Discord 空白訊息。
+    - **季中休兵日 (如明星賽四天)**：也會自動識別並安靜跳過。
+    - **隔年春訓/開幕戰**：當春訓或例行賽第一天比賽結束後，隔日中午腳本便會自動偵測到賽事（`totalGames > 0`）並開始正常運作。完全不需要任何人手動修改排程或重置程式。
+
+
+### 3. 隊徽顯示與深色背景優化 (Team Logo & Visibility)
+- **隊徽來源**：
+  - 採用 MLB 官方穩定提供的 SVG 隊徽路徑：`https://www.mlbstatic.com/team-logos/team-cap-on-dark/{teamId}.svg`。
+  - `team-cap-on-dark` 是 MLB 專為深色底設計的帽子隊徽版本，會針對深色字體做出白色描邊或變更為亮色，天生適合深色模式網頁。
+- **CSS 視覺補強（外發光與縮放動畫）**：
+  - 在 CSS 中對隊徽圖片加上 `filter: drop-shadow(...)` 濾鏡。這可以在深色背景下為所有隊徽（不論原本是亮色或暗色）加上一層細緻的白色或淺灰柔和光暈，保證完美的視覺對比度與高階質感：
+    ```css
+    .team-logo {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        margin-right: 8px;
+        /* 增加柔和白色外發光，解決深色隊徽在黑底看不清的問題 */
+        filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.65));
+        transition: transform 0.2s ease-in-out;
+    }
+    .team-logo:hover {
+        transform: scale(1.15); /* 懸停時放大 */
+    }
+    ```
