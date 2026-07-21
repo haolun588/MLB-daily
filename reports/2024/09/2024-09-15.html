@@ -135,25 +135,39 @@
 
     /* Back Link */
     .back-home {
+      position: absolute;
+      top: 0.5rem;
+      left: 0;
       display: inline-flex;
       align-items: center;
       color: var(--text-secondary);
       text-decoration: none;
       font-weight: 500;
-      font-size: 0.95rem;
-      margin-bottom: 2rem;
-      transition: color 0.2s ease, transform 0.2s ease;
+      font-size: 0.9rem;
+      transition: color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
     }
 
     .back-home:hover {
       color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.06);
       transform: translateX(-4px);
     }
 
     .back-home svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       margin-right: 0.5rem;
+    }
+
+    @media (max-width: 576px) {
+      .back-home {
+        position: static;
+        margin-bottom: 1.5rem;
+      }
     }
 
     /* Games Grid Layout */
@@ -695,6 +709,19 @@
       left: 0;
       font-weight: bold;
     }
+
+    /* Player Savant Profile Link */
+    .player-link {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+
+    .player-link:hover {
+      color: #60a5fa;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -702,7 +729,7 @@
   <div class="container">
     
     <header>
-      <a href="../index.html" class="back-home">
+      <a href="../../../index.html" class="back-home">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
@@ -783,15 +810,15 @@
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Keider Montero (6-6)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/672456" target="_blank" class="player-link">Keider Montero</a> (6-6)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Cade Povich (2-9)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/700249" target="_blank" class="player-link">Cade Povich</a> (2-9)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">Jason Foley (23)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/671345" target="_blank" class="player-link">Jason Foley</a> (23)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -806,7 +833,7 @@
                   <span class="card-tx-team-name">巴爾的摩金鶯</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Baltimore Orioles activated LF Heston Kjerstad from the 10-day injured list.</li><li>Baltimore Orioles activated RHP Jacob Webb from the 15-day injured list.</li><li>Baltimore Orioles designated LHP Cole Irvin for assignment.</li><li>Baltimore Orioles designated 3B Nick Maton for assignment.</li>
+                  <li>Baltimore Orioles activated LF <a href="https://baseballsavant.mlb.com/savant-player/677008" target="_blank" class="player-link">Heston Kjerstad</a> from the 10-day injured list.</li><li>Baltimore Orioles activated RHP <a href="https://baseballsavant.mlb.com/savant-player/657097" target="_blank" class="player-link">Jacob Webb</a> from the 15-day injured list.</li><li>Baltimore Orioles designated LHP <a href="https://baseballsavant.mlb.com/savant-player/608344" target="_blank" class="player-link">Cole Irvin</a> for assignment.</li><li>Baltimore Orioles designated 3B <a href="https://baseballsavant.mlb.com/savant-player/665155" target="_blank" class="player-link">Nick Maton</a> for assignment.</li>
                 </ul>
               </div>
             </div>
@@ -824,7 +851,7 @@
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Riley Greene</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/682985" target="_blank" class="player-link">Riley Greene</a></span>
                     <span class="performer-team">DET · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 2(22)(23)</span>
@@ -837,7 +864,7 @@
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Adley Rutschman</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/668939" target="_blank" class="player-link">Adley Rutschman</a></span>
                     <span class="performer-team">BAL · C</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(19)</span>
@@ -857,7 +884,7 @@
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Cade Povich</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/700249" target="_blank" class="player-link">Cade Povich</a></span>
                     <span class="performer-team">BAL · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);">L (2-9)</span>
@@ -870,7 +897,7 @@
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Keider Montero</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/672456" target="_blank" class="player-link">Keider Montero</a></span>
                     <span class="performer-team">DET · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (6-6)</span>
@@ -883,7 +910,7 @@
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Jason Foley</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/671345" target="_blank" class="player-link">Jason Foley</a></span>
                     <span class="performer-team">DET · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">S (23)</span>
@@ -950,11 +977,11 @@
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Cole Sands (8-1)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/663485" target="_blank" class="player-link">Cole Sands</a> (8-1)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Rhett Lowder (1-2)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/695076" target="_blank" class="player-link">Rhett Lowder</a> (1-2)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
@@ -974,7 +1001,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
                   <span class="card-tx-team-name">辛辛那提紅人</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Cincinnati Reds sent RHP Ian Gibaut on a rehab assignment to Louisville Bats.</li>
+                  <li>Cincinnati Reds sent RHP <a href="https://baseballsavant.mlb.com/savant-player/664139" target="_blank" class="player-link">Ian Gibaut</a> on a rehab assignment to Louisville Bats.</li>
                 </ul>
               </div>
             </div>
@@ -992,7 +1019,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Carlos Santana</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/467793" target="_blank" class="player-link">Carlos Santana</a></span>
                     <span class="performer-team">MIN · 1B</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(22)</span>
@@ -1005,7 +1032,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Brooks Lee</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/686797" target="_blank" class="player-link">Brooks Lee</a></span>
                     <span class="performer-team">MIN · SS</span>
                   </div>
                   
@@ -1018,7 +1045,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Ryan Jeffers</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/680777" target="_blank" class="player-link">Ryan Jeffers</a></span>
                     <span class="performer-team">MIN · C</span>
                   </div>
                   
@@ -1038,7 +1065,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Cole Sands</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/663485" target="_blank" class="player-link">Cole Sands</a></span>
                     <span class="performer-team">MIN · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (8-1)</span>
@@ -1051,7 +1078,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Jorge Alcala</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/660896" target="_blank" class="player-link">Jorge Alcala</a></span>
                     <span class="performer-team">MIN · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Relief</span>
@@ -1118,15 +1145,15 @@ This perhaps wasn’t the loose play and reclaiming of</p>
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Carmen Mlodzinski (3-5)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/669387" target="_blank" class="player-link">Carmen Mlodzinski</a> (3-5)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Brady Singer (9-11)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/663903" target="_blank" class="player-link">Brady Singer</a> (9-11)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">Aroldis Chapman (9)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/547973" target="_blank" class="player-link">Aroldis Chapman</a> (9)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -1141,7 +1168,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
                   <span class="card-tx-team-name">堪薩斯皇家</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Kansas City Royals sent LHP Josh Taylor on a rehab assignment to Omaha Storm Chasers.</li>
+                  <li>Kansas City Royals sent LHP <a href="https://baseballsavant.mlb.com/savant-player/657031" target="_blank" class="player-link">Josh Taylor</a> on a rehab assignment to Omaha Storm Chasers.</li>
                 </ul>
               </div>
             </div>
@@ -1159,7 +1186,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Yuli Gurriel</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/493329" target="_blank" class="player-link">Yuli Gurriel</a></span>
                     <span class="performer-team">KCR · 1B</span>
                   </div>
                   
@@ -1179,7 +1206,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Carmen Mlodzinski</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/669387" target="_blank" class="player-link">Carmen Mlodzinski</a></span>
                     <span class="performer-team">PIT · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (3-5)</span>
@@ -1192,7 +1219,7 @@ This perhaps wasn’t the loose play and reclaiming of</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Aroldis Chapman</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/547973" target="_blank" class="player-link">Aroldis Chapman</a></span>
                     <span class="performer-team">PIT · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">S (9)</span>
@@ -1259,11 +1286,11 @@ This perhaps wasn’t the loose play and reclaiming of</p>
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">José Ruiz (4-1)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/614179" target="_blank" class="player-link">José Ruiz</a> (4-1)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Edwin Díaz (5-4)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/621242" target="_blank" class="player-link">Edwin Díaz</a> (5-4)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
@@ -1284,7 +1311,7 @@ There will be no waiting and wondering about Sánchez’s postseason status this
                   <span class="card-tx-team-name">費城費城人</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Philadelphia Phillies activated 3B Alec Bohm from the 10-day injured list.</li><li>Philadelphia Phillies designated C Aramis Garcia for assignment.</li>
+                  <li>Philadelphia Phillies activated 3B <a href="https://baseballsavant.mlb.com/savant-player/664761" target="_blank" class="player-link">Alec Bohm</a> from the 10-day injured list.</li><li>Philadelphia Phillies designated C <a href="https://baseballsavant.mlb.com/savant-player/605244" target="_blank" class="player-link">Aramis Garcia</a> for assignment.</li>
                 </ul>
               </div>
             </div>
@@ -1302,7 +1329,7 @@ There will be no waiting and wondering about Sánchez’s postseason status this
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Tyrone Taylor</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/621438" target="_blank" class="player-link">Tyrone Taylor</a></span>
                     <span class="performer-team">NYM · RF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(7)</span>
@@ -1322,7 +1349,7 @@ There will be no waiting and wondering about Sánchez’s postseason status this
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">David Peterson</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/656849" target="_blank" class="player-link">David Peterson</a></span>
                     <span class="performer-team">NYM · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
@@ -1335,7 +1362,7 @@ There will be no waiting and wondering about Sánchez’s postseason status this
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Cristopher Sánchez</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/650911" target="_blank" class="player-link">Cristopher Sánchez</a></span>
                     <span class="performer-team">PHI · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
@@ -1348,7 +1375,7 @@ There will be no waiting and wondering about Sánchez’s postseason status this
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">José Ruiz</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/614179" target="_blank" class="player-link">José Ruiz</a></span>
                     <span class="performer-team">PHI · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (4-1)</span>
@@ -1415,15 +1442,15 @@ There will be no waiting and wondering about Sánchez’s postseason status this
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">MacKenzie Gore (9-12)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/669022" target="_blank" class="player-link">MacKenzie Gore</a> (9-12)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Adam Oller (1-4)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/670124" target="_blank" class="player-link">Adam Oller</a> (1-4)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">José A. Ferrer (1)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/678606" target="_blank" class="player-link">José A. Ferrer</a> (1)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -1447,7 +1474,7 @@ At the</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">James Wood</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/695578" target="_blank" class="player-link">James Wood</a></span>
                     <span class="performer-team">WSH · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 2(6)(7)</span>
@@ -1460,7 +1487,7 @@ At the</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Jonah Bride</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/681146" target="_blank" class="player-link">Jonah Bride</a></span>
                     <span class="performer-team">MIA · DH</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(7)</span>
@@ -1480,7 +1507,7 @@ At the</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">MacKenzie Gore</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/669022" target="_blank" class="player-link">MacKenzie Gore</a></span>
                     <span class="performer-team">WSH · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (9-12)</span>
@@ -1547,15 +1574,15 @@ At the</p>
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Carlos Rodón (15-9)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/607074" target="_blank" class="player-link">Carlos Rodón</a> (15-9)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Kutter Crawford (8-15)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/676710" target="_blank" class="player-link">Kutter Crawford</a> (8-15)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">Tommy Kahnle (1)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/592454" target="_blank" class="player-link">Tommy Kahnle</a> (1)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -1571,7 +1598,7 @@ On the next offering, Judge launched his Major League-leading 53rd</p>
                   <span class="card-tx-team-name">波士頓紅襪</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Boston Red Sox sent RHP Lucas Sims on a rehab assignment to Worcester Red Sox.</li>
+                  <li>Boston Red Sox sent RHP <a href="https://baseballsavant.mlb.com/savant-player/608371" target="_blank" class="player-link">Lucas Sims</a> on a rehab assignment to Worcester Red Sox.</li>
                 </ul>
               </div>              <div class="card-team-tx">
                 <div class="card-team-tx-header">
@@ -1579,7 +1606,7 @@ On the next offering, Judge launched his Major League-leading 53rd</p>
                   <span class="card-tx-team-name">紐約洋基</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>New York Yankees sent RHP JT Brubaker on a rehab assignment to Scranton/Wilkes-Barre RailRiders.</li>
+                  <li>New York Yankees sent RHP <a href="https://baseballsavant.mlb.com/savant-player/664141" target="_blank" class="player-link">JT Brubaker</a> on a rehab assignment to Scranton/Wilkes-Barre RailRiders.</li>
                 </ul>
               </div>
             </div>
@@ -1597,7 +1624,7 @@ On the next offering, Judge launched his Major League-leading 53rd</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Aaron Judge</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/592450" target="_blank" class="player-link">Aaron Judge</a></span>
                     <span class="performer-team">NYY · CF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(53)</span> <span class="performer-tag sb">SB: 1(9)</span>
@@ -1610,7 +1637,7 @@ On the next offering, Judge launched his Major League-leading 53rd</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Gleyber Torres</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/650402" target="_blank" class="player-link">Gleyber Torres</a></span>
                     <span class="performer-team">NYY · 2B</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(14)</span>
@@ -1623,7 +1650,7 @@ On the next offering, Judge launched his Major League-leading 53rd</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Tyler O'Neill</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/641933" target="_blank" class="player-link">Tyler O'Neill</a></span>
                     <span class="performer-team">BOS · RF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(31)</span>
@@ -1636,7 +1663,7 @@ On the next offering, Judge launched his Major League-leading 53rd</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Connor Wong</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/657136" target="_blank" class="player-link">Connor Wong</a></span>
                     <span class="performer-team">BOS · 1B</span>
                   </div>
                   
@@ -1649,7 +1676,7 @@ On the next offering, Judge launched his Major League-leading 53rd</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Giancarlo Stanton</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/519317" target="_blank" class="player-link">Giancarlo Stanton</a></span>
                     <span class="performer-team">NYY · DH</span>
                   </div>
                   
@@ -1669,7 +1696,7 @@ On the next offering, Judge launched his Major League-leading 53rd</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Carlos Rodón</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/607074" target="_blank" class="player-link">Carlos Rodón</a></span>
                     <span class="performer-team">NYY · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (15-9)</span>
@@ -1736,15 +1763,15 @@ On the next offering, Judge launched his Major League-leading 53rd</p>
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Zach Pop (2-4)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/647315" target="_blank" class="player-link">Zach Pop</a> (2-4)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Andrew Kittredge (4-5)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/552640" target="_blank" class="player-link">Andrew Kittredge</a> (4-5)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">Chad Green (17)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/643338" target="_blank" class="player-link">Chad Green</a> (17)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -1760,7 +1787,7 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
                   <span class="card-tx-team-name">多倫多藍鳥</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Toronto Blue Jays sent RHP Yerry Rodríguez outright to Buffalo Bisons.</li>
+                  <li>Toronto Blue Jays sent RHP <a href="https://baseballsavant.mlb.com/savant-player/666720" target="_blank" class="player-link">Yerry Rodríguez</a> outright to Buffalo Bisons.</li>
                 </ul>
               </div>
             </div>
@@ -1778,7 +1805,7 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Davis Schneider</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/676914" target="_blank" class="player-link">Davis Schneider</a></span>
                     <span class="performer-team">TOR · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(12)</span>
@@ -1791,7 +1818,7 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Lars Nootbaar</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/663457" target="_blank" class="player-link">Lars Nootbaar</a></span>
                     <span class="performer-team">STL · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(10)</span>
@@ -1804,7 +1831,7 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Nathan Lukes</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/664770" target="_blank" class="player-link">Nathan Lukes</a></span>
                     <span class="performer-team">TOR · CF</span>
                   </div>
                   
@@ -1824,7 +1851,7 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Miles Mikolas</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/571945" target="_blank" class="player-link">Miles Mikolas</a></span>
                     <span class="performer-team">STL · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
@@ -1837,7 +1864,7 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Yariel Rodríguez</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/684320" target="_blank" class="player-link">Yariel Rodríguez</a></span>
                     <span class="performer-team">TOR · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
@@ -1904,15 +1931,15 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Ben Lively (12-9)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/594902" target="_blank" class="player-link">Ben Lively</a> (12-9)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Taj Bradley (6-11)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/671737" target="_blank" class="player-link">Taj Bradley</a> (6-11)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">Emmanuel Clase (45)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/661403" target="_blank" class="player-link">Emmanuel Clase</a> (45)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -1942,7 +1969,7 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Ben Lively</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/594902" target="_blank" class="player-link">Ben Lively</a></span>
                     <span class="performer-team">CLE · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (12-9)</span>
@@ -1955,7 +1982,7 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Emmanuel Clase</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/661403" target="_blank" class="player-link">Emmanuel Clase</a></span>
                     <span class="performer-team">CLE · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">S (45)</span>
@@ -1968,7 +1995,7 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Taj Bradley</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/671737" target="_blank" class="player-link">Taj Bradley</a></span>
                     <span class="performer-team">TB · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);">L (6-11)</span>
@@ -2035,15 +2062,15 @@ There weren’t many answers when he walked into Dunedin, Fla., for the first ti
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Sean Burke (1-0)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/680732" target="_blank" class="player-link">Sean Burke</a> (1-0)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">JP Sears (11-11)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/676664" target="_blank" class="player-link">JP Sears</a> (11-11)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">Fraser Ellard (1)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/686642" target="_blank" class="player-link">Fraser Ellard</a> (1)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -2067,7 +2094,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Bryan Ramos</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/682868" target="_blank" class="player-link">Bryan Ramos</a></span>
                     <span class="performer-team">CWS · 3B</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(2)</span>
@@ -2080,7 +2107,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Brent Rooker</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/667670" target="_blank" class="player-link">Brent Rooker</a></span>
                     <span class="performer-team">OAK · DH</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(37)</span>
@@ -2093,7 +2120,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Gavin Sheets</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/657757" target="_blank" class="player-link">Gavin Sheets</a></span>
                     <span class="performer-team">CWS · 1B</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(10)</span>
@@ -2106,7 +2133,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Shea Langeliers</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/669127" target="_blank" class="player-link">Shea Langeliers</a></span>
                     <span class="performer-team">OAK · PH</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(26)</span>
@@ -2119,7 +2146,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">JJ Bleday</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/668709" target="_blank" class="player-link">JJ Bleday</a></span>
                     <span class="performer-team">OAK · CF</span>
                   </div>
                   
@@ -2139,7 +2166,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Sean Burke</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/680732" target="_blank" class="player-link">Sean Burke</a></span>
                     <span class="performer-team">CWS · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (1-0)</span>
@@ -2206,15 +2233,15 @@ Those wishes have been rarely granted this season. But</p>
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Kyle Hendricks (4-11)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/543294" target="_blank" class="player-link">Kyle Hendricks</a> (4-11)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Cal Quantrill (8-10)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/615698" target="_blank" class="player-link">Cal Quantrill</a> (8-10)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">Tyson Miller (1)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/668338" target="_blank" class="player-link">Tyson Miller</a> (1)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -2229,7 +2256,7 @@ Those wishes have been rarely granted this season. But</p>
                   <span class="card-tx-team-name">科羅拉多洛磯</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Colorado Rockies activated RHP Cal Quantrill from the 15-day injured list.</li><li>Colorado Rockies optioned RHP Bradley Blalock to Albuquerque Isotopes.</li>
+                  <li>Colorado Rockies activated RHP <a href="https://baseballsavant.mlb.com/savant-player/615698" target="_blank" class="player-link">Cal Quantrill</a> from the 15-day injured list.</li><li>Colorado Rockies optioned RHP <a href="https://baseballsavant.mlb.com/savant-player/687134" target="_blank" class="player-link">Bradley Blalock</a> to Albuquerque Isotopes.</li>
                 </ul>
               </div>
             </div>
@@ -2247,7 +2274,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Michael Busch</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/683737" target="_blank" class="player-link">Michael Busch</a></span>
                     <span class="performer-team">CHC · 1B</span>
                   </div>
                   <span class="performer-tag hr">HR: 2(19)(20)</span>
@@ -2260,7 +2287,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Pete Crow-Armstrong</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/691718" target="_blank" class="player-link">Pete Crow-Armstrong</a></span>
                     <span class="performer-team">CHC · CF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(10)</span>
@@ -2273,7 +2300,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Jacob Stallings</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/607732" target="_blank" class="player-link">Jacob Stallings</a></span>
                     <span class="performer-team">COL · C</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(9)</span>
@@ -2286,7 +2313,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Nico Hoerner</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/663538" target="_blank" class="player-link">Nico Hoerner</a></span>
                     <span class="performer-team">CHC · 2B</span>
                   </div>
                   <span class="performer-tag sb">SB: 1(29)</span>
@@ -2306,7 +2333,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Kyle Hendricks</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/543294" target="_blank" class="player-link">Kyle Hendricks</a></span>
                     <span class="performer-team">CHC · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (4-11)</span>
@@ -2319,7 +2346,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Jeff Criswell</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/676105" target="_blank" class="player-link">Jeff Criswell</a></span>
                     <span class="performer-team">COL · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Relief</span>
@@ -2332,7 +2359,7 @@ Those wishes have been rarely granted this season. But</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Tyson Miller</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/668338" target="_blank" class="player-link">Tyson Miller</a></span>
                     <span class="performer-team">CHC · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">S (1)</span>
@@ -2399,15 +2426,15 @@ Those wishes have been rarely granted this season. But</p>
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Robert Suarez (9-3)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/663158" target="_blank" class="player-link">Robert Suarez</a> (9-3)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Camilo Doval (5-3)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/666808" target="_blank" class="player-link">Camilo Doval</a> (5-3)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">Adrian Morejon (2)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/670970" target="_blank" class="player-link">Adrian Morejon</a> (2)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -2430,7 +2457,7 @@ Which gave the Padres this assurance: If they won, they knew they’d gain</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Fernando Tatis Jr.</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/665487" target="_blank" class="player-link">Fernando Tatis Jr.</a></span>
                     <span class="performer-team">SD · PH</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(18)</span>
@@ -2443,7 +2470,7 @@ Which gave the Padres this assurance: If they won, they knew they’d gain</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Donovan Walton</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/622268" target="_blank" class="player-link">Donovan Walton</a></span>
                     <span class="performer-team">SF · 2B</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(1)</span>
@@ -2456,7 +2483,7 @@ Which gave the Padres this assurance: If they won, they knew they’d gain</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Heliot Ramos</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/671218" target="_blank" class="player-link">Heliot Ramos</a></span>
                     <span class="performer-team">SF · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(21)</span>
@@ -2476,7 +2503,7 @@ Which gave the Padres this assurance: If they won, they knew they’d gain</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Landen Roupp</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/694738" target="_blank" class="player-link">Landen Roupp</a></span>
                     <span class="performer-team">SF · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
@@ -2489,7 +2516,7 @@ Which gave the Padres this assurance: If they won, they knew they’d gain</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Martín Pérez</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/527048" target="_blank" class="player-link">Martín Pérez</a></span>
                     <span class="performer-team">SD · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
@@ -2556,15 +2583,15 @@ Which gave the Padres this assurance: If they won, they knew they’d gain</p>
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Ronel Blanco (11-6)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/669854" target="_blank" class="player-link">Ronel Blanco</a> (11-6)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Caden Dana (1-2)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/702674" target="_blank" class="player-link">Caden Dana</a> (1-2)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
-                <span class="decision-value">Josh Hader (31)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/623352" target="_blank" class="player-link">Josh Hader</a> (31)</span>
               </div>
             </div>
                         <div class="game-news-box">
@@ -2580,7 +2607,7 @@ Heyward already has had a</p>
                   <span class="card-tx-team-name">休士頓太空人</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Houston Astros transferred RF Ben Gamel from the 10-day injured list to the 60-day injured list.</li>
+                  <li>Houston Astros transferred RF <a href="https://baseballsavant.mlb.com/savant-player/592325" target="_blank" class="player-link">Ben Gamel</a> from the 10-day injured list to the 60-day injured list.</li>
                 </ul>
               </div>              <div class="card-team-tx">
                 <div class="card-team-tx-header">
@@ -2588,7 +2615,7 @@ Heyward already has had a</p>
                   <span class="card-tx-team-name">洛杉磯天使</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Los Angeles Angels activated RHP Carson Fulmer from the 15-day injured list.</li><li>Los Angeles Angels placed LHP Samuel Aldegheri on the 15-day injured list retroactive to September 14, 2024. Left middle finger blister.</li><li>Los Angeles Angels placed CF Bryce Teodosio on the 10-day injured list. Right middle finger fracture.</li><li>Los Angeles Angels designated RHP Nick Robertson for assignment.</li><li>Los Angeles Angels selected the contract of OF Gustavo Campero from Salt Lake Bees.</li>
+                  <li>Los Angeles Angels activated RHP <a href="https://baseballsavant.mlb.com/savant-player/608334" target="_blank" class="player-link">Carson Fulmer</a> from the 15-day injured list.</li><li>Los Angeles Angels placed LHP Samuel Aldegheri on the 15-day injured list retroactive to September 14, 2024. Left middle finger blister.</li><li>Los Angeles Angels placed CF <a href="https://baseballsavant.mlb.com/savant-player/669326" target="_blank" class="player-link">Bryce Teodosio</a> on the 10-day injured list. Right middle finger fracture.</li><li>Los Angeles Angels designated RHP <a href="https://baseballsavant.mlb.com/savant-player/687798" target="_blank" class="player-link">Nick Robertson</a> for assignment.</li><li>Los Angeles Angels selected the contract of OF <a href="https://baseballsavant.mlb.com/savant-player/672569" target="_blank" class="player-link">Gustavo Campero</a> from Salt Lake Bees.</li>
                 </ul>
               </div>
             </div>
@@ -2606,7 +2633,7 @@ Heyward already has had a</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Jason Heyward</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/518792" target="_blank" class="player-link">Jason Heyward</a></span>
                     <span class="performer-team">HOU · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(8)</span> <span class="performer-tag sb">SB: 1(5)</span>
@@ -2619,7 +2646,7 @@ Heyward already has had a</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Taylor Ward</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/621493" target="_blank" class="player-link">Taylor Ward</a></span>
                     <span class="performer-team">LAA · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(24)</span>
@@ -2639,7 +2666,7 @@ Heyward already has had a</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Ronel Blanco</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/669854" target="_blank" class="player-link">Ronel Blanco</a></span>
                     <span class="performer-team">HOU · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (11-6)</span>
@@ -2706,11 +2733,11 @@ Heyward already has had a</p>
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">George Kirby (12-11)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/669923" target="_blank" class="player-link">George Kirby</a> (12-11)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Andrew Heaney (5-14)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/571760" target="_blank" class="player-link">Andrew Heaney</a> (5-14)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
@@ -2729,7 +2756,7 @@ Heyward already has had a</p>
                   <span class="card-tx-team-name">德州遊騎兵</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Texas Rangers placed RHP José Ureña on the 15-day injured list. Right shoulder fatigue.</li><li>Texas Rangers recalled RHP Gerson Garabito from Round Rock Express.</li>
+                  <li>Texas Rangers placed RHP <a href="https://baseballsavant.mlb.com/savant-player/570632" target="_blank" class="player-link">José Ureña</a> on the 15-day injured list. Right shoulder fatigue.</li><li>Texas Rangers recalled RHP <a href="https://baseballsavant.mlb.com/savant-player/642520" target="_blank" class="player-link">Gerson Garabito</a> from Round Rock Express.</li>
                 </ul>
               </div>
             </div>
@@ -2747,7 +2774,7 @@ Heyward already has had a</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Randy Arozarena</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/668227" target="_blank" class="player-link">Randy Arozarena</a></span>
                     <span class="performer-team">SEA · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(20)</span>
@@ -2760,7 +2787,7 @@ Heyward already has had a</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Mitch Garver</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/641598" target="_blank" class="player-link">Mitch Garver</a></span>
                     <span class="performer-team">SEA · C</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(13)</span>
@@ -2780,7 +2807,7 @@ Heyward already has had a</p>
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">George Kirby</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/669923" target="_blank" class="player-link">George Kirby</a></span>
                     <span class="performer-team">SEA · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (12-11)</span>
@@ -2847,11 +2874,11 @@ Heyward already has had a</p>
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Blake Walston (1-0)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/686796" target="_blank" class="player-link">Blake Walston</a> (1-0)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Jared Koenig (8-4)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/657649" target="_blank" class="player-link">Jared Koenig</a> (8-4)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
@@ -2871,7 +2898,7 @@ Heck, just trying to sum it up is a challenge, but Arizona fill-in manager Jeff 
                   <span class="card-tx-team-name">亞利桑那響尾蛇</span>
                 </div>
                 <ul class="card-tx-list">
-                  <li>Arizona Diamondbacks placed RHP Paul Sewald on the 15-day injured list retroactive to September 12, 2024. Left neck discomfort.</li><li>Arizona Diamondbacks activated C Gabriel Moreno from the 10-day injured list.</li><li>Arizona Diamondbacks designated RHP Dylan Floro for assignment.</li><li>Arizona Diamondbacks recalled LHP Blake Walston from Reno Aces.</li>
+                  <li>Arizona Diamondbacks placed RHP <a href="https://baseballsavant.mlb.com/savant-player/623149" target="_blank" class="player-link">Paul Sewald</a> on the 15-day injured list retroactive to September 12, 2024. Left neck discomfort.</li><li>Arizona Diamondbacks activated C <a href="https://baseballsavant.mlb.com/savant-player/672515" target="_blank" class="player-link">Gabriel Moreno</a> from the 10-day injured list.</li><li>Arizona Diamondbacks designated RHP <a href="https://baseballsavant.mlb.com/savant-player/571670" target="_blank" class="player-link">Dylan Floro</a> for assignment.</li><li>Arizona Diamondbacks recalled LHP <a href="https://baseballsavant.mlb.com/savant-player/686796" target="_blank" class="player-link">Blake Walston</a> from Reno Aces.</li>
                 </ul>
               </div>
             </div>
@@ -2889,7 +2916,7 @@ Heck, just trying to sum it up is a challenge, but Arizona fill-in manager Jeff 
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Jackson Chourio</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/694192" target="_blank" class="player-link">Jackson Chourio</a></span>
                     <span class="performer-team">MIL · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(21)</span>
@@ -2902,7 +2929,7 @@ Heck, just trying to sum it up is a challenge, but Arizona fill-in manager Jeff 
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Eric Haase</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/606992" target="_blank" class="player-link">Eric Haase</a></span>
                     <span class="performer-team">MIL · C</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(5)</span>
@@ -2915,7 +2942,7 @@ Heck, just trying to sum it up is a challenge, but Arizona fill-in manager Jeff 
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Josh Bell</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/605137" target="_blank" class="player-link">Josh Bell</a></span>
                     <span class="performer-team">ARI · DH</span>
                   </div>
                   
@@ -2928,7 +2955,7 @@ Heck, just trying to sum it up is a challenge, but Arizona fill-in manager Jeff 
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Brice Turang</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/668930" target="_blank" class="player-link">Brice Turang</a></span>
                     <span class="performer-team">MIL · 2B</span>
                   </div>
                   <span class="performer-tag sb">SB: 1(43)</span>
@@ -2941,7 +2968,7 @@ Heck, just trying to sum it up is a challenge, but Arizona fill-in manager Jeff 
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Pavin Smith</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/656976" target="_blank" class="player-link">Pavin Smith</a></span>
                     <span class="performer-team">ARI · LF</span>
                   </div>
                   
@@ -3016,11 +3043,11 @@ Heck, just trying to sum it up is a challenge, but Arizona fill-in manager Jeff 
             <div class="decisions-container">
               <div class="decision-row">
                 <span class="decision-label">勝投</span>
-                <span class="decision-value">Michael Kopech (6-8)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/656629" target="_blank" class="player-link">Michael Kopech</a> (6-8)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">敗投</span>
-                <span class="decision-value">Raisel Iglesias (5-2)</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/628452" target="_blank" class="player-link">Raisel Iglesias</a> (5-2)</span>
               </div>
               <div class="decision-row">
                 <span class="decision-label">救援</span>
@@ -3047,7 +3074,7 @@ With the flurry of injuries to the starting staff, Buehler will almost certainly
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Shohei Ohtani</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/660271" target="_blank" class="player-link">Shohei Ohtani</a></span>
                     <span class="performer-team">LAD · DH</span>
                   </div>
                   
@@ -3060,7 +3087,7 @@ With the flurry of injuries to the starting staff, Buehler will almost certainly
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Tommy Edman</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/669242" target="_blank" class="player-link">Tommy Edman</a></span>
                     <span class="performer-team">LAD · SS</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(5)</span>
@@ -3073,7 +3100,7 @@ With the flurry of injuries to the starting staff, Buehler will almost certainly
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Teoscar Hernández</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/606192" target="_blank" class="player-link">Teoscar Hernández</a></span>
                     <span class="performer-team">LAD · LF</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(29)</span>
@@ -3086,7 +3113,7 @@ With the flurry of injuries to the starting staff, Buehler will almost certainly
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Max Muncy</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/571970" target="_blank" class="player-link">Max Muncy</a></span>
                     <span class="performer-team">LAD · 3B</span>
                   </div>
                   <span class="performer-tag hr">HR: 1(15)</span>
@@ -3099,7 +3126,7 @@ With the flurry of injuries to the starting staff, Buehler will almost certainly
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Will Smith</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/669257" target="_blank" class="player-link">Will Smith</a></span>
                     <span class="performer-team">LAD · C</span>
                   </div>
                   
@@ -3119,7 +3146,7 @@ With the flurry of injuries to the starting staff, Buehler will almost certainly
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Charlie Morton</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/450203" target="_blank" class="player-link">Charlie Morton</a></span>
                     <span class="performer-team">ATL · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
@@ -3132,7 +3159,7 @@ With the flurry of injuries to the starting staff, Buehler will almost certainly
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Walker Buehler</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/621111" target="_blank" class="player-link">Walker Buehler</a></span>
                     <span class="performer-team">LAD · P</span>
                   </div>
                   <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
@@ -3145,7 +3172,7 @@ With the flurry of injuries to the starting staff, Buehler will almost certainly
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">Michael Kopech</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/656629" target="_blank" class="player-link">Michael Kopech</a></span>
                     <span class="performer-team">LAD · P</span>
                   </div>
                   <span class="performer-tag pitcher-win">W (6-8)</span>

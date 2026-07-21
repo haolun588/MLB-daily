@@ -164,6 +164,14 @@ def fetch_daily_transactions(date_str):
         to_team_id = tx.get("toTeam", {}).get("id")
         from_team_id = tx.get("fromTeam", {}).get("id")
         
+        person_info = tx.get("person", {})
+        person_id = person_info.get("id")
+        person_name = person_info.get("fullName")
+        
+        if person_id and person_name and person_name in desc:
+            link_html = f'<a href="https://baseballsavant.mlb.com/savant-player/{person_id}" target="_blank" class="player-link">{person_name}</a>'
+            desc = desc.replace(person_name, link_html)
+            
         tx_list.append({
             "to_team_id": to_team_id,
             "from_team_id": from_team_id,
@@ -341,25 +349,28 @@ def generate_report(date_str, games):
             return None, None
             
         if "winner" in dec_obj:
-            name, stats = find_pitcher_stats(dec_obj["winner"]["id"])
+            p_id = dec_obj["winner"]["id"]
+            name, stats = find_pitcher_stats(p_id)
             if name:
-                w_pitcher_str = f"{name} ({stats.get('wins', 0)}-{stats.get('losses', 0)})"
+                w_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{name}</a> ({stats.get("wins", 0)}-{stats.get("losses", 0)})'
             else:
-                w_pitcher_str = dec_obj["winner"]["fullName"]
+                w_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{dec_obj["winner"]["fullName"]}</a>'
                 
         if "loser" in dec_obj:
-            name, stats = find_pitcher_stats(dec_obj["loser"]["id"])
+            p_id = dec_obj["loser"]["id"]
+            name, stats = find_pitcher_stats(p_id)
             if name:
-                l_pitcher_str = f"{name} ({stats.get('wins', 0)}-{stats.get('losses', 0)})"
+                l_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{name}</a> ({stats.get("wins", 0)}-{stats.get("losses", 0)})'
             else:
-                l_pitcher_str = dec_obj["loser"]["fullName"]
+                l_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{dec_obj["loser"]["fullName"]}</a>'
                 
         if "save" in dec_obj:
-            name, stats = find_pitcher_stats(dec_obj["save"]["id"])
+            p_id = dec_obj["save"]["id"]
+            name, stats = find_pitcher_stats(p_id)
             if name:
-                s_pitcher_str = f"{name} ({stats.get('saves', 0)})"
+                s_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{name}</a> ({stats.get("saves", 0)})'
             else:
-                s_pitcher_str = f"{dec_obj['save']['fullName']} ({stats.get('saves', 0)})"
+                s_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{dec_obj["save"]["fullName"]}</a>'
                 
         # Determine starting pitchers for away and home teams
         away_pitchers = boxscore["teams"]["away"].get("pitchers", [])
@@ -519,7 +530,7 @@ def generate_report(date_str, games):
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">{b['name']}</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/{b['id']}" target="_blank" class="player-link">{b['name']}</a></span>
                     <span class="performer-team">{b['team']} · {b['pos']}</span>
                   </div>
                   {tags_str}
@@ -538,7 +549,7 @@ def generate_report(date_str, games):
               <div class="performer-item">
                 <div class="performer-name-row">
                   <div>
-                    <span class="performer-name">{p['name']}</span>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/{p['id']}" target="_blank" class="player-link">{p['name']}</a></span>
                     <span class="performer-team">{p['team']} · {p['pos']}</span>
                   </div>
                   {p['tag']}
