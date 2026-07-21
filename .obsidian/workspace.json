@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/progress.md",
+                "file": "docs/ai_collaboration_guide.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "progress"
+              "title": "ai_collaboration_guide"
             }
           }
         ]
@@ -185,6 +185,9 @@
   },
   "active": "d90d7e41a10555a7",
   "lastOpenFiles": [
+    "docs/dev_rules.md",
+    "docs/progress.md",
+    "docs/ai_collaboration_guide.md",
     "docs/dev_logs/20260721_優化卡片版面與歷史存檔目錄分層.md",
     "reports/2024/12/2024-12-25.html",
     "reports/2024/12",
@@ -200,7 +203,6 @@
     "docs/dev_logs/20260720_實作與驗證Python數據抓取.md",
     "reports/metadata.json",
     "docs/dev_logs/README.md",
-    "docs/progress.md",
     "docs/dev_logs/20260720_實作與精簡HTML靜態網頁設計.md",
     "docs/dev_logs/20260720_初始化專案說明文件與開發守則.md"
   ]
