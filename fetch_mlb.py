@@ -442,84 +442,86 @@ def generate_report(date_str, games):
         card_html = f"""
       <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #{game_pk}</span>
-              <span class="status-badge {status_class}">{status_text}</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="{away_winner_class}">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: {away_info['color']}; color: {away_info['color']}; background: {away_info['color']}10;">{away_info['abbr']}</div>
-                      <span>{away_info['name']} {away_rec_str}</span>
-                    </td>
-                    <td class="num-cell runs-cell">{away_r}</td>
-                    <td class="num-cell">{away_h}</td>
-                    <td class="num-cell">{away_e}</td>
-                  </tr>
-                  <tr class="{home_winner_class}">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: {home_info['color']}; color: {home_info['color']}; background: {home_info['color']}10;">{home_info['abbr']}</div>
-                      <span>{home_info['name']} {home_rec_str}</span>
-                    </td>
-                    <td class="num-cell runs-cell">{home_r}</td>
-                    <td class="num-cell">{home_h}</td>
-                    <td class="num-cell">{home_e}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #{game_pk}</span>
+            <span class="status-badge {status_class}">{status_text}</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">{w_pitcher_str}</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">{l_pitcher_str}</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">{s_pitcher_str}</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="{away_winner_class}">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{away_team_obj['id']}.svg" class="team-logo" alt="{away_info['abbr']}">
+                    <span>{away_info['name']} {away_rec_str}</span>
+                  </td>
+                  <td class="num-cell runs-cell">{away_r}</td>
+                  <td class="num-cell">{away_h}</td>
+                  <td class="num-cell">{away_e}</td>
+                </tr>
+                <tr class="{home_winner_class}">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{home_team_obj['id']}.svg" class="team-logo" alt="{home_info['abbr']}">
+                    <span>{home_info['name']} {home_rec_str}</span>
+                  </td>
+                  <td class="num-cell runs-cell">{home_r}</td>
+                  <td class="num-cell">{home_h}</td>
+                  <td class="num-cell">{home_e}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
-          </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
-{batters_section_html}
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">{w_pitcher_str}</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">{l_pitcher_str}</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">{s_pitcher_str}</span>
+              </div>
             </div>
           </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+{batters_section_html}
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
 {pitchers_section_html}
+              </div>
             </div>
           </div>
         </div>
@@ -577,9 +579,13 @@ def generate_report(date_str, games):
         games_html = "\n".join(games_cards_html)
         html_content = pre_g + start_g_tag + "\n" + games_html + "\n      " + end_g_tag + post_g
         
-    # Output to reports directory
-    os.makedirs("reports", exist_ok=True)
-    report_output_path = f"reports/{date_str}.html"
+    # Output to hierarchical reports directory
+    parts = date_str.split('-')
+    year = parts[0]
+    month = parts[1]
+    output_dir = os.path.join("reports", year, month)
+    os.makedirs(output_dir, exist_ok=True)
+    report_output_path = os.path.join(output_dir, f"{date_str}.html")
     with open(report_output_path, "w", encoding="utf-8") as f:
         f.write(html_content)
     print(f"Successfully generated report: {report_output_path}")
@@ -644,7 +650,9 @@ def update_index_page(new_metadata):
     except:
         date_formatted = latest_date
         
-    latest_html = f"""<a href="reports/{latest_date}.html" class="latest-card-anchor">
+    parts_latest = latest_date.split('-')
+    latest_path = f"reports/{parts_latest[0]}/{parts_latest[1]}/{latest_date}.html"
+    latest_html = f"""<a href="{latest_path}" class="latest-card-anchor">
         <div class="latest-card">
           <span class="latest-tag">最新戰報</span>
           <div class="latest-date">{date_formatted}</div>
@@ -678,8 +686,10 @@ def update_index_page(new_metadata):
     archive_cards = []
     for date_str in sorted_dates:
         meta = metadata_db[date_str]
+        parts_card = date_str.split('-')
+        card_path = f"reports/{parts_card[0]}/{parts_card[1]}/{date_str}.html"
         card = f"""          <!-- History Item {date_str} -->
-          <a href="reports/{date_str}.html" class="history-card">
+          <a href="{card_path}" class="history-card">
             <div>
               <div class="history-date">{date_str}</div>
               <div class="history-details">
@@ -722,7 +732,8 @@ def send_discord_notification(new_meta):
     except:
         date_formatted = date_str
         
-    report_url = f"https://haolun588.github.io/MLB-daily/reports/{date_str}.html"
+    parts = date_str.split('-')
+    report_url = f"https://haolun588.github.io/MLB-daily/reports/{parts[0]}/{parts[1]}/{date_str}.html"
     
     if new_meta.get("total_games", 0) == 0:
         description = "昨日無安排任何大聯盟例行賽事。"
@@ -814,7 +825,7 @@ def main():
             "date": date_str,
             "total_games": 0,
             "postponed": 0,
-            "summary": f"{date_str} 當日無安排 any 大聯盟賽事。"
+            "summary": f"{date_str} 當日無安排任何大聯盟賽事。"
         }
         
         # Build empty card report html
@@ -831,7 +842,7 @@ def main():
             html_content = html_content.replace("<!--DATE_PLACEHOLDER-->2026 年 07 年 19 日<!--/DATE_PLACEHOLDER-->", date_formatted)
             
             empty_card = f"""
-      <div class="game-card" style="grid-template-columns: 1fr;">
+      <div class="game-card">
         <div class="postponed-game-body">
           <div class="postponed-icon">📅</div>
           <div class="postponed-title">今日無賽事</div>
@@ -847,8 +858,13 @@ def main():
                 post = html_content.split(end_g)[1]
                 html_content = pre + start_g + "\n" + empty_card + "\n      " + end_g + post
                 
-            os.makedirs("reports", exist_ok=True)
-            with open(f"reports/{date_str}.html", "w", encoding="utf-8") as f:
+            parts = date_str.split('-')
+            year = parts[0]
+            month = parts[1]
+            output_dir = os.path.join("reports", year, month)
+            os.makedirs(output_dir, exist_ok=True)
+            report_output_path = os.path.join(output_dir, f"{date_str}.html")
+            with open(report_output_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
                 
         update_index_page(empty_meta)

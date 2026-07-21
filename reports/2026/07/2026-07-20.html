@@ -163,7 +163,7 @@
       gap: 2rem;
     }
 
-    /* Game Card */
+    /* Game Card (Scheme B) */
     .game-card {
       background: var(--card-bg);
       backdrop-filter: blur(12px);
@@ -172,36 +172,25 @@
       overflow: hidden;
       box-shadow: var(--shadow-lg);
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      display: grid;
-      grid-template-columns: 1fr;
-    }
-
-    @media (min-width: 1024px) {
-      .game-card {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    .game-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--card-hover-border);
-      box-shadow: var(--shadow-glow);
-    }
-
-    /* Left Side: Game Summary (R-H-E Scores) */
-    .game-summary-section {
-      padding: 1.5rem;
-      border-bottom: 1px solid var(--card-border);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
     }
 
-    @media (min-width: 1024px) {
-      .game-summary-section {
-        border-bottom: none;
-        border-right: 1px solid var(--card-border);
-        padding: 2rem;
+    .game-card-upper {
+      padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+    }
+
+    .game-card-lower {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding: 1.25rem 1.5rem 1.5rem 1.5rem;
+      border-top: 1px dashed var(--card-border);
+    }
+
+    @media (min-width: 768px) {
+      .game-card-lower {
+        grid-template-columns: 1fr 1.5fr;
       }
     }
 
@@ -327,6 +316,13 @@
       font-size: 0.8rem;
     }
 
+    .team-logo {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.25));
+    }
+
     /* Decision Pitchers Section */
     .decisions-container {
       background: rgba(255, 255, 255, 0.01);
@@ -355,28 +351,31 @@
 
     /* Right Side: Key Performers Highlights */
     .highlights-section {
-      padding: 1.5rem;
-      background: rgba(17, 24, 39, 0.25);
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    @media (min-width: 1024px) {
-      .highlights-section {
-        padding: 2rem;
-      }
+      gap: 1rem;
     }
 
     .highlights-header {
-      font-size: 1rem;
+      font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--accent-blue);
       border-left: 3px solid var(--accent-blue);
-      padding-left: 0.75rem;
-      margin-bottom: 0.5rem;
+      padding-left: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-sub-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      border-left: 3px solid var(--text-muted);
+      padding-left: 0.5rem;
+      margin-bottom: 0.75rem;
     }
 
     .performer-group {
@@ -555,75 +554,76 @@
 
       <!-- Game Card: MIN @ CLE -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #824410</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #002B5C; color: #002B5C; background: #002B5C10;">MIN</div>
-                      <span>明尼蘇達雙城 (49-52)</span>
-                    </td>
-                    <td class="num-cell runs-cell">4</td>
-                    <td class="num-cell">10</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #0C2340; color: #0C2340; background: #0C234010;">CLE</div>
-                      <span>克里夫蘭守護者 (53-48)</span>
-                    </td>
-                    <td class="num-cell runs-cell">13</td>
-                    <td class="num-cell">19</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824410</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Tanner Bibee (4-9)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Joe Ryan (6-6)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">無</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/142.svg" class="team-logo" alt="MIN">
+                    <span>明尼蘇達雙城 (49-52)</span>
+                  </td>
+                  <td class="num-cell runs-cell">4</td>
+                  <td class="num-cell">10</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/114.svg" class="team-logo" alt="CLE">
+                    <span>克里夫蘭守護者 (53-48)</span>
+                  </td>
+                  <td class="num-cell runs-cell">13</td>
+                  <td class="num-cell">19</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Tanner Bibee (4-9)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Joe Ryan (6-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Petey Halpin -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -715,13 +715,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Tanner Bibee -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -735,6 +735,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">6.0</span> | 被安打 <span class="performer-stats-numbers">6</span> | 失分 <span class="performer-stats-numbers">2</span> | 自責 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">5</span> (球數 <span class="performer-stats-numbers">95/61</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -743,75 +744,76 @@
 
       <!-- Game Card: PIT @ NYY -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #823522</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #FDB827; color: #FDB827; background: #FDB82710;">PIT</div>
-                      <span>匹茲堡海盜 (52-49)</span>
-                    </td>
-                    <td class="num-cell runs-cell">5</td>
-                    <td class="num-cell">9</td>
-                    <td class="num-cell">2</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #0C2340; color: #0C2340; background: #0C234010;">NYY</div>
-                      <span>紐約洋基 (56-44)</span>
-                    </td>
-                    <td class="num-cell runs-cell">8</td>
-                    <td class="num-cell">11</td>
-                    <td class="num-cell">1</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #823522</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Angel Chivilli (1-0)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Braxton Ashcraft (9-4)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">Fernando Cruz (2)</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/134.svg" class="team-logo" alt="PIT">
+                    <span>匹茲堡海盜 (52-49)</span>
+                  </td>
+                  <td class="num-cell runs-cell">5</td>
+                  <td class="num-cell">9</td>
+                  <td class="num-cell">2</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/147.svg" class="team-logo" alt="NYY">
+                    <span>紐約洋基 (56-44)</span>
+                  </td>
+                  <td class="num-cell runs-cell">8</td>
+                  <td class="num-cell">11</td>
+                  <td class="num-cell">1</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Angel Chivilli (1-0)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Braxton Ashcraft (9-4)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">Fernando Cruz (2)</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Jazz Chisholm Jr. -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -864,13 +866,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">0</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Wilber Dotel -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -910,6 +912,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">1.1</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">0</span> (球數 <span class="performer-stats-numbers">15/8</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -918,75 +921,76 @@
 
       <!-- Game Card: TB @ TOR -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #822788</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #092C5C; color: #092C5C; background: #092C5C10;">TB</div>
-                      <span>坦帕灣光芒 (57-42)</span>
-                    </td>
-                    <td class="num-cell runs-cell">7</td>
-                    <td class="num-cell">13</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #134A8E; color: #134A8E; background: #134A8E10;">TOR</div>
-                      <span>多倫多藍鳥 (46-54)</span>
-                    </td>
-                    <td class="num-cell runs-cell">1</td>
-                    <td class="num-cell">8</td>
-                    <td class="num-cell">3</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #822788</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Nick Martinez (9-2)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Dylan Cease (6-5)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">無</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/139.svg" class="team-logo" alt="TB">
+                    <span>坦帕灣光芒 (57-42)</span>
+                  </td>
+                  <td class="num-cell runs-cell">7</td>
+                  <td class="num-cell">13</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/141.svg" class="team-logo" alt="TOR">
+                    <span>多倫多藍鳥 (46-54)</span>
+                  </td>
+                  <td class="num-cell runs-cell">1</td>
+                  <td class="num-cell">8</td>
+                  <td class="num-cell">3</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Nick Martinez (9-2)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Dylan Cease (6-5)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Junior Caminero -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1039,13 +1043,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Nick Martinez -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1072,6 +1076,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">6.0</span> | 被安打 <span class="performer-stats-numbers">7</span> | 失分 <span class="performer-stats-numbers">5</span> | 自責 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">7</span> (球數 <span class="performer-stats-numbers">101/66</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1080,75 +1085,76 @@
 
       <!-- Game Card: BAL @ BOS -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #824736</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #DF4601; color: #DF4601; background: #DF460110;">BAL</div>
-                      <span>巴爾的摩金鶯 (49-52)</span>
-                    </td>
-                    <td class="num-cell runs-cell">5</td>
-                    <td class="num-cell">11</td>
-                    <td class="num-cell">4</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #BD3039; color: #BD3039; background: #BD303910;">BOS</div>
-                      <span>波士頓紅襪 (51-48)</span>
-                    </td>
-                    <td class="num-cell runs-cell">6</td>
-                    <td class="num-cell">10</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824736</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Garrett Whitlock (5-1)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Tyler Wells (2-2)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">Aroldis Chapman (22)</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/110.svg" class="team-logo" alt="BAL">
+                    <span>巴爾的摩金鶯 (49-52)</span>
+                  </td>
+                  <td class="num-cell runs-cell">5</td>
+                  <td class="num-cell">11</td>
+                  <td class="num-cell">4</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" class="team-logo" alt="BOS">
+                    <span>波士頓紅襪 (51-48)</span>
+                  </td>
+                  <td class="num-cell runs-cell">6</td>
+                  <td class="num-cell">10</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Garrett Whitlock (5-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Tyler Wells (2-2)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">Aroldis Chapman (22)</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Gunnar Henderson -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1227,13 +1233,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Shane Baz -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1260,6 +1266,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">1.0</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">1</span> (球數 <span class="performer-stats-numbers">11/9</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1268,75 +1275,76 @@
 
       <!-- Game Card: LAD @ PHI -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #823436</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #005A9C; color: #005A9C; background: #005A9C10;">LAD</div>
-                      <span>洛杉磯道奇 (63-38)</span>
-                    </td>
-                    <td class="num-cell runs-cell">7</td>
-                    <td class="num-cell">12</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #E81828; color: #E81828; background: #E8182810;">PHI</div>
-                      <span>費城費城人 (56-45)</span>
-                    </td>
-                    <td class="num-cell runs-cell">10</td>
-                    <td class="num-cell">11</td>
-                    <td class="num-cell">1</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #823436</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Cristopher Sánchez (12-4)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Emmet Sheehan (4-7)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">無</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" class="team-logo" alt="LAD">
+                    <span>洛杉磯道奇 (63-38)</span>
+                  </td>
+                  <td class="num-cell runs-cell">7</td>
+                  <td class="num-cell">12</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/143.svg" class="team-logo" alt="PHI">
+                    <span>費城費城人 (56-45)</span>
+                  </td>
+                  <td class="num-cell runs-cell">10</td>
+                  <td class="num-cell">11</td>
+                  <td class="num-cell">1</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Cristopher Sánchez (12-4)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Emmet Sheehan (4-7)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Trea Turner -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1402,13 +1410,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Cristopher Sánchez -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1422,6 +1430,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">5.1</span> | 被安打 <span class="performer-stats-numbers">7</span> | 失分 <span class="performer-stats-numbers">3</span> | 自責 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">7</span> (球數 <span class="performer-stats-numbers">99/64</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1430,75 +1439,76 @@
 
       <!-- Game Card: SD @ ATL -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #824898</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #2F241D; color: #2F241D; background: #2F241D10;">SD</div>
-                      <span>聖地牙哥教士 (49-51)</span>
-                    </td>
-                    <td class="num-cell runs-cell">2</td>
-                    <td class="num-cell">7</td>
-                    <td class="num-cell">1</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #CE1141; color: #CE1141; background: #CE114110;">ATL</div>
-                      <span>亞特蘭大勇士 (58-41)</span>
-                    </td>
-                    <td class="num-cell runs-cell">3</td>
-                    <td class="num-cell">4</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824898</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Bryce Elder (6-6)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">JP Sears (2-3)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">Victor Mederos (1)</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/135.svg" class="team-logo" alt="SD">
+                    <span>聖地牙哥教士 (49-51)</span>
+                  </td>
+                  <td class="num-cell runs-cell">2</td>
+                  <td class="num-cell">7</td>
+                  <td class="num-cell">1</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/144.svg" class="team-logo" alt="ATL">
+                    <span>亞特蘭大勇士 (58-41)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">4</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Bryce Elder (6-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">JP Sears (2-3)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">Victor Mederos (1)</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Manny Machado -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1551,13 +1561,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Bryce Elder -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1597,6 +1607,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">2.1</span> | 被安打 <span class="performer-stats-numbers">1</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">1</span> (球數 <span class="performer-stats-numbers">29/20</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1605,75 +1616,76 @@
 
       <!-- Game Card: SF @ KCR -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #824087</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #FD5A1E; color: #FD5A1E; background: #FD5A1E10;">SF</div>
-                      <span>舊金山巨人 (42-58)</span>
-                    </td>
-                    <td class="num-cell runs-cell">3</td>
-                    <td class="num-cell">6</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #004687; color: #004687; background: #00468710;">KCR</div>
-                      <span>堪薩斯皇家 (41-60)</span>
-                    </td>
-                    <td class="num-cell runs-cell">4</td>
-                    <td class="num-cell">9</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824087</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Alex Lange (1-5)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Caleb Kilian (2-6)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">無</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/137.svg" class="team-logo" alt="SF">
+                    <span>舊金山巨人 (42-58)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">6</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/118.svg" class="team-logo" alt="KCR">
+                    <span>堪薩斯皇家 (41-60)</span>
+                  </td>
+                  <td class="num-cell runs-cell">4</td>
+                  <td class="num-cell">9</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Alex Lange (1-5)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Caleb Kilian (2-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Willy Adames -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1713,13 +1725,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Michael Wacha -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1733,6 +1745,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">6.0</span> | 被安打 <span class="performer-stats-numbers">3</span> | 失分 <span class="performer-stats-numbers">1</span> | 自責 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">2</span> | 三振 <span class="performer-stats-numbers">5</span> (球數 <span class="performer-stats-numbers">96/63</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1741,75 +1754,76 @@
 
       <!-- Game Card: NYM @ MIL -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #823762</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #FF5910; color: #FF5910; background: #FF591010;">NYM</div>
-                      <span>紐約大都會 (42-59)</span>
-                    </td>
-                    <td class="num-cell runs-cell">3</td>
-                    <td class="num-cell">6</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #122853; color: #122853; background: #12285310;">MIL</div>
-                      <span>密爾瓦基釀酒人 (63-37)</span>
-                    </td>
-                    <td class="num-cell runs-cell">8</td>
-                    <td class="num-cell">10</td>
-                    <td class="num-cell">1</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #823762</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Craig Yoho (2-0)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Freddy Peralta (5-9)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">無</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" class="team-logo" alt="NYM">
+                    <span>紐約大都會 (42-59)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">6</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/158.svg" class="team-logo" alt="MIL">
+                    <span>密爾瓦基釀酒人 (63-37)</span>
+                  </td>
+                  <td class="num-cell runs-cell">8</td>
+                  <td class="num-cell">10</td>
+                  <td class="num-cell">1</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Craig Yoho (2-0)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Freddy Peralta (5-9)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Andrew Vaughn -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1849,13 +1863,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Jacob Misiorowski -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -1882,6 +1896,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">1.0</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">2</span> (球數 <span class="performer-stats-numbers">17/8</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1890,75 +1905,76 @@
 
       <!-- Game Card: DET @ CHC -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #824654</span>
-              <span class="status-badge extra">Final/10</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #0C2340; color: #0C2340; background: #0C234010;">DET</div>
-                      <span>底特律老虎 (47-53)</span>
-                    </td>
-                    <td class="num-cell runs-cell">8</td>
-                    <td class="num-cell">12</td>
-                    <td class="num-cell">1</td>
-                  </tr>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #0E3386; color: #0E3386; background: #0E338610;">CHC</div>
-                      <span>芝加哥小熊 (56-44)</span>
-                    </td>
-                    <td class="num-cell runs-cell">6</td>
-                    <td class="num-cell">11</td>
-                    <td class="num-cell">1</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824654</span>
+            <span class="status-badge extra">Final/10</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Kenley Jansen (2-4)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Trent Thornton (3-3)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">Tyler Holton (1)</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/116.svg" class="team-logo" alt="DET">
+                    <span>底特律老虎 (47-53)</span>
+                  </td>
+                  <td class="num-cell runs-cell">8</td>
+                  <td class="num-cell">12</td>
+                  <td class="num-cell">1</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/112.svg" class="team-logo" alt="CHC">
+                    <span>芝加哥小熊 (56-44)</span>
+                  </td>
+                  <td class="num-cell runs-cell">6</td>
+                  <td class="num-cell">11</td>
+                  <td class="num-cell">1</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Kenley Jansen (2-4)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Trent Thornton (3-3)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">Tyler Holton (1)</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Dillon Dingler -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2024,14 +2040,15 @@
                   單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">1</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <div style='color:var(--text-muted);font-size:0.85rem;padding:0.5rem;'>今日無突出投手表現。</div>
+              </div>
             </div>
           </div>
         </div>
@@ -2040,75 +2057,76 @@
 
       <!-- Game Card: CWS @ TEX -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #822874</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #27251F; color: #27251F; background: #27251F10;">CWS</div>
-                      <span>芝加哥白襪 (53-46)</span>
-                    </td>
-                    <td class="num-cell runs-cell">10</td>
-                    <td class="num-cell">13</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #003278; color: #003278; background: #00327810;">TEX</div>
-                      <span>德州遊騎兵 (50-50)</span>
-                    </td>
-                    <td class="num-cell runs-cell">3</td>
-                    <td class="num-cell">7</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #822874</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Chris Murphy (3-0)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Jacob deGrom (7-6)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">無</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/145.svg" class="team-logo" alt="CWS">
+                    <span>芝加哥白襪 (53-46)</span>
+                  </td>
+                  <td class="num-cell runs-cell">10</td>
+                  <td class="num-cell">13</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/140.svg" class="team-logo" alt="TEX">
+                    <span>德州遊騎兵 (50-50)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">7</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Chris Murphy (3-0)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Jacob deGrom (7-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Miguel Vargas -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2174,13 +2192,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">2</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Chris Murphy -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2207,6 +2225,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">4.0</span> | 被安打 <span class="performer-stats-numbers">4</span> | 失分 <span class="performer-stats-numbers">2</span> | 自責 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">6</span> (球數 <span class="performer-stats-numbers">64/42</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2215,75 +2234,76 @@
 
       <!-- Game Card: MIA @ HOU -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #824167</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #00A3E0; color: #00A3E0; background: #00A3E010;">MIA</div>
-                      <span>邁阿密馬林魚 (52-49)</span>
-                    </td>
-                    <td class="num-cell runs-cell">5</td>
-                    <td class="num-cell">9</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #EB6E1F; color: #EB6E1F; background: #EB6E1F10;">HOU</div>
-                      <span>休士頓太空人 (48-54)</span>
-                    </td>
-                    <td class="num-cell runs-cell">8</td>
-                    <td class="num-cell">8</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824167</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Enyel De Los Santos (1-3)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Janson Junk (4-6)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">無</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/146.svg" class="team-logo" alt="MIA">
+                    <span>邁阿密馬林魚 (52-49)</span>
+                  </td>
+                  <td class="num-cell runs-cell">5</td>
+                  <td class="num-cell">9</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/117.svg" class="team-logo" alt="HOU">
+                    <span>休士頓太空人 (48-54)</span>
+                  </td>
+                  <td class="num-cell runs-cell">8</td>
+                  <td class="num-cell">8</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Enyel De Los Santos (1-3)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Janson Junk (4-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Yordan Alvarez -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2336,13 +2356,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">2</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Enyel De Los Santos -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2356,6 +2376,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">1.1</span> | 被安打 <span class="performer-stats-numbers">1</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">2</span> (球數 <span class="performer-stats-numbers">22/14</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2364,75 +2385,76 @@
 
       <!-- Game Card: WSH @ COL -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #824328</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #AB0003; color: #AB0003; background: #AB000310;">WSH</div>
-                      <span>華盛頓國民 (51-50)</span>
-                    </td>
-                    <td class="num-cell runs-cell">7</td>
-                    <td class="num-cell">12</td>
-                    <td class="num-cell">2</td>
-                  </tr>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #333366; color: #333366; background: #33336610;">COL</div>
-                      <span>科羅拉多洛磯 (40-62)</span>
-                    </td>
-                    <td class="num-cell runs-cell">3</td>
-                    <td class="num-cell">6</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824328</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Riley Cornelio (1-1)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Kyle Freeland (2-9)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">Tom Cosgrove (1)</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/120.svg" class="team-logo" alt="WSH">
+                    <span>華盛頓國民 (51-50)</span>
+                  </td>
+                  <td class="num-cell runs-cell">7</td>
+                  <td class="num-cell">12</td>
+                  <td class="num-cell">2</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/115.svg" class="team-logo" alt="COL">
+                    <span>科羅拉多洛磯 (40-62)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">6</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Riley Cornelio (1-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Kyle Freeland (2-9)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">Tom Cosgrove (1)</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Andrés Chaparro -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2485,13 +2507,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">0</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">1</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Tom Cosgrove -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2518,6 +2540,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">1.2</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">2</span> | 三振 <span class="performer-stats-numbers">0</span> (球數 <span class="performer-stats-numbers">29/15</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2526,75 +2549,76 @@
 
       <!-- Game Card: OAK @ ARI -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #825058</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #003831; color: #003831; background: #00383110;">OAK</div>
-                      <span>奧克蘭運動家 (43-57)</span>
-                    </td>
-                    <td class="num-cell runs-cell">5</td>
-                    <td class="num-cell">15</td>
-                    <td class="num-cell">1</td>
-                  </tr>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #A71930; color: #A71930; background: #A7193010;">ARI</div>
-                      <span>亞利桑那響尾蛇 (51-49)</span>
-                    </td>
-                    <td class="num-cell runs-cell">2</td>
-                    <td class="num-cell">8</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #825058</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">Luis Medina (2-1)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Kevin Ginkel (3-3)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">Hogan Harris (7)</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/133.svg" class="team-logo" alt="OAK">
+                    <span>奧克蘭運動家 (43-57)</span>
+                  </td>
+                  <td class="num-cell runs-cell">5</td>
+                  <td class="num-cell">15</td>
+                  <td class="num-cell">1</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/109.svg" class="team-logo" alt="ARI">
+                    <span>亞利桑那響尾蛇 (51-49)</span>
+                  </td>
+                  <td class="num-cell runs-cell">2</td>
+                  <td class="num-cell">8</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">Luis Medina (2-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Kevin Ginkel (3-3)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">Hogan Harris (7)</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Ketel Marte -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2634,13 +2658,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: Luis Medina -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2667,6 +2691,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">1.0</span> | 被安打 <span class="performer-stats-numbers">1</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">3</span> (球數 <span class="performer-stats-numbers">26/17</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2675,75 +2700,76 @@
 
       <!-- Game Card: CIN @ SEA -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #823112</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #C6011F; color: #C6011F; background: #C6011F10;">CIN</div>
-                      <span>辛辛那提紅人 (45-54)</span>
-                    </td>
-                    <td class="num-cell runs-cell">0</td>
-                    <td class="num-cell">3</td>
-                    <td class="num-cell">1</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #0C2C56; color: #0C2C56; background: #0C2C5610;">SEA</div>
-                      <span>西雅圖水手 (51-50)</span>
-                    </td>
-                    <td class="num-cell runs-cell">8</td>
-                    <td class="num-cell">13</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #823112</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">George Kirby (8-8)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Andrew Abbott (5-6)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">無</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/113.svg" class="team-logo" alt="CIN">
+                    <span>辛辛那提紅人 (45-54)</span>
+                  </td>
+                  <td class="num-cell runs-cell">0</td>
+                  <td class="num-cell">3</td>
+                  <td class="num-cell">1</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/136.svg" class="team-logo" alt="SEA">
+                    <span>西雅圖水手 (51-50)</span>
+                  </td>
+                  <td class="num-cell runs-cell">8</td>
+                  <td class="num-cell">13</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">George Kirby (8-8)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Andrew Abbott (5-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Cal Raleigh -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2770,13 +2796,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">4</span> | 打點 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: George Kirby -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2803,6 +2829,7 @@
                   投球內容：局數 <span class="performer-stats-numbers">6.0</span> | 被安打 <span class="performer-stats-numbers">4</span> | 失分 <span class="performer-stats-numbers">1</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">2</span> | 三振 <span class="performer-stats-numbers">6</span> (球數 <span class="performer-stats-numbers">100/67</span>)
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2811,75 +2838,76 @@
 
       <!-- Game Card: STL @ LAA -->
       <div class="game-card">
-        <!-- Left Column: Matchup & Scores -->
-        <div class="game-summary-section">
-          <div>
-            <div class="game-header">
-              <span class="game-title">例行賽 #824006</span>
-              <span class="status-badge final">Final</span>
-            </div>
-            
-            <div class="score-table-wrapper">
-              <table class="score-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: left; width: 50%;">隊伍</th>
-                    <th>R</th>
-                    <th>H</th>
-                    <th>E</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #C41E3A; color: #C41E3A; background: #C41E3A10;">STL</div>
-                      <span>聖路易紅雀 (51-48)</span>
-                    </td>
-                    <td class="num-cell runs-cell">2</td>
-                    <td class="num-cell">4</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                  <tr class="winner-row">
-                    <td class="team-cell">
-                      <div class="team-badge" style="border-color: #BA0021; color: #BA0021; background: #BA002110;">LAA</div>
-                      <span>洛杉磯天使 (40-61)</span>
-                    </td>
-                    <td class="num-cell runs-cell">3</td>
-                    <td class="num-cell">6</td>
-                    <td class="num-cell">0</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824006</span>
+            <span class="status-badge final">Final</span>
           </div>
-
-          <!-- Pitching Decisions -->
-          <div class="decisions-container">
-            <div class="decision-row">
-              <span class="decision-label">勝投</span>
-              <span class="decision-value">José Fermin (3-1)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">敗投</span>
-              <span class="decision-value">Riley O'Brien (3-4)</span>
-            </div>
-            <div class="decision-row">
-              <span class="decision-label">救援</span>
-              <span class="decision-value">無</span>
-            </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/138.svg" class="team-logo" alt="STL">
+                    <span>聖路易紅雀 (51-48)</span>
+                  </td>
+                  <td class="num-cell runs-cell">2</td>
+                  <td class="num-cell">4</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/108.svg" class="team-logo" alt="LAA">
+                    <span>洛杉磯天使 (40-61)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">6</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Right Column: Key Performers Highlights -->
-        <div class="highlights-section">
-          <div>
-            <h3 class="highlights-header">單場焦點球員</h3>
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">José Fermin (3-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">Riley O'Brien (3-4)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
           </div>
-          
-          <!-- Batting Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">打擊焦點</span>
-            <div class="performer-list">
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
               <!-- Batter Highlight: Jo Adell -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2893,13 +2921,13 @@
                   單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Pitching Highlights -->
-          <div class="performer-group">
-            <span class="performer-category-title">投手焦點</span>
-            <div class="performer-list">
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
               <!-- Pitcher Highlight: José Soriano -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -2938,6 +2966,7 @@
                 <div class="performer-stats">
                   投球內容：局數 <span class="performer-stats-numbers">1.0</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">2</span> (球數 <span class="performer-stats-numbers">21/10</span>)
                 </div>
+              </div>
               </div>
             </div>
           </div>

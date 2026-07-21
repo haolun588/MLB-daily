@@ -185,19 +185,23 @@
   },
   "active": "d90d7e41a10555a7",
   "lastOpenFiles": [
+    "docs/dev_logs/20260721_優化卡片版面與歷史存檔目錄分層.md",
+    "reports/2024/12/2024-12-25.html",
+    "reports/2024/12",
+    "reports/2026/07/2026-07-20.html",
+    "reports/2026/07",
+    "reports/2026",
+    "reports/2024/09/2024-09-15.html",
+    "reports/2024/09",
+    "reports/2024",
     "reports/2026-07-20.html",
     "docs/dev_logs/20260721_實作自動化排程與通知整合.md",
     "README.md",
     "docs/dev_logs/20260720_實作與驗證Python數據抓取.md",
     "reports/metadata.json",
-    "reports/2024-09-15.html",
-    "reports",
-    "fetch_mlb.py",
     "docs/dev_logs/README.md",
     "docs/progress.md",
     "docs/dev_logs/20260720_實作與精簡HTML靜態網頁設計.md",
-    "docs/dev_logs/20260720_初始化專案說明文件與開發守則.md",
-    "index.html",
-    "templates/report_template.html"
+    "docs/dev_logs/20260720_初始化專案說明文件與開發守則.md"
   ]
 }

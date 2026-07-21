@@ -38,10 +38,11 @@
 - [x] 設計精美的 Discord Embed 戰報卡片 (包含昨日日期、戰況統計、Pages 連結)
 - [x] 完整系統跑通測試
 
-### 🛠️ 階段六：優化與進階長期維護 [當前目標]
-- [ ] 重構 `templates/report_template.html` 卡片版面為「方案 B」（上半部滿版對戰與比分表，下半部雙欄展示投手決定與傑出球員）
-- [ ] 實作歷史戰報目錄分層（`reports/YYYY/MM/`）與首頁動態 JSON 存檔索引
-- [ ] 實作昨日無賽事自動跳過（藉由「昨日賽事為零」動態適應休賽季與季中休兵日）
-- [ ] 在網頁上引入 MLB 官方 `team-cap-on-dark` SVG 隊徽，並在 CSS 加入 `filter: drop-shadow` 外發光描邊效果以解決黑底對比度問題
+### 🛠️ 階段六：優化與進階長期維護 [已完成]
+- [x] 重構 `templates/report_template.html` 卡片版面為「方案 B」（上半部滿版對戰與比分表，下半部雙欄展示投手決定與傑出球員）
+- [x] 實作歷史戰報目錄分層（`reports/YYYY/MM/`）與首頁動態 JSON 存檔索引
+- [x] 實作昨日無賽事自動跳過（藉由「昨日賽事為零」動態適應休賽季與季中休兵日）
+- [x] 在網頁上引入 MLB 官方 `team-cap-on-dark` SVG 隊徽，並在 CSS 加入 `filter: drop-shadow` 外發光描邊效果以解決黑底對比度問題
+
 
 
