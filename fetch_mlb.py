@@ -119,6 +119,120 @@ def check_all_games_finalized(date_str):
             
     return True, games
 
+def fetch_game_news(game_pk, away_abbr, home_abbr, away_r, home_r):
+    url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/content"
+    backup_headline = f"{away_abbr} @ {home_abbr} 賽事總結"
+    backup_blurb = f"終場比分 {away_abbr} {away_r} - {home_abbr} {home_r}。本場比賽目前無官方文字摘要。"
+    
+    data = fetch_json(url)
+    if not data:
+        return {"headline": backup_headline, "blurb": backup_blurb}
+        
+    try:
+        recap = data.get("editorial", {}).get("recap", {}).get("mlb", {})
+        headline = recap.get("headline")
+        blurb = recap.get("blurb")
+        if headline and blurb:
+            return {"headline": headline, "blurb": blurb}
+    except Exception as e:
+        print(f"Warning: Error parsing news for game {game_pk} ({e})", file=sys.stderr)
+        
+    return {"headline": backup_headline, "blurb": backup_blurb}
+
+def fetch_daily_transactions(date_str):
+    url = f"https://statsapi.mlb.com/api/v1/transactions?date={date_str}&sportId=1"
+    data = fetch_json(url)
+    if not data or not data.get("transactions"):
+        return []
+        
+    tx_list = []
+    seen_descriptions = set()
+    
+    for tx in data["transactions"]:
+        desc = tx.get("description")
+        if not desc or desc in seen_descriptions:
+            continue
+        seen_descriptions.add(desc)
+        
+        to_team_id = tx.get("toTeam", {}).get("id")
+        from_team_id = tx.get("fromTeam", {}).get("id")
+        
+        tx_list.append({
+            "to_team_id": to_team_id,
+            "from_team_id": from_team_id,
+            "description": desc
+        })
+        
+    return tx_list
+
+def build_transactions_section_html(daily_tx_list):
+    grouped_other_tx = {}
+    for tx in daily_tx_list:
+        to_team_id = tx["to_team_id"]
+        from_team_id = tx["from_team_id"]
+        
+        team_id = None
+        if to_team_id in TEAM_META:
+            team_id = to_team_id
+        elif from_team_id in TEAM_META:
+            team_id = from_team_id
+            
+        if team_id:
+            grouped_other_tx.setdefault(team_id, []).append(tx["description"])
+        else:
+            grouped_other_tx.setdefault("Other", []).append(tx["description"])
+            
+    total_other_tx = sum(len(descs) for descs in grouped_other_tx.values())
+    
+    if total_other_tx > 0:
+        other_cards_html = []
+        sorted_other_team_ids = sorted([tid for tid in grouped_other_tx.keys() if tid != "Other"])
+        if "Other" in grouped_other_tx:
+            sorted_other_team_ids.append("Other")
+            
+        for tid in sorted_other_team_ids:
+            descs = grouped_other_tx[tid]
+            li_parts = [f"<li>{desc}</li>" for desc in descs]
+            
+            if tid == "Other":
+                logo_url = "https://www.mlbstatic.com/team-logos/team-cap-on-dark/mlb.svg"
+                team_name = "其他異動"
+            else:
+                logo_url = f"https://www.mlbstatic.com/team-logos/team-cap-on-dark/{tid}.svg"
+                team_name = TEAM_META[tid]["name"]
+                
+            team_card_html = f"""        <!-- Team Transactions: {tid} -->
+        <div class="team-tx-card">
+          <div class="team-tx-header">
+            <img src="{logo_url}" class="team-tx-logo" alt="logo">
+            <span class="team-tx-name">{team_name}</span>
+          </div>
+          <ul class="team-tx-list">
+            {"".join(li_parts)}
+          </ul>
+        </div>"""
+            other_cards_html.append(team_card_html)
+            
+        return f"""    <section class="transactions-section">
+      <h2 class="transactions-header">
+        <span>其他球隊人事異動</span>
+        <span class="tx-badge">{total_other_tx}</span>
+      </h2>
+      <div class="transactions-grid">
+{"\n".join(other_cards_html)}
+      </div>
+    </section>"""
+    else:
+        return f"""    <section class="transactions-section">
+      <h2 class="transactions-header">
+        <span>其他球隊人事異動</span>
+        <span class="tx-badge">0</span>
+      </h2>
+      <div style="color:var(--text-muted);font-size:0.85rem;padding:1.5rem;text-align:center;background:rgba(255,255,255,0.01);border:1px dashed var(--card-border);border-radius:12px;">
+        本日無其他球隊人事異動。
+      </div>
+    </section>"""
+
 def generate_report(date_str, games):
     print(f"Generating report for {date_str} with {len(games)} games...")
     total_games = len(games)
@@ -127,6 +241,9 @@ def generate_report(date_str, games):
     
     # Simple summary log for index metadata
     key_matchups_summary = []
+    
+    # Fetch daily transactions
+    daily_tx_list = fetch_daily_transactions(date_str)
     
     for game in games:
         game_pk = game["gamePk"]
@@ -437,6 +554,50 @@ def generate_report(date_str, games):
             elif top_perf["type"] == "pitcher" and top_perf["stats"]["so"] >= 5:
                 summary_sentence += f"，{top_perf['name']} 投出 {top_perf['stats']['so']} 次三振"
         key_matchups_summary.append(summary_sentence)
+        
+        # Fetch game news (Headline & Blurb)
+        news = fetch_game_news(game_pk, away_info["abbr"], home_info["abbr"], away_r, home_r)
+        news_box_html = f"""            <div class="game-news-box">
+              <h4 class="game-news-title">{news['headline']}</h4>
+              <p class="game-news-content">{news['blurb']}</p>
+            </div>"""
+
+        # Roster Transactions for this game
+        game_tx_html_parts = []
+        
+        def render_card_team_tx(team_id, team_info, tx_descriptions):
+            tx_li_parts = [f"<li>{desc}</li>" for desc in tx_descriptions]
+            logo_url = f"https://www.mlbstatic.com/team-logos/team-cap-on-dark/{team_id}.svg"
+            return f"""              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="{logo_url}" class="card-tx-logo" alt="{team_info['abbr']}">
+                  <span class="card-tx-team-name">{team_info['name']}</span>
+                </div>
+                <ul class="card-tx-list">
+                  {"".join(tx_li_parts)}
+                </ul>
+              </div>"""
+
+        # Roster transactions matching away team
+        away_tx_descs = [tx["description"] for tx in daily_tx_list if tx["to_team_id"] == away_team_obj["id"] or tx["from_team_id"] == away_team_obj["id"]]
+        if away_tx_descs:
+            game_tx_html_parts.append(render_card_team_tx(away_team_obj["id"], away_info, away_tx_descs))
+            
+        # Roster transactions matching home team
+        home_tx_descs = [tx["description"] for tx in daily_tx_list if tx["to_team_id"] == home_team_obj["id"] or tx["from_team_id"] == home_team_obj["id"]]
+        if home_tx_descs:
+            game_tx_html_parts.append(render_card_team_tx(home_team_obj["id"], home_info, home_tx_descs))
+            
+        # Remove these matched transactions from the global list
+        matched_descriptions = set(away_tx_descs + home_tx_descs)
+        daily_tx_list = [tx for tx in daily_tx_list if tx["description"] not in matched_descriptions]
+        
+        game_tx_box_html = ""
+        if game_tx_html_parts:
+            game_tx_box_html = f"""            <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+              {"".join(game_tx_html_parts)}
+            </div>"""
             
         # Build Game Card HTML
         card_html = f"""
@@ -485,7 +646,7 @@ def generate_report(date_str, games):
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -502,6 +663,8 @@ def generate_report(date_str, games):
                 <span class="decision-value">{s_pitcher_str}</span>
               </div>
             </div>
+            {news_box_html}
+            {game_tx_box_html}
           </div>
 
           <!-- Right Column: Key Performers Highlights -->
@@ -578,6 +741,15 @@ def generate_report(date_str, games):
         post_g = html_content.split(end_g_tag)[1]
         games_html = "\n".join(games_cards_html)
         html_content = pre_g + start_g_tag + "\n" + games_html + "\n      " + end_g_tag + post_g
+        
+    # Transactions section block
+    start_tx_tag = "<!--TRANSACTIONS_SECTION-->"
+    end_tx_tag = "<!--/TRANSACTIONS_SECTION-->"
+    if start_tx_tag in html_content and end_tx_tag in html_content:
+        pre_tx = html_content.split(start_tx_tag)[0]
+        post_tx = html_content.split(end_tx_tag)[1]
+        tx_section_html = build_transactions_section_html(daily_tx_list)
+        html_content = pre_tx + start_tx_tag + "\n" + tx_section_html + "\n      " + end_tx_tag + post_tx
         
     # Output to hierarchical reports directory
     parts = date_str.split('-')
@@ -857,6 +1029,16 @@ def main():
                 pre = html_content.split(start_g)[0]
                 post = html_content.split(end_g)[1]
                 html_content = pre + start_g + "\n" + empty_card + "\n      " + end_g + post
+                
+            # Replace transactions section
+            daily_tx_list = fetch_daily_transactions(date_str)
+            start_tx_tag = "<!--TRANSACTIONS_SECTION-->"
+            end_tx_tag = "<!--/TRANSACTIONS_SECTION-->"
+            if start_tx_tag in html_content and end_tx_tag in html_content:
+                pre_tx = html_content.split(start_tx_tag)[0]
+                post_tx = html_content.split(end_tx_tag)[1]
+                tx_section_html = build_transactions_section_html(daily_tx_list)
+                html_content = pre_tx + start_tx_tag + "\n" + tx_section_html + "\n      " + end_tx_tag + post_tx
                 
             parts = date_str.split('-')
             year = parts[0]

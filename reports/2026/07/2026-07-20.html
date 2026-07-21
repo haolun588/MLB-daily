@@ -512,8 +512,188 @@
       text-decoration: none;
     }
 
-    footer a:hover {
+    /* Game News Summary Styling */
+    .game-news-box {
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .game-news-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      line-height: 1.3;
+    }
+
+    .game-news-content {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Transactions Section Styling */
+    .transactions-section {
+      margin-top: 3rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .transactions-header {
+      font-size: 1.25rem;
+      font-weight: 800;
       color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.75rem;
+    }
+
+    .tx-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.15rem 0.6rem;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      border-radius: 9999px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .transactions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .team-tx-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .team-tx-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px dashed var(--card-border);
+      padding-bottom: 0.5rem;
+    }
+
+    .team-tx-logo {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.2));
+    }
+
+    .team-tx-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .team-tx-list {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .team-tx-list li {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      position: relative;
+      padding-left: 0.75rem;
+    }
+
+    /* Game Card Transactions Box */
+    .game-transactions-box {
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .game-tx-sub-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      border-left: 3px solid var(--text-muted);
+      padding-left: 0.5rem;
+    }
+
+    .card-team-tx {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .card-team-tx-header {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-tx-logo {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
+    }
+
+    .card-tx-team-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .card-tx-list {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .card-tx-list li {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      position: relative;
+      padding-left: 0.75rem;
+    }
+
+    .card-tx-list li::before {
+      content: "•";
+      color: var(--accent-blue);
+      position: absolute;
+      left: 0;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -597,7 +777,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -612,6 +792,22 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Guards face Twins' All-Star ace ... and hit season-high 7 homers in rout</h4>
+              <p class="game-news-content">CLEVELAND -- Given how much the Guardians’ offense has struggled this season, watching what unfolded at Progressive Field on Monday night was a bit hard to believe. In the end, the Guardians delivered a performance that will go down in the record book for a franchise that has been around</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/142.svg" class="card-tx-logo" alt="MIN">
+                  <span class="card-tx-team-name">明尼蘇達雙城</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Minnesota Twins activated CF Byron Buxton from the 10-day injured list.</li><li>Minnesota Twins optioned SS Tristan Gray to St. Paul Saints.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -787,7 +983,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -802,6 +998,30 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Fernando Cruz (2)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Jazz stays hot, socks 2 HRs to power Yanks after pep talk from Judge, Volpe</h4>
+              <p class="game-news-content">NEW YORK – Swagger arrives when Jazz Chisholm Jr. does, following him from the Yankee Stadium parking garage into the clubhouse and out toward the field. Hardly one to shy away from any spotlight, the infielder admits there have been times this season when it has felt like he’s putting</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/134.svg" class="card-tx-logo" alt="PIT">
+                  <span class="card-tx-team-name">匹茲堡海盜</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Pittsburgh Pirates signed free agent RHP Kyle Calzadiaz to a minor league contract.</li><li>Pittsburgh Pirates signed RHP Griffin Stieg.</li><li>Pittsburgh Pirates signed LHP Dakota Stone.</li><li>Pittsburgh Pirates signed RHP Liam O'Leary.</li><li>Pittsburgh Pirates signed RHP Nathan Helman.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/147.svg" class="card-tx-logo" alt="NYY">
+                  <span class="card-tx-team-name">紐約洋基</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>New York Yankees signed SS William Cutshall.</li><li>New York Yankees signed 1B Tyce Armstrong.</li><li>New York Yankees signed OF Blake Cyr.</li><li>New York Yankees signed RHP Garrett Ahern.</li><li>New York Yankees signed SS Anthony Potestio.</li><li>New York Yankees signed RHP Austin Berggren.</li><li>New York Yankees signed OF Lee Garris.</li><li>New York Yankees signed OF Diego Castellanos.</li><li>New York Yankees signed TWP Luke Pettitte.</li><li>New York Yankees signed SS Bayram Hot.</li><li>New York Yankees signed 3B Andrew Gonzalez.</li><li>New York Yankees signed RHP Michael Harpster.</li><li>New York Yankees signed C Bear Harrison.</li><li>New York Yankees signed OF Paul Gutierrez-Contreras II.</li><li>New York Yankees signed LHP Sean Duncan.</li><li>New York Yankees signed C Brendan Brock.</li><li>New York Yankees optioned RHP Elmer Rodríguez to Scranton/Wilkes-Barre RailRiders.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -964,7 +1184,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -981,6 +1201,11 @@
                 <span class="decision-value">無</span>
               </div>
             </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Martinez stifles Blue Jays to help halt Rays' five-game skid</h4>
+              <p class="game-news-content">TORONTO -- After seeing their starters struggle throughout a long weekend in Boston, the Rays sent the right man to the mound on Monday night.</p>
+            </div>
+            
           </div>
 
           <!-- Right Column: Key Performers Highlights -->
@@ -1128,7 +1353,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1143,6 +1368,23 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Aroldis Chapman (22)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">'Special things' fueling Boston's 14-game winning streak</h4>
+              <p class="game-news-content">BOSTON -- With 1946 now firmly in their sights, don’t expect the Red Sox to decelerate even a little bit when they take the field next, on Tuesday night against the Orioles.
+Fueled by a 14-game winning streak, the second longest in the history of a franchise that originated in</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/110.svg" class="card-tx-logo" alt="BAL">
+                  <span class="card-tx-team-name">巴爾的摩金鶯</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Baltimore Orioles placed C Adley Rutschman on the 10-day injured list retroactive to July 19, 2026. Left wrist inflammation.</li><li>Baltimore Orioles designated RF Rudy Martin Jr. for assignment.</li><li>Baltimore Orioles selected the contract of C Chadwick Tromp from Norfolk Tides.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1318,7 +1560,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1333,6 +1575,31 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">'Just a ridiculous game': Turner racks up multiple HRs ... and miscues</h4>
+              <p class="game-news-content">PHILADELPHIA -- How many people can truly relate to the night Trea Turner had on Monday?
+Perhaps only a few.</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" class="card-tx-logo" alt="LAD">
+                  <span class="card-tx-team-name">洛杉磯道奇</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Colorado Rockies traded RHP Seth Halvorsen to Los Angeles Dodgers for RHP Nick Frasso and OF Landyn Vidourek.</li><li>Los Angeles Dodgers optioned RHP Wyatt Halvorson to Oklahoma City Comets.</li><li>Los Angeles Dodgers optioned RHP Kyle Hurt to Oklahoma City Comets.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/143.svg" class="card-tx-logo" alt="PHI">
+                  <span class="card-tx-team-name">費城費城人</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Philadelphia Phillies optioned RHP Alan Rangel to Lehigh Valley IronPigs.</li><li>Philadelphia Phillies recalled RHP Alex McFarlane from Reading Fightin Phils.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1482,7 +1749,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1497,6 +1764,30 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Victor Mederos (1)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Elder takes step forward in search to regain early-season form</h4>
+              <p class="game-news-content">ATLANTA -- Bryce Elder was one of MLB’s best pitchers during an 18-start stretch that ended in late May. Two frustration-filled months later, he seems determined to get back to that elite level.</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/135.svg" class="card-tx-logo" alt="SD">
+                  <span class="card-tx-team-name">聖地牙哥教士</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>San Diego Padres placed DH Miguel Andujar on the 10-day injured list. Right wrist fracture.</li><li>San Diego Padres recalled C Rodolfo Durán from El Paso Chihuahuas.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/144.svg" class="card-tx-logo" alt="ATL">
+                  <span class="card-tx-team-name">亞特蘭大勇士</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Atlanta Braves signed free agent IF Joan Hernandez to a minor league contract.</li><li>Atlanta Braves signed RHP Nile Adcock.</li><li>Atlanta Braves signed RHP John Damozonio.</li><li>Atlanta Braves signed OF Caleb Klein.</li><li>Atlanta Braves signed C Dominic Kibler.</li><li>Atlanta Braves signed RHP Brady Hamilton.</li><li>Atlanta Braves signed LHP Ethan Stade.</li><li>Atlanta Braves signed C Austin Fawley.</li><li>Atlanta Braves signed C Dalton Harper.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1659,7 +1950,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1674,6 +1965,23 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Loftin's perfect safety squeeze, Rojas' mad dash home walk off Giants</h4>
+              <p class="game-news-content">KANSAS CITY -- Josh Rojas had one more sprint in him. He was exhausted.
+The Royals third baseman had led off the bottom of the ninth with an opposite-field single, going hard out of the box in hopes of a double but putting on the brakes when Giants left fielder</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/118.svg" class="card-tx-logo" alt="KCR">
+                  <span class="card-tx-team-name">堪薩斯皇家</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Kansas City Royals signed RHP Jack Slightom.</li><li>Kansas City Royals signed RHP Dylan Alonso.</li><li>Kansas City Royals signed LHP Justin LeGuernic.</li><li>Kansas City Royals signed OF Dominic Battista.</li><li>Kansas City Royals signed LHP Madden Clement.</li><li>Kansas City Royals signed RHP Richie Roman.</li><li>Kansas City Royals signed RHP Taylor Rabe.</li><li>Kansas City Royals signed RHP Grant Fontenot.</li><li>Kansas City Royals signed free agent SS Ben North to a minor league contract.</li><li>Kansas City Royals signed LHP Hunter Possehl.</li><li>Kansas City Royals signed SS Camden Johnson.</li><li>Kansas City Royals signed LHP Maxx Yehl.</li><li>Kansas City Royals signed free agent 3B Jimmy Nati to a minor league contract.</li><li>Kansas City Royals signed OF Zion Rose.</li><li>Kansas City Royals signed LHP Cooper Corkrean.</li><li>Kansas City Royals signed RHP Dalton Hill.</li><li>Kansas City Royals signed RHP Dylan Vigue.</li><li>Kansas City Royals signed free agent RHP Jackson Cleveland to a minor league contract.</li><li>Kansas City Royals signed LHP Ethan McElvain.</li><li>Kansas City Royals signed OF Tanner Griffith.</li><li>Kansas City Royals signed RHP Lance Hartley.</li><li>Kansas City Royals signed C Banks Wickersham.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1797,7 +2105,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1812,6 +2120,22 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Miz leads Crew with 4 electric frames in pre-planned shortened outing</h4>
+              <p class="game-news-content">MILWAUKEE – “Win tonight” is always going to be atop Pat Murphy’s daily to-do list. But as Jacob Misiorowski took the mound on Monday for the first time after a 13-day extended All-Star break, the Brewers’ manager and his coaches also had a longer-term idea in the back of their</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" class="card-tx-logo" alt="NYM">
+                  <span class="card-tx-team-name">紐約大都會</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>New York Mets signed C Ryan Tayman.</li><li>New York Mets signed RHP AJ Krodel.</li><li>New York Mets signed free agent OF Jack Toomey to a minor league contract.</li><li>New York Mets signed free agent SS Danny Melendez to a minor league contract.</li><li>New York Mets signed OF John Smith III.</li><li>New York Mets signed SS Kooper Schulte.</li><li>New York Mets signed RHP Aidan Keenan.</li><li>New York Mets signed OF Kuhio Aloy.</li><li>New York Mets activated CF Luis Robert Jr. from the 60-day injured list.</li><li>New York Mets signed free agent SS Dylan Carey to a minor league contract.</li><li>New York Mets signed RHP Luke McNeillie.</li><li>New York Mets signed RHP Alex Petrovic.</li><li>New York Mets signed RHP Dustin Hagens Jr..</li><li>New York Mets signed OF Aiden Robbins.</li><li>New York Mets signed RHP Nate Isler.</li><li>New York Mets signed RHP Gavin Guidry.</li><li>New York Mets signed free agent 1B Carter Dierdorf to a minor league contract.</li><li>New York Mets signed free agent LHP A.J. Colarusso to a minor league contract.</li><li>New York Mets signed LHP Zach Crotchfelt.</li><li>New York Mets signed C Jacob Madrid.</li><li>New York Mets signed free agent 1B Reed Stallman to a minor league contract.</li><li>New York Mets signed LHP Shane Sdao.</li><li>New York Mets signed RHP Landon Koenig.</li><li>New York Mets signed RHP Cooper Dossett.</li><li>New York Mets signed free agent SS Jake Ogden to a minor league contract.</li><li>New York Mets sent SS Zack Short outright to Syracuse Mets.</li><li>New York Mets optioned 1B Eric Wagaman to Syracuse Mets.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1948,7 +2272,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1963,6 +2287,31 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Tyler Holton (1)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Bases loaded, 9th inning, tie game. What better way for Jansen to finally top his nemesis</h4>
+              <p class="game-news-content">CHICAGO -- Tigers fans made themselves heard at Wrigley Field all Monday night. But as Kenley Jansen stared in at catcher Dillon Dingler with the bases loaded and a 3-0 count to Alex Bregman, Cubs fans drowned out everything else, even Jansen’s PitchCom earpiece.
+“It was an incredible atmosphere,” said</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/116.svg" class="card-tx-logo" alt="DET">
+                  <span class="card-tx-team-name">底特律老虎</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Detroit Tigers activated 2B Gleyber Torres from the 10-day injured list.</li><li>Detroit Tigers optioned C Eduardo Valencia to Toledo Mud Hens.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/112.svg" class="card-tx-logo" alt="CHC">
+                  <span class="card-tx-team-name">芝加哥小熊</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Chicago Cubs activated RHP Jameson Taillon from the 15-day injured list.</li><li>Chicago Cubs designated LHP Drew Pomeranz for assignment.</li><li>Chicago Cubs placed RHP Phil Maton on the 15-day injured list. Right knee tendinitis.</li><li>Chicago Cubs activated RHP Aaron Civale.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2100,7 +2449,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2115,6 +2464,23 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Benintendi has his own way of celebrating 10 years of MLB service time</h4>
+              <p class="game-news-content">ARLINGTON, Texas -- On the Sunday before the All-Star break, the White Sox celebrated Andrew Benintendi reaching 10 years of Major League Baseball service time.
+They even got him a bottle of Rip Van Winkle bourbon, in honor of the man who fell asleep for 20 years, to reinforce his</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/140.svg" class="card-tx-logo" alt="TEX">
+                  <span class="card-tx-team-name">德州遊騎兵</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Texas Rangers sent 3B Cody Freeman on a rehab assignment to ACL Rangers.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2277,7 +2643,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2292,6 +2658,31 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Blanco K's 8 in return as Alvarez, Peña spark offense for Astros</h4>
+              <p class="game-news-content">HOUSTON -- The Astros’ best hitters, Yordan Alvarez and Jeremy Peña, carried the weight offensively Monday night, and starting pitcher Ronel Blanco provided a glimpse of how he can help the club moving forward in his return to the mound for the first time in 429 days.
+Alvarez smashed his</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/146.svg" class="card-tx-logo" alt="MIA">
+                  <span class="card-tx-team-name">邁阿密馬林魚</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Miami Marlins placed RHP Max Meyer on the 15-day injured list retroactive to July 19, 2026. Neck strain.</li><li>Miami Marlins recalled RHP Zach Brzykcy from Jacksonville Jumbo Shrimp.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/117.svg" class="card-tx-logo" alt="HOU">
+                  <span class="card-tx-team-name">休士頓太空人</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Houston Astros activated RHP Ronel Blanco from the 60-day injured list.</li><li>Houston Astros activated LHP Bennett Sousa from the 60-day injured list.</li><li>Houston Astros optioned 2B Raynel Delgado to Sugar Land Space Cowboys.</li><li>Houston Astros optioned LHP Bryan King to Sugar Land Space Cowboys.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2428,7 +2819,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2443,6 +2834,23 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Tom Cosgrove (1)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Chaparro, Abrams stay hot as Nats' league-best offense beats Rockies</h4>
+              <p class="game-news-content">DENVER – The ball is known to fly at Coors Field. So when the Nationals entered their series against the Rockies, manager Blake Butera didn’t want the hitters to try to do too much.
+Their approach has produced baseball’s top offense this season. No need to do anything extra in</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/115.svg" class="card-tx-logo" alt="COL">
+                  <span class="card-tx-team-name">科羅拉多洛磯</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Colorado Rockies optioned RHP Nick Frasso to Albuquerque Isotopes.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2592,7 +3000,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2607,6 +3015,30 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Hogan Harris (7)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Kuroda-Grauer departs with injury after hitting 1st career homer</h4>
+              <p class="game-news-content">PHOENIX -- The night a player hits his first Major League home run is one he will always remember. For Joshua Kuroda-Grauer, his special day will also be somewhat of a painful memory.</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/133.svg" class="card-tx-logo" alt="OAK">
+                  <span class="card-tx-team-name">奧克蘭運動家</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Athletics sent 1B Joey Meneses outright to Las Vegas Aviators.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/109.svg" class="card-tx-logo" alt="ARI">
+                  <span class="card-tx-team-name">亞利桑那響尾蛇</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Arizona Diamondbacks signed RHP Blake Bryant.</li><li>Arizona Diamondbacks signed OF Brayden Dowd.</li><li>Arizona Diamondbacks signed SS Jack Spanier.</li><li>Arizona Diamondbacks signed RHP Andrew Wertz.</li><li>Arizona Diamondbacks signed C Weber Neels.</li><li>Arizona Diamondbacks signed RHP LJ Mercurius.</li><li>Arizona Diamondbacks signed RHP Carson Turnquist.</li><li>Arizona Diamondbacks signed OF Jake Duer.</li><li>Arizona Diamondbacks signed RHP Brannon Westmoreland.</li><li>Arizona Diamondbacks signed RHP Mason Steele.</li><li>Arizona Diamondbacks signed OF Paul Schoenfeld.</li><li>Arizona Diamondbacks signed RHP Josh McDevitt.</li><li>Arizona Diamondbacks signed SS Carson Kerce.</li><li>Arizona Diamondbacks signed LHP Caleb Jameson.</li><li>Arizona Diamondbacks signed LHP Micah Worley.</li><li>Arizona Diamondbacks signed 1B Cody Boshell.</li><li>Arizona Diamondbacks signed RHP Andrew Evans.</li><li>Arizona Diamondbacks signed RHP Joseph Jasso.</li><li>Arizona Diamondbacks signed C Ryder Helfrick.</li><li>Arizona Diamondbacks signed 1B Chris Katz.</li><li>Arizona Diamondbacks recalled RHP Juan Burgos from Reno Aces.</li><li>Arizona Diamondbacks optioned LHP Philip Abner to Reno Aces.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2743,7 +3175,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2760,6 +3192,12 @@
                 <span class="decision-value">無</span>
               </div>
             </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">The Reds intentionally walked the bases loaded. Big Dumper made them pay</h4>
+              <p class="game-news-content">SEATTLE -- In what world could anyone imagine intentionally walking a left-on-left matchup to load the bases and face Cal Raleigh?
+That it happened on Monday night underscored just how precipitous the dropoff has been in this 2026 season for the Mariners’ star catcher.</p>
+            </div>
+            
           </div>
 
           <!-- Right Column: Key Performers Highlights -->
@@ -2881,7 +3319,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2898,6 +3336,12 @@
                 <span class="decision-value">無</span>
               </div>
             </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Adell, Soriano bolster potential trade value in wild walk-off win for Halos</h4>
+              <p class="game-news-content">ANAHEIM -- With the Aug. 3 Trade Deadline looming, right-hander José Soriano and right fielder Jo Adell have had their names surface among trade rumors.
+They’ve both struggled recently but bounced back in a big way against the Cardinals on Monday, as Soriano threw seven strong innings to boost his</p>
+            </div>
+            
           </div>
 
           <!-- Right Column: Key Performers Highlights -->
@@ -2975,6 +3419,18 @@
 
       <!--/GAMES_LIST-->
     </main>
+
+    <!--TRANSACTIONS_SECTION-->
+    <section class="transactions-section">
+      <h2 class="transactions-header">
+        <span>其他球隊人事異動</span>
+        <span class="tx-badge">0</span>
+      </h2>
+      <div style="color:var(--text-muted);font-size:0.85rem;padding:1.5rem;text-align:center;background:rgba(255,255,255,0.01);border:1px dashed var(--card-border);border-radius:12px;">
+        本日無其他球隊人事異動。
+      </div>
+    </section>
+      <!--/TRANSACTIONS_SECTION-->
 
     <footer>
       <p>MLB Daily 每日戰報系統</p>

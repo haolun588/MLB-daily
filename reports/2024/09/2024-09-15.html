@@ -512,8 +512,188 @@
       text-decoration: none;
     }
 
-    footer a:hover {
+    /* Game News Summary Styling */
+    .game-news-box {
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .game-news-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      line-height: 1.3;
+    }
+
+    .game-news-content {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Transactions Section Styling */
+    .transactions-section {
+      margin-top: 3rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .transactions-header {
+      font-size: 1.25rem;
+      font-weight: 800;
       color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.75rem;
+    }
+
+    .tx-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.15rem 0.6rem;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      border-radius: 9999px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .transactions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .team-tx-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .team-tx-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px dashed var(--card-border);
+      padding-bottom: 0.5rem;
+    }
+
+    .team-tx-logo {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.2));
+    }
+
+    .team-tx-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .team-tx-list {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .team-tx-list li {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      position: relative;
+      padding-left: 0.75rem;
+    }
+
+    /* Game Card Transactions Box */
+    .game-transactions-box {
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .game-tx-sub-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      border-left: 3px solid var(--text-muted);
+      padding-left: 0.5rem;
+    }
+
+    .card-team-tx {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .card-team-tx-header {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-tx-logo {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
+    }
+
+    .card-tx-team-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .card-tx-list {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .card-tx-list li {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      position: relative;
+      padding-left: 0.75rem;
+    }
+
+    .card-tx-list li::before {
+      content: "•";
+      color: var(--accent-blue);
+      position: absolute;
+      left: 0;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -597,7 +777,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -612,6 +792,22 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Jason Foley (23)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Greene swaps bat, swats 2 HRs as Tigers keep foot on gas</h4>
+              <p class="game-news-content">DETROIT -- Riley Greene isn’t quite as superstitious now as he was during his prospect days, but he still has his habits. If the Tigers’ All-Star outfielder feels that his bat doesn’t have any more hits in it, he’s not afraid to switch it up. Sometimes, it just takes a</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/110.svg" class="card-tx-logo" alt="BAL">
+                  <span class="card-tx-team-name">巴爾的摩金鶯</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Baltimore Orioles activated LF Heston Kjerstad from the 10-day injured list.</li><li>Baltimore Orioles activated RHP Jacob Webb from the 15-day injured list.</li><li>Baltimore Orioles designated LHP Cole Irvin for assignment.</li><li>Baltimore Orioles designated 3B Nick Maton for assignment.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -748,7 +944,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -763,6 +959,23 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Twins 'play to take it' in Lee's breakout game</h4>
+              <p class="game-news-content">MINNEAPOLIS -- Playing without their two best hitters in the lineup and needing a win to avoid a back-breaking sweep at home to a non-contending team, the Twins dug really deep and found the biggest game of Brooks Lee’s young career.
+This perhaps wasn’t the loose play and reclaiming of</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/113.svg" class="card-tx-logo" alt="CIN">
+                  <span class="card-tx-team-name">辛辛那提紅人</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Cincinnati Reds sent RHP Ian Gibaut on a rehab assignment to Louisville Bats.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -899,7 +1112,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -914,6 +1127,22 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Aroldis Chapman (9)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Cook uncorks Clemente-like throw, paying tribute on Roberto Clemente Day</h4>
+              <p class="game-news-content">PITTSBURGH -- Like every Pirate, Billy Cook was wearing 21 Sunday, a tribute to the legendary Roberto Clemente on his day. The number 21 was stenciled into the grass at his position in right field at PNC Park, the spot where Clemente won 15 Gold Gloves during his Hall of</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/118.svg" class="card-tx-logo" alt="KCR">
+                  <span class="card-tx-team-name">堪薩斯皇家</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Kansas City Royals sent LHP Josh Taylor on a rehab assignment to Omaha Storm Chasers.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1024,7 +1253,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1039,6 +1268,24 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Sánchez's dominance sets stage for Phillies' walk-off win</h4>
+              <p class="game-news-content">PHILADELPHIA -- Last fall, the Phillies waited until after Game 3 of the NLCS to announce that Cristopher Sánchez would start Game 4 in Arizona.
+There had been talk about it being either Sánchez or Taijuan Walker.
+There will be no waiting and wondering about Sánchez’s postseason status this year.</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/143.svg" class="card-tx-logo" alt="PHI">
+                  <span class="card-tx-team-name">費城費城人</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Philadelphia Phillies activated 3B Alec Bohm from the 10-day injured list.</li><li>Philadelphia Phillies designated C Aramis Garcia for assignment.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1162,7 +1409,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1179,6 +1426,13 @@
                 <span class="decision-value">José A. Ferrer (1)</span>
               </div>
             </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">'It's awesome': Trio of young Nats achieve milestones </h4>
+              <p class="game-news-content">WASHINGTON -- The young Nats achieved milestones on both sides of the field in a 4-3 win over the Marlins at Nationals Park on Sunday.
+Left-hander MacKenzie Gore made his 30th start of the season -- a career-high for the 25-year-old southpaw who tallied 27 starts in 2023.
+At the</p>
+            </div>
+            
           </div>
 
           <!-- Right Column: Key Performers Highlights -->
@@ -1287,7 +1541,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1302,6 +1556,31 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Tommy Kahnle (1)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Judge's 53rd strikes CF restaurant, helps Yanks pad AL East lead</h4>
+              <p class="game-news-content">NEW YORK -- Aaron Judge shook his head ever so slightly after fouling a ball back into the seats during the third inning on Sunday, clearly upset that he had missed a hittable pitch. He wasn’t going to miss another.
+On the next offering, Judge launched his Major League-leading 53rd</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" class="card-tx-logo" alt="BOS">
+                  <span class="card-tx-team-name">波士頓紅襪</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Boston Red Sox sent RHP Lucas Sims on a rehab assignment to Worcester Red Sox.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/147.svg" class="card-tx-logo" alt="NYY">
+                  <span class="card-tx-team-name">紐約洋基</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>New York Yankees sent RHP JT Brubaker on a rehab assignment to Scranton/Wilkes-Barre RailRiders.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1451,7 +1730,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1466,6 +1745,23 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Chad Green (17)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Rodríguez shaping up to be big part of '25 as the mystery unravels</h4>
+              <p class="game-news-content">TORONTO -- Before we could set the bar for what “success” looked like for Yariel Rodríguez in the big leagues, we first had to figure out who he is.
+There weren’t many answers when he walked into Dunedin, Fla., for the first time in February, the closest thing to a</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/141.svg" class="card-tx-logo" alt="TOR">
+                  <span class="card-tx-team-name">多倫多藍鳥</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Toronto Blue Jays sent RHP Yerry Rodríguez outright to Buffalo Bisons.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1602,7 +1898,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1619,6 +1915,11 @@
                 <span class="decision-value">Emmanuel Clase (45)</span>
               </div>
             </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Smith's dominance makes Guards' call to the 'pen easy no matter the stakes</h4>
+              <p class="game-news-content">CLEVELAND -- The Guardians know they need as many innings from their starting pitchers as they can get, especially at this time in the season. But Sunday morning, even pitching coach Carl Willis had to admit he enjoys picking up the phone that rings the bullpen and saying Cade Smith’s</p>
+            </div>
+            
           </div>
 
           <!-- Right Column: Key Performers Highlights -->
@@ -1728,7 +2029,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1745,6 +2046,13 @@
                 <span class="decision-value">Fraser Ellard (1)</span>
               </div>
             </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Burke, White Sox punctuate series with key firsts</h4>
+              <p class="game-news-content">CHICAGO – A young fan approached near the White Sox dugout 30 minutes prior to Sunday’s series finale against the A’s at Guaranteed Rate Field with the following sign in tow:
+“I'm 11 today. My wish is a White Sox win."
+Those wishes have been rarely granted this season. But</p>
+            </div>
+            
           </div>
 
           <!-- Right Column: Key Performers Highlights -->
@@ -1892,7 +2200,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -1907,6 +2215,22 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Tyson Miller (1)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">'Can’t thank them enough': Hendricks grateful for Cubs' continued belief</h4>
+              <p class="game-news-content">DENVER -- There was a moment early in this season when Kyle Hendricks’ struggles reached a point of wondering if the time had come for the Cubs to consider turning the page on his tenure. Chicago stuck by the pitcher, allowing him the chance to rediscover his rhythm while continuing</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/115.svg" class="card-tx-logo" alt="COL">
+                  <span class="card-tx-team-name">科羅拉多洛磯</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Colorado Rockies activated RHP Cal Quantrill from the 15-day injured list.</li><li>Colorado Rockies optioned RHP Bradley Blalock to Albuquerque Isotopes.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2069,7 +2393,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2086,6 +2410,12 @@
                 <span class="decision-value">Adrian Morejon (2)</span>
               </div>
             </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Padres turn back Giants in 10th, complete key sweep</h4>
+              <p class="game-news-content">SAN FRANCISCO -- An opportunity awaited the Padres in San Francisco this weekend. There are six other teams currently in the National League playoff picture, and those six teams were all playing series against each other elsewhere.
+Which gave the Padres this assurance: If they won, they knew they’d gain</p>
+            </div>
+            
           </div>
 
           <!-- Right Column: Key Performers Highlights -->
@@ -2220,7 +2550,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2235,6 +2565,31 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">Josh Hader (31)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Heyward enjoys the ride as Astros motor toward playoffs</h4>
+              <p class="game-news-content">ANAHEIM -- The Astros signed Jason Heyward late last month, hoping he could contribute down the stretch occasionally with his bat. They already knew what the veteran outfielder provides in the clubhouse, which is the epitome of professionalism on a team with tremendously high standards.
+Heyward already has had a</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/117.svg" class="card-tx-logo" alt="HOU">
+                  <span class="card-tx-team-name">休士頓太空人</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Houston Astros transferred RF Ben Gamel from the 10-day injured list to the 60-day injured list.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/108.svg" class="card-tx-logo" alt="LAA">
+                  <span class="card-tx-team-name">洛杉磯天使</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Los Angeles Angels activated RHP Carson Fulmer from the 15-day injured list.</li><li>Los Angeles Angels placed LHP Samuel Aldegheri on the 15-day injured list retroactive to September 14, 2024. Left middle finger blister.</li><li>Los Angeles Angels placed CF Bryce Teodosio on the 10-day injured list. Right middle finger fracture.</li><li>Los Angeles Angels designated RHP Nick Robertson for assignment.</li><li>Los Angeles Angels selected the contract of OF Gustavo Campero from Salt Lake Bees.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2345,7 +2700,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2360,6 +2715,22 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">4 biggest contributors from Mariners' shutout vs. Rangers</h4>
+              <p class="game-news-content">SEATTLE -- Victor Robles ran wild again, Mitch Garver got off the schneid with a massive three-run homer, Randy Arozarena reached the coveted 20/20 club and George Kirby dominated over seven shutout innings for a big rebound as the Mariners established an early lead, tossed a 27-batter combined one-hitter and</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/140.svg" class="card-tx-logo" alt="TEX">
+                  <span class="card-tx-team-name">德州遊騎兵</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Texas Rangers placed RHP José Ureña on the 15-day injured list. Right shoulder fatigue.</li><li>Texas Rangers recalled RHP Gerson Garabito from Round Rock Express.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2470,7 +2841,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2485,6 +2856,23 @@
               <div class="decision-row">
                 <span class="decision-label">救援</span>
                 <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">How the D-backs pulled off a see-saw, walk-off victory in the desert</h4>
+              <p class="game-news-content">PHOENIX -- It is impossible to break down every single wild thing that happened during the Diamondbacks’ 11-10 walk-off win over the Brewers on Sunday afternoon at Chase Field.
+Heck, just trying to sum it up is a challenge, but Arizona fill-in manager Jeff Banister came as close to anyone</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/109.svg" class="card-tx-logo" alt="ARI">
+                  <span class="card-tx-team-name">亞利桑那響尾蛇</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Arizona Diamondbacks placed RHP Paul Sewald on the 15-day injured list retroactive to September 12, 2024. Left neck discomfort.</li><li>Arizona Diamondbacks activated C Gabriel Moreno from the 10-day injured list.</li><li>Arizona Diamondbacks designated RHP Dylan Floro for assignment.</li><li>Arizona Diamondbacks recalled LHP Blake Walston from Reno Aces.</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2622,7 +3010,7 @@
 
         <!-- Lower Part: Two Columns (Decisions & Highlights) -->
         <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions -->
+          <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
             <h3 class="section-sub-header">投球決定</h3>
             <div class="decisions-container">
@@ -2639,6 +3027,12 @@
                 <span class="decision-value">無</span>
               </div>
             </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Buehler steps up with strong start amidst injuries in rotation</h4>
+              <p class="game-news-content">ATLANTA -- The weekend in Atlanta went against the Dodgers' plans in just about every way. But in the midst of a tough stretch, they could take some solace in a much-needed encouraging start from Walker Buehler.
+With the flurry of injuries to the starting staff, Buehler will almost certainly</p>
+            </div>
+            
           </div>
 
           <!-- Right Column: Key Performers Highlights -->
@@ -2768,6 +3162,18 @@
 
       <!--/GAMES_LIST-->
     </main>
+
+    <!--TRANSACTIONS_SECTION-->
+    <section class="transactions-section">
+      <h2 class="transactions-header">
+        <span>其他球隊人事異動</span>
+        <span class="tx-badge">0</span>
+      </h2>
+      <div style="color:var(--text-muted);font-size:0.85rem;padding:1.5rem;text-align:center;background:rgba(255,255,255,0.01);border:1px dashed var(--card-border);border-radius:12px;">
+        本日無其他球隊人事異動。
+      </div>
+    </section>
+      <!--/TRANSACTIONS_SECTION-->
 
     <footer>
       <p>MLB Daily 每日戰報系統</p>
