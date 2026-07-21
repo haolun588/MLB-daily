@@ -56,3 +56,8 @@
 ### 🛠️ 階段九：版面微調與 Bug 修復 [已完成]
 - [x] 修復戰報返回連結 404 問題（將 `templates/report_template.html` 中的 `../index.html` 改為 `../../../index.html`）
 - [x] 調整返回按鈕為絕對定位（置於左上角，不佔用獨立行空間）
+
+### 📊 階段十：球員進階數據連結 [當前目標]
+- [ ] 於 `templates/report_template.html` 與 `fetch_mlb.py` 中，將球員名稱加上超連結，連結至其 Baseball Savant Profile (`baseballsavant.mlb.com/savant-player/{playerId}`)（包含投球決定、傑出球員、以及人事異動中的球員姓名）
+
+
