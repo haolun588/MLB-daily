@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "README.md",
+                "file": "docs/progress.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "README"
+              "title": "progress"
             }
           }
         ]
@@ -185,6 +185,8 @@
   },
   "active": "d90d7e41a10555a7",
   "lastOpenFiles": [
+    "docs/dev_logs/20260721_實作自動化排程與通知整合.md",
+    "README.md",
     "docs/dev_logs/20260720_實作與驗證Python數據抓取.md",
     "reports/metadata.json",
     "reports/2024-09-15.html",
@@ -195,7 +197,6 @@
     "docs/dev_logs/20260720_實作與精簡HTML靜態網頁設計.md",
     "docs/dev_logs/20260720_初始化專案說明文件與開發守則.md",
     "index.html",
-    "templates/report_template.html",
-    "README.md"
+    "templates/report_template.html"
   ]
 }

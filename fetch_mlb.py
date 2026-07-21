@@ -9,6 +9,18 @@ import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
+# Reconfigure standard I/O encoding to UTF-8 to avoid encoding errors on Windows (CP950)
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+if hasattr(sys.stderr, 'reconfigure'):
+    try:
+        sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
 # MLB Team Metadata: Chinese Name, Abbreviation, and Official Color Hex
 TEAM_META = {
     108: {"name": "洛杉磯天使", "abbr": "LAA", "color": "#BA0021"},
@@ -225,15 +237,21 @@ def generate_report(date_str, games):
             else:
                 s_pitcher_str = f"{dec_obj['save']['fullName']} ({stats.get('saves', 0)})"
                 
-        # Parse Player Highlights (Notable Performers)
-        notable_batters = []
-        notable_pitchers = []
+        # Determine starting pitchers for away and home teams
+        away_pitchers = boxscore["teams"]["away"].get("pitchers", [])
+        home_pitchers = boxscore["teams"]["home"].get("pitchers", [])
+        away_starter_id = away_pitchers[0] if away_pitchers else None
+        home_starter_id = home_pitchers[0] if home_pitchers else None
+
+        # Parse Player Highlights (Notable Performers) using unified score formulas
+        all_candidates = []
         
         # Loop teams
         for team_type, team_abbr in [("away", away_info["abbr"]), ("home", home_info["abbr"])]:
-            team_players = boxscore["teams"][team_type]["players"]
+            team_players = boxscore["teams"][team_type].get("players", {})
             for p_id, p_info in team_players.items():
                 p_name = p_info["person"]["fullName"]
+                p_id_int = p_info["person"]["id"]
                 pos = p_info.get("position", {}).get("abbreviation", "")
                 
                 # Batter check
@@ -242,34 +260,38 @@ def generate_report(date_str, games):
                     ab = bat_stats.get("atBats", 0)
                     r = bat_stats.get("runs", 0)
                     h = bat_stats.get("hits", 0)
+                    d = bat_stats.get("doubles", 0)
+                    t = bat_stats.get("triples", 0)
+                    hr = bat_stats.get("homeRuns", 0)
                     rbi = bat_stats.get("rbi", 0)
                     bb = bat_stats.get("baseOnBalls", 0)
                     so = bat_stats.get("strikeOuts", 0)
-                    hr = bat_stats.get("homeRuns", 0)
                     sb = bat_stats.get("stolenBases", 0)
                     
-                    # Highlight criteria: HR > 0, hits >= 2, rbi >= 2, sb > 0, or combination
-                    score = hr * 4.0 + sb * 2.0 + rbi * 1.5 + h * 1.0 + r * 0.5
-                    if score >= 1.5 or hr > 0 or sb > 0:
-                        # Find cumulative season stats
-                        season_bat = p_info.get("seasonStats", {}).get("batting", {})
-                        season_hr = season_bat.get("homeRuns", 0)
-                        season_sb = season_bat.get("stolenBases", 0)
-                        
-                        notable_batters.append({
-                            "name": p_name,
-                            "team": team_abbr,
-                            "pos": pos,
+                    # Score = H*1 + 2B*2 + 3B*3 + HR*4 + RBI*1.5 + R*1 + SB*1 + BB*1
+                    score = h * 1.0 + d * 2.0 + t * 3.0 + hr * 4.0 + rbi * 1.5 + r * 1.0 + sb * 1.0 + bb * 1.0
+                    
+                    season_bat = p_info.get("seasonStats", {}).get("batting", {})
+                    season_hr = season_bat.get("homeRuns", 0)
+                    season_sb = season_bat.get("stolenBases", 0)
+                    
+                    all_candidates.append({
+                        "type": "batter",
+                        "id": p_id_int,
+                        "name": p_name,
+                        "team": team_abbr,
+                        "pos": pos,
+                        "score": score,
+                        "stats": {
                             "ab": ab, "r": r, "h": h, "rbi": rbi, "bb": bb, "so": so,
-                            "hr": hr, "sb": sb,
-                            "season_hr": season_hr, "season_sb": season_sb,
-                            "score": score
-                        })
+                            "hr": hr, "sb": sb, "season_hr": season_hr, "season_sb": season_sb
+                        }
+                    })
                         
                 # Pitcher check
                 pit_stats = p_info.get("stats", {}).get("pitching", {})
-                if pit_stats and pit_stats.get("inningsPitched"):
-                    ip = pit_stats.get("inningsPitched", "0.0")
+                if pit_stats and pit_stats.get("inningsPitched") and pit_stats.get("inningsPitched") != "0.0":
+                    ip_str = pit_stats.get("inningsPitched")
                     h = pit_stats.get("hits", 0)
                     r = pit_stats.get("runs", 0)
                     er = pit_stats.get("earnedRuns", 0)
@@ -278,67 +300,94 @@ def generate_report(date_str, games):
                     num_pitches = pit_stats.get("numberOfPitches", 0)
                     strikes = pit_stats.get("strikes", 0)
                     
-                    is_starter = p_info.get("gameStatus", {}).get("isCurrentPitcher", False) or p_info.get("seasonStats", {}).get("pitching", {}).get("gamesStarted", 0) > 0
+                    is_starter = (p_id_int == away_starter_id) or (p_id_int == home_starter_id)
                     
-                    # Check if decision pitcher
-                    wins = pit_stats.get("wins", 0)
-                    losses = pit_stats.get("losses", 0)
-                    saves = pit_stats.get("saves", 0)
+                    # Resolve IP outs
+                    parts = ip_str.split('.')
+                    innings = int(parts[0])
+                    outs = int(parts[1]) if len(parts) > 1 else 0
+                    ip_outs = innings * 3 + outs
                     
-                    # Notable criteria: wins > 0 (W), saves > 0 (S), starter, or high strikeouts
-                    is_notable = wins > 0 or saves > 0 or so >= 4 or (is_starter and float(ip) >= 5.0 and er <= 3)
-                    if is_notable:
-                        season_pit = p_info.get("seasonStats", {}).get("pitching", {})
-                        s_wins = season_pit.get("wins", 0)
-                        s_losses = season_pit.get("losses", 0)
-                        s_saves = season_pit.get("saves", 0)
+                    # Decisions info
+                    wins_game = pit_stats.get("wins", 0)
+                    saves_game = pit_stats.get("saves", 0)
+                    losses_game = pit_stats.get("losses", 0)
+                    
+                    is_win = wins_game > 0
+                    is_save = saves_game > 0
+                    
+                    # Score = IP_outs + K*1 - ER*2 - H*1 - BB*1 + (Win ? 5 : 0) + (Save ? 4 : 0)
+                    score = ip_outs + so * 1.0 - er * 2.0 - h * 1.0 - bb * 1.0 + (5.0 if is_win else 0.0) + (4.0 if is_save else 0.0)
+                    
+                    season_pit = p_info.get("seasonStats", {}).get("pitching", {})
+                    s_wins = season_pit.get("wins", 0)
+                    s_losses = season_pit.get("losses", 0)
+                    s_saves = season_pit.get("saves", 0)
+                    
+                    tag = ""
+                    if is_win:
+                        tag = f'<span class="performer-tag pitcher-win">W ({s_wins}-{s_losses})</span>'
+                    elif is_save:
+                        tag = f'<span class="performer-tag pitcher-win">S ({s_saves})</span>'
+                    elif losses_game > 0:
+                        tag = f'<span class="performer-tag" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);">L ({s_wins}-{s_losses})</span>'
+                    elif is_starter:
+                        tag = '<span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>'
+                    else:
+                        tag = '<span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Relief</span>'
                         
-                        tag = ""
-                        if wins > 0:
-                            tag = f'<span class="performer-tag pitcher-win">W ({s_wins}-{s_losses})</span>'
-                        elif saves > 0:
-                            tag = f'<span class="performer-tag pitcher-win">S ({s_saves})</span>'
-                        elif losses > 0:
-                            tag = f'<span class="performer-tag" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);">L ({s_wins}-{s_losses})</span>'
-                        elif is_starter:
-                            tag = '<span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>'
-                        else:
-                            tag = '<span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Relief</span>'
-                            
-                        notable_pitchers.append({
-                            "name": p_name,
-                            "team": team_abbr,
-                            "pos": pos,
-                            "ip": ip, "h": h, "r": r, "er": er, "bb": bb, "so": so,
-                            "pitches": num_pitches, "strikes": strikes,
-                            "tag": tag,
-                            "is_starter": is_starter,
-                            "is_decision": wins > 0 or losses > 0 or saves > 0
-                        })
+                    all_candidates.append({
+                        "type": "pitcher",
+                        "id": p_id_int,
+                        "name": p_name,
+                        "team": team_abbr,
+                        "pos": pos,
+                        "score": score,
+                        "is_starter": is_starter,
+                        "tag": tag,
+                        "stats": {
+                            "ip": ip_str, "h": h, "r": r, "er": er, "bb": bb, "so": so,
+                            "pitches": num_pitches, "strikes": strikes
+                        }
+                    })
                         
-        # Sort notable lists
-        notable_batters.sort(key=lambda x: x["score"], reverse=True)
-        # Pitchers order: Wins first, Saves second, Losses third, then Starters, then Relievers
-        def pitcher_sort_val(x):
-            if "W (" in x["tag"]: return 0
-            if "S (" in x["tag"]: return 1
-            if "L (" in x["tag"]: return 2
-            if x["is_starter"]: return 3
-            return 4
-        notable_pitchers.sort(key=pitcher_sort_val)
+        # Sort candidates by score descending
+        all_candidates.sort(key=lambda x: x["score"], reverse=True)
         
-        # Pick top batters (up to 4) and pitchers (up to 3)
-        selected_batters = notable_batters[:4]
-        selected_pitchers = notable_pitchers[:3]
+        # Output candidate scores for debugging/logging
+        print(f"  Game {game_pk} ({away_info['abbr']} @ {home_info['abbr']}) candidates score log:")
+        for cand in all_candidates[:5]:
+            print(f"    - {cand['name']} ({cand['team']} - {cand['type']}): score={cand['score']:.1f}")
+        
+        # Pick top performers using dual-threshold approach
+        selected_candidates = []
+        for idx, cand in enumerate(all_candidates):
+            if idx < 3:
+                # Guarantee top 3
+                selected_candidates.append(cand)
+            else:
+                # Check thresholds
+                if cand["type"] == "batter":
+                    if cand["score"] >= 7.0:
+                        selected_candidates.append(cand)
+                elif cand["type"] == "pitcher":
+                    threshold = 15.0 if cand["is_starter"] else 8.0
+                    if cand["score"] >= threshold:
+                        selected_candidates.append(cand)
+                        
+        # Split back to batters and pitchers
+        selected_batters = [c for c in selected_candidates if c["type"] == "batter"]
+        selected_pitchers = [c for c in selected_candidates if c["type"] == "pitcher"]
         
         # Build batters HTML list
         batters_html_list = []
         for b in selected_batters:
+            b_stats = b["stats"]
             tags = []
-            if b["hr"] > 0:
-                tags.append(f'<span class="performer-tag hr">HR: {format_cumulative(b["hr"], b["season_hr"])}</span>')
-            if b["sb"] > 0:
-                tags.append(f'<span class="performer-tag sb">SB: {format_cumulative(b["sb"], b["season_sb"])}</span>')
+            if b_stats["hr"] > 0:
+                tags.append(f'<span class="performer-tag hr">HR: {format_cumulative(b_stats["hr"], b_stats["season_hr"])}</span>')
+            if b_stats["sb"] > 0:
+                tags.append(f'<span class="performer-tag sb">SB: {format_cumulative(b_stats["sb"], b_stats["season_sb"])}</span>')
                 
             tags_str = " ".join(tags)
             
@@ -352,7 +401,7 @@ def generate_report(date_str, games):
                   {tags_str}
                 </div>
                 <div class="performer-stats">
-                  單場表現：打數 <span class="performer-stats-numbers">{b['ab']}</span> | 得分 <span class="performer-stats-numbers">{b['r']}</span> | 安打 <span class="performer-stats-numbers">{b['h']}</span> | 打點 <span class="performer-stats-numbers">{b['rbi']}</span> | 保送 <span class="performer-stats-numbers">{b['bb']}</span>
+                  單場表現：打數 <span class="performer-stats-numbers">{b_stats['ab']}</span> | 得分 <span class="performer-stats-numbers">{b_stats['r']}</span> | 安打 <span class="performer-stats-numbers">{b_stats['h']}</span> | 打點 <span class="performer-stats-numbers">{b_stats['rbi']}</span> | 保送 <span class="performer-stats-numbers">{b_stats['bb']}</span>
                 </div>
               </div>"""
             batters_html_list.append(batter_card)
@@ -360,6 +409,7 @@ def generate_report(date_str, games):
         # Build pitchers HTML list
         pitchers_html_list = []
         for p in selected_pitchers:
+            p_stats = p["stats"]
             pitcher_card = f"""              <!-- Pitcher Highlight: {p['name']} -->
               <div class="performer-item">
                 <div class="performer-name-row">
@@ -370,7 +420,7 @@ def generate_report(date_str, games):
                   {p['tag']}
                 </div>
                 <div class="performer-stats">
-                  投球內容：局數 <span class="performer-stats-numbers">{p['ip']}</span> | 被安打 <span class="performer-stats-numbers">{p['h']}</span> | 失分 <span class="performer-stats-numbers">{p['r']}</span> | 自責 <span class="performer-stats-numbers">{p['er']}</span> | 保送 <span class="performer-stats-numbers">{p['bb']}</span> | 三振 <span class="performer-stats-numbers">{p['so']}</span> (球數 <span class="performer-stats-numbers">{p['pitches']}/{p['strikes']}</span>)
+                  投球內容：局數 <span class="performer-stats-numbers">{p_stats['ip']}</span> | 被安打 <span class="performer-stats-numbers">{p_stats['h']}</span> | 失分 <span class="performer-stats-numbers">{p_stats['r']}</span> | 自責 <span class="performer-stats-numbers">{p_stats['er']}</span> | 保送 <span class="performer-stats-numbers">{p_stats['bb']}</span> | 三振 <span class="performer-stats-numbers">{p_stats['so']}</span> (球數 <span class="performer-stats-numbers">{p_stats['pitches']}/{p_stats['strikes']}</span>)
                 </div>
               </div>"""
             pitchers_html_list.append(pitcher_card)
@@ -379,12 +429,14 @@ def generate_report(date_str, games):
         pitchers_section_html = "\n".join(pitchers_html_list) if pitchers_html_list else "              <div style='color:var(--text-muted);font-size:0.85rem;padding:0.5rem;'>今日無突出投手表現。</div>"
         
         # Log summary sentence for index.html description
-        if selected_batters:
-            top_b = selected_batters[0]
-            summary_sentence = f"{away_info['abbr']} @ {home_info['abbr']}，比分 {away_r}:{home_r}"
-            if top_b["hr"] > 0:
-                summary_sentence += f"，{top_b['name']} 擊出全壘打"
-            key_matchups_summary.append(summary_sentence)
+        summary_sentence = f"{away_info['abbr']} @ {home_info['abbr']}，比分 {away_r}:{home_r}"
+        if selected_candidates:
+            top_perf = selected_candidates[0]
+            if top_perf["type"] == "batter" and top_perf["stats"]["hr"] > 0:
+                summary_sentence += f"，{top_perf['name']} 擊出全壘打"
+            elif top_perf["type"] == "pitcher" and top_perf["stats"]["so"] >= 5:
+                summary_sentence += f"，{top_perf['name']} 投出 {top_perf['stats']['so']} 次三振"
+        key_matchups_summary.append(summary_sentence)
             
         # Build Game Card HTML
         card_html = f"""
@@ -657,6 +709,67 @@ def update_index_page(new_metadata):
         f.write(index_content)
     print("Successfully updated index.html index page.")
 
+def send_discord_notification(new_meta):
+    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
+    if not webhook_url:
+        print("Warning: DISCORD_WEBHOOK_URL env variable not set. Skipping Discord notification.")
+        return
+    
+    date_str = new_meta["date"]
+    try:
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        date_formatted = dt.strftime("%Y 年 %m 月 %d 日")
+    except:
+        date_formatted = date_str
+        
+    report_url = f"https://haolun588.github.io/MLB-daily/reports/{date_str}.html"
+    
+    if new_meta.get("total_games", 0) == 0:
+        description = "昨日無安排任何大聯盟例行賽事。"
+        fields = []
+    else:
+        description = "昨日焦點戰報與最新賽況已生成，點擊下方連結即可瀏覽完整內容！"
+        fields = [
+            {
+                "name": "📊 賽事統計",
+                "value": f"• 總場數：**{new_meta['total_games']}** 場\n• 延賽場數：**{new_meta['postponed']}** 場",
+                "inline": True
+            },
+            {
+                "name": "📝 焦點摘要",
+                "value": new_meta["summary"]
+            }
+        ]
+        
+    payload = {
+        "embeds": [
+            {
+                "title": f"⚾ MLB 每日焦點戰報 - {date_formatted}",
+                "description": description,
+                "url": report_url,
+                "color": 795456,  # Yankees Blue: #0C2340
+                "fields": fields,
+                "footer": {
+                    "text": "MLB Daily 每日戰報系統"
+                },
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        ]
+    }
+    
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        webhook_url,
+        data=data,
+        headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}
+    )
+    
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            print(f"Discord notification sent successfully. Response code: {response.getcode()}")
+    except Exception as e:
+        print(f"Error sending Discord notification: {e}", file=sys.stderr)
+
 def main():
     parser = argparse.ArgumentParser(description="MLB Daily Report Generator Script")
     parser.add_argument("--date", type=str, help="Target report date in YYYY-MM-DD format (defaults to yesterday in Taipei Time)")
@@ -701,7 +814,7 @@ def main():
             "date": date_str,
             "total_games": 0,
             "postponed": 0,
-            "summary": f"{date_str} 當日無安排任何大聯盟賽事。"
+            "summary": f"{date_str} 當日無安排 any 大聯盟賽事。"
         }
         
         # Build empty card report html
@@ -739,6 +852,7 @@ def main():
                 f.write(html_content)
                 
         update_index_page(empty_meta)
+        send_discord_notification(empty_meta)
         sys.exit(0)
         
     # 3. Generate report files
@@ -746,6 +860,9 @@ def main():
     
     # 4. Update index homepage listings
     update_index_page(new_meta)
+    
+    # 5. Send Discord notification
+    send_discord_notification(new_meta)
     print("All tasks completed successfully.")
 
 if __name__ == "__main__":
