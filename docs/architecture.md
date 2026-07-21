@@ -135,7 +135,11 @@ graph TD
 
 ### 4. 當日人事異動整合 (Daily Transactions)
 - **資料來源**：MLB Stats API：`https://statsapi.mlb.com/api/v1/transactions?sportId=1&date=YYYY-MM-DD`。
-- **去重與過濾**：對相同 `description` 進行去重；**過濾掉包含 `"minor league"` (小聯盟) 關鍵字之簽約或指派訊息**，避免無大聯盟出賽機會的深度球員簽約干擾版面；最後藉由 `toTeam.id` 或 `fromTeam.id` 對應 30 支大聯盟隊伍。
+- **去重與過濾**：对相同 `description` 進行去重，並套用以下過濾規則以排除小聯盟深度合約與選秀簽約：
+  1. 排除任何包含 `"minor league"` (小聯盟) 關鍵字的異動。
+  2. 若異動描述包含 `"signed"` (簽約)，必須同時包含大聯盟特徵關鍵字（如 `"free agent"`、`"major league"`、`"extension"`、`"arbitration"` 或如 `"1-year"` 等年份合約標記）才予以顯示。其餘單純的選秀簽約（如 *"signed OF Eric Booth Jr."*）或一般小聯盟深度簽約（如 *"signed RHP John Smith"*）一律過濾不顯示。
+  3. 藉由 `toTeam.id` 或 `fromTeam.id` 對應 30 支大聯盟隊伍。
+
 - **分組展示（依隊伍與賽事合併）**：
   - **比賽球隊異動**：若人事異動涉及當天有比賽的球隊，該異動會直接抽離，並以隊徽+列表形式顯示在**該場賽事卡片左欄（新聞下方）**。
   - **其他球隊異動**：其餘未在當天出賽（或比賽延期）之球隊異動，則在頁面最下方的 **「其他球隊人事異動」** 區塊中分組（依隊伍帽徽）彙整顯示。

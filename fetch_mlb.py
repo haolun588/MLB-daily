@@ -152,8 +152,13 @@ def fetch_daily_transactions(date_str):
         desc = tx.get("description")
         if not desc or desc in seen_descriptions:
             continue
-        if "minor league" in desc.lower():
+        desc_lower = desc.lower()
+        if "minor league" in desc_lower:
             continue
+        if "signed" in desc_lower:
+            indicators = ["free agent", "major league", "extension", "arbitration", "-year"]
+            if not any(ind in desc_lower for ind in indicators):
+                continue
         seen_descriptions.add(desc)
         
         to_team_id = tx.get("toTeam", {}).get("id")
