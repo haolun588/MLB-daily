@@ -272,6 +272,7 @@ def generate_report(date_str, games):
         home_info = get_team_info(home_team_obj["id"], home_team_obj["name"])
         
         # 1. Postponed Game Card
+        teams_data_str = f"{away_info['abbr']} {away_info['name']} {away_team_obj.get('name', '')} {home_info['abbr']} {home_info['name']} {home_team_obj.get('name', '')}"
         if detailed_state in ["Postponed", "Cancelled"]:
             postponed_count += 1
             reason_eng = game.get("status", {}).get("reason", "Postponed")
@@ -279,7 +280,7 @@ def generate_report(date_str, games):
             
             card_html = f"""
       <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} (Postponed) -->
-      <div class="game-card" style="grid-template-columns: 1fr;">
+      <div class="game-card" style="grid-template-columns: 1fr;" data-teams="{teams_data_str}">
         <div class="postponed-game-body">
           <div class="postponed-icon">🌧️</div>
           <div class="postponed-title">{away_info['name']} @ {home_info['name']}</div>
@@ -620,7 +621,7 @@ def generate_report(date_str, games):
         # Build Game Card HTML
         card_html = f"""
       <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} -->
-      <div class="game-card">
+      <div class="game-card" data-teams="{teams_data_str}">
         <!-- Upper Part: Matchup & Scores (Full-width) -->
         <div class="game-card-upper">
           <div class="game-header">

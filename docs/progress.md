@@ -60,4 +60,11 @@
 ### 📊 階段十：球員進階數據連結 [已完成]
 - [x] 於 `templates/report_template.html` 與 `fetch_mlb.py` 中，將球員名稱加上超連結，連結至其 Baseball Savant Profile (`baseballsavant.mlb.com/savant-player/{playerId}`)（包含投球決定、傑出球員、以及人事異動中的球員姓名）
 
+### 🔍 階段十一：搜尋與自動定位跳轉 [已完成]
+- [x] 於 `templates/report_template.html` 中新增深色系搜尋輸入框，支援輸入中/英文隊名與縮寫
+- [x] 修改 `fetch_mlb.py` 卡片渲染，為每個比賽卡片加上包含雙方隊伍名稱與縮寫的 `data-teams` 屬性
+- [x] 撰寫輕量 JavaScript 實作搜尋監聽與匹配，按下 Enter 後使用 `scrollIntoView` 平滑跳轉定位
+- [x] 於 CSS 新增跳轉成功的呼吸發光與微縮放動畫（`.highlight-card`）
+
+
 

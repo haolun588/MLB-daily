@@ -722,6 +722,114 @@
       color: #60a5fa;
       text-decoration: underline;
     }
+
+    /* Search Bar Section */
+    .search-section {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .search-box-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.6rem;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 15px var(--accent-blue-glow);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-btn {
+      padding: 0.65rem 1.25rem;
+      background: var(--accent-blue);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-btn:hover {
+      background: #2563eb;
+    }
+
+    .search-btn:active {
+      transform: scale(0.97);
+    }
+
+    .search-feedback {
+      text-align: center;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--accent-red);
+      display: none;
+    }
+
+    /* Highlight Card Animation */
+    @keyframes highlightPulse {
+      0% {
+        box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+        border-color: var(--card-border);
+        transform: scale(1);
+      }
+      30% {
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+        border-color: var(--accent-blue);
+        transform: scale(1.02);
+      }
+      70% {
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        border-color: var(--accent-blue);
+        transform: scale(1.01);
+      }
+      100% {
+        box-shadow: var(--shadow-lg);
+        border-color: var(--card-border);
+        transform: scale(1);
+      }
+    }
+
+    .game-card.highlight-card {
+      animation: highlightPulse 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
   </style>
 </head>
 <body>
@@ -754,12 +862,25 @@
         </div>
       </div>
       <!--/OVERALL_SUMMARY_PLACEHOLDER-->
+
+      <!--SEARCH_SECTION-->
+      <div class="search-section">
+        <div class="search-box-wrapper">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <input type="text" id="teamSearchInput" class="search-input" placeholder="搜尋隊名或縮寫 (如 LAD, 洋基, Red Sox)..." autocomplete="off">
+          <button id="teamSearchBtn" class="search-btn">搜尋</button>
+        </div>
+      </div>
+      <div id="searchFeedback" class="search-feedback"></div>
+      <!--/SEARCH_SECTION-->
     </header>
 
     <main class="games-grid">
       <!--GAMES_LIST-->
       <!-- Game 1: NYY @ BOS (Standard Game Example with Performance Highlights) -->
-      <div class="game-card">
+      <div class="game-card" data-teams="NYY 紐約洋基 New York Yankees BOS 波士頓紅襪 Boston Red Sox">
         <!-- Upper Part: Matchup & Scores (Full-width) -->
         <div class="game-card-upper">
           <div class="game-header">
@@ -925,7 +1046,7 @@
       </div>
 
       <!-- Game 2: LAD @ SF (Extra Innings Highlights Example) -->
-      <div class="game-card">
+      <div class="game-card" data-teams="LAD 洛杉磯道奇 Los Angeles Dodgers SF 舊金山巨人 San Francisco Giants">
         <!-- Upper Part: Matchup & Scores (Full-width) -->
         <div class="game-card-upper">
           <div class="game-header">
@@ -1067,7 +1188,7 @@
       </div>
 
       <!-- Game 3: NYM @ ATL (Postponed Game Example) -->
-      <div class="game-card">
+      <div class="game-card" data-teams="NYM 紐約大都會 New York Mets ATL 亞特蘭大勇士 Atlanta Braves">
         <div class="postponed-game-body">
           <div class="postponed-icon">🌧️</div>
           <div class="postponed-title">紐約大都會 @ 亞特蘭大勇士</div>
@@ -1109,5 +1230,56 @@
 
   </div>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('teamSearchInput');
+      const searchBtn = document.getElementById('teamSearchBtn');
+      const feedback = document.getElementById('searchFeedback');
+
+      function performSearch() {
+        const query = searchInput.value.trim().toLowerCase();
+        if (feedback) feedback.style.display = 'none';
+        
+        if (!query) {
+          return;
+        }
+
+        const cards = document.querySelectorAll('.game-card[data-teams]');
+        let matchedCard = null;
+
+        for (const card of cards) {
+          const teamsData = (card.getAttribute('data-teams') || '').toLowerCase();
+          if (teamsData.includes(query)) {
+            matchedCard = card;
+            break;
+          }
+        }
+
+        if (matchedCard) {
+          matchedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          matchedCard.classList.remove('highlight-card');
+          void matchedCard.offsetWidth; // Force reflow
+          matchedCard.classList.add('highlight-card');
+
+          setTimeout(() => {
+            matchedCard.classList.remove('highlight-card');
+          }, 2600);
+        } else if (feedback) {
+          feedback.textContent = `找不到隊名或縮寫包含 「${searchInput.value.trim()}」 的比賽卡片`;
+          feedback.style.display = 'block';
+        }
+      }
+
+      if (searchBtn && searchInput) {
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keyup', function(e) {
+          if (e.key === 'Enter') {
+            performSearch();
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>
