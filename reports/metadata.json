@@ -22,5 +22,11 @@
     "total_games": 15,
     "postponed": 2,
     "summary": "昨日共進行了 15 場賽事。其中有 2 場賽事延期。 MIN @ CLE，比分 2:5，Parker Messick 投出 6 次三振；LAD @ PHI，比分 2:1，Justin Wrobleski 投出 7 次三振；TB @ TOR，比分 12:2，Nick Fortes 擊出全壘打。"
+  },
+  "2026-07-22": {
+    "date": "2026-07-22",
+    "total_games": 17,
+    "postponed": 0,
+    "summary": "昨日共進行了 17 場賽事。 PIT @ NYY，比分 5:3，Gerrit Cole 投出 11 次三振；PIT @ NYY，比分 0:2，Bubba Chandler 投出 5 次三振；BAL @ BOS，比分 3:6，Christian Encarnacion-Strand 擊出全壘打。"
   }
 }
