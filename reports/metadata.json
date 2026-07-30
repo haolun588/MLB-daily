@@ -64,5 +64,11 @@
     "total_games": 16,
     "postponed": 1,
     "summary": "昨日共進行了 16 場賽事。其中有 1 場賽事延期。 CLE @ CIN，比分 6:5，Sal Stewart 擊出全壘打；CLE @ CIN，比分 0:2，Gavin Williams 投出 12 次三振；BAL @ DET，比分 0:14，Troy Melton 投出 5 次三振。"
+  },
+  "2026-07-29": {
+    "date": "2026-07-29",
+    "total_games": 16,
+    "postponed": 0,
+    "summary": "昨日共進行了 16 場賽事。 PHI @ MIA，比分 6:8；ARI @ PIT，比分 3:0；TOR @ WSH，比分 5:2。"
   }
 }
