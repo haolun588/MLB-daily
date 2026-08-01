@@ -526,6 +526,7 @@ def generate_report(date_str, games):
                 tags.append(f'<span class="performer-tag sb">SB: {format_cumulative(b_stats["sb"], b_stats["season_sb"])}</span>')
                 
             tags_str = " ".join(tags)
+            tags_container = f'<div class="performer-tags">{tags_str}</div>' if tags_str else ''
             
             batter_card = f"""              <!-- Batter Highlight: {b['name']} -->
               <div class="performer-item">
@@ -534,7 +535,7 @@ def generate_report(date_str, games):
                     <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/{b['id']}" target="_blank" class="player-link">{b['name']}</a></span>
                     <span class="performer-team">{b['team']} · {b['pos']}</span>
                   </div>
-                  {tags_str}
+                  {tags_container}
                 </div>
                 <div class="performer-stats">
                   單場表現：打數 <span class="performer-stats-numbers">{b_stats['ab']}</span> | 得分 <span class="performer-stats-numbers">{b_stats['r']}</span> | 安打 <span class="performer-stats-numbers">{b_stats['h']}</span> | 打點 <span class="performer-stats-numbers">{b_stats['rbi']}</span> | 保送 <span class="performer-stats-numbers">{b_stats['bb']}</span>
@@ -553,7 +554,9 @@ def generate_report(date_str, games):
                     <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/{p['id']}" target="_blank" class="player-link">{p['name']}</a></span>
                     <span class="performer-team">{p['team']} · {p['pos']}</span>
                   </div>
-                  {p['tag']}
+                  <div class="performer-tags">
+                    {p['tag']}
+                  </div>
                 </div>
                 <div class="performer-stats">
                   投球內容：局數 <span class="performer-stats-numbers">{p_stats['ip']}</span> | 被安打 <span class="performer-stats-numbers">{p_stats['h']}</span> | 失分 <span class="performer-stats-numbers">{p_stats['r']}</span> | 自責 <span class="performer-stats-numbers">{p_stats['er']}</span> | 保送 <span class="performer-stats-numbers">{p_stats['bb']}</span> | 三振 <span class="performer-stats-numbers">{p_stats['so']}</span> (球數 <span class="performer-stats-numbers">{p_stats['pitches']}/{p_stats['strikes']}</span>)

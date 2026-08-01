@@ -66,5 +66,9 @@
 - [x] 撰寫輕量 JavaScript 實作搜尋監聽與匹配，按下 Enter 後使用 `scrollIntoView` 平滑跳轉定位
 - [x] 於 CSS 新增跳轉成功的呼吸發光與微縮放動畫（`.highlight-card`）
 
+### 🏷️ 階段十二：焦點球員標籤排版優化 [已完成]
+- [x] 新增 `.performer-tags` Flexbox 容器，將 HR 與 SB 標籤統一包覆並靠右併排顯示
+
+
 
 
