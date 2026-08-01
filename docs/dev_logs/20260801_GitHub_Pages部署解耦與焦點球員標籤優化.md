@@ -28,8 +28,8 @@
   - 加入 `reports/*/*/*.html` 與 `reports/*.html`，確保 `.html` 檔案不再推送到 `main` 分頁。
   - 明確保留 `reports/metadata.json` 追蹤。
 - **[.github/workflows/daily_report.yml](file:///c:/GitHub/MLB-daily/.github/workflows/daily_report.yml)**：
-  - 調整 Actions 工作流程：`main` 分頁僅提交 `index.html` 與 `reports/metadata.json` 索引檔。
-  - 引入 `peaceiris/actions-gh-pages@v4` 並設定 `keep_files: true`，將包含完整歷史戰報的網頁資料發布至 `gh-pages` 分頁提供 GitHub Pages 線上託管。
+  - 調整 Actions 工作流程：執行前先從 `gh-pages` 取得歷史戰報 HTML，產生新戰報後僅將 `index.html` 與 `reports/metadata.json` 寫回 `main` 分頁。
+  - 使用 `peaceiris/actions-gh-pages@v4` 並設定 `keep_files: true`，將包含完整歷史戰報的網頁發布至 `gh-pages` 分頁。
 - **本地檔案清理**：
   - 執行 `git rm --cached` 取消 `main` 分頁對 14 個歷史 `.html` 檔的追蹤。
   - 清理本地 `reports/` 資料夾下的 HTML 檔案，釋放本地硬碟空間並保持倉庫乾淨。
