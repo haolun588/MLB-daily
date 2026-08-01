@@ -22,3 +22,9 @@ Thumbs.db
 # IDE settings
 .vscode/
 .idea/
+
+# Generated daily report HTML files (tracked only on gh-pages branch)
+reports/*/*/*.html
+reports/*.html
+!reports/metadata.json
+

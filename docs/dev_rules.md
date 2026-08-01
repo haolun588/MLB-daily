@@ -27,8 +27,10 @@
      - 只有在**確定所有比賽均已打完 (Final) 或已延期 (Postponed)** 後，腳本才能正式開始擷取資料並生成網頁。
 5. **程式設計原則**：
    - 儘量使用 Python 原生標準函式庫 (如 `urllib.request` 與 `json`)，避免在 GitHub Actions 環境中安裝不必要的第三方依賴套件，確保程式輕量化與執行穩定度。
-6. **通知與傳送**：
-   - 戰報網頁生成並成功推送至 GitHub 後，必須發送 Discord Webhook 通知使用者。通知內必須附帶可直接點擊打開的 GitHub Pages 連結。
+6. **通知與傳送及 GitHub Pages 發布架構**：
+   - `main` 主分頁僅保留程式碼、模板與 `reports/metadata.json` 索引檔，每日戰報 `.html` 檔由 `.gitignore` 忽略以維護倉庫輕量化。
+   - GitHub Actions 於每日產出戰報後，會自動將 metadata 與首頁寫回 `main` 分頁，並使用 `peaceiris/actions-gh-pages` 將完整網頁發布至 `gh-pages` 分頁進行 GitHub Pages 託管。
+   - 戰報網頁發布後，發送 Discord Webhook 通知使用者，通知內附帶可直接點擊打開的 GitHub Pages 連結。
 
 ---
 

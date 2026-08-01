@@ -69,6 +69,12 @@
 ### 🏷️ 階段十二：焦點球員標籤排版優化 [已完成]
 - [x] 新增 `.performer-tags` Flexbox 容器，將 HR 與 SB 標籤統一包覆並靠右併排顯示
 
+### 🚀 階段十三：GitHub Pages 部署與 main 分頁解耦 [已完成]
+- [x] 在 `.gitignore` 中忽略每日戰報 `.html` 檔案 (`reports/*/*/*.html`)
+- [x] 從 `main` 分頁移除歷史 `.html` 檔案追蹤，保留 `reports/metadata.json` 作為輕量歷史索引數據
+- [x] 設定 `.github/workflows/daily_report.yml` 透過 `peaceiris/actions-gh-pages` 將完整網頁發布至 `gh-pages` 分頁
+
+
 
 
 
