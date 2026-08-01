@@ -74,6 +74,11 @@
 - [x] 從 `main` 分頁移除歷史 `.html` 檔案追蹤，保留 `reports/metadata.json` 作為輕量歷史索引數據
 - [x] 設定 `.github/workflows/daily_report.yml` 透過 `peaceiris/actions-gh-pages` 將完整網頁發布至 `gh-pages` 分頁
 
+### 🗂️ 階段十四：首頁歷史戰報數量限制優化 [已完成]
+- [x] 調整 `index.html` 靜態頁面，僅保留最新 6 場歷史戰報卡片
+- [x] 修改 `fetch_mlb.py` 中 `update_index_html()` 邏輯，設限僅顯示最新 6 場歷史戰報（`sorted_dates[:6]`）
+
+
 
 
 
