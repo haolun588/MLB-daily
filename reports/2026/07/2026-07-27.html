@@ -1,0 +1,2842 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MLB 每日戰報 - 2026-07-27</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #111827 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover-border: rgba(59, 130, 246, 0.4);
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --accent-blue: #3b82f6;
+      --accent-blue-glow: rgba(59, 130, 246, 0.15);
+      --accent-red: #ef4444;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-orange-glow: rgba(245, 158, 11, 0.15);
+      --table-header-bg: rgba(17, 24, 39, 0.6);
+      --table-row-hover: rgba(255, 255, 255, 0.03);
+      --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-glow: 0 20px 25px -5px rgba(59, 130, 246, 0.15), 0 10px 10px -5px rgba(59, 130, 246, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-primary);
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 2rem 1rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header Styles */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .header-logo {
+      font-size: 0.9rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--accent-blue);
+      margin-bottom: 0.5rem;
+      display: inline-block;
+      border: 1.5px solid var(--accent-blue);
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      text-shadow: 0 0 10px var(--accent-blue-glow);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #ffffff, #9ca3af);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Overall Summary Panel */
+    .summary-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1rem 2.5rem;
+      display: inline-flex;
+      gap: 3rem;
+      justify-content: center;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1rem;
+    }
+
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .summary-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .summary-value {
+      font-size: 1.75rem;
+      font-weight: 850;
+      color: var(--text-primary);
+    }
+    
+    .summary-value.highlight-blue { color: var(--accent-blue); }
+    .summary-value.highlight-red { color: var(--accent-red); }
+
+    .summary-divider {
+      width: 1px;
+      height: 35px;
+      background: var(--card-border);
+    }
+
+    /* Back Link */
+    .back-home {
+      position: absolute;
+      top: 0.5rem;
+      left: 0;
+      display: inline-flex;
+      align-items: center;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+    }
+
+    .back-home:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateX(-4px);
+    }
+
+    .back-home svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.5rem;
+    }
+
+    @media (max-width: 576px) {
+      .back-home {
+        position: static;
+        margin-bottom: 1.5rem;
+      }
+    }
+
+    /* Games Grid Layout */
+    .games-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    /* Game Card (Scheme B) */
+    .game-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-card-upper {
+      padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+    }
+
+    .game-card-lower {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding: 1.25rem 1.5rem 1.5rem 1.5rem;
+      border-top: 1px dashed var(--card-border);
+    }
+
+    @media (min-width: 768px) {
+      .game-card-lower {
+        grid-template-columns: 1fr 1.5fr;
+      }
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .game-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-badge.final {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-badge.postponed {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .status-badge.extra {
+      background: var(--accent-orange-glow);
+      color: var(--accent-orange);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    /* Score Table (Final R-H-E) */
+    .score-table-wrapper {
+      margin-bottom: 1.5rem;
+      background: rgba(17, 24, 39, 0.4);
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      overflow: hidden;
+    }
+
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 1.05rem;
+    }
+
+    .score-table th, 
+    .score-table td {
+      padding: 0.75rem 1.25rem;
+      text-align: center;
+    }
+
+    .score-table th {
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      background: var(--table-header-bg);
+      letter-spacing: 0.1em;
+    }
+
+    .score-table td.team-cell {
+      text-align: left;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .score-table td.num-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .score-table td.num-cell.runs-cell {
+      font-weight: 800;
+      font-size: 1.35rem;
+      color: var(--text-secondary);
+    }
+
+    .score-table tr.winner-row td.team-cell {
+      color: var(--text-primary);
+    }
+
+    .score-table tr.winner-row td.team-cell::after {
+      content: "◀";
+      margin-left: 0.4rem;
+      font-size: 0.7rem;
+      color: var(--accent-green);
+    }
+
+    .score-table tr.winner-row td.num-cell.runs-cell {
+      color: var(--accent-blue);
+      text-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+    }
+
+    .team-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.8rem;
+    }
+
+    .team-logo {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.25));
+    }
+
+    /* Decision Pitchers Section */
+    .decisions-container {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .decision-row {
+      display: flex;
+      font-size: 0.85rem;
+    }
+
+    .decision-label {
+      width: 50px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .decision-value {
+      color: var(--text-primary);
+    }
+
+    /* Right Side: Key Performers Highlights */
+    .highlights-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .highlights-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent-blue);
+      border-left: 3px solid var(--accent-blue);
+      padding-left: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-sub-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      border-left: 3px solid var(--text-muted);
+      padding-left: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .performer-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .performer-category-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .performer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .performer-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      transition: background-color 0.2s ease;
+    }
+
+    .performer-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .performer-name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .performer-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .performer-team {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-left: 0.5rem;
+      font-weight: 500;
+    }
+
+    .performer-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .performer-tag.hr {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .performer-tag.sb {
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .performer-tag.pitcher-win {
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .performer-stats {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .performer-stats-numbers {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* Empty/Postponed Games Styling */
+    .postponed-game-body {
+      padding: 3rem 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      color: var(--text-secondary);
+      grid-column: span 2;
+    }
+
+    .postponed-icon {
+      font-size: 2.5rem;
+      color: var(--text-muted);
+    }
+
+    .postponed-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Footer styling */
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    footer p {
+      margin-bottom: 0.5rem;
+    }
+
+    footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    /* Game News Summary Styling */
+    .game-news-box {
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .game-news-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      line-height: 1.3;
+    }
+
+    .game-news-content {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Transactions Section Styling */
+    .transactions-section {
+      margin-top: 3rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .transactions-header {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.75rem;
+    }
+
+    .tx-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.15rem 0.6rem;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      border-radius: 9999px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .transactions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .team-tx-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .team-tx-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px dashed var(--card-border);
+      padding-bottom: 0.5rem;
+    }
+
+    .team-tx-logo {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.2));
+    }
+
+    .team-tx-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .team-tx-list {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .team-tx-list li {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      position: relative;
+      padding-left: 0.75rem;
+    }
+
+    /* Game Card Transactions Box */
+    .game-transactions-box {
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .game-tx-sub-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      border-left: 3px solid var(--text-muted);
+      padding-left: 0.5rem;
+    }
+
+    .card-team-tx {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .card-team-tx-header {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-tx-logo {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
+    }
+
+    .card-tx-team-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .card-tx-list {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .card-tx-list li {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      position: relative;
+      padding-left: 0.75rem;
+    }
+
+    .card-tx-list li::before {
+      content: "•";
+      color: var(--accent-blue);
+      position: absolute;
+      left: 0;
+      font-weight: bold;
+    }
+
+    /* Player Savant Profile Link */
+    .player-link {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+
+    .player-link:hover {
+      color: #60a5fa;
+      text-decoration: underline;
+    }
+
+    /* Search Bar Section */
+    .search-section {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .search-box-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.6rem;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 15px var(--accent-blue-glow);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-btn {
+      padding: 0.65rem 1.25rem;
+      background: var(--accent-blue);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-btn:hover {
+      background: #2563eb;
+    }
+
+    .search-btn:active {
+      transform: scale(0.97);
+    }
+
+    .search-feedback {
+      text-align: center;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--accent-red);
+      display: none;
+    }
+
+    /* Highlight Card Animation */
+    @keyframes highlightPulse {
+      0% {
+        box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+        border-color: var(--card-border);
+        transform: scale(1);
+      }
+      30% {
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+        border-color: var(--accent-blue);
+        transform: scale(1.02);
+      }
+      70% {
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        border-color: var(--accent-blue);
+        transform: scale(1.01);
+      }
+      100% {
+        box-shadow: var(--shadow-lg);
+        border-color: var(--card-border);
+        transform: scale(1);
+      }
+    }
+
+    .game-card.highlight-card {
+      animation: highlightPulse 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <header>
+      <a href="../../../index.html" class="back-home">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+        返回戰報列表
+      </a>
+      <div>
+        <span class="header-logo">MLB Daily</span>
+      </div>
+      <h1>MLB 每日戰報</h1>
+      <div class="subtitle">2026 年 07 月 27 日 賽事結果彙整</div>
+      
+      <!--OVERALL_SUMMARY_PLACEHOLDER-->
+      <div class="summary-panel">
+        <div class="summary-item">
+          <span class="summary-label">總場數</span>
+          <span class="summary-value highlight-blue">12</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+          <span class="summary-label">延賽場數</span>
+          <span class="summary-value highlight-red">1</span>
+        </div>
+      </div>
+      <!--/OVERALL_SUMMARY_PLACEHOLDER-->
+
+      <!--SEARCH_SECTION-->
+      <div class="search-section">
+        <div class="search-box-wrapper">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <input type="text" id="teamSearchInput" class="search-input" placeholder="搜尋隊名或縮寫 (如 LAD, 洋基, Red Sox)..." autocomplete="off">
+          <button id="teamSearchBtn" class="search-btn">搜尋</button>
+        </div>
+      </div>
+      <div id="searchFeedback" class="search-feedback"></div>
+      <!--/SEARCH_SECTION-->
+    </header>
+
+    <main class="games-grid">
+      <!--GAMES_LIST-->
+
+      <!-- Game Card: SEA @ TEX -->
+      <div class="game-card" data-teams="SEA 西雅圖水手 Seattle Mariners TEX 德州遊騎兵 Texas Rangers">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #822868</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/136.svg" class="team-logo" alt="SEA">
+                    <span>西雅圖水手 (52-55)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">7</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/140.svg" class="team-logo" alt="TEX">
+                    <span>德州遊騎兵 (54-52)</span>
+                  </td>
+                  <td class="num-cell runs-cell">7</td>
+                  <td class="num-cell">11</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/677958" target="_blank" class="player-link">Kumar Rocker</a> (4-8)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/669923" target="_blank" class="player-link">George Kirby</a> (8-9)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Rangers' power display breaks through Kirby's previously established dominance</h4>
+              <p class="game-news-content">ARLINGTON -- “Go Go Power Rangers” -- the theme song to the 90s hit show Mighty Morphin’ Power Rangers -- echoed throughout Globe Life Field as the Rangers defense went back out to take the field for the third inning.
+Power was exactly what the Rangers needed. It was provided</p>
+            </div>
+            
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Joc Pederson -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/592626" target="_blank" class="player-link">Joc Pederson</a></span>
+                    <span class="performer-team">TEX · DH</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 2(18)(19)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">4</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Jake Burger -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/669394" target="_blank" class="player-link">Jake Burger</a></span>
+                    <span class="performer-team">TEX · 1B</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(19)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Ezequiel Duran -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/677649" target="_blank" class="player-link">Ezequiel Duran</a></span>
+                    <span class="performer-team">TEX · SS</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(12)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Randy Arozarena -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/668227" target="_blank" class="player-link">Randy Arozarena</a></span>
+                    <span class="performer-team">SEA · LF</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(13)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Kumar Rocker -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/677958" target="_blank" class="player-link">Kumar Rocker</a></span>
+                    <span class="performer-team">TEX · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (4-8)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">6.2</span> | 被安打 <span class="performer-stats-numbers">4</span> | 失分 <span class="performer-stats-numbers">2</span> | 自責 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">2</span> | 三振 <span class="performer-stats-numbers">7</span> (球數 <span class="performer-stats-numbers">88/57</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: BAL @ DET -->
+      <div class="game-card" data-teams="BAL 巴爾的摩金鶯 Baltimore Orioles DET 底特律老虎 Detroit Tigers">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824245</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/110.svg" class="team-logo" alt="BAL">
+                    <span>巴爾的摩金鶯 (52-55)</span>
+                  </td>
+                  <td class="num-cell runs-cell">8</td>
+                  <td class="num-cell">12</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/116.svg" class="team-logo" alt="DET">
+                    <span>底特律老虎 (50-57)</span>
+                  </td>
+                  <td class="num-cell runs-cell">5</td>
+                  <td class="num-cell">11</td>
+                  <td class="num-cell">1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/664991" target="_blank" class="player-link">Grant Wolfram</a> (3-2)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/672456" target="_blank" class="player-link">Keider Montero</a> (7-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/670329" target="_blank" class="player-link">Rico Garcia</a> (5)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">O's continue to build Deadline case with big win in Detroit</h4>
+              <p class="game-news-content">DETROIT -- With exactly one week to go until the Aug. 3 Trade Deadline, the Orioles couldn’t have started their critical week much better than they did Monday night.
+Baltimore belted three home runs to fuel a strong offensive showing in its series-opening 8-5 win over Detroit at Comerica Park.</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/110.svg" class="card-tx-logo" alt="BAL">
+                  <span class="card-tx-team-name">巴爾的摩金鶯</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Baltimore Orioles designated C <a href="https://baseballsavant.mlb.com/savant-player/669087" target="_blank" class="player-link">Sam Huff</a> for assignment.</li><li>Baltimore Orioles recalled C <a href="https://baseballsavant.mlb.com/savant-player/650968" target="_blank" class="player-link">Yohel Pozo</a> from Chesapeake Baysox.</li><li>Baltimore Orioles traded RF <a href="https://baseballsavant.mlb.com/savant-player/671286" target="_blank" class="player-link">Johnathan Rodríguez</a> to Pittsburgh Pirates for cash.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/116.svg" class="card-tx-logo" alt="DET">
+                  <span class="card-tx-team-name">底特律老虎</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Detroit Tigers placed RF <a href="https://baseballsavant.mlb.com/savant-player/681481" target="_blank" class="player-link">Kerry Carpenter</a> on the 10-day injured list. Left foot plantar fasciitis.</li><li>Detroit Tigers recalled C <a href="https://baseballsavant.mlb.com/savant-player/680664" target="_blank" class="player-link">Eduardo Valencia</a> from Toledo Mud Hens.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Coby Mayo -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/691723" target="_blank" class="player-link">Coby Mayo</a></span>
+                    <span class="performer-team">BAL · 3B</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(14)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Leody Taveras -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/665750" target="_blank" class="player-link">Leody Taveras</a></span>
+                    <span class="performer-team">BAL · RF</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(5)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Zach McKinstry -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/656716" target="_blank" class="player-link">Zach McKinstry</a></span>
+                    <span class="performer-team">DET · RF</span>
+                  </div>
+                  
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">1</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Jackson Holliday -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/702616" target="_blank" class="player-link">Jackson Holliday</a></span>
+                    <span class="performer-team">BAL · SS</span>
+                  </div>
+                  
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">4</span> | 打點 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Tyler O'Neill -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/641933" target="_blank" class="player-link">Tyler O'Neill</a></span>
+                    <span class="performer-team">BAL · PH</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(7)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">1</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Grant Wolfram -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/664991" target="_blank" class="player-link">Grant Wolfram</a></span>
+                    <span class="performer-team">BAL · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (3-2)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">1.1</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">2</span> (球數 <span class="performer-stats-numbers">17/12</span>)
+                </div>
+              </div>
+              <!-- Pitcher Highlight: Rico Garcia -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/670329" target="_blank" class="player-link">Rico Garcia</a></span>
+                    <span class="performer-team">BAL · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">S (5)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">1.0</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">2</span> (球數 <span class="performer-stats-numbers">17/10</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: ARI @ PIT -->
+      <div class="game-card" data-teams="ARI 亞利桑那響尾蛇 Arizona Diamondbacks PIT 匹茲堡海盜 Pittsburgh Pirates">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #823353</span>
+            <span class="status-badge extra">Final/10</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/109.svg" class="team-logo" alt="ARI">
+                    <span>亞利桑那響尾蛇 (55-52)</span>
+                  </td>
+                  <td class="num-cell runs-cell">2</td>
+                  <td class="num-cell">8</td>
+                  <td class="num-cell">1</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/134.svg" class="team-logo" alt="PIT">
+                    <span>匹茲堡海盜 (55-52)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">9</td>
+                  <td class="num-cell">1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/682254" target="_blank" class="player-link">Mason Montgomery</a> (4-3)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/664199" target="_blank" class="player-link">Taylor Clarke</a> (2-2)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Lowe leads Bucs to walk-off win after rookie Valdez exits with left wrist injury</h4>
+              <p class="game-news-content">PITTSBURGH -- The implications don’t get much higher for a game in late July.
+The Pirates entered the series with the Diamondbacks one game behind Arizona in the National League Wild Card standings.</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/134.svg" class="card-tx-logo" alt="PIT">
+                  <span class="card-tx-team-name">匹茲堡海盜</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Pittsburgh Pirates activated C <a href="https://baseballsavant.mlb.com/savant-player/682848" target="_blank" class="player-link">Endy Rodríguez</a> from the 10-day injured list.</li><li>Pittsburgh Pirates designated C <a href="https://baseballsavant.mlb.com/savant-player/676566" target="_blank" class="player-link">Shawn Ross</a> for assignment.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Brandon Lowe -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/664040" target="_blank" class="player-link">Brandon Lowe</a></span>
+                    <span class="performer-team">PIT · 2B</span>
+                  </div>
+                  
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">3</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Max Kepler -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/596146" target="_blank" class="player-link">Max Kepler</a></span>
+                    <span class="performer-team">ARI · LF</span>
+                  </div>
+                  
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">0</span> | 安打 <span class="performer-stats-numbers">3</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Merrill Kelly -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/518876" target="_blank" class="player-link">Merrill Kelly</a></span>
+                    <span class="performer-team">ARI · P</span>
+                  </div>
+                  <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">5.2</span> | 被安打 <span class="performer-stats-numbers">4</span> | 失分 <span class="performer-stats-numbers">1</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">6</span> (球數 <span class="performer-stats-numbers">93/61</span>)
+                </div>
+              </div>
+              <!-- Pitcher Highlight: Mitch Keller -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/656605" target="_blank" class="player-link">Mitch Keller</a></span>
+                    <span class="performer-team">PIT · P</span>
+                  </div>
+                  <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">5.1</span> | 被安打 <span class="performer-stats-numbers">6</span> | 失分 <span class="performer-stats-numbers">2</span> | 自責 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">4</span> (球數 <span class="performer-stats-numbers">83/53</span>)
+                </div>
+              </div>
+              <!-- Pitcher Highlight: Mason Montgomery -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/682254" target="_blank" class="player-link">Mason Montgomery</a></span>
+                    <span class="performer-team">PIT · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (4-3)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">1.0</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">1</span> (球數 <span class="performer-stats-numbers">20/14</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: PHI @ MIA -->
+      <div class="game-card" data-teams="PHI 費城費城人 Philadelphia Phillies MIA 邁阿密馬林魚 Miami Marlins">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #823839</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/143.svg" class="team-logo" alt="PHI">
+                    <span>費城費城人 (57-50)</span>
+                  </td>
+                  <td class="num-cell runs-cell">7</td>
+                  <td class="num-cell">10</td>
+                  <td class="num-cell">2</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/146.svg" class="team-logo" alt="MIA">
+                    <span>邁阿密馬林魚 (53-54)</span>
+                  </td>
+                  <td class="num-cell runs-cell">8</td>
+                  <td class="num-cell">14</td>
+                  <td class="num-cell">1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/676534" target="_blank" class="player-link">Calvin Faucher</a> (5-5)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/661395" target="_blank" class="player-link">Jhoan Duran</a> (1-4)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">How else to end a 12-game skid? Marlins rattle Phillies' ace, All-Star closer</h4>
+              <p class="game-news-content">MIAMI -- Griffin Conine knew that whenever the Marlins snapped their franchise-record 12-game skid, it wouldn’t come easy.
+If it were to happen on Monday, they would need to get past longtime foe and National League Cy Young hopeful Zack Wheeler. Entering the series opener, Wheeler had been undefeated in</p>
+            </div>
+            
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Heriberto Hernández -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/681715" target="_blank" class="player-link">Heriberto Hernández</a></span>
+                    <span class="performer-team">MIA · LF</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(15)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Bryce Harper -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/547180" target="_blank" class="player-link">Bryce Harper</a></span>
+                    <span class="performer-team">PHI · 1B</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(22)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">2</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Otto Lopez -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/672640" target="_blank" class="player-link">Otto Lopez</a></span>
+                    <span class="performer-team">MIA · SS</span>
+                  </div>
+                  <span class="performer-tag sb">SB: 2(21)(22)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">3</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Griffin Conine -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/665052" target="_blank" class="player-link">Griffin Conine</a></span>
+                    <span class="performer-team">MIA · RF</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(8)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Jakob Marsee -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/805300" target="_blank" class="player-link">Jakob Marsee</a></span>
+                    <span class="performer-team">MIA · CF</span>
+                  </div>
+                  
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">1</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Bryson Stott -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/681082" target="_blank" class="player-link">Bryson Stott</a></span>
+                    <span class="performer-team">PHI · 2B</span>
+                  </div>
+                  
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">1</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: J.T. Realmuto -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/592663" target="_blank" class="player-link">J.T. Realmuto</a></span>
+                    <span class="performer-team">PHI · C</span>
+                  </div>
+                  
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">2</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Calvin Faucher -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/676534" target="_blank" class="player-link">Calvin Faucher</a></span>
+                    <span class="performer-team">MIA · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (5-5)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">1.0</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">2</span> (球數 <span class="performer-stats-numbers">18/9</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: TOR @ WSH -->
+      <div class="game-card" data-teams="TOR 多倫多藍鳥 Toronto Blue Jays WSH 華盛頓國民 Washington Nationals">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #822705</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/141.svg" class="team-logo" alt="TOR">
+                    <span>多倫多藍鳥 (49-58)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">7</td>
+                  <td class="num-cell">1</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/120.svg" class="team-logo" alt="WSH">
+                    <span>華盛頓國民 (54-53)</span>
+                  </td>
+                  <td class="num-cell runs-cell">2</td>
+                  <td class="num-cell">8</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/689254" target="_blank" class="player-link">Mason Fluharty</a> (5-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/678868" target="_blank" class="player-link">Eddy Yean</a> (0-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/686973" target="_blank" class="player-link">Louis Varland</a> (22)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Scherzer grinds through birthday return to Nationals Park</h4>
+              <p class="game-news-content">WASHINGTON -- Max Scherzer’s second return from an IL stint this season went better than his first, enough so that he’s hopeful for what could still be ahead.
+Scherzer labored through 2 2/3 innings on 75 pitches on his 42nd birthday, but he escaped by allowing only one run in</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/141.svg" class="card-tx-logo" alt="TOR">
+                  <span class="card-tx-team-name">多倫多藍鳥</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Toronto Blue Jays placed RHP <a href="https://baseballsavant.mlb.com/savant-player/680755" target="_blank" class="player-link">Braydon Fisher</a> on the restricted list.</li><li>Toronto Blue Jays activated RHP <a href="https://baseballsavant.mlb.com/savant-player/453286" target="_blank" class="player-link">Max Scherzer</a> from the 15-day injured list.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/120.svg" class="card-tx-logo" alt="WSH">
+                  <span class="card-tx-team-name">華盛頓國民</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Washington Nationals designated LHP <a href="https://baseballsavant.mlb.com/savant-player/640454" target="_blank" class="player-link">Matt Krook</a> for assignment.</li><li>Washington Nationals recalled RHP <a href="https://baseballsavant.mlb.com/savant-player/687606" target="_blank" class="player-link">Paxton Schultz</a> from Rochester Red Wings.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Luis Urías -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/649966" target="_blank" class="player-link">Luis Urías</a></span>
+                    <span class="performer-team">TOR · 2B</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(3)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">2</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">2</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Myles Straw -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/664702" target="_blank" class="player-link">Myles Straw</a></span>
+                    <span class="performer-team">TOR · LF</span>
+                  </div>
+                  <span class="performer-tag sb">SB: 1(5)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Andrés Chaparro -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/665953" target="_blank" class="player-link">Andrés Chaparro</a></span>
+                    <span class="performer-team">WSH · DH</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(5)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">2</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Mason Fluharty -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/689254" target="_blank" class="player-link">Mason Fluharty</a></span>
+                    <span class="performer-team">TOR · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (5-1)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">1.1</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">1</span> (球數 <span class="performer-stats-numbers">17/12</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: ATL @ NYM -->
+      <div class="game-card" data-teams="ATL 亞特蘭大勇士 Atlanta Braves NYM 紐約大都會 New York Mets">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #823597</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/144.svg" class="team-logo" alt="ATL">
+                    <span>亞特蘭大勇士 (62-44)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">6</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" class="team-logo" alt="NYM">
+                    <span>紐約大都會 (45-62)</span>
+                  </td>
+                  <td class="num-cell runs-cell">14</td>
+                  <td class="num-cell">19</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/804267" target="_blank" class="player-link">Zac Thornton</a> (2-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/671162" target="_blank" class="player-link">Connor Thomas</a> (0-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Robert aware of Deadline talk but ‘I'd like to stay here’</h4>
+              <p class="game-news-content">NEW YORK -- With a steady rain soaking Citi Field in the fifth inning of a 14-3 win over the Braves on Monday, cleanup hitter Luis Robert Jr. stepped to the plate and pulled a two-strike, 111.7 mph single into left field. Robert now has four of the 12 hardest-hit</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/144.svg" class="card-tx-logo" alt="ATL">
+                  <span class="card-tx-team-name">亞特蘭大勇士</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Atlanta Braves activated RF <a href="https://baseballsavant.mlb.com/savant-player/660670" target="_blank" class="player-link">Ronald Acuña Jr.</a> from the 10-day injured list.</li><li>Atlanta Braves optioned RF <a href="https://baseballsavant.mlb.com/savant-player/676551" target="_blank" class="player-link">Brewer Hicklen</a> to Gwinnett Stripers.</li><li>Atlanta Braves sent RHP <a href="https://baseballsavant.mlb.com/savant-player/622694" target="_blank" class="player-link">Elieser Hernández</a> outright to Gwinnett Stripers.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Francisco Lindor -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/596019" target="_blank" class="player-link">Francisco Lindor</a></span>
+                    <span class="performer-team">NYM · SS</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 2(7)(8)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">3</span> | 打點 <span class="performer-stats-numbers">6</span> | 保送 <span class="performer-stats-numbers">1</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Tyrone Taylor -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/621438" target="_blank" class="player-link">Tyrone Taylor</a></span>
+                    <span class="performer-team">NYM · LF</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(9)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">3</span> | 安打 <span class="performer-stats-numbers">3</span> | 打點 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Marcus Semien -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/543760" target="_blank" class="player-link">Marcus Semien</a></span>
+                    <span class="performer-team">NYM · 2B</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(12)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">3</span> | 安打 <span class="performer-stats-numbers">3</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">1</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Ozzie Albies -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/645277" target="_blank" class="player-link">Ozzie Albies</a></span>
+                    <span class="performer-team">ATL · 2B</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(18)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: A.J. Ewing -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/805999" target="_blank" class="player-link">A.J. Ewing</a></span>
+                    <span class="performer-team">NYM · RF</span>
+                  </div>
+                  <span class="performer-tag sb">SB: 1(12)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">3</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Zac Thornton -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/804267" target="_blank" class="player-link">Zac Thornton</a></span>
+                    <span class="performer-team">NYM · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (2-1)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">6.1</span> | 被安打 <span class="performer-stats-numbers">6</span> | 失分 <span class="performer-stats-numbers">3</span> | 自責 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">5</span> (球數 <span class="performer-stats-numbers">81/54</span>)
+                </div>
+              </div>
+              <!-- Pitcher Highlight: Daniel Duarte -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/650960" target="_blank" class="player-link">Daniel Duarte</a></span>
+                    <span class="performer-team">NYM · P</span>
+                  </div>
+                  <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Relief</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">2.0</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">3</span> (球數 <span class="performer-stats-numbers">24/19</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: NYY @ CWS -->
+      <div class="game-card" data-teams="NYY 紐約洋基 New York Yankees CWS 芝加哥白襪 Chicago White Sox">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824570</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/147.svg" class="team-logo" alt="NYY">
+                    <span>紐約洋基 (60-46)</span>
+                  </td>
+                  <td class="num-cell runs-cell">9</td>
+                  <td class="num-cell">10</td>
+                  <td class="num-cell">2</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/145.svg" class="team-logo" alt="CWS">
+                    <span>芝加哥白襪 (55-50)</span>
+                  </td>
+                  <td class="num-cell runs-cell">5</td>
+                  <td class="num-cell">10</td>
+                  <td class="num-cell">3</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/687396" target="_blank" class="player-link">Brent Headrick</a> (6-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/663542" target="_blank" class="player-link">Bryan Hudson</a> (3-4)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/670280" target="_blank" class="player-link">David Bednar</a> (21)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Sánchez finally slugs the homer he's been waiting 6 years to hit</h4>
+              <p class="game-news-content">CHICAGO -- For a few seconds, Ali Sánchez said he “felt nothing” as he tracked the flight of his first Major League home run. It was when he began to run, a trot around the bases that the Yankees' catcher had pictured for his entire life, that he felt everything.</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/145.svg" class="card-tx-logo" alt="CWS">
+                  <span class="card-tx-team-name">芝加哥白襪</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Chicago White Sox activated RF <a href="https://baseballsavant.mlb.com/savant-player/677592" target="_blank" class="player-link">Everson Pereira</a> from the 7-day injured list.</li><li>Chicago White Sox optioned CF <a href="https://baseballsavant.mlb.com/savant-player/678577" target="_blank" class="player-link">Junior Perez</a> to Charlotte Knights.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Jazz Chisholm Jr. -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/665862" target="_blank" class="player-link">Jazz Chisholm Jr.</a></span>
+                    <span class="performer-team">NYY · 2B</span>
+                  </div>
+                  <span class="performer-tag sb">SB: 2(28)(29)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">2</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Ali Sánchez -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/645305" target="_blank" class="player-link">Ali Sánchez</a></span>
+                    <span class="performer-team">NYY · C</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(1)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">3</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Colson Montgomery -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/695657" target="_blank" class="player-link">Colson Montgomery</a></span>
+                    <span class="performer-team">CWS · DH</span>
+                  </div>
+                  
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">3</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">1</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Trevor Richards -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/670950" target="_blank" class="player-link">Trevor Richards</a></span>
+                    <span class="performer-team">CWS · P</span>
+                  </div>
+                  <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Relief</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">2.0</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">4</span> (球數 <span class="performer-stats-numbers">29/18</span>)
+                </div>
+              </div>
+              <!-- Pitcher Highlight: Brent Headrick -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/687396" target="_blank" class="player-link">Brent Headrick</a></span>
+                    <span class="performer-team">NYY · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (6-1)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">1.1</span> | 被安打 <span class="performer-stats-numbers">2</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">1</span> (球數 <span class="performer-stats-numbers">14/10</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: CHC @ STL -->
+      <div class="game-card" data-teams="CHC 芝加哥小熊 Chicago Cubs STL 聖路易紅雀 St. Louis Cardinals">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #823025</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/112.svg" class="team-logo" alt="CHC">
+                    <span>芝加哥小熊 (60-46)</span>
+                  </td>
+                  <td class="num-cell runs-cell">7</td>
+                  <td class="num-cell">14</td>
+                  <td class="num-cell">0</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/138.svg" class="team-logo" alt="STL">
+                    <span>聖路易紅雀 (53-53)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">7</td>
+                  <td class="num-cell">1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/656849" target="_blank" class="player-link">David Peterson</a> (6-7)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/669461" target="_blank" class="player-link">Matthew Liberatore</a> (5-8)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">無</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Bregman, Hoerner back up Peterson's solid start with 4 hits each</h4>
+              <p class="game-news-content">ST. LOUIS -- The players inside the Cubs’ clubhouse began their day Monday by learning that starter Jameson Taillon -- a well-respected veteran and leader -- had been designated for assignment. It was the latest unexpected turn for a Chicago team that has weathered plenty of storms this season.
+Through</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/112.svg" class="card-tx-logo" alt="CHC">
+                  <span class="card-tx-team-name">芝加哥小熊</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Chicago Cubs designated RHP <a href="https://baseballsavant.mlb.com/savant-player/592791" target="_blank" class="player-link">Jameson Taillon</a> for assignment.</li><li>Chicago Cubs selected the contract of RHP <a href="https://baseballsavant.mlb.com/savant-player/681806" target="_blank" class="player-link">Andrew Wantz</a> from Iowa Cubs.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Alex Bregman -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/608324" target="_blank" class="player-link">Alex Bregman</a></span>
+                    <span class="performer-team">CHC · 3B</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(11)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">3</span> | 安打 <span class="performer-stats-numbers">4</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Nico Hoerner -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/663538" target="_blank" class="player-link">Nico Hoerner</a></span>
+                    <span class="performer-team">CHC · 2B</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(5)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">4</span> | 打點 <span class="performer-stats-numbers">4</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: José Fermín -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/665877" target="_blank" class="player-link">José Fermín</a></span>
+                    <span class="performer-team">STL · CF</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(5)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: David Peterson -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/656849" target="_blank" class="player-link">David Peterson</a></span>
+                    <span class="performer-team">CHC · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (6-7)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">5.2</span> | 被安打 <span class="performer-stats-numbers">3</span> | 失分 <span class="performer-stats-numbers">2</span> | 自責 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">2</span> | 三振 <span class="performer-stats-numbers">3</span> (球數 <span class="performer-stats-numbers">86/54</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: HOU @ LAA -->
+      <div class="game-card" data-teams="HOU 休士頓太空人 Houston Astros LAA 洛杉磯天使 Los Angeles Angels">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824001</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/117.svg" class="team-logo" alt="HOU">
+                    <span>休士頓太空人 (53-55)</span>
+                  </td>
+                  <td class="num-cell runs-cell">6</td>
+                  <td class="num-cell">5</td>
+                  <td class="num-cell">1</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/108.svg" class="team-logo" alt="LAA">
+                    <span>洛杉磯天使 (42-65)</span>
+                  </td>
+                  <td class="num-cell runs-cell">4</td>
+                  <td class="num-cell">6</td>
+                  <td class="num-cell">2</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/664299" target="_blank" class="player-link">Cristian Javier</a> (1-1)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/820862" target="_blank" class="player-link">José Fermin</a> (3-2)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/623352" target="_blank" class="player-link">Josh Hader</a> (13)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Astros score 4 in 9th with just 1 hit in improbable comeback win</h4>
+              <p class="game-news-content">ANAHEIM -- In one of their most improbable wins of the season, the Astros rallied for four runs in the ninth inning despite managing one hit, to stun the Angels with a 6-4 win Monday night at Angel Stadium -- their sixth in their last seven games.
+Trailing 4-2 entering</p>
+            </div>
+            
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Vaughn Grissom -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/687093" target="_blank" class="player-link">Vaughn Grissom</a></span>
+                    <span class="performer-team">LAA · 2B</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(7)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">5</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">3</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Taylor Trammell -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/666211" target="_blank" class="player-link">Taylor Trammell</a></span>
+                    <span class="performer-team">HOU · LF</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(5)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">2</span> | 得分 <span class="performer-stats-numbers">2</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">2</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Cristian Javier -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/664299" target="_blank" class="player-link">Cristian Javier</a></span>
+                    <span class="performer-team">HOU · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (1-1)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">5.0</span> | 被安打 <span class="performer-stats-numbers">3</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">7</span> (球數 <span class="performer-stats-numbers">70/50</span>)
+                </div>
+              </div>
+              <!-- Pitcher Highlight: Walbert Ureña -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/700712" target="_blank" class="player-link">Walbert Ureña</a></span>
+                    <span class="performer-team">LAA · P</span>
+                  </div>
+                  <span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">6.0</span> | 被安打 <span class="performer-stats-numbers">2</span> | 失分 <span class="performer-stats-numbers">1</span> | 自責 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">2</span> | 三振 <span class="performer-stats-numbers">5</span> (球數 <span class="performer-stats-numbers">91/60</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: BOS @ OAK -->
+      <div class="game-card" data-teams="BOS 波士頓紅襪 Boston Red Sox OAK 奧克蘭運動家 Athletics">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #824977</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" class="team-logo" alt="BOS">
+                    <span>波士頓紅襪 (55-50)</span>
+                  </td>
+                  <td class="num-cell runs-cell">4</td>
+                  <td class="num-cell">5</td>
+                  <td class="num-cell">2</td>
+                </tr>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/133.svg" class="team-logo" alt="OAK">
+                    <span>奧克蘭運動家 (44-62)</span>
+                  </td>
+                  <td class="num-cell runs-cell">2</td>
+                  <td class="num-cell">6</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/801139" target="_blank" class="player-link">Payton Tolle</a> (6-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/678022" target="_blank" class="player-link">Jack Perkins</a> (2-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/547973" target="_blank" class="player-link">Aroldis Chapman</a> (25)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">Rafaela's 1st career grand slam fuels Boston's 10th straight road win</h4>
+              <p class="game-news-content">WEST SACRAMENTO – The fifth spot in the lineup looks like it’s going to suit Ceddanne Rafaela just fine in his breakout season at the plate.
+The All-Star center fielder had been interim manager Chad Tracy’s No. 2 hitter for Boston’s torrid run over the last month-plus.</p>
+            </div>
+                        <div class="game-transactions-box">
+              <h4 class="game-tx-sub-header">球員異動</h4>
+                            <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" class="card-tx-logo" alt="BOS">
+                  <span class="card-tx-team-name">波士頓紅襪</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Boston Red Sox activated 3B <a href="https://baseballsavant.mlb.com/savant-player/678554" target="_blank" class="player-link">Curtis Mead</a>.</li><li>Boston Red Sox optioned SS <a href="https://baseballsavant.mlb.com/savant-player/691907" target="_blank" class="player-link">Tsung-Che Cheng</a> to Worcester Red Sox.</li>
+                </ul>
+              </div>              <div class="card-team-tx">
+                <div class="card-team-tx-header">
+                  <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/133.svg" class="card-tx-logo" alt="OAK">
+                  <span class="card-tx-team-name">奧克蘭運動家</span>
+                </div>
+                <ul class="card-tx-list">
+                  <li>Athletics activated RHP <a href="https://baseballsavant.mlb.com/savant-player/656240" target="_blank" class="player-link">Scott Blewett</a>.</li><li>Athletics designated RHP <a href="https://baseballsavant.mlb.com/savant-player/664129" target="_blank" class="player-link">Geoff Hartlieb</a> for assignment.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Ceddanne Rafaela -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/678882" target="_blank" class="player-link">Ceddanne Rafaela</a></span>
+                    <span class="performer-team">BOS · CF</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(11)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">4</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Tyler Soderstrom -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/691016" target="_blank" class="player-link">Tyler Soderstrom</a></span>
+                    <span class="performer-team">OAK · DH</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(17)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">1</span>
+                </div>
+              </div>
+              <!-- Batter Highlight: Jonah Heim -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/641680" target="_blank" class="player-link">Jonah Heim</a></span>
+                    <span class="performer-team">OAK · C</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(10)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">4</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">1</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Payton Tolle -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/801139" target="_blank" class="player-link">Payton Tolle</a></span>
+                    <span class="performer-team">BOS · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (6-6)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">5.1</span> | 被安打 <span class="performer-stats-numbers">5</span> | 失分 <span class="performer-stats-numbers">2</span> | 自責 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">1</span> | 三振 <span class="performer-stats-numbers">7</span> (球數 <span class="performer-stats-numbers">90/59</span>)
+                </div>
+              </div>
+              <!-- Pitcher Highlight: Jack Perkins -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/678022" target="_blank" class="player-link">Jack Perkins</a></span>
+                    <span class="performer-team">OAK · P</span>
+                  </div>
+                  <span class="performer-tag" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);">L (2-6)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">5.2</span> | 被安打 <span class="performer-stats-numbers">1</span> | 失分 <span class="performer-stats-numbers">2</span> | 自責 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">3</span> | 三振 <span class="performer-stats-numbers">4</span> (球數 <span class="performer-stats-numbers">69/41</span>)
+                </div>
+              </div>
+              <!-- Pitcher Highlight: Aroldis Chapman -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/547973" target="_blank" class="player-link">Aroldis Chapman</a></span>
+                    <span class="performer-team">BOS · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">S (25)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">1.0</span> | 被安打 <span class="performer-stats-numbers">1</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">3</span> (球數 <span class="performer-stats-numbers">24/18</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: MIL @ SF -->
+      <div class="game-card" data-teams="MIL 密爾瓦基釀酒人 Milwaukee Brewers SF 舊金山巨人 San Francisco Giants">
+        <!-- Upper Part: Matchup & Scores (Full-width) -->
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #823195</span>
+            <span class="status-badge final">Final</span>
+          </div>
+          
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                  <th>H</th>
+                  <th>E</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/158.svg" class="team-logo" alt="MIL">
+                    <span>密爾瓦基釀酒人 (66-40)</span>
+                  </td>
+                  <td class="num-cell runs-cell">0</td>
+                  <td class="num-cell">3</td>
+                  <td class="num-cell">1</td>
+                </tr>
+                <tr class="winner-row">
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/137.svg" class="team-logo" alt="SF">
+                    <span>舊金山巨人 (45-61)</span>
+                  </td>
+                  <td class="num-cell runs-cell">3</td>
+                  <td class="num-cell">6</td>
+                  <td class="num-cell">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
+        <div class="game-card-lower">
+          <!-- Left Column: Pitching Decisions & News Summary -->
+          <div class="decisions-section">
+            <h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/641816" target="_blank" class="player-link">Tyler Mahle</a> (3-9)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/687075" target="_blank" class="player-link">Brandon Sproat</a> (3-6)</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value"><a href="https://baseballsavant.mlb.com/savant-player/669062" target="_blank" class="player-link">Erik Miller</a> (3)</span>
+              </div>
+            </div>
+                        <div class="game-news-box">
+              <h4 class="game-news-title">As Deadline nears, Mahle shows best stuff in 6-inning gem</h4>
+              <p class="game-news-content">SAN FRANCISCO -- Second baseman Luis Arraez and left-hander Robbie Ray have been viewed as the Giants’ most obvious candidates to be moved ahead of the Aug. 3 Trade Deadline.
+But there’s another pending free agent who seems likely to garner interest from contending teams over the next week: right-hander</p>
+            </div>
+            
+          </div>
+
+          <!-- Right Column: Key Performers Highlights -->
+          <div class="highlights-section">
+            <h3 class="highlights-header">單場焦點球員</h3>
+            
+            <!-- Batting Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">打擊焦點</span>
+              <div class="performer-list">
+              <!-- Batter Highlight: Grant McCray -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/687529" target="_blank" class="player-link">Grant McCray</a></span>
+                    <span class="performer-team">SF · RF</span>
+                  </div>
+                  <span class="performer-tag hr">HR: 1(1)</span>
+                </div>
+                <div class="performer-stats">
+                  單場表現：打數 <span class="performer-stats-numbers">3</span> | 得分 <span class="performer-stats-numbers">1</span> | 安打 <span class="performer-stats-numbers">1</span> | 打點 <span class="performer-stats-numbers">2</span> | 保送 <span class="performer-stats-numbers">0</span>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Pitching Highlights -->
+            <div class="performer-group">
+              <span class="performer-category-title">投手焦點</span>
+              <div class="performer-list">
+              <!-- Pitcher Highlight: Tyler Mahle -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/641816" target="_blank" class="player-link">Tyler Mahle</a></span>
+                    <span class="performer-team">SF · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">W (3-9)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">6.0</span> | 被安打 <span class="performer-stats-numbers">3</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">2</span> | 三振 <span class="performer-stats-numbers">3</span> (球數 <span class="performer-stats-numbers">88/54</span>)
+                </div>
+              </div>
+              <!-- Pitcher Highlight: Erik Miller -->
+              <div class="performer-item">
+                <div class="performer-name-row">
+                  <div>
+                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/669062" target="_blank" class="player-link">Erik Miller</a></span>
+                    <span class="performer-team">SF · P</span>
+                  </div>
+                  <span class="performer-tag pitcher-win">S (3)</span>
+                </div>
+                <div class="performer-stats">
+                  投球內容：局數 <span class="performer-stats-numbers">1.0</span> | 被安打 <span class="performer-stats-numbers">0</span> | 失分 <span class="performer-stats-numbers">0</span> | 自責 <span class="performer-stats-numbers">0</span> | 保送 <span class="performer-stats-numbers">0</span> | 三振 <span class="performer-stats-numbers">2</span> (球數 <span class="performer-stats-numbers">14/9</span>)
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Game Card: CLE @ CIN (Postponed) -->
+      <div class="game-card" style="grid-template-columns: 1fr;" data-teams="CLE 克里夫蘭守護者 Cleveland Guardians CIN 辛辛那提紅人 Cincinnati Reds">
+        <div class="postponed-game-body">
+          <div class="postponed-icon">🌧️</div>
+          <div class="postponed-title">克里夫蘭守護者 @ 辛辛那提紅人</div>
+          <p>原定於今日舉行的例行賽事，因雨延期 (Postponed - Rain)。補賽日期將另行公布。</p>
+          <span class="status-badge postponed">Postponed</span>
+        </div>
+      </div>
+
+      <!--/GAMES_LIST-->
+    </main>
+
+    <!--TRANSACTIONS_SECTION-->
+    <section class="transactions-section">
+      <h2 class="transactions-header">
+        <span>其他球隊人事異動</span>
+        <span class="tx-badge">2</span>
+      </h2>
+      <div class="transactions-grid">
+        <!-- Team Transactions: 113 -->
+        <div class="team-tx-card">
+          <div class="team-tx-header">
+            <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/113.svg" class="team-tx-logo" alt="logo">
+            <span class="team-tx-name">辛辛那提紅人</span>
+          </div>
+          <ul class="team-tx-list">
+            <li>Cincinnati Reds placed 1B <a href="https://baseballsavant.mlb.com/savant-player/668715" target="_blank" class="player-link">Spencer Steer</a> on the 10-day injured list. Right wrist sprain.</li><li>Cincinnati Reds recalled 2B <a href="https://baseballsavant.mlb.com/savant-player/671155" target="_blank" class="player-link">Ivan Johnson</a> from Louisville Bats.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+      <!--/TRANSACTIONS_SECTION-->
+
+    <footer>
+      <p>MLB Daily 每日戰報系統</p>
+      <p>資料來源: MLB Stats API | 台北時間中午 12:00 自動更新</p>
+      <p><a href="https://haolun588.github.io/MLB-daily/">回首頁</a> | <a href="https://github.com/haolun588/MLB-daily">GitHub 專案庫</a></p>
+    </footer>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('teamSearchInput');
+      const searchBtn = document.getElementById('teamSearchBtn');
+      const feedback = document.getElementById('searchFeedback');
+
+      function performSearch() {
+        const query = searchInput.value.trim().toLowerCase();
+        if (feedback) feedback.style.display = 'none';
+        
+        if (!query) {
+          return;
+        }
+
+        const cards = document.querySelectorAll('.game-card[data-teams]');
+        let matchedCard = null;
+
+        for (const card of cards) {
+          const teamsData = (card.getAttribute('data-teams') || '').toLowerCase();
+          if (teamsData.includes(query)) {
+            matchedCard = card;
+            break;
+          }
+        }
+
+        if (matchedCard) {
+          matchedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          matchedCard.classList.remove('highlight-card');
+          void matchedCard.offsetWidth; // Force reflow
+          matchedCard.classList.add('highlight-card');
+
+          setTimeout(() => {
+            matchedCard.classList.remove('highlight-card');
+          }, 2600);
+        } else if (feedback) {
+          feedback.textContent = `找不到隊名或縮寫包含 「${searchInput.value.trim()}」 的比賽卡片`;
+          feedback.style.display = 'block';
+        }
+      }
+
+      if (searchBtn && searchInput) {
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keyup', function(e) {
+          if (e.key === 'Enter') {
+            performSearch();
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

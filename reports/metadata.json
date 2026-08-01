@@ -22,5 +22,65 @@
     "total_games": 15,
     "postponed": 2,
     "summary": "昨日共進行了 15 場賽事。其中有 2 場賽事延期。 MIN @ CLE，比分 2:5，Parker Messick 投出 6 次三振；LAD @ PHI，比分 2:1，Justin Wrobleski 投出 7 次三振；TB @ TOR，比分 12:2，Nick Fortes 擊出全壘打。"
+  },
+  "2026-07-22": {
+    "date": "2026-07-22",
+    "total_games": 17,
+    "postponed": 0,
+    "summary": "昨日共進行了 17 場賽事。 PIT @ NYY，比分 5:3，Gerrit Cole 投出 11 次三振；PIT @ NYY，比分 0:2，Bubba Chandler 投出 5 次三振；BAL @ BOS，比分 3:6，Christian Encarnacion-Strand 擊出全壘打。"
+  },
+  "2026-07-23": {
+    "date": "2026-07-23",
+    "total_games": 5,
+    "postponed": 0,
+    "summary": "昨日共進行了 5 場賽事。 SD @ ATL，比分 5:6，Chris Sale 投出 11 次三振；MIN @ CLE，比分 3:1，Gavin Williams 投出 11 次三振；TB @ TOR，比分 1:3。"
+  },
+  "2026-07-24": {
+    "date": "2026-07-24",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "昨日共進行了 15 場賽事。 COL @ MIL，比分 5:2，Tomoyuki Sugano 投出 5 次三振；KCR @ DET，比分 1:2，Tarik Skubal 投出 12 次三振；CHC @ PIT，比分 3:2，Jared Jones 投出 5 次三振。"
+  },
+  "2026-07-25": {
+    "date": "2026-07-25",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "昨日共進行了 15 場賽事。 KCR @ DET，比分 3:2；ARI @ WSH，比分 3:5，CJ Abrams 擊出全壘打；LAA @ SF，比分 2:9，Robbie Ray 投出 5 次三振。"
+  },
+  "2026-07-26": {
+    "date": "2026-07-26",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "昨日共進行了 15 場賽事。 CLE @ TB，比分 0:1，Drew Rasmussen 投出 9 次三振；ARI @ WSH，比分 7:10，CJ Abrams 擊出全壘打；CHC @ PIT，比分 7:8，Ryan O'Hearn 擊出全壘打。"
+  },
+  "2026-07-27": {
+    "date": "2026-07-27",
+    "total_games": 12,
+    "postponed": 1,
+    "summary": "昨日共進行了 12 場賽事。其中有 1 場賽事延期。 SEA @ TEX，比分 3:7，Kumar Rocker 投出 7 次三振；BAL @ DET，比分 8:5，Coby Mayo 擊出全壘打；ARI @ PIT，比分 2:3，Merrill Kelly 投出 6 次三振。"
+  },
+  "2026-07-28": {
+    "date": "2026-07-28",
+    "total_games": 16,
+    "postponed": 1,
+    "summary": "昨日共進行了 16 場賽事。其中有 1 場賽事延期。 CLE @ CIN，比分 6:5，Sal Stewart 擊出全壘打；CLE @ CIN，比分 0:2，Gavin Williams 投出 12 次三振；BAL @ DET，比分 0:14，Troy Melton 投出 5 次三振。"
+  },
+  "2026-07-29": {
+    "date": "2026-07-29",
+    "total_games": 16,
+    "postponed": 0,
+    "summary": "昨日共進行了 16 場賽事。 PHI @ MIA，比分 6:8；ARI @ PIT，比分 3:0；TOR @ WSH，比分 5:2。"
+  },
+  "2026-07-30": {
+    "date": "2026-07-30",
+    "total_games": 10,
+    "postponed": 0,
+    "summary": "昨日共進行了 10 場賽事。 TEX @ TB，比分 2:3，Jonny DeLuca 擊出全壘打；KCR @ MIN，比分 3:4，Noah Cameron 投出 7 次三振；NYY @ CWS，比分 1:2，Sean Burke 投出 10 次三振。"
+  },
+  "2026-07-31": {
+    "date": "2026-07-31",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "昨日共進行了 15 場賽事。 NYY @ CHC，比分 2:0，Will Warren 投出 7 次三振；PIT @ CIN，比分 7:8，Sal Stewart 擊出全壘打；PHI @ BAL，比分 4:6，Andrew Painter 投出 6 次三振。"
   }
 }
