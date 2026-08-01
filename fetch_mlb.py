@@ -876,9 +876,9 @@ def update_index_page(new_metadata):
         post = index_content.split(end_tag)[1]
         index_content = pre + start_tag + "\n      " + latest_html + "\n      " + end_tag + post
         
-    # 2. Update REPORTS_LIST archive section
+    # 2. Update REPORTS_LIST archive section (only keep latest 6)
     archive_cards = []
-    for date_str in sorted_dates:
+    for date_str in sorted_dates[:6]:
         meta = metadata_db[date_str]
         parts_card = date_str.split('-')
         card_path = f"reports/{parts_card[0]}/{parts_card[1]}/{date_str}.html"
