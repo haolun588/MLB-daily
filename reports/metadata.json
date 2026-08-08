@@ -118,5 +118,11 @@
     "total_games": 11,
     "postponed": 0,
     "summary": "昨日共進行了 11 場賽事。 LAA @ BAL，比分 4:1，Zach Neto 擊出全壘打；OAK @ CIN，比分 5:6；NYM @ CLE，比分 13:6，Marcus Semien 擊出全壘打。"
+  },
+  "2026-08-07": {
+    "date": "2026-08-07",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "昨日共進行了 15 場賽事。 NYM @ PIT，比分 6:4；TOR @ PHI，比分 5:4，Josh Smith 擊出全壘打；CIN @ WSH，比分 3:5，Cade Cavalli 投出 8 次三振。"
   }
 }
