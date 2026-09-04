@@ -280,5 +280,11 @@
     "total_games": 15,
     "postponed": 0,
     "summary": "昨日共進行了 15 場賽事。 SD @ CIN，比分 3:7，JJ Bleday 擊出全壘打；ATL @ WSH，比分 9:0，Sean Murphy 擊出全壘打；OAK @ TEX，比分 9:2，Henry Bolte 擊出全壘打。"
+  },
+  "2026-09-03": {
+    "date": "2026-09-03",
+    "total_games": 9,
+    "postponed": 0,
+    "summary": "昨日共進行了 9 場賽事。 SF @ PIT，比分 2:5，Blade Tidwell 投出 5 次三振；TOR @ CLE，比分 6:3；CWS @ HOU，比分 2:6，Hunter Brown 投出 7 次三振。"
   }
 }
