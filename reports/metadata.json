@@ -400,5 +400,11 @@
     "total_games": 16,
     "postponed": 1,
     "summary": "昨日共進行了 16 場賽事。其中有 1 場賽事延期。 TB @ NYY，比分 0:2，Carlos Rodón 投出 8 次三振；TB @ NYY，比分 6:1，Drew Rasmussen 投出 11 次三振；WSH @ DET，比分 3:1，CJ Abrams 擊出全壘打。"
+  },
+  "2026-09-23": {
+    "date": "2026-09-23",
+    "total_games": 16,
+    "postponed": 0,
+    "summary": "昨日共進行了 16 場賽事。 WSH @ DET，比分 4:2，Framber Valdez 投出 6 次三振；TOR @ BAL，比分 2:4；TOR @ BAL，比分 2:4，Trey Gibson 投出 7 次三振。"
   }
 }
