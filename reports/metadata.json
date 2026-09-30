@@ -436,5 +436,11 @@
     "total_games": 0,
     "postponed": 0,
     "summary": "2026-09-28 當日無安排任何大聯盟賽事。"
+  },
+  "2026-09-29": {
+    "date": "2026-09-29",
+    "total_games": 4,
+    "postponed": 0,
+    "summary": "昨日共進行了 4 場賽事。 PHI @ ATL，比分 3:5，Chris Sale 投出 9 次三振；CWS @ HOU，比分 6:3；BOS @ NYY，比分 0:9，Cam Schlittler 投出 10 次三振。"
   }
 }
