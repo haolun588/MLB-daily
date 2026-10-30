@@ -616,5 +616,11 @@
     "total_games": 1,
     "postponed": 0,
     "summary": "昨日共進行了 1 場賽事。 MIL @ TB，比分 4:1。"
+  },
+  "2026-10-29": {
+    "date": "2026-10-29",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-29 當日無安排任何大聯盟賽事。"
   }
 }
