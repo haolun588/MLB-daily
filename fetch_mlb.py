@@ -70,6 +70,15 @@ POSTPONED_REASONS = {
     "Postponed": "賽事延期"
 }
 
+# 取消（Cancelled）原因對照；不沿用延期文案以免語句不通順
+CANCELLED_REASONS = {
+    "Rain": "因雨取消",
+    "Wet Grounds": "因場地濕滑取消",
+    "Cold": "因低溫取消",
+    "Inclement Weather": "因惡劣天氣取消",
+    "Snow": "因雪取消",
+}
+
 # 等待迴圈：每次檢查未完成時睡 30 分鐘，最多檢查 MAX_WAIT_CHECKS 次
 MAX_WAIT_CHECKS = 8
 WAIT_SLEEP_SECONDS = 1800
@@ -1174,7 +1183,12 @@ def build_postponed_view(game, away_info, home_info):
     if status.get("detailedState") == "Cancelled":
         reason_raw = status.get("reason")
         reason_eng = f"Cancelled - {reason_raw}" if reason_raw else "Cancelled"
-        reason_chi = POSTPONED_REASONS.get(reason_raw, "賽事延期").replace("延期", "取消")
+        if reason_raw in CANCELLED_REASONS:
+            reason_chi = CANCELLED_REASONS[reason_raw]
+        elif reason_raw:
+            reason_chi = f"賽事取消（原因：{reason_raw}）"
+        else:
+            reason_chi = "賽事取消"
         view.update(
             status_text="Cancelled", status_class="cancelled", icon="🚫",
             note_title="賽事取消",
@@ -1206,6 +1220,17 @@ def build_game_view(game, boxscore, away_info, home_info):
     batters, pitchers, selected = select_performers(candidates)
     view["batters"], view["pitchers"] = batters, pitchers
     return view, selected
+
+
+def top_focus_score(selected):
+    """該場焦點球員的最高積分（selected 已依積分由高到低）；無焦點球員為 0。"""
+    return max((c["score"] for c in selected), default=0.0)
+
+
+def pick_summary_sentences(entries, limit=3):
+    """entries 為 [(焦點最高積分, 摘要句)]；取積分最高的 limit 場（同分維持原賽程順序）。"""
+    ranked = sorted(entries, key=lambda e: -e[0])
+    return [sentence for _, sentence in ranked[:limit]]
 
 
 def build_summary_sentence(view, selected):
@@ -1290,11 +1315,11 @@ def generate_report(date_str, games):
             print(f"Warning: Could not fetch boxscore for game {game_pk}. Using fallback card.", file=sys.stderr)
             view = build_base_view(game, away_info, home_info)
             cards.append(render_fallback_card(view))
-            key_matchups_summary.append(build_summary_sentence(view, []))
+            key_matchups_summary.append((0.0, build_summary_sentence(view, [])))
             continue
 
         view, selected = build_game_view(game, boxscore, away_info, home_info)
-        key_matchups_summary.append(build_summary_sentence(view, selected))
+        key_matchups_summary.append((top_focus_score(selected), build_summary_sentence(view, selected)))
         view["news"] = fetch_game_news(
             game_pk, away_info["abbr"], home_info["abbr"], view["away"]["r"], view["home"]["r"]
         )
@@ -1313,7 +1338,7 @@ def generate_report(date_str, games):
     if postponed_count > 0:
         summary_sentence += f"其中有 {postponed_count} 場賽事延期。"
     if key_matchups_summary:
-        summary_sentence += " " + "；".join(key_matchups_summary[:3]) + "。"
+        summary_sentence += " " + "；".join(pick_summary_sentences(key_matchups_summary)) + "。"
 
     meta = {
         "date": date_str,
@@ -1329,6 +1354,17 @@ def generate_report(date_str, games):
     return meta
 
 
+def build_offseason_summary(news, transactions_count):
+    """休賽季 metadata 摘要（純文字，渲染時另行 escape）：優先用前 3 則新聞標題（已翻譯用譯文）。"""
+    titles = [(n.get("title_zh") or n["title"]).strip() for n in (news or [])[:3]]
+    titles = [t for t in titles if t]
+    if titles:
+        return "；".join(titles) + "。"
+    if transactions_count > 0:
+        return f"休賽季：人事異動 {transactions_count} 筆"
+    return "休賽季，無重大消息"
+
+
 def generate_offseason_report(date_str):
     """無賽事日：產出「休賽季快報」頁面（新聞＋大聯盟人事異動），回傳 metadata。"""
     tx_list = fetch_daily_transactions(date_str)
@@ -1339,7 +1375,7 @@ def generate_offseason_report(date_str):
         "date": date_str,
         "total_games": 0,
         "postponed": 0,
-        "summary": f"{date_str} 當日無安排任何大聯盟賽事。",
+        "summary": build_offseason_summary(news, len(tx_list)),
         "type": "offseason",
         "transactions_count": len(tx_list),
         "translated": translated,

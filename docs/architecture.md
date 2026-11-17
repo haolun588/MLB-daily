@@ -1,182 +1,190 @@
 # 專案架構 (Project Architecture)
 
-本專案是一個輕量化的自動化 MLB 戰報生成系統。核心理念是「無伺服器 (Serverless) 運行，靜態網頁託管」，透過 GitHub Actions 每日定時執行 Python 腳本抓取資料，生成靜態 HTML 網頁並藉由 GitHub Pages 提供線上瀏覽，最後透過 Discord Webhook 傳送通知。
+本專案是輕量化的自動化 MLB 戰報系統：無伺服器運行、靜態網頁託管。GitHub Actions 每日執行 Python 腳本抓取資料並產生靜態 HTML，部署到 GitHub Pages，最後以 Discord Webhook 通知。只使用 Python 標準函式庫（需 Python 3.12 以上）。
 
 ---
 
-## 模組劃分 (Modules)
+## 檔案結構
 
-專案主要分為以下四個模組：
+```
+fetch_mlb.py              唯一的主程式
+templates/report.html     戰報與休賽季快報頁面骨架
+templates/index.html      首頁骨架
+assets/style.css          共用樣式表
+assets/archive.js         歷史存檔頁腳本
+index.html                首頁（腳本全量重新產生，不是局部修改）
+archive.html              歷史存檔頁（靜態檔，執行時以 JS 讀取 metadata）
+reports/metadata.json     每日索引
+reports/YYYY/MM/YYYY-MM-DD.html   戰報（僅存在於 gh-pages，main 忽略）
+tests/test_fetch_mlb.py   單元測試
+tests/fixtures/           API 假資料（schedule、boxscore、content、transactions、RSS）
+.github/workflows/daily_report.yml   排程、測試、部署、通知
+```
+
+---
+
+## 流程
 
 ```mermaid
 graph TD
-    A[GitHub Actions 排程] -->|每日 12:00 PM 觸發| B(開工檢查模組)
-    B -->|檢查所有比賽是否已結束| C{是否結束?}
-    C -->|否| D[等候 30 分鐘並重試]
-    D --> B
-    C -->|是| E[數據抓取與解析模組]
-    E -->|呼叫 MLB Stats API| F[HTML 生成與更新模組]
-    F -->|產生 daily report & 更新 index.html| G[Git 推送模組]
-    G -->|Commit & Push| H[GitHub Pages 託管]
-    G -->|發送 Post 請求| I[Discord 通知模組]
+    A[排程 04:17 UTC / 手動觸發] --> T[單元測試]
+    T -->|失敗| X[中止]
+    T --> B[產生：--check-wait --no-notify]
+    B --> C{全數完賽?}
+    C -->|否，未達 8 次| D[睡 30 分鐘後重查]
+    D --> C
+    C -->|是，或達上限| E[抓取、渲染、更新 metadata 與 index.html]
+    E --> F[commit 並 push 到 main]
+    F --> G[部署到 gh-pages]
+    G --> H[等待 Pages 回應 200]
+    H --> I[--notify-only 發 Discord]
 ```
 
-### 1. 開工檢查與數據抓取模組 (`fetch_mlb.py`)
-- **API 來源**：MLB Stats API (`https://statsapi.mlb.com/api/v1/schedule`)。
-- **開工檢查**：每日台北時間 12:00 PM 執行時，腳本會先查詢昨日所有比賽的 `abstractGameState` 是否皆為 `Final` 或 `Postponed`。若有任何比賽仍處於 `Live` / `Pre-Game` / `Warmup`，則腳本進入休眠（30 分鐘後重新檢查），直到確認全部結束。
-- **資料解析**：抓取勝負隊伍名稱、最終比分與 R/H/E 數據（不抓取逐局 Linescore 數據）、勝投、敗投及救援投手資訊，並篩選雙方投打的表現焦點（Highlights）。
-
-### 2. HTML 報表生成模組 (`fetch_mlb.py` + `templates/`)
-- **日戰報模板**：將解析後的數據填入 `templates/report_template.html`，輸出為 `reports/YYYY-MM-DD.html`。
-- **入口索引更新**：自動解析 `reports/` 下已有的檔案，更新 `index.html` 的報告清單與最新賽況概覽。
-- **設計風格**：
-  - 現代深色模式 (Modern Dark Mode)。
-  - 純 CSS 響應式佈局 (Mobile-Friendly)。
-  - 採用 **方案 B 上下分層佈局**：
-    - **上半部（滿版寬度）**：展示對戰組合、R-H-E 記分板與賽事狀態 badge。
-    - **下半部（分割雙欄）**：左欄展示「投手決定（勝/敗/救援）」，右欄展示「單場傑出表現球員」。
-    - 這能完美避免因右側球員名單過長而導致左側比分區塊拉伸或產生過多視覺空白。
-  - 利用微動畫與柔和漸層提升視覺體驗。
-
-
-### 3. Git 推送與託管模組 (GitHub Actions + GitHub Pages)
-- **環境**：GitHub Actions Runner。
-- **功能**：自動配置 Git 使用者身分，執行 `git add .`、`git commit` 並 `git push` 回 Repo 的 `main` 分支。
-- **託管**：利用 GitHub Pages 免費靜態託管服務，對外提供 `https://haolun588.github.io/MLB-daily/` 網頁連結。
-
-### 4. Discord 通知模組
-- **機制**：在網頁成功 push 至 GitHub 後，向 Discord Webhook URL 發送 JSON Payload。
-- **內容**：包含昨日日期、比賽場數概況、以及剛產生的 GitHub Pages 網頁連結，讓您在手機或電腦點擊即可直接於瀏覽器瀏覽。
+1. **觸發**：cron `17 4 * * *`（約台北 12:17）或 `workflow_dispatch`（輸入 `date`、`notify`）。`concurrency` 群組 `daily-report`（不取消進行中），job `timeout-minutes: 330`。
+2. **測試**：`python -m unittest discover -s tests -v`。
+3. **產生**：`python fetch_mlb.py --check-wait --no-notify --date <日期>`，環境變數帶入 `GEMINI_API_KEY`。
+4. **push main**：只提交 `index.html` 與 `reports/metadata.json`；`git pull --rebase origin main` 後 push，失敗重試 3 次。
+5. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
+6. **等待 Pages**：每 15 秒檢查當日戰報網址，最多 20 次（約 5 分鐘），逾時只警告、仍繼續下一步。
+7. **通知**：`python fetch_mlb.py --notify-only --date <日期>`，僅排程觸發或手動勾選 `notify` 時執行。
 
 ---
 
-## 🌟 傑出表現球員篩選邏輯 (Top Performers Selection)
+## `fetch_mlb.py` 分層
 
-為了公平且客觀地列出單場表現優異的球員（不論勝負隊伍），系統將採用以下雙軌篩選機制：
+由上而下：
 
-### 1. 篩選機制流程
-1. **計算所有球員積分**：針對該場比賽兩隊所有上場的打者與投手，依據其個人數據計算「表現積分」。
-2. **基本排序保障**：將所有球員按積分從高到低排序，**不分隊伍，直接錄取前 3 名**。
-3. **門檻動態擴充**：自第 4 名（含）以下的球員開始，只要其積分**達到或超過傑出表現門檻**，即自動加列入名單中，無名額上限。
+1. **抓取**
+   - `fetch_json`／`fetch_text`：重試 3 次，失敗回傳 `None`。
+   - `check_all_games_finalized(date)`：回傳 `(是否全數完賽, games)`；API 失敗或結構異常拋出 `ApiError`，只有確認 `totalGames == 0` 才視為無賽事。
+   - `fetch_game_news`（單場 content）、`fetch_daily_transactions`（人事異動）、`fetch_daily_news`（MLB.com RSS）。
+2. **資料抽取**
+   - `classify_game_status`：Final／延長賽 `Final/N`／提前結束／Suspended／未完賽。延長賽以 `linescore.scheduledInnings` 判斷（7 局雙重賽不算延長賽）。
+   - `collect_candidates`、`select_performers`：焦點球員評分與篩選（見下）。
+   - `build_decisions`、`format_cumulative`、`split_game_transactions`。
+3. **view（純資料 dict）**
+   - `build_base_view`（狀態、隊伍、比分）、`build_game_view`（加決定與焦點球員）、`build_postponed_view`（延賽／取消）。
+   - `build_summary_sentence`、`pick_summary_sentences`、`build_offseason_summary`：metadata `summary`。
+4. **翻譯**（渲染前）：`apply_translations`，見下。
+5. **渲染**
+   - 共用工具：`esc()`（所有外部字串輸出到 HTML 前一律經過）、`fill_slots`、`render_page`。
+   - 區塊：`render_summary`、`render_search`、`render_news_section`、`render_transactions_section`、`render_game_card`／`render_fallback_card`／`render_postponed_card`。
+   - 整頁：`render_report(date, page_type, ...)` 為賽季戰報與休賽季快報共用；`render_index` 產生首頁。
+6. **輸出與通知**：`write_report`、`load_metadata`／`save_metadata`／`update_index_page`、`should_notify`、`send_discord_notification`、`main`。
 
-### 2. 積分與門檻定義
+### 模板插槽
 
-#### ⚾ 打者 (Hitters)
-* **積分公式**：
-  $$\text{Score} = H \times 1 + 2B \times 2 + 3B \times 3 + HR \times 4 + RBI \times 1.5 + R \times 1 + SB \times 1 + BB \times 1$$
-  *(例如：單場 3 安打、1 全壘打、3 打點、2 得分之積分為 $3(H) + 4(HR) + 4.5(RBI) + 2(R) = 13.5$ 分)*
-* **傑出門檻**：積分 $\ge 7.0$ 分 (大約相當於 2 安打、1 轟、2 打點，或 3 安打、1 盜壘、2 得分等優良數據)。
+`templates/report.html` 的插槽：`TITLE`、`DATE_LONG`、`SUBTITLE`、`SUMMARY`、`SEARCH`、`NEWS`、`GAMES`、`TRANSACTIONS`、`GENERATED_AT`。`templates/index.html` 的插槽：`LATEST`、`RECENT`。插槽格式為 `<!--SLOT:NAME-->`，`fill_slots` 單次掃描替換，插入的內容不會被當成插槽再次展開。
 
-#### 投球 (Pitchers)
-* **積分公式**：
-  $$\text{Score} = IP \times 3 + K \times 1 - ER \times 2 - H \times 1 - BB \times 1 + (\text{Win} ? 5 : 0) + (\text{Save} ? 4 : 0)$$
-  *(例如：先發投手投 6 局被擊出 4 安打、失 2 自責、三振 6 次且拿到勝投之積分為 $18(IP) + 6(K) - 4(ER) - 4(H) + 5(W) = 21.0$ 分)*
-* **傑出門檻**：
-  * **先發投手 (SP)**：積分 $\ge 15.0$ 分。
-  * **後援/救援投手 (RP/SU/CL)**：積分 $\ge 8.0$ 分。
+### 共用資源與連結
 
----
-
-
-## 資料流說明 (Data Flow)
-
-1. **觸發時間**：每日 UTC 04:00 (台北時間 12:00 PM)。
-2. **比賽檢查**：
-   - 查詢 API 賽事狀態。
-   - 若未完賽 $\rightarrow$ 等待 30 分鐘 $\rightarrow$ 再次查詢。
-   - 若已完賽 $\rightarrow$ 進入資料處理。
-3. **網頁生成**：產出 `reports/YYYY-MM-DD.html` 並更新 `index.html`。
-4. **Git 自動提交**：推送變更，觸發 Pages 部署。
-5. **發送 Discord 訊息**：傳送包含 Pages URL 的精美 Embed 訊息。
+CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `reports/YYYY/MM/`，以 `../../../assets/style.css`、`../../../index.html`、`../../../archive.html` 相對連結回到網站根目錄；首頁使用 `assets/style.css`、`archive.html`。
 
 ---
 
-## 📂 進階維護與視覺設計 (Advanced Maintenance & Design)
+## metadata 欄位
 
-針對專案長期運作及美觀度，規畫以下擴充與優化設計：
+`reports/metadata.json` 是以日期為鍵的物件，每筆：
 
-### 1. 歷史戰報存檔管理 (Archive Management)
-- **目錄結構分層**：當累計報告變多時，腳本將自動按年/月分層儲存 HTML 報告，路徑改為：`reports/YYYY/MM/YYYY-MM-DD.html`（例如：`reports/2026/07/2026-07-18.html`），避免單一資料夾下檔案過多。
-- **首頁動態索引選單**：
-  - `index.html` 預設僅列出「最新 7 天」的戰報以保持頁面簡潔。
-  - 歷史存檔改用選單或摺疊面板（Accordion）呈現。腳本會自動將所有歷史報告的清單彙整成一個輕量 JSON 檔（`reports/archive_index.json`），首頁前端 JavaScript 再根據此 JSON 檔動態繪製年份/月份選單。
+| 欄位 | 說明 |
+|---|---|
+| `date` | `YYYY-MM-DD` |
+| `total_games` | 總場數（休賽季為 0） |
+| `postponed` | 延賽與取消場數 |
+| `summary` | 純文字摘要（輸出時才 escape） |
+| `type` | `season` 或 `offseason` |
+| `news_count` | 當日新聞則數；新聞抓取失敗時不寫入此欄 |
+| `transactions_count` | 該頁顯示的人事異動筆數 |
+| `translated` | 本頁是否成功套用翻譯 |
 
-### 2. 賽季結束自動休眠與重新開工機制 (Off-season Smart Pause)
-- **昨日無賽事自動跳過（動態適應與高穩定度方案）**：
-  - **問題考量**：年度世界大賽的確切結束日期是動態的（根據系列賽打到第 4 至 7 場決定），且每年開幕戰的日期也可能變動，因此使用硬編碼日期或預設日期進行比對容易產生邊界錯誤。
-  - **解決方案**：直接利用「昨天的賽事數量」作為動態判斷核心。
-  - 腳本每天中午 12:00 啟動時，會先查詢昨天的 MLB 賽事。如果 API 回傳的 **總比賽場次 (totalGames) 為 0**，則腳本直接輸出 `[INFO] 昨日無任何 MLB 賽事，跳過戰報生成與 Discord 發送。` 並安全結束運行（Exit Code 0）。
-  - **自動化效果**：
-    - **非賽季期間 (11 月至隔年 3 月)**：GitHub Actions 每天會定時啟動，但在 5 秒內就會因「昨日無賽事」而自動結束，不會產生空白的 HTML、不會提交 Git Commit，也不會發送任何 Discord 空白訊息。
-    - **季中休兵日 (如明星賽四天)**：也會自動識別並安靜跳過。
-    - **隔年春訓/開幕戰**：當春訓或例行賽第一天比賽結束後，隔日中午腳本便會自動偵測到賽事（`totalGames > 0`）並開始正常運作。完全不需要任何人手動修改排程或重置程式。
+舊資料缺少 `type`／`news_count` 等欄位時，首頁與存檔頁會以 `total_games` 推斷類型，缺欄位則省略該數字。
 
+`summary` 規則：
 
-### 3. 隊徽顯示與深色背景優化 (Team Logo & Visibility)
-- **隊徽來源**：
-  - 採用 MLB 官方穩定提供的 SVG 隊徽路徑：`https://www.mlbstatic.com/team-logos/team-cap-on-dark/{teamId}.svg`。
-  - `team-cap-on-dark` 是 MLB 專為深色底設計的帽子隊徽版本，會針對深色字體做出白色描邊或變更為亮色，天生適合深色模式網頁。
-- **CSS 視覺補強（外發光與縮放動畫）**：
-  - 在 CSS 中對隊徽圖片加上 `filter: drop-shadow(...)` 濾鏡。這可以在深色背景下為所有隊徽（不論原本是亮色或暗色）加上一層細緻的白色或淺灰柔和光暈，保證完美的視覺對比度與高階質感：
-    ```css
-    .team-logo {
-        width: 24px;
-        height: 24px;
-        vertical-align: middle;
-        margin-right: 8px;
-        /* 增加柔和白色外發光，解決深色隊徽在黑底看不清的問題 */
-        filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.65));
-        transition: transform 0.2s ease-in-out;
-    }
-    .team-logo:hover {
-        transform: scale(1.15); /* 懸停時放大 */
-    }
-    ```
+- 賽季：「昨日共進行了 N 場賽事。」＋延賽數＋焦點積分最高的 3 場一句話摘要（每場取該場焦點球員的最高積分；無 boxscore 的場次排在最後，同分維持賽程順序）。
+- 休賽季：當日新聞前 3 則標題（已翻譯用譯文）以「；」連接；無新聞時為「休賽季：人事異動 N 筆」；兩者皆無為「休賽季，無重大消息」。
 
-### 4. 當日人事異動整合 (Daily Transactions)
-- **資料來源**：MLB Stats API：`https://statsapi.mlb.com/api/v1/transactions?sportId=1&date=YYYY-MM-DD`。
-- **去重與過濾**：对相同 `description` 進行去重，並套用以下過濾規則以排除小聯盟深度合約與選秀簽約：
-  1. 排除任何包含 `"minor league"` (小聯盟) 關鍵字的異動。
-  2. 若異動描述包含 `"signed"` (簽約)，必須同時包含大聯盟特徵關鍵字（如 `"free agent"`、`"major league"`、`"extension"`、`"arbitration"` 或如 `"1-year"` 等年份合約標記）才予以顯示。其餘單純的選秀簽約（如 *"signed OF Eric Booth Jr."*）或一般小聯盟深度簽約（如 *"signed RHP John Smith"*）一律過濾不顯示。
-  3. 藉由 `toTeam.id` 或 `fromTeam.id` 對應 30 支大聯盟隊伍。
+---
 
-- **分組展示（依隊伍與賽事合併）**：
-  - **比賽球隊異動**：若人事異動涉及當天有比賽的球隊，該異動會直接抽離，並以隊徽+列表形式顯示在**該場賽事卡片左欄（新聞下方）**。
-  - **其他球隊異動**：其餘未在當天出賽（或比賽延期）之球隊異動，則在頁面最下方的 **「其他球隊人事異動」** 區塊中分組（依隊伍帽徽）彙整顯示。
-  - 由於與官方戰報一併呈現，直接使用官方提供的英文完整句，保持 100% 的準確性。
+## 錯誤處理策略
 
-### 5. 單場新聞摘要整合與防禦機制 (Game Content & Fallback)
-- **資料來源**：MLB Stats API：`https://statsapi.mlb.com/api/v1/game/{gamePk}/content`。
-- **解析與呈現**：
-  - 讀取當場比賽的官方英文新聞標題 (`headline`) 與簡介 (`blurb`)。
-  - 展示於每場比賽卡片下半部左欄（投球決定正下方），用於說明賽事重點並填補版面留白。
-- **防禦機制 (Fallback)**：
-  - **問題**：若剛完賽時隨隊記者尚未完成報導，API 中的 `recap` 可能暫時為空（Null）。
-  - **對策**：
-    - 程式讀取時先做非空值檢查。若官方新聞存在，則正常渲染。
-    - 若新聞為空，則利用 100% 即時完賽的數據自動套用英文比分備份範本（例如：*\"[AwayAbbr] @ [HomeAbbr] 賽事總結\"* 作為標題，且簡介為比分備份字串）作為**備份摘要**。
-    - 如此能同時確保 **數據 100% 正確** 且 **版面不留空白**，避免開天窗。
+- **H1 API 失敗不等於無賽事**：`check_all_games_finalized` 失敗拋出 `ApiError`。單次檢查直接 `exit 1`；`--check-wait` 中視為未完成並重試，用完次數仍從未取得賽程則 `exit 1`。失敗時不寫任何檔案。
+- **M3 boxscore 失敗**：該場改用 schedule 資料的簡化卡片（標示「詳細數據暫缺」），卡片總數仍等於總場數。
+- **M5 metadata 讀寫失敗**：讀取或解析失敗 `exit 1`，不覆寫原檔；寫入使用暫存檔加 `os.replace`，失敗 `exit` 非零。
+- **新聞或翻譯失敗**：新聞抓取失敗則省略該區塊且不寫 `news_count`；翻譯失敗退回原文，不影響整體結果。
+- **外部字串**：新聞、球員名、隊名、人事異動、`data-teams` 一律經 `esc()`；新聞連結與圖片只接受 https 且主機為 `www.mlb.com` 或 `*.mlbstatic.com`。
 
-### 6. 球員 Savant 數據超連結 (Player Savant Links)
-- **連結機制**：
-  - 由於 MLB Stats API 的球員 ID 與 Baseball Savant 完全通用，因此可以直接使用官方球員 ID (`playerId`) 構造超連結，不需要維護任何 ID 對照表。
-- **網址格式**：
-  - `https://baseballsavant.mlb.com/savant-player/{playerId}`
-- **網頁呈現**：
-  - 在生成的日戰報網頁中，以下區域的球員姓名皆套用此超連結，讓使用者點擊即可直接在新分頁中打開其 Baseball Savant 進階數據頁面：
-    1. 「投球決定區域」（勝投、敗投、救援）的投手姓名。
-    2. 「單場傑出表現球員」名單中的所有球員姓名。
-    3. 「當日人事異動（含賽事卡片內與底部其他隊伍異動）」描述中的球員姓名（腳本將透過 `person.fullName` 在 `description` 字串中自動尋找並替換為 HTML 超連結）。
+### 等待機制
 
-### 7. 搜尋隊伍自動定位與跳轉 (Team Search & Auto-Scroll)
-- **設計目的**：當日賽事卡片多達 15 場時，方便使用者在日戰報頁面快速尋找並跳轉至特定球隊的比賽卡片，提升操作便利性。
-- **介面設計**：
-  - 在日戰報頁面的 `<header>` 下方新增一個簡約、符合深色模式的搜尋框（`#team-search`）。
-  - 支援輸入球隊中文名、英文名或三字縮寫（例如：輸入「洋基」、「Yankees」或「NYY」皆可匹配）。
-- **實作原理**：
-  - **資料標記**：在 Python 產生日戰報卡片 HTML 時，為每個 `.game-card` 容器加上自訂屬性 `data-teams`，內容包含雙方球隊的中文名稱、英文名稱與縮寫（例如：`data-teams="紐約洋基 NYY Yankees 波士頓紅襪 BOS Red Sox"`）。
-  - **平滑捲動**：使用輕量 JavaScript 監聽搜尋輸入框。當使用者輸入並按下 `Enter` 鍵或點擊建議項時，搜尋字串與各卡片的 `data-teams` 進行模糊匹配。匹配成功後，使用 `scrollIntoView({ behavior: 'smooth', block: 'center' })` 讓瀏覽器平滑捲動至該卡片。
-  - **視覺動畫回饋**：跳轉至該卡片時，為該卡片動態加入 CSS 類別 `.highlight-card`，觸發 2 秒的呼吸外發光與微微放大動畫，讓使用者能瞬間定位視覺焦點。
+`--check-wait` 最多檢查 `--max-wait-checks` 次（預設 8），每次未完成睡 30 分鐘。Suspended（暫停比賽）不視為未完成，不等待。達上限後仍有未完成場次，照常產出戰報並標示「未完賽」。Postponed、Cancelled 視為已結束。
 
+---
 
+## 資料規格與篩選
 
+### 賽事狀態與文案
+
+- 延賽與取消分開呈現；原因分別對照 `POSTPONED_REASONS`、`CANCELLED_REASONS`，未知原因以「賽事取消（原因：…）」呈現。
+- 卡片標題依 `gameType` 顯示例行賽、外卡賽、分區系列賽、聯盟冠軍賽、世界大賽、春訓、熱身賽、明星賽，其他為「比賽」。
+- Suspended 兩隊都不標勝方。
+
+### 傑出表現球員
+
+不分隊伍，前 3 名保證入選，第 4 名起達門檻才加列：
+
+- 打者積分：`H + 2B*2 + 3B*3 + HR*4 + RBI*1.5 + R + SB + BB`，門檻 7.0。沒有打數但有盜壘或得分的代跑者也列入候選。
+- 投手積分：`出局數（IP×3） + SO - ER*2 - H - BB + 勝投 5 + 救援 4`，門檻：先發 15.0、後援 8.0。
+- 打者顯示 AB、R、H、RBI、BB、SO，加上 2B／3B／HR／SB 的「單場次數(賽季累計)」標記，如 `HR: 2(10)(11)`；賽季累計缺漏或小於單場次數時只顯示次數。
+- 投手顯示 IP、H、R、ER、BB、SO、P-S。
+
+### 人事異動
+
+來源 `transactions?date=...&sportId=1`，保留條件：
+
+1. 不含 `minor league`。
+2. 含 `signed` 者須有大聯盟特徵詞（`free agent`、`major league`、`extension`、`arbitration`、`-year`）。
+3. `toTeam` 或 `fromTeam` 至少一方為 30 支大聯盟球隊之一（排除小聯盟球隊之間與冬季聯盟指派）。
+4. 相同描述去重。
+
+比賽球隊的異動放進該場卡片，其餘放在頁尾「其他球隊人事異動」；休賽季頁面標題為「大聯盟人事異動」。描述先 escape，再把球員姓名替換成 Savant 連結（`https://baseballsavant.mlb.com/savant-player/{playerId}`）。
+
+### 新聞
+
+- 每日新聞：MLB.com RSS（`https://www.mlb.com/feeds/news/rss.xml`），取台北時間該日 00:00–24:00 發布者，新到舊，最多 12 則。賽季頁附在戰報上方；休賽季頁第一則為頭條。
+- 單場賽後新聞：`game/{gamePk}/content` 的 recap headline 與 blurb；缺漏時用比分備份文字（不翻譯）。
+
+---
+
+## 翻譯流程（Gemini）
+
+- 以 `urllib` 直接呼叫 Gemini Interactions API，不安裝 SDK；金鑰讀環境變數 `GEMINI_API_KEY`，模型可由 `GEMINI_MODEL` 覆寫。
+- 範圍：RSS 新聞標題、單場賽後新聞的 Headline／Blurb、人事異動描述。球員姓名逐字保留英文，數據縮寫保留，球隊名稱依內建對照表。
+- 整頁先收集所有文字，一次送翻（超過 60 則分批）；每則附 `keep` 清單，譯文必須逐字包含其中字串，否則該則退回原文。
+- 退回原文的情況：無金鑰、無內容、整批失敗（HTTP 錯誤、非 JSON、長度不符）。結果寫入 `translated`。
+- 譯文先寫入 `*_zh` 欄位，渲染時優先使用譯文；球員超連結在譯文出爐後才用英文姓名比對替換。
+- 錯誤訊息會遮蔽金鑰後才輸出。
+
+---
+
+## 通知
+
+`send_discord_notification` 由 `--notify-only` 呼叫，讀 `reports/metadata.json` 中該日資料，不呼叫 MLB API。賽季通知含總場數、延賽數、焦點摘要與新聞則數；休賽季通知含新聞與人事異動數。`should_notify`：休賽季快報在新聞與人事異動皆為 0 時不發。未設定 `DISCORD_WEBHOOK_URL` 時略過並印出警告。
+
+---
+
+## 首頁與存檔
+
+- `index.html` 每次由 `templates/index.html` 與 metadata 全量產生：最新一期大卡＋近期 6 期（不含最新一期），休賽季項目顯示新聞與人事異動數量。
+- `archive.html`＋`assets/archive.js`：讀取 `reports/metadata.json` 依月份分組；讀取失敗顯示錯誤訊息；所有外部資料以 `textContent` 寫入，不拼接 HTML。
+
+---
+
+## 搜尋
+
+賽季戰報的每張卡片帶 `data-teams`（以 `|` 分隔縮寫、中英文隊名）。搜尋框精確縮寫優先，輸入後 Enter 捲動並高亮第一筆，再按 Enter 跳到下一筆。
+
+---
+
+## 測試
+
+`tests/test_fetch_mlb.py` 使用標準庫 `unittest`，所有 HTTP 由 `FakeApi` 以 `tests/fixtures/*.json` 回應（也攔截 `urlopen`），輸出導向暫存目錄，Discord 與 `time.sleep` 皆被 patch，完全不連網。涵蓋 API 失敗、無賽事、7 局雙重賽、Suspended、延長賽、boxscore 失敗、XSS、翻譯成功與失敗等。workflow 在產生戰報前先執行，失敗即中止。

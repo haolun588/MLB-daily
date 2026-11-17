@@ -2061,5 +2061,79 @@ class SlotTests(unittest.TestCase):
         self.assertFalse((REPO_ROOT / "templates" / "report_template.html").exists())
 
 
+class SummarySentenceTests(MlbTestBase):
+    """模組 F：首頁摘要選場（L7）、休賽季摘要、取消原因文案。"""
+
+    def test_pick_summary_sentences_by_score_stable(self):
+        entries = [(1.0, "a"), (9.0, "b"), (5.0, "c"), (9.0, "d"), (0.0, "e")]
+        self.assertEqual(fetch_mlb.pick_summary_sentences(entries), ["b", "d", "c"])
+        self.assertEqual(fetch_mlb.pick_summary_sentences(entries[:2]), ["b", "a"])
+        self.assertEqual(fetch_mlb.pick_summary_sentences([]), [])
+
+    def test_top_focus_score(self):
+        self.assertEqual(fetch_mlb.top_focus_score([]), 0.0)
+        self.assertEqual(fetch_mlb.top_focus_score([{"score": 3.5}, {"score": 12.0}]), 12.0)
+
+    def test_L7_summary_uses_highest_scoring_games_not_first_three(self):
+        g1, g2 = self.games_of("schedule_normal")
+        games = [g1, g2, g1, g2]  # 順序：NYY@BOS, LAD@SF, NYY@BOS, LAD@SF
+        self.api.schedule = "schedule_normal"
+        with mock.patch.object(fetch_mlb, "top_focus_score", side_effect=[1.0, 2.0, 3.0, 4.0]),                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            meta = fetch_mlb.generate_report(DATE, games)
+        matchups = re.findall(r"(\w+) @ (\w+)，比分", meta["summary"])
+        # 前 3 場為 NYY, LAD, NYY；積分最高的 3 場（4、3、2）則為 LAD, NYY, LAD
+        self.assertEqual(matchups, [("LAD", "SF"), ("NYY", "BOS"), ("LAD", "SF")])
+
+    def test_offseason_summary_uses_first_three_news_titles(self):
+        news = [{"title": "T1"}, {"title": "T2", "title_zh": "譯文2"}, {"title": "T3"}, {"title": "T4"}]
+        self.assertEqual(fetch_mlb.build_offseason_summary(news, 5), "T1；譯文2；T3。")
+
+    def test_offseason_summary_fallbacks(self):
+        self.assertEqual(fetch_mlb.build_offseason_summary([], 4), "休賽季：人事異動 4 筆")
+        self.assertEqual(fetch_mlb.build_offseason_summary(None, 4), "休賽季：人事異動 4 筆")
+        self.assertEqual(fetch_mlb.build_offseason_summary([], 0), "休賽季，無重大消息")
+        self.assertEqual(fetch_mlb.build_offseason_summary(None, 0), "休賽季，無重大消息")
+
+    def test_offseason_metadata_summary_from_news_and_not_old_wording(self):
+        self.api.news = "news_rss.xml"
+        self.assertEqual(self.run_main("schedule_empty"), 0)
+        summary = self.read_metadata()[DATE]["summary"]
+        self.assertNotIn("無安排", summary)
+        self.assertIn("Hall of Fame announces 2027 ballot", summary)
+        self.assertTrue(summary.endswith("。"))
+
+    def test_offseason_empty_day_summary(self):
+        self.assertEqual(self.run_main("schedule_empty"), 0)
+        self.assertEqual(self.read_metadata()[DATE]["summary"], "休賽季，無重大消息")
+
+    def test_offseason_summary_is_escaped_on_index(self):
+        self.api.news = "news_rss.xml"
+        self.assertEqual(self.run_main("schedule_empty"), 0)
+        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn("<script>alert('XSS_MARKER')", index)
+        self.assertIn("&lt;script&gt;alert(&#x27;XSS_MARKER&#x27;)&lt;/script&gt;", index)
+
+    def test_cancelled_reason_wording(self):
+        _, html = self.generate("schedule_cancelled")
+        games = games_block(html)
+        self.assertIn("因雨取消 (Cancelled - Rain)", games)
+        self.assertNotIn("延期", games)
+
+    def test_cancelled_reason_unknown_and_missing(self):
+        game = self.games_of("schedule_cancelled")[0]
+        info = fetch_mlb.get_team_info(game["teams"]["away"]["team"]["id"], game["teams"]["away"]["team"]["name"])
+        for reason, expected in (("Mystery <b>", "賽事取消（原因：Mystery <b>）"), (None, "賽事取消")):
+            g = json.loads(json.dumps(game))
+            if reason is None:
+                g["status"].pop("reason", None)
+            else:
+                g["status"]["reason"] = reason
+            view = fetch_mlb.build_postponed_view(g, info, info)
+            self.assertIn(expected + " (", view["notice"])
+            self.assertNotIn("延期", view["notice"])
+            # 渲染時外部字串仍會 escape
+            self.assertNotIn("<b>", fetch_mlb.render_postponed_card(view))
+
+
 if __name__ == "__main__":
     unittest.main()

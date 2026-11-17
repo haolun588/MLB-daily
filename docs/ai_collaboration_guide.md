@@ -49,7 +49,8 @@ Once the static UI is approved:
 2. **Minimal Dependencies**: Prioritize native standard libraries to keep deployment lightweight and reduce CI/CD runner errors.
 3. **Resilience & Fail-safe Logic**:
    - **Data Finalization Checks**: If APIs or data sources are not fully finalized, implement wait-and-retry logic (e.g., sleeping 30 minutes before re-checking).
-   - **Off-season / Dry-run Handling**: If no data is available (e.g., zero tasks/games scheduled), the script must exit successfully (Code 0) without committing changes or triggering notifications.
+   - **Off-season / Dry-run Handling**: If no games are scheduled, the script must still exit successfully (Code 0) and generate an off-season digest page (news plus Major League transactions); the Discord notification is skipped only when the digest has no news and no transactions. An API failure is never treated as "no games" (exit non-zero instead).
+   - **Tests**: Every code change must ship with unit tests (`python -m unittest discover -s tests`, standard library only, no network).
 
 ---
 

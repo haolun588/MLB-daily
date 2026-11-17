@@ -19,29 +19,38 @@
 
 ## ⚙️ 系統設計守則
 
-4. **台北時間中午 12:00 開工檢查邏輯**：
-   - 每日排程觸發時間為台北時間中午 12:00 (12:00 PM)。
-   - **開工前置檢查**：腳本啟動後，必須先透過 API 檢查昨日的所有比賽狀態。
+4. **排程與開工檢查邏輯**：
+   - 排程時間為 04:17 UTC（約台北時間 12:17，刻意避開整點壅塞）；也可由 `workflow_dispatch` 手動觸發（`date`、`notify` 輸入）。
+   - **開工前置檢查**：腳本以 `--check-wait` 啟動後，先透過 API 檢查目標日（預設為台北時間昨日）所有比賽狀態。API 失敗不得當成「無賽事」：等待中視為未完成並重試，從未取得賽程則 `exit 1`；單次檢查失敗直接 `exit 1`，不寫任何檔案。
    - **延遲等待機制**：
-     - 若有任何一場比賽尚未結束（例如仍處於進行中或延遲狀態），腳本必須**暫停並休眠 30 分鐘**，之後重新發起檢查。
-     - 只有在**確定所有比賽均已打完 (Final) 或已延期 (Postponed)** 後，腳本才能正式開始擷取資料並生成網頁。
+     - 有比賽尚未結束（Preview／Live）時，休眠 **30 分鐘**後重新檢查，**最多檢查 8 次**（`--max-wait-checks`，預設 8）。
+     - 全數 Final、Postponed、Cancelled 即開始產生。**Suspended（暫停比賽）不等待**，不視為未完成。
+     - 達上限仍有未完成場次時，照常產出戰報，並把這些場次標示為「未完賽」。
+   - 無賽事日產出「休賽季快報」頁面（新聞＋大聯盟人事異動），不再跳過。
 5. **程式設計原則**：
-   - 儘量使用 Python 原生標準函式庫 (如 `urllib.request` 與 `json`)，避免在 GitHub Actions 環境中安裝不必要的第三方依賴套件，確保程式輕量化與執行穩定度。
+   - 儘量使用 Python 原生標準函式庫 (如 `urllib.request` 與 `json`)，避免在 GitHub Actions 環境中安裝不必要的第三方依賴套件，確保程式輕量化與執行穩定度。需要 Python 3.12 以上。
+   - 金鑰（`DISCORD_WEBHOOK_URL`、`GEMINI_API_KEY`）只能放 GitHub Secrets 或本機環境變數，不得寫進程式、文件或測試。
+   - 所有來自外部的字串輸出到 HTML 前一律經過 `esc()`。
 6. **通知與傳送及 GitHub Pages 發布架構**：
-   - `main` 主分頁僅保留程式碼、模板與 `reports/metadata.json` 索引檔，每日戰報 `.html` 檔由 `.gitignore` 忽略以維護倉庫輕量化。
-   - GitHub Actions 於每日產出戰報後，會自動將 metadata 與首頁寫回 `main` 分頁，並使用 `peaceiris/actions-gh-pages` 將完整網頁發布至 `gh-pages` 分頁進行 GitHub Pages 託管。
-   - 戰報網頁發布後，發送 Discord Webhook 通知使用者，通知內附帶可直接點擊打開的 GitHub Pages 連結。
+   - `main` 主分頁僅保留程式碼、模板、共用資源（`assets/`）、文件，以及 `reports/metadata.json` 索引檔與首頁 `index.html`；每日戰報 `.html` 檔由 `.gitignore` 忽略以維護倉庫輕量化。
+   - workflow 步驟順序：單元測試 → 產生（`--check-wait --no-notify`）→ 將 metadata 與首頁推回 `main` → 以 `peaceiris/actions-gh-pages` 部署到 `gh-pages` → 等待 GitHub Pages 上線 → 以 `--notify-only` 發送 Discord 通知。
+   - **通知時機**：必須在部署完成且 Pages 回應 200 之後才發送，連結才能直接開啟。休賽季快報若新聞與人事異動皆為 0，不發通知。
+   - 部署時以 `exclude_assets` 排除程式、文件與 `.gitignore`；`.gitignore` 若被部署，會讓新戰報被忽略。
+7. **測試守則**：
+   - 修改程式（`fetch_mlb.py`、模板渲染邏輯）必須附對應的單元測試，並確認 `python -m unittest discover -s tests` 全部通過後才算完成。
+   - 測試只用標準庫 `unittest`，以 `tests/fixtures/*.json` 假資料執行，不得連網、不得呼叫真實 Gemini 或 Discord。
+   - workflow 會在產生戰報前先跑測試；測試失敗就不產生、不部署、不通知。
 
 ---
 
 ## 🚀 開工與收工工作流 (Session Commands Workflow)
 
-7. **「開工」指令流程**：
+8. **「開工」指令流程**：
    - 當使用者在任何對話說 **「開工」** 時，AI Agent 必須：
      1. 檢查開發行為守則（`docs/dev_rules.md`）與當前進度表（`docs/progress.md`）。
      2. 與使用者確認當次預計進行的工作內容。
      3. 等待使用者確定同意後，方可開始進行程式碼修改或開發。
-8. **「收工」指令流程**：
+9. **「收工」指令流程**：
    - 當使用者在任何對話說 **「收工」** 時，代表該次工作結束，AI Agent 必須：
      1. 根據該次工作實際變更內容，提供 push 至 GitHub 的 `summary` (標題) 與 `description` (詳細描述)。
      2. 於 `docs/dev_logs/` 資料夾下生成一份該次開發日誌。
@@ -73,3 +82,11 @@
 - **篩選標準**：包含勝投 (W)、敗投 (L)、救援成功 (S) 投手，以及局數長且壓制力佳的先發或關鍵後援投手。
 - **投球數據**：投球局數 (IP)、被安打 (H)、失分 (R)、自責分 (ER)、保送 (BB)、三振 (SO)、總投球數/好球數 (Pitches/Strikes)。
 - **移除項目**：**移除**原本規劃的「賽季防禦率 (ERA)」，專注於當場比賽的投球內容。
+
+### 4. 新聞、翻譯與人事異動規格
+- **每日新聞**：MLB.com 官方 RSS，取台北時間目標日當天發布者（最多 12 則）。賽季頁附在戰報上方；休賽季頁以新聞與人事異動為主體。
+- **人事異動**：僅限大聯盟層級——排除 `minor league`；`signed` 需帶大聯盟特徵詞；`toTeam`／`fromTeam` 至少一方須為 30 支大聯盟球隊；描述去重。
+- **翻譯（Gemini）**：翻譯範圍為新聞標題、單場賽後新聞的 Headline／Blurb、人事異動描述。球員姓名保留英文原名、數據縮寫（HR、RBI、IP 等）保留、球隊名稱用內建中文譯名；只顯示中文，不附英文原文。無金鑰、額度用盡或回應格式錯誤時改顯示英文原文，不得讓整次執行失敗。
+- **metadata 欄位**：`date,total_games,postponed,summary,type,news_count,transactions_count,translated`。
+- **休賽季摘要**：以當日新聞前 3 則標題組成；無新聞則為人事異動筆數；皆無為「休賽季，無重大消息」。
+- **賽季摘要**：總場數、延賽數，加上焦點積分最高的 3 場。

@@ -2,122 +2,129 @@
 
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Active-brightgreen)](https://haolun588.github.io/MLB-daily/)
 
-一個輕量化、無伺服器 (Serverless) 運行的自動化 MLB 戰報生成系統。本專案透過 GitHub Actions 每日定時執行 Python 腳本抓取 MLB 官方數據，自動生成現代深色模式 (Modern Dark Mode) 的響應式網頁，並藉由 GitHub Pages 進行託管，最後透過 Discord Webhook 即時推送通知與瀏覽連結。
+輕量化、無伺服器 (Serverless) 的 MLB 每日戰報系統。GitHub Actions 每日定時執行 Python 腳本，抓取 MLB 官方資料，產生深色為主（跟隨系統切換淺色）的響應式靜態網頁，部署到 GitHub Pages，最後以 Discord Webhook 推送通知與連結。
 
 ---
 
-## ⚙️ 系統工作流程 (Workflow)
+## 功能
 
-```mermaid
-graph TD
-    A[GitHub Actions 排程] -->|每日 12:00 PM 觸發| B(開工檢查模組)
-    B -->|檢查所有比賽是否已結束| C{是否結束?}
-    C -->|否| D[等候 30 分鐘並重試]
-    D --> B
-    C -->|是| E[數據抓取與解析模組]
-    E -->|呼叫 MLB Stats API| F[HTML 生成與更新模組]
-    F -->|產生 daily report & 更新 index.html| G[Git 推送模組]
-    G -->|Commit & Push| H[GitHub Pages 託管]
-    G -->|發送 Post 請求| I[Discord 通知模組]
+- **賽季戰報**：前一日（台北時間）所有賽事的比分、R/H/E、投球決定（勝／敗／救援）、打擊與投球焦點球員（球員名連到 Baseball Savant）、賽後新聞、當日人事異動，加上當日 MLB.com 新聞。頁面內有隊伍搜尋（中英文隊名或縮寫，可再按 Enter 跳到下一場）。
+- **休賽季快報**：昨日無賽事時，產出「新聞＋大聯盟層級人事異動」頁面，不會留白。
+- **歷史存檔**：[archive.html](archive.html) 以 JavaScript 讀取 `reports/metadata.json`，依月份分組；首頁顯示最新一期與近期清單。
+- **Gemini 翻譯**：新聞標題、單場賽後新聞（Headline／Blurb）與人事異動描述以 Gemini 翻成繁體中文；球員姓名維持英文原名，球隊名稱沿用程式內建譯名。沒有金鑰、額度用盡或回應格式錯誤時，自動改用英文原文，不會讓整次執行失敗。
+- **Discord 通知**：頁面部署且 Pages 可開啟後才發送；休賽季快報若無新聞與人事異動則不發。
+
+---
+
+## 架構與資料流
+
+分支分工：
+
+- `main`：只存程式碼、模板、共用資源、文件，以及 `reports/metadata.json` 與首頁 `index.html`。每日戰報 HTML 被 `.gitignore` 忽略。
+- `gh-pages`：存放完整網頁（戰報、首頁、`archive.html`、`assets/`），由 workflow 部署，`keep_files: true` 保留歷史戰報。
+
+Workflow（`.github/workflows/daily_report.yml`）步驟順序：
+
+1. **Run Unit Tests**：`python -m unittest discover -s tests -v`，失敗即中止，不產生、不部署、不通知。
+2. **Resolve report date**：手動輸入的日期，或預設台北時間昨日。
+3. **Generate Daily Report**：`python fetch_mlb.py --check-wait --no-notify --date ...`。尚有未完賽場次時每 30 分鐘重新檢查，最多 8 次；達上限後照常產出並把未完成場次標示為「未完賽」。
+4. **Commit and Push Metadata to Main**：把 `index.html` 與 `reports/metadata.json` 推回 `main`（先 `git pull --rebase`，失敗最多重試 3 次）。
+5. **Deploy Site to gh-pages**：`peaceiris/actions-gh-pages`，並以 `exclude_assets` 排除程式與文件。
+6. **Wait for GitHub Pages**：輪詢當日戰報網址直到回應 200（最多約 5 分鐘）。
+7. **Send Discord Notification**：`python fetch_mlb.py --notify-only --date ...`，只讀既有 metadata，不呼叫 API。僅在排程觸發，或手動觸發且 `notify` 勾選時執行。
+
+排程：每日 04:17 UTC（約台北時間 12:17）。`concurrency` 群組 `daily-report` 避免重疊執行，job 逾時上限 330 分鐘。
+
+細節見 [docs/architecture.md](docs/architecture.md)。
+
+---
+
+## 需要的 Secrets
+
+在 GitHub Repository 的 Settings → Secrets and variables → Actions 設定：
+
+| 名稱 | 必要 | 說明 |
+|---|---|---|
+| `DISCORD_WEBHOOK_URL` | 要通知時必填 | Discord Webhook 網址 |
+| `GEMINI_API_KEY` | 要翻譯時必填 | 未設定則不翻譯，顯示英文原文 |
+
+可選的環境變數 `GEMINI_MODEL`：覆寫預設的 Gemini 模型名稱。金鑰一律放在 Secrets 或本機環境變數，不得寫進程式或文件。
+
+---
+
+## 本機執行
+
+需求：**Python 3.12 以上**，只用標準函式庫，不需安裝任何套件。
+
+```bash
+# 產生指定日期的戰報（不發 Discord 通知）
+python fetch_mlb.py --date 2026-07-20 --no-notify
+
+# 預設日期為台北時間昨日；--check-wait 會等待完賽（排程使用）
+python fetch_mlb.py --check-wait --no-notify
+
+# 只依既有 reports/metadata.json 發送某日通知（需設定 DISCORD_WEBHOOK_URL）
+python fetch_mlb.py --notify-only --date 2026-07-20
+
+# 執行單元測試（完全不連網）
+python -m unittest discover -s tests
 ```
 
-1. **定時觸發**：每日台北時間中午 12:00 (12:00 PM) 由 GitHub Actions 排程啟動。
-2. **狀態檢查與等待機制**：
-   - 腳本會先查詢昨日所有賽事的狀態（是否皆為 `Final` 或 `Postponed`）。
-   - 若有任何比賽尚未結束，則自動休眠 30 分鐘後重新檢查，確保數據完整才開始解析。
-3. **數據抓取與處理**：呼叫 MLB Stats API，解析昨日賽事的關鍵數據。
-4. **靜態網頁生成**：套用 HTML 模板輸出每日獨立戰報網頁，並自動更新首頁的歷史戰報索引。
-5. **自動部署與通知**：將產生的網頁 Commit & Push 回 Repo，觸發 GitHub Pages 部署，隨後向 Discord Webhook 發送精美的戰報通知與網頁連結。
+其他參數：`--max-wait-checks N`（等待迴圈最多檢查次數，預設 8）。
 
----
+環境變數設定範例：
 
-## ✨ 核心特色與設計細節
-
-### 1. 傑出表現球員篩選機制 (Top Performers Selection)
-系統會對每場比賽兩隊的所有上場球員進行表現積分計算，並不分勝負隊伍，選出表現最優異的球員：
-*   **打者積分公式**：
-    $$\text{Score} = H \times 1 + 2B \times 2 + 3B \times 3 + HR \times 4 + RBI \times 1.5 + R \times 1 + SB \times 1 + BB \times 1$$
-    *   *傑出門檻*：積分 $\ge 7.0$ 分 (例如 2 安打、1 全壘打、2 打點，或 3 安打、1 盜壘、2 得分等)。
-*   **投手積分公式**：
-    $$\text{Score} = IP \times 3 + K \times 1 - ER \times 2 - H \times 1 - BB \times 1 + (\text{Win} ? 5 : 0) + (\text{Save} ? 4 : 0)$$
-    *   *傑出門檻*：先發投手 (SP) $\ge 15.0$ 分；後援/救援投手 (RP/SU/CL) $\ge 8.0$ 分。
-*   **錄取邏輯**：每場比賽不分隊伍自動排序，**前 3 名保證錄取**。第 4 名（含）起，只要積分達上述傑出門檻即自動額外加列，無名額上限。
-
-### 2. 精美響應式網頁設計 (Responsive Dark Mode)
-*   **上下分層佈局 (方案 B)**：
-    *   **上半部**：滿版寬度對戰組合、R-H-E 記分板與賽況標籤。
-    *   **下半部**：分割雙欄，左欄為「投手決定（勝/敗/救援）」，右欄為「單場傑出表現球員」。有效避免排版因球員名單過長而拉伸或留白。
-*   **SVG 官方隊徽優化**：引入 MLB 官方 `team-cap-on-dark` SVG 隊徽，在 CSS 中加入 `filter: drop-shadow(0 0 2px rgba(255,255,255,0.65))` 外發光效果，解決暗色隊徽在深色背景下對比度不足的問題。
-*   **平滑動畫**：懸停時隊徽與卡片會產生縮放與陰影漸變的微動畫，增強互動質感。
-
-### 3. 進階長期維護機制
-*   **歷史戰報分層存檔**：當累計報告變多時，腳本自動按年/月分層儲存（`reports/YYYY/MM/YYYY-MM-DD.html`），並在首頁使用輕量 `archive_index.json` 進行動態 JavaScript 渲染。
-*   **無賽事/休賽季自動跳過**：若昨日無任何大聯盟賽事（例如明星賽、休賽期等），系統會自動偵測並靜默結束，不生成空白報告，亦不發送 Discord 空白通知，實現全自動零干預維護。
-
----
-
-## 📊 數據呈現規格
-
-### 1. 打者數據 (Batters)
-*   **基礎數據**：打數 (AB)、得分 (R)、安打 (H)、打點 (RBI)、保送 (BB)、被三振 (SO)。
-*   **長打與盜壘**：二壘安打 (2B)、三壘安打 (3B)、全壘打 (HR)、盜壘 (SB)。
-*   **賽季累計標記**：標記該長打/盜壘在「該場比賽的次數」以及「該次數對應的賽季累計總數」。
-    *   *格式範例*：`HR: 1(9)` 表示該場比賽有 1 支全壘打，且為個人賽季第 9 轟。
-    *   *複數範例*：`HR: 2(10)(11)` 表示該場比賽有 2 支全壘打，分別為個人賽季第 10 與 11 轟。
-    *   *盜壘範例*：`SB: 1(15)` 表示該場比賽有 1 次盜壘成功，且為個人賽季第 15 次盜壘。
-
-### 2. 投手數據 (Pitchers)
-*   專注於當場比賽投球內容：投球局數 (IP)、被安打 (H)、失分 (R)、自責分 (ER)、保送 (BB)、三振 (SO)、總投球數/好球數 (Pitches/Strikes)。
-
----
-
-## 📁 目錄結構
-
-*   [.agents/AGENTS.md](file:///c:/GitHub/MLB-daily/.agents/AGENTS.md)：AI Agent 工作區規則約束。
-*   [docs/architecture.md](file:///c:/GitHub/MLB-daily/docs/architecture.md)：專案架構說明文件。
-*   [docs/dev_rules.md](file:///c:/GitHub/MLB-daily/docs/dev_rules.md)：開發守則與細部規格。
-*   [docs/progress.md](file:///c:/GitHub/MLB-daily/docs/progress.md)：專案開發進度表。
-*   [docs/dev_logs/](file:///c:/GitHub/MLB-daily/docs/dev_logs/)：開發日誌目錄。
-*   [templates/report_template.html](file:///c:/GitHub/MLB-daily/templates/report_template.html)：每日戰報網頁 HTML 模板。
-*   [index.html](file:///c:/GitHub/MLB-daily/index.html)：專案首頁暨歷史戰報索引。
-*   [fetch_mlb.py](file:///c:/GitHub/MLB-daily/fetch_mlb.py)：核心 Python 抓取與 HTML 生成腳本。
-*   [README.md](file:///c:/GitHub/MLB-daily/README.md)：本說明文件。
-
----
-
-## 🚀 本地運行指南
-
-### 1. 環境需求
-*   Python 3.x
-*   無須安裝任何第三方套件（全採用 Python 標準函式庫 `urllib.request` 與 `json` 等，確保環境輕量乾淨）。
-
-### 2. 執行指令
-在專案根目錄下執行：
-
-*   **抓取昨日戰報 (預設)**：
-    ```bash
-    python fetch_mlb.py
-    ```
-*   **指定日期抓取**：
-    ```bash
-    python fetch_mlb.py --date 2026-07-20
-    ```
-*   **啟用完賽檢查與等待機制 (適合排程執行)**：
-    ```bash
-    python fetch_mlb.py --check-wait
-    ```
-
-### 3. Discord Webhook 設定 (選用)
-若要啟用 Discord 即時推送功能，請在執行環境設定 `DISCORD_WEBHOOK_URL` 環境變數：
 ```bash
 # Windows (PowerShell)
 $env:DISCORD_WEBHOOK_URL="你的Discord_Webhook_網址"
+$env:GEMINI_API_KEY="你的Gemini金鑰"
 
 # Linux / macOS
 export DISCORD_WEBHOOK_URL="你的Discord_Webhook_網址"
+export GEMINI_API_KEY="你的Gemini金鑰"
+```
+
+### 手動觸發 workflow
+
+到 GitHub 的 Actions 分頁選擇「Daily MLB Report Generator」→ Run workflow：
+
+- `date`：報表日期 `YYYY-MM-DD`，留空為台北時間昨日。
+- `notify`：是否發送 Discord 通知，預設不發送（可先驗證流程，確認無誤再勾選）。
+
+---
+
+## 目錄結構
+
+```
+fetch_mlb.py              核心腳本：抓取 → 資料抽取 → view → 渲染，另含翻譯、通知
+templates/
+  report.html             戰報與休賽季快報的頁面骨架（含 <!--SLOT:...--> 插槽）
+  index.html              首頁骨架
+assets/
+  style.css               共用樣式表（部署到 gh-pages）
+  archive.js              歷史存檔頁的動態腳本
+index.html                首頁（由腳本依 metadata 全量重新產生）
+archive.html              歷史存檔頁（讀取 reports/metadata.json）
+reports/
+  metadata.json           每日索引（main 追蹤；戰報 HTML 不追蹤）
+tests/
+  test_fetch_mlb.py       單元測試（unittest）
+  fixtures/               測試用 API 假資料
+.github/workflows/
+  daily_report.yml        排程與部署
+docs/
+  architecture.md         專案架構
+  dev_rules.md            開發守則與規格
+  progress.md             進度表
+  ai_collaboration_guide.md  AI 協作流程
+  plans/                  修改計畫
+  dev_logs/               開發日誌
+  mockups/                UI 設計稿（歷史）
+.agents/AGENTS.md         AI Agent 工作區規則
 ```
 
 ---
 
-## 🛠️ 開發守則
-本專案開發過程嚴格落實「先規劃、後實作」、「UI 優先」與「模組化循序漸進」原則。詳細說明請見 [開發守則 (dev_rules.md)](file:///c:/GitHub/MLB-daily/docs/dev_rules.md)。
+## 開發守則
+
+本專案採「先規劃、後實作」、「UI 優先」、「模組化循序漸進」，修改程式必須附單元測試。詳見 [docs/dev_rules.md](docs/dev_rules.md)，AI Agent 規則見 [.agents/AGENTS.md](.agents/AGENTS.md)。
