@@ -475,6 +475,69 @@ class FailureHandlingTests(MlbTestBase):
         self.discord.assert_not_called()
 
 
+# ---------------------------------------------------------------- 通知旗標（模組 C：--no-notify / --notify-only）
+class NotifyFlagTests(MlbTestBase):
+    def run_flags(self, *flags):
+        argv = ["fetch_mlb.py", "--date", DATE, *flags]
+        with mock.patch.object(sys, "argv", argv),                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            try:
+                fetch_mlb.main()
+            except SystemExit as e:
+                return e.code
+        return None
+
+    def snapshot(self):
+        files = {}
+        for p in sorted(self.tmp.rglob("*")):
+            if p.is_file() and "templates" not in p.parts:
+                files[str(p.relative_to(self.tmp))] = p.read_bytes()
+        return files
+
+    def test_no_notify_with_games(self):
+        self.api.schedule = "schedule_normal"
+        code = self.run_flags("--no-notify")
+        self.assertIsNone(code)
+        self.assertTrue((self.tmp / "reports" / "2026" / "11" / f"{DATE}.html").exists())
+        self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
+        self.discord.assert_not_called()
+
+    def test_no_notify_empty_day(self):
+        self.api.schedule = "schedule_empty"
+        code = self.run_flags("--no-notify")
+        self.assertEqual(code, 0)
+        self.assertIn("今日無賽事", self.read_report())
+        self.assertEqual(self.read_metadata()[DATE]["total_games"], 0)
+        self.discord.assert_not_called()
+
+    def test_notify_only_sends_existing_entry(self):
+        entry = {"date": DATE, "total_games": 4, "postponed": 1, "summary": "既有摘要"}
+        (self.tmp / "reports" / "metadata.json").write_text(
+            json.dumps({DATE: entry}, ensure_ascii=False), encoding="utf-8")
+        before = self.snapshot()
+        code = self.run_flags("--notify-only")
+        self.assertIsNone(code)
+        self.discord.assert_called_once_with(entry)
+        self.assertEqual(fetch_mlb.fetch_json.call_count, 0)
+        self.assertEqual(self.snapshot(), before)
+
+    def test_notify_only_missing_entry_exits_1(self):
+        (self.tmp / "reports" / "metadata.json").write_text("{}", encoding="utf-8")
+        code = self.run_flags("--notify-only")
+        self.assertEqual(code, 1)
+        self.discord.assert_not_called()
+
+    def test_notify_only_conflicts_with_check_wait(self):
+        code = self.run_flags("--notify-only", "--check-wait")
+        self.assertEqual(code, 1)
+        self.discord.assert_not_called()
+        self.assertEqual(fetch_mlb.fetch_json.call_count, 0)
+
+    def test_notify_only_conflicts_with_no_notify(self):
+        code = self.run_flags("--notify-only", "--no-notify")
+        self.assertEqual(code, 1)
+        self.discord.assert_not_called()
+
+
 # ---------------------------------------------------------------- 已知 bug（修好後移除 expectedFailure）
 class KnownBugTests(MlbTestBase):
     def test_H1_api_failure_must_not_overwrite_metadata(self):
@@ -524,9 +587,9 @@ class KnownBugTests(MlbTestBase):
         self.assertEqual(meta["total_games"], 2)
         self.assertEqual(html.count(CARD_OPEN), meta["total_games"])
 
-    def test_M4_seven_inning_doubleheader_not_marked_extra(self):
-        """M4: 7 局雙重賽不應標成 Final/7 與 extra 樣式。"""
-        _, html = self.generate("schedule_doubleheader7")
+    def test_M4_scheduled_seven_innings_completed_shows_final(self):
+        """M4: 預定 7 局的比賽（如春訓）打滿應顯示 Final、不套延長賽樣式；MLB 雙重賽自 2022 年起已恢復 9 局。"""
+        _, html = self.generate("schedule_scheduled7")
         self.assertNotIn("Final/7", html)
         self.assertNotIn('<span class="status-badge extra">', html)
         self.assertIn('<span class="status-badge final">Final</span>', html)

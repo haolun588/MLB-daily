@@ -2,12 +2,25 @@ name: Daily MLB Report Generator
 
 on:
   schedule:
-    # 04:00 UTC is 12:00 PM Taipei Time (UTC+8)
-    - cron: '0 4 * * *'
+    # 04:17 UTC 約為台北時間 12:17（避開整點壅塞）
+    - cron: '17 4 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+    inputs:
+      date:
+        description: '報表日期 YYYY-MM-DD，留空為昨日（台北時間）'
+        type: string
+        required: false
+      notify:
+        description: '是否發送 Discord 通知'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+
+concurrency:
+  group: daily-report
+  cancel-in-progress: false
 
 jobs:
   run-generator:
@@ -18,12 +31,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Fetch existing reports from gh-pages branch
-        run: |
-          git fetch origin gh-pages:gh-pages || true
-          git checkout gh-pages -- reports/ || true
-          git reset HEAD reports/ || true
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -32,18 +39,53 @@ jobs:
       - name: Run Unit Tests
         run: python -m unittest discover -s tests -v
 
+      - name: Resolve report date
+        id: date
+        env:
+          INPUT_DATE: ${{ inputs.date }}
+        run: |
+          if [ -n "$INPUT_DATE" ]; then
+            if ! [[ "$INPUT_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+              echo "::error::日期格式必須為 YYYY-MM-DD"
+              exit 1
+            fi
+            REPORT_DATE="$INPUT_DATE"
+          else
+            REPORT_DATE="$(TZ=Asia/Taipei date -d yesterday +%F)"
+          fi
+          YEAR="${REPORT_DATE:0:4}"
+          MONTH="${REPORT_DATE:5:2}"
+          echo "date=$REPORT_DATE" >> "$GITHUB_OUTPUT"
+          echo "url=https://haolun588.github.io/MLB-daily/reports/$YEAR/$MONTH/$REPORT_DATE.html" >> "$GITHUB_OUTPUT"
+
       - name: Generate Daily Report
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          REPORT_DATE: ${{ steps.date.outputs.date }}
         run: |
-          python fetch_mlb.py --check-wait
+          python fetch_mlb.py --check-wait --no-notify --date "$REPORT_DATE"
 
       - name: Commit and Push Metadata to Main
+        env:
+          REPORT_DATE: ${{ steps.date.outputs.date }}
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html reports/metadata.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "auto: update report metadata for $(date +'%Y-%m-%d')" && git push origin main)
+          if git diff --staged --quiet; then
+            echo "No metadata changes to commit."
+            exit 0
+          fi
+          git commit -m "auto: update report metadata for $REPORT_DATE"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin main; then
+              exit 0
+            fi
+            echo "::warning::push 失敗（第 $attempt 次），10 秒後重試"
+            sleep 10
+          done
+          echo "::error::push 連續 3 次失敗"
+          exit 1
 
       - name: Deploy Site to gh-pages
         uses: peaceiris/actions-gh-pages@v4
@@ -51,4 +93,28 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./
           keep_files: true
+          exclude_assets: '.github,.agents,docs,templates,tests,fetch_mlb.py,README.md,.gitignore'
 
+      - name: Wait for GitHub Pages
+        env:
+          REPORT_URL: ${{ steps.date.outputs.url }}
+        run: |
+          for i in $(seq 1 20); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' "$REPORT_URL" || true)"
+            if [ "$code" = "200" ]; then
+              echo "Pages 已上線：$REPORT_URL"
+              exit 0
+            fi
+            echo "第 $i/20 次檢查：HTTP $code，15 秒後重試"
+            sleep 15
+          done
+          echo "::warning::等待 GitHub Pages 逾時（約 5 分鐘），仍繼續後續步驟"
+          exit 0
+
+      - name: Send Discord Notification
+        if: github.event_name == 'schedule' || inputs.notify == true
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          REPORT_DATE: ${{ steps.date.outputs.date }}
+        run: |
+          python fetch_mlb.py --notify-only --date "$REPORT_DATE"

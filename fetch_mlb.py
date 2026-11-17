@@ -1134,7 +1134,13 @@ def main():
     parser.add_argument("--check-wait", action="store_true", help="If active, loops and sleeps 30 minutes until yesterday's games are finished")
     parser.add_argument("--max-wait-checks", type=int, default=MAX_WAIT_CHECKS, help=f"Max number of checks in the --check-wait loop (default {MAX_WAIT_CHECKS})")
     
+    parser.add_argument("--no-notify", action="store_true", help="Generate report and metadata but do not send Discord notification")
+    parser.add_argument("--notify-only", action="store_true", help="Only send Discord notification from existing metadata (no API calls, no file writes)")
+
     args = parser.parse_args()
+    if args.notify_only and (args.check_wait or args.no_notify):
+        print("Error: --notify-only cannot be combined with --check-wait or --no-notify", file=sys.stderr)
+        sys.exit(1)
     if args.max_wait_checks < 1:
         print("Error: --max-wait-checks must be >= 1", file=sys.stderr)
         sys.exit(1)
@@ -1152,7 +1158,16 @@ def main():
         date_str = get_yesterday_str()
         
     print(f"Target Date: {date_str}")
-    
+
+    # --notify-only: 僅依既有 metadata 發送通知，不呼叫 API、不寫檔
+    if args.notify_only:
+        entry = load_metadata("reports/metadata.json").get(date_str)
+        if not entry:
+            print(f"Error: reports/metadata.json 中找不到 {date_str} 的資料，無法發送通知。", file=sys.stderr)
+            sys.exit(1)
+        send_discord_notification(entry)
+        return
+
     # 2. Check wait loop if enabled
     if args.check_wait:
         max_checks = args.max_wait_checks
@@ -1249,7 +1264,8 @@ def main():
                 f.write(html_content)
                 
         update_index_page(empty_meta)
-        send_discord_notification(empty_meta)
+        if not args.no_notify:
+            send_discord_notification(empty_meta)
         sys.exit(0)
         
     # 3. Generate report files
@@ -1259,7 +1275,8 @@ def main():
     update_index_page(new_meta)
     
     # 5. Send Discord notification
-    send_discord_notification(new_meta)
+    if not args.no_notify:
+        send_discord_notification(new_meta)
     print("All tasks completed successfully.")
 
 if __name__ == "__main__":
