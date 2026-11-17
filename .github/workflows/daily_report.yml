@@ -93,7 +93,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./
           keep_files: true
-          exclude_assets: '.github,.agents,docs,templates,tests,fetch_mlb.py,README.md,.gitignore'
+          exclude_assets: '.github,.agents,docs,templates,tests,fetch_mlb.py,README.md,.gitignore,__pycache__'
 
       - name: Wait for GitHub Pages
         env:
