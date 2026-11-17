@@ -2545,5 +2545,100 @@ class TeamAbbrTests(MlbTestBase):
         self.assertEqual(len(abbrs), len(set(abbrs)))
 
 
+
+class SiteNavTests(MlbTestBase):
+    """R3：全站導覽列與球隊名單頁（模組 R3）。"""
+
+    def nav_of(self, html):
+        m = re.search(r'<nav class="nav-row" aria-label="頁面導覽">(.*?)</nav>', html, re.S)
+        self.assertIsNotNone(m, "找不到導覽列")
+        return m.group(1)
+
+    def nav_links(self, html):
+        """導覽列內 [(href, 文字, 是否 aria-current)]。"""
+        return [(m.group(2), m.group(4), 'aria-current="page"' in (m.group(1) + m.group(3)))
+                for m in re.finditer(r'<a([^>]*?)href="([^"]+)"([^>]*)>([^<]*)</a>', self.nav_of(html))]
+
+    def make_site_files(self):
+        for name in ("archive.html", "teams.html"):
+            shutil.copy(REPO_ROOT / name, self.tmp / name)
+
+    def assert_nav_resolves(self, html, page_dir, expected):
+        links = self.nav_links(html)
+        self.assertEqual([t for _, t, _ in links], expected)
+        for href, _, _ in links:
+            self.assertTrue((page_dir / href).resolve().exists(), href)
+        return links
+
+    def test_season_report_nav(self):
+        self.make_site_files()
+        _, html = self.generate("schedule_normal")
+        report_dir = self.tmp / "reports" / "2026" / "11"
+        links = self.assert_nav_resolves(html, report_dir, ["← 首頁", "球隊名單", "歷史存檔"])
+        self.assertEqual([h for h, _, _ in links], ["../../../index.html", "../../../teams.html", "../../../archive.html"])
+        self.assertFalse(any(cur for _, _, cur in links))
+
+    def test_offseason_report_nav(self):
+        self.make_site_files()
+        self.run_main("schedule_empty")
+        html = self.read_report()
+        report_dir = self.tmp / "reports" / "2026" / "11"
+        self.assert_nav_resolves(html, report_dir, ["← 首頁", "球隊名單", "歷史存檔"])
+
+    def test_index_nav_and_teams_entry(self):
+        self.make_site_files()
+        self.run_main("schedule_normal")
+        html = (self.tmp / "index.html").read_text(encoding="utf-8")
+        links = self.assert_nav_resolves(html, self.tmp, ["球隊名單", "歷史存檔"])
+        self.assertEqual([h for h, _, _ in links], ["teams.html", "archive.html"])
+        # 首頁入口卡：連到 teams.html，且位於最新一期卡片之後、近期區塊之前
+        entry = re.search(r'<a class="teams-entry" href="([^"]+)">.*?30 隊名單', html, re.S)
+        self.assertIsNotNone(entry)
+        self.assertTrue((self.tmp / entry.group(1)).exists())
+        self.assertLess(html.index('class="latest"'), html.index('class="teams-entry"'))
+        self.assertLess(html.index('class="teams-entry"'), html.index('aria-labelledby="recent-h"'))
+
+    def test_index_teams_entry_when_no_reports(self):
+        out = fetch_mlb.render_index({})
+        self.assertIn('<a class="teams-entry" href="teams.html">', out)
+
+    def test_static_pages_nav_and_current(self):
+        for name, current, hrefs in (
+            ("archive.html", "歷史存檔", ["index.html", "teams.html", "archive.html"]),
+            ("teams.html", "球隊名單", ["index.html", "teams.html", "archive.html"]),
+        ):
+            html = (REPO_ROOT / name).read_text(encoding="utf-8")
+            links = self.nav_links(html)
+            self.assertEqual([h for h, _, _ in links], hrefs, name)
+            self.assertEqual([t for _, t, cur in links if cur], [current], name)
+            for href, _, _ in links:
+                self.assertTrue((REPO_ROOT / href).exists(), href)
+
+    def test_teams_page_files(self):
+        html = (REPO_ROOT / "teams.html").read_text(encoding="utf-8")
+        self.assertIn('href="assets/style.css"', html)
+        self.assertIn('src="assets/teams.js"', html)
+        self.assertTrue((REPO_ROOT / "assets" / "teams.js").exists())
+        self.assertNotIn("site.css", html)
+        for el_id in ("dateline", "teamSelect", "picker", "content"):
+            self.assertIn(f'id="{el_id}"', html)
+
+    def test_teams_js_safety_and_paths(self):
+        js = (REPO_ROOT / "assets" / "teams.js").read_text(encoding="utf-8")
+        self.assertNotIn("innerHTML", js)
+        self.assertNotIn("insertAdjacentHTML", js)
+        self.assertNotIn("document.write", js)
+        self.assertIn("data/teams/", js)
+        self.assertNotIn("teams.sample.json", js)
+        for old, new in (("ARI", "AZ"), ("KCR", "KC"), ("OAK", "ATH")):
+            self.assertRegex(js, rf'{old}:\s*"{new}"')
+
+    def test_style_has_nav_and_teams_rules(self):
+        css = (REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        for selector in (".nav-links", ".teams-entry", ".picker-select", ".roster", ".team-title", ".sort-btn"):
+            self.assertIn(selector, css)
+        self.assertEqual(css.count('.nav-links a + a'), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

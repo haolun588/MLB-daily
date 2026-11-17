@@ -1498,6 +1498,12 @@ def render_recent_item(date_str, entry):
     )
 
 
+TEAMS_ENTRY_HTML = """  <a class="teams-entry" href="teams.html">
+    <span><strong>球隊名單</strong><span class="sub-txt">30 隊球員名單與本季數據，依守備位置分組</span></span>
+    <span class="go" aria-hidden="true">30 隊名單 →</span>
+  </a>"""
+
+
 def render_index(metadata):
     """首頁：最新一期大卡 + 近期 6 期（不含最新一期）。每次由 templates/index.html 全量重新產生。"""
     dates = sorted(
@@ -1506,10 +1512,10 @@ def render_index(metadata):
     )
     if not dates:
         return fill_slots(load_template("index.html"), {
-            "LATEST": '  <p class="section-empty">尚無戰報。</p>',
+            "LATEST": '  <p class="section-empty">尚無戰報。</p>\n\n' + TEAMS_ENTRY_HTML,
             "RECENT": "",
         })
-    latest = render_latest_card(dates[0], metadata[dates[0]])
+    latest = render_latest_card(dates[0], metadata[dates[0]]) + "\n\n" + TEAMS_ENTRY_HTML
     recent_dates = dates[1:7]
     items = "\n".join(render_recent_item(d, metadata[d]) for d in recent_dates)
     if items:
