@@ -93,6 +93,15 @@
   - 階段 2：加入 MLB.com 每日新聞；人事異動限縮為大聯盟層級；休賽季快報頁面；metadata 新增 `type`、`news_count`、`transactions_count`
   - 階段 3：以 Gemini 翻譯新聞、賽後新聞與人事異動，失敗退回原文；metadata 新增 `translated`
 - [x] **模組 F**：首頁摘要改取焦點積分最高的 3 場；休賽季摘要改用當日新聞標題；取消原因改用獨立對照表；README、架構、開發守則、AGENTS、進度與計畫文件同步
+### ⚾ 階段十六：球隊名單頁（2026-11-18）
+依 `docs/plans/20261118_球隊名單頁計畫.md`，一次一個模組。
+
+- [x] **模組 R1**（`b8de886`、`843b383`）：球隊名單頁靜態設計稿與全站導覽，使用者核准；野手合併為單一表格並顯示守位
+- [x] **模組 R2**（`96192e8`）：`python fetch_mlb.py --rosters`，賽季判斷、分組與欄位計算、JSON 輸出與單元測試
+- [x] **模組 R3**（`ae0e1fd`）：正式 `teams.html`、`assets/teams.js` 與全站導覽
+- [x] **模組 R4**（本 commit）：workflow 加入 Update Team Rosters 步驟（`continue-on-error`），文件同步
+- [ ] 待辦：GitHub 實測（手動觸發 workflow，確認 `data/teams/` 部署與 `teams.html` 可用）
+
 - [ ] 待辦：補產 2026-08-01 至 2026-11-15 的戰報（暫緩，該區間戰報連結目前仍為 404）
 - [ ] 待辦：賽季中 RSS 只保留約 25 則，可能不足以涵蓋整日新聞
 - [ ] 待辦：賽季卡片待明年開季以真實資料驗證（目前休賽季只能用 fixture）

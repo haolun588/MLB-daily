@@ -12,6 +12,7 @@
 - **休賽季快報**：昨日無賽事時，產出「新聞＋大聯盟層級人事異動」頁面，不會留白。
 - **歷史存檔**：[archive.html](archive.html) 以 JavaScript 讀取 `reports/metadata.json`，依月份分組；首頁顯示最新一期與近期清單。
 - **Gemini 翻譯**：新聞標題、單場賽後新聞（Headline／Blurb）與人事異動描述以 Gemini 翻成繁體中文；球員姓名維持英文原名，球隊名稱沿用程式內建譯名。沒有金鑰、額度用盡或回應格式錯誤時，自動改用英文原文，不會讓整次執行失敗。
+- **球隊名單頁**：[teams.html](teams.html) 點選隊徽顯示該隊名單（賽季中 26 人現役、休賽季 40 人），分 SP、RP、野手三張表並附本季數據，可排序，網址可帶球隊縮寫（如 `teams.html#NYY`）。名單資料由每日 workflow 更新。
 - **Discord 通知**：頁面部署且 Pages 可開啟後才發送；休賽季快報若無新聞與人事異動則不發。
 
 ---
@@ -28,10 +29,11 @@ Workflow（`.github/workflows/daily_report.yml`）步驟順序：
 1. **Run Unit Tests**：`python -m unittest discover -s tests -v`，失敗即中止，不產生、不部署、不通知。
 2. **Resolve report date**：手動輸入的日期，或預設台北時間昨日。
 3. **Generate Daily Report**：`python fetch_mlb.py --check-wait --no-notify --date ...`。尚有未完賽場次時每 30 分鐘重新檢查，最多 8 次；達上限後照常產出並把未完成場次標示為「未完賽」。
-4. **Commit and Push Metadata to Main**：把 `index.html` 與 `reports/metadata.json` 推回 `main`（先 `git pull --rebase`，失敗最多重試 3 次）。
-5. **Deploy Site to gh-pages**：`peaceiris/actions-gh-pages`，並以 `exclude_assets` 排除程式與文件。
-6. **Wait for GitHub Pages**：輪詢當日戰報網址直到回應 200（最多約 5 分鐘）。
-7. **Send Discord Notification**：`python fetch_mlb.py --notify-only --date ...`，只讀既有 metadata，不呼叫 API。僅在排程觸發，或手動觸發且 `notify` 勾選時執行。
+4. **Update Team Rosters**：`python fetch_mlb.py --rosters`，更新 `data/teams/`。`continue-on-error`，失敗不影響戰報與通知。
+5. **Commit and Push Metadata to Main**：把 `index.html` 與 `reports/metadata.json` 推回 `main`（先 `git pull --rebase`，失敗最多重試 3 次）；`data/` 不進 `main`。
+6. **Deploy Site to gh-pages**：`peaceiris/actions-gh-pages`，並以 `exclude_assets` 排除程式與文件；`data/teams/` 隨之部署。
+7. **Wait for GitHub Pages**：輪詢當日戰報網址直到回應 200（最多約 5 分鐘）。
+8. **Send Discord Notification**：`python fetch_mlb.py --notify-only --date ...`，只讀既有 metadata，不呼叫 API。僅在排程觸發，或手動觸發且 `notify` 勾選時執行。
 
 排程：每日 04:17 UTC（約台北時間 12:17）。`concurrency` 群組 `daily-report` 避免重疊執行，job 逾時上限 330 分鐘。
 
@@ -65,6 +67,9 @@ python fetch_mlb.py --check-wait --no-notify
 
 # 只依既有 reports/metadata.json 發送某日通知（需設定 DISCORD_WEBHOOK_URL）
 python fetch_mlb.py --notify-only --date 2026-07-20
+
+# 抓取 30 隊名單與本季數據，寫入 data/teams/（不產生戰報、不發通知）
+python fetch_mlb.py --rosters
 
 # 執行單元測試（完全不連網）
 python -m unittest discover -s tests
@@ -103,8 +108,11 @@ templates/
 assets/
   style.css               共用樣式表（部署到 gh-pages）
   archive.js              歷史存檔頁的動態腳本
+  teams.js                球隊名單頁的動態腳本
 index.html                首頁（由腳本依 metadata 全量重新產生）
 archive.html              歷史存檔頁（讀取 reports/metadata.json）
+teams.html                球隊名單頁（讀取 data/teams/*.json）
+data/teams/               名單 JSON（index.json、{teamId}.json；僅部署於 gh-pages，main 忽略）
 reports/
   metadata.json           每日索引（main 追蹤；戰報 HTML 不追蹤）
 tests/

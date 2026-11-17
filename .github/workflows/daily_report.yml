@@ -65,6 +65,10 @@ jobs:
         run: |
           python fetch_mlb.py --check-wait --no-notify --date "$REPORT_DATE"
 
+      - name: Update Team Rosters
+        continue-on-error: true
+        run: python fetch_mlb.py --rosters
+
       - name: Commit and Push Metadata to Main
         env:
           REPORT_DATE: ${{ steps.date.outputs.date }}
