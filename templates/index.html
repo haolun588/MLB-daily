@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <!-- 先於繪製前還原桌機收合狀態，避免重新整理時閃一下展開版面 -->
+  <script>try{if(localStorage.getItem('mlbdaily.standings.collapsed')==='1')document.documentElement.classList.add('standings-collapsed')}catch(e){}</script>
+  <script src="assets/standings.js" defer></script>
 </head>
 <body>
 
@@ -23,13 +26,24 @@
   </div>
 </header>
 
-<main class="wrap">
-  <p class="intro">焦點球員數據、投球決定、賽後新聞與人事異動，一頁掌握。</p>
+<!-- 導言放在兩欄 grid 之外：兩欄從同一條起跑線開始，頂端自然對齊 -->
+<div class="wrap intro-wrap"><p class="intro">焦點球員數據、投球決定、賽後新聞與人事異動，一頁掌握。</p></div>
 
+<div class="layout wrap">
+<main>
 <!--SLOT:LATEST-->
+
+<!--SLOT:UPCOMING-->
+
+<!--SLOT:TEAMS-->
 
 <!--SLOT:RECENT-->
 </main>
+
+<!--SLOT:STANDINGS-->
+</div>
+
+<!--SLOT:STANDINGS_UI-->
 
 <footer class="wrap site-footer">
   <span>資料來源：MLB Stats API</span>

@@ -64,10 +64,21 @@ class FakeApi:
         self.seasons_data = None  # 若設定，直接作為賽季 API 回應（優先於 seasons）
         self.fail_roster = set()  # 球隊 id 集合，或 "all"；該隊 roster 抓取失敗
         self.roster_override = None  # 若設定，所有球隊 roster 回應改用此 dict
+        self.standings = None  # standings fixture 檔名；None 代表抓取失敗（預設，不影響既有測試）
+        self.people = None  # people（先發投手數據）fixture 檔名；None 代表失敗
+        self.seasons_by_year = {}  # {年份: fixture 檔名 或 None（失敗）}；未列出的年份用 seasons
         self.calls = []
 
     def fetch(self, url, retries=3, delay=5):
         self.calls.append(url)
+        if "/standings" in url:
+            return load_fixture(self.standings) if self.standings else None
+        if "/people?" in url:
+            return load_fixture(self.people) if self.people else None
+        m = re.search(r"/seasons/(\d{4})", url)
+        if m and int(m.group(1)) in self.seasons_by_year:
+            name = self.seasons_by_year[int(m.group(1))]
+            return load_fixture(name) if name else None
         if "/schedule" in url:
             name = self.schedule
             if self.schedule_sequence:
@@ -126,6 +137,9 @@ class MlbTestBase(unittest.TestCase):
         self.addCleanup(env.stop)
         for key in ("DISCORD_WEBHOOK_URL", "GEMINI_API_KEY"):
             os.environ.pop(key, None)
+        # 模組層級的翻譯狀態不得在測試之間外洩
+        fetch_mlb.LAST_POST["retryable"] = False
+        fetch_mlb.TX_TRANSLATION_CACHE.clear()
 
         # 網路 / 睡眠 / Discord 一律攔截
         self.api = FakeApi()
@@ -134,6 +148,9 @@ class MlbTestBase(unittest.TestCase):
             mock.patch.object(fetch_mlb, "fetch_text", side_effect=self.api.fetch_text),
             mock.patch("urllib.request.urlopen", side_effect=AssertionError("測試不得連網")),
             mock.patch.object(fetch_mlb.time, "sleep"),
+            # 時鐘固定在休賽季（2026-11-18 12:17 台北），測試結果不得隨真實日期改變；需要賽季中情境的測試自行覆蓋
+            mock.patch.object(fetch_mlb, "get_taipei_now",
+                              return_value=datetime(2026, 11, 18, 12, 17, tzinfo=timezone(timedelta(hours=8)))),
         ):
             p.start()
             self.addCleanup(p.stop)
@@ -1252,7 +1269,9 @@ class FooterTests(MlbTestBase):
             def now(cls, tz=None):
                 return fixed.astimezone(tz) if tz else fixed
 
-        with mock.patch.object(fetch_mlb, "datetime", FakeDatetime):
+        # setUp 已固定 get_taipei_now；這裡要驗證「真正的」台北時間換算，改成由假的 datetime.now 推算
+        with mock.patch.object(fetch_mlb, "datetime", FakeDatetime),                 mock.patch.object(fetch_mlb, "get_taipei_now",
+                                  side_effect=lambda: FakeDatetime.now(fetch_mlb.timezone.utc).astimezone(fetch_mlb.TAIPEI_TZ)):
             _, html = self.generate("schedule_normal")
         self.assertIn("產生時間：2026-11-17 12:17（台北時間）", html)
 
@@ -2071,6 +2090,7 @@ class TranslatedPageTests(MlbTestBase):
     def test_offseason_page_translated(self):
         with self.fake_post() as m:
             self.assertEqual(self.run_main("schedule_empty"), 0)
+        # 首頁「本週人事異動精選」與戰報有相同 description，直接沿用戰報譯文，不再呼叫 Gemini
         self.assertEqual(m.call_count, 1)
         self.assertTrue(self.read_metadata()[DATE]["translated"])
         html = self.read_report()
@@ -2786,6 +2806,590 @@ class TeamGlossaryTests(unittest.TestCase):
 
     def test_translate_system_has_list_rule(self):
         self.assertIn("以逗號或頓號列舉的球隊名稱與簡稱也必須依對照表翻成中文", fetch_mlb.TRANSLATE_SYSTEM)
+
+
+# ---------------------------------------------------------------- 首頁戰績側邊欄、今日預告、休賽季區塊（模組 S2）
+TAIPEI = timezone(timedelta(hours=8))
+SEASON_NOW = datetime(2026, 7, 30, 12, 17, tzinfo=TAIPEI)   # 賽季中
+OFFSEASON_NOW = datetime(2026, 11, 18, 12, 17, tzinfo=TAIPEI)  # 休賽季（季後賽已結束）
+
+
+class SidebarBase(MlbTestBase):
+    def build(self, now, **api):
+        for k, v in api.items():
+            setattr(self.api, k, v)
+        with mock.patch.object(fetch_mlb, "get_taipei_now", return_value=now), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return fetch_mlb.build_index_extras(now)
+
+    def page(self, now, **api):
+        extras = self.build(now, **api)
+        return fetch_mlb.render_index({"2026-07-29": {"date": "2026-07-29", "total_games": 3, "postponed": 0,
+                                                       "summary": "s", "type": "season"}}, extras)
+
+
+class StandingsTests(SidebarBase):
+    def test_fetch_standings_order_and_sorting(self):
+        self.api.standings = "standings_2026"
+        st = fetch_mlb.fetch_standings(2026)
+        self.assertEqual([d["name"] for d in st["divisions"]],
+                         ["美聯東區", "美聯中區", "美聯西區", "國聯東區", "國聯中區", "國聯西區"])
+        self.assertEqual([d["id"] for d in st["divisions"]], [201, 202, 200, 204, 205, 203])
+        for d in st["divisions"]:
+            self.assertEqual(len(d["teams"]), 5)
+            self.assertEqual([t["rank"] for t in d["teams"]], [1, 2, 3, 4, 5])  # API 順序相反，仍依 divisionRank
+        first = st["divisions"][0]["teams"][0]
+        self.assertEqual(first["clinch"], "z")
+        self.assertEqual(first["gb"], "–")
+        self.assertEqual(first["last_ten"], "9-1")
+        self.assertEqual(first["streak"], "W1")
+        self.assertEqual(len(st["records"]), 30)
+        self.assertIn("season=2026", self.api.calls[-1])
+        self.assertIn("leagueId=103,104", self.api.calls[-1])
+
+    def test_fetch_standings_failure_returns_none(self):
+        self.api.standings = None
+        self.assertIsNone(fetch_mlb.fetch_standings(2026))
+        with mock.patch.object(fetch_mlb, "fetch_json", return_value={"records": []}):
+            self.assertIsNone(fetch_mlb.fetch_standings(2026))
+        with mock.patch.object(fetch_mlb, "fetch_json", return_value={"unexpected": 1}):
+            self.assertIsNone(fetch_mlb.fetch_standings(2026))
+
+    def test_render_six_divisions_five_rows_and_markers(self):
+        out = self.page(OFFSEASON_NOW, standings="standings_2026")
+        aside = out[out.index('<aside class="standings"'):out.index("</aside>")]
+        self.assertEqual(aside.count('<section class="st-div'), 6)
+        self.assertEqual(aside.count('<tr class="st-row">'), 30)
+        titles = re.findall(r'<h3 id="st-d\d+">([^<]+)</h3>', aside)
+        self.assertEqual(titles, ["美聯東區", "美聯中區", "美聯西區", "國聯東區", "國聯中區", "國聯西區"])
+        self.assertEqual(aside.count("st-div--league-start"), 1)
+        self.assertLess(aside.index("st-div--league-start"), aside.index("國聯東區"))
+        self.assertGreater(aside.index("st-div--league-start"), aside.index("美聯西區"))
+        # clinch 標記：z、w 各一（美東）、y 兩個（中區、西區）
+        self.assertEqual(aside.count('class="st-clinch"'), 4)
+        self.assertIn('aria-hidden="true">z</sup>', aside)
+        self.assertIn(">w</sup>", aside)
+        self.assertEqual(aside.count(">y</sup>"), 2)
+        self.assertIn("分區冠軍＋聯盟最佳戰績", aside)
+        self.assertIn('class="st-legend"', aside)
+        self.assertIn("<dt>z</dt>", aside)
+        # 欄位、L10、STRK、隊名連結
+        for col in ("W", "L", "PCT", "GB", "L10", "STRK"):
+            self.assertIn(f'<th scope="col">{col}</th>', aside)
+        self.assertIn('<td class="is-sub">9-1</td>', aside)
+        self.assertRegex(aside, r'<td class="st-streak is-w">W1</td>')
+        self.assertRegex(aside, r'<td class="st-streak is-l">L2</td>')
+        self.assertIn('href="teams.html#NYY"', aside)
+        self.assertIn('aria-label="紐約洋基', aside)
+        self.assertNotIn("戰績暫時無法取得", aside)
+
+    def test_title_in_season_vs_final(self):
+        season = self.page(SEASON_NOW, standings="standings_2026", schedule="schedule_preview")
+        self.assertIn("2026 例行賽戰績</h2>", season)
+        self.assertNotIn("最終戰績", season)
+        off = self.page(OFFSEASON_NOW, standings="standings_2026")
+        self.assertIn("2026 例行賽最終戰績</h2>", off)
+        self.assertRegex(off, r"更新於 <span class=\"num\">11/18 12:17</span>")
+        self.assertIn("資料來源 MLB Stats API", off)
+
+    def test_title_uses_previous_year_before_opening_day(self):
+        now = datetime(2026, 3, 1, 12, 17, tzinfo=TAIPEI)
+        out = self.page(now, standings="standings_2026")
+        self.assertIn("2025 例行賽最終戰績</h2>", out)
+        self.assertIn("season=2025", [c for c in self.api.calls if "/standings" in c][0])
+
+    def test_failure_shows_error_version(self):
+        out = self.page(OFFSEASON_NOW, standings=None)
+        aside = out[out.index('<aside class="standings is-error"'):out.index("</aside>")]
+        self.assertIn("戰績暫時無法取得", aside)
+        self.assertNotIn("st-table", aside)
+        self.assertNotIn("st-meta", aside)
+        self.assertIn("2026 例行賽最終戰績", aside)
+
+    def test_aside_structure_matches_mockup(self):
+        out = self.page(OFFSEASON_NOW, standings="standings_2026")
+        for needle in ('id="standings"', 'id="standings-panel"', 'data-st="collapse"', 'data-st="expand"',
+                       'class="st-btn st-close"', 'data-st="open"', 'class="st-backdrop"', 'class="st-fab"'):
+            self.assertIn(needle, out)
+        self.assertLess(out.index("</main>"), out.index('<aside'))
+        self.assertIn('assets/standings.js', out)
+        self.assertIn("mlbdaily.standings.collapsed", out)
+
+    def test_xss_in_standings_fields_escaped(self):
+        data = load_fixture("standings_2026")
+        tr = data["records"][0]["teamRecords"][0]
+        tr["streak"]["streakCode"] = "<script>alert(1)</script>"
+        tr["clinchIndicator"] = "<b>"
+        tr["gamesBack"] = "<i>"
+        with mock.patch.object(fetch_mlb, "fetch_json", return_value=data):
+            st = fetch_mlb.fetch_standings(2026)
+        html = fetch_mlb.render_standings_aside(st, 2026, False, OFFSEASON_NOW)
+        self.assertNotIn("<script>alert(1)</script>", html)
+        self.assertNotIn("<b>", html)
+        self.assertNotIn("<i>", html)
+        self.assertIn("&lt;script&gt;", html)
+
+
+class GamePreviewTests(SidebarBase):
+    def previews(self, **api):
+        api.setdefault("schedule", "schedule_preview")
+        api.setdefault("people", "people_pitchers")
+        api.setdefault("standings", "standings_2026")
+        for k, v in api.items():
+            setattr(self.api, k, v)
+        records = (fetch_mlb.fetch_standings(2026) or {}).get("records")
+        return fetch_mlb.fetch_game_previews("2026-07-30", 2026, records)
+
+    def test_url_and_pitcher_batch_request(self):
+        self.previews()
+        sched = [c for c in self.api.calls if "/schedule" in c][0]
+        self.assertIn("date=2026-07-30", sched)
+        self.assertIn("hydrate=probablePitcher,team", sched)
+        people = [c for c in self.api.calls if "/people?" in c][0]
+        self.assertIn("personIds=", people)
+        self.assertIn("season=2026", people)
+        self.assertIn("543037", people)
+
+    def test_taipei_conversion_sorting_and_exclusions(self):
+        games = self.previews()
+        # 延賽（9004）與非 30 隊（9006 明星賽）被排除
+        self.assertEqual([g["pk"] for g in games], [9001, 9002, 9003, 9005, 9007])
+        self.assertEqual(games[0]["start"].strftime("%Y-%m-%d %H:%M"), "2026-07-31 00:10")  # 16:10Z 跨日
+        self.assertEqual(games[3]["start"].strftime("%m-%d %H:%M"), "07-31 09:05")
+        self.assertEqual([g["start"] for g in games], sorted(g["start"] for g in games))
+
+    def test_doubleheader_notes_and_tbd_pitcher(self):
+        games = self.previews()
+        self.assertEqual([g["note"] for g in games], ["", "雙重賽 1/2", "雙重賽 2/2", "", ""])
+        html = fetch_mlb.render_game_previews(games)
+        self.assertIn('<span class="gp-note">雙重賽 1/2</span>', html)
+        self.assertIn('<span class="gp-note">雙重賽 2/2</span>', html)
+        self.assertEqual(html.count('class="gp-tbd">未定</span>'), 2)  # 9002 之後客隊、9001 主隊皆無先發
+        self.assertEqual(html.count('class="gp-note"'), 2)
+
+    def test_pitcher_stats_and_records(self):
+        html = fetch_mlb.render_game_previews(self.previews())
+        self.assertIn("(11-6, 3.21)", html)
+        self.assertIn("(18-4, 2.21)", html)
+        self.assertIn('savant-player/543037"', html)
+        # 戰績取自 standings（紐約洋基在 fixture 為美東第 N 名），退回 schedule 的情況另測
+        yankees = fetch_mlb.fetch_standings(2026)["records"][147]
+        self.assertIn(f'<span class="gp-rec">{yankees[0]}-{yankees[1]}</span>', html)
+        self.assertNotIn("SHOULD NOT SHOW PARK", html)
+        self.assertNotIn("API NAME", html)  # 中文隊名取自 TEAM_META
+
+    def test_record_falls_back_to_schedule_then_omitted(self):
+        games = self.previews(standings=None)
+        # standings 失敗：改用 schedule leagueRecord（光芒 70-39）
+        self.assertIn('<span class="gp-rec">70-39</span>', fetch_mlb.render_game_previews(games))
+        data = load_fixture("schedule_preview")
+        for g in data["dates"][0]["games"]:
+            for side in g["teams"].values():
+                side.pop("leagueRecord", None)
+        with mock.patch.object(fetch_mlb, "fetch_json", side_effect=lambda u, *a, **k: data if "/schedule" in u else None):
+            html = fetch_mlb.render_game_previews(fetch_mlb.fetch_game_previews("2026-07-30", 2026, {}))
+        self.assertNotIn("gp-rec", html)
+
+    def test_people_failure_keeps_names_without_stats(self):
+        html = fetch_mlb.render_game_previews(self.previews(people=None))
+        self.assertIn("Gerrit Cole", html)
+        self.assertNotIn("gp-stat", html)
+
+    def test_range_text_early_morning(self):
+        games = self.previews()
+        self.assertEqual(fetch_mlb.preview_range_text(games), "台北時間 7/31（五）凌晨起 · 5 場")
+        self.assertIn("台北時間 7/31（五）凌晨起 · 5 場", fetch_mlb.render_game_previews(games))
+
+    def test_range_text_non_early_has_no_dawn_wording(self):
+        games = self.previews()
+        games = [g for g in games if g["start"].hour >= 6]
+        text = fetch_mlb.preview_range_text(games)
+        self.assertNotIn("凌晨", text)
+        self.assertRegex(text, r"^台北時間 7/31（五） \d\d:\d\d 起 · \d 場$")
+
+    def test_zero_games(self):
+        self.api.schedule = "schedule_empty"
+        games = fetch_mlb.fetch_game_previews("2026-07-14", 2026, {})
+        self.assertEqual(games, [])
+        self.assertIn("今日無比賽", fetch_mlb.render_game_previews(games))
+
+    def test_schedule_failure(self):
+        self.api.schedule = None
+        self.assertIsNone(fetch_mlb.fetch_game_previews("2026-07-30", 2026, {}))
+        self.assertIn("賽程暫時無法取得", fetch_mlb.render_game_previews(None))
+
+    def test_xss_pitcher_name_and_bad_id(self):
+        html = fetch_mlb.render_game_previews(self.previews())
+        self.assertNotIn("<script>alert('P')</script>", html)
+        self.assertIn("&lt;script&gt;alert(&#x27;P&#x27;)&lt;/script&gt;", html)
+        self.assertNotIn("bad-id", html)  # id 非整數：不輸出連結
+
+    def test_in_season_page_has_preview_and_no_offseason_blocks(self):
+        out = self.page(SEASON_NOW, schedule="schedule_preview", people="people_pitchers", standings="standings_2026")
+        self.assertIn('id="gp-h"', out)
+        self.assertNotIn('id="cd-h"', out)
+        self.assertNotIn('id="wk-h"', out)
+        self.assertIn("2026 例行賽戰績</h2>", out)
+        # 原有區塊仍在
+        self.assertIn('class="latest"', out)
+        self.assertIn('href="teams.html"', out)
+        self.assertIn('id="recent-h"', out)
+        self.assertLess(out.index('class="latest"'), out.index('id="gp-h"'))
+        self.assertLess(out.index('id="gp-h"'), out.index('class="teams-entry"'))
+        self.assertLess(out.index('class="teams-entry"'), out.index('id="recent-h"'))
+
+    def test_in_season_schedule_failure_shows_error_only_in_block(self):
+        out = self.page(SEASON_NOW, schedule=None, standings="standings_2026")
+        self.assertIn("賽程暫時無法取得", out)
+        self.assertIn('class="st-row"', out)  # 戰績不受影響
+
+
+class OffseasonBlocksTests(SidebarBase):
+    def test_countdown_days(self):
+        self.api.seasons_by_year = {2027: "seasons_2027"}
+        cd = fetch_mlb.fetch_countdown(date(2026, 11, 18))
+        self.assertEqual((cd["year"], cd["spring_days"], cd["opening_days"]), (2027, 93, 127))
+        html = fetch_mlb.render_countdown(cd)
+        self.assertIn('<span class="num">93</span> 天', html)
+        self.assertIn('<span class="num">127</span> 天', html)
+        self.assertIn("距離春訓", html)
+        self.assertIn("距離開幕戰", html)
+        self.assertIn('datetime="2027-02-19"', html)
+        self.assertIn("2027 球季", html)
+
+    def test_countdown_before_this_years_postseason_end_uses_current_year(self):
+        # 今天（2026-01-10）尚未超過 2026 postSeasonEndDate -> 取 2026 年
+        cd = fetch_mlb.fetch_countdown(date(2026, 1, 10))
+        self.assertEqual(cd["year"], 2026)
+        self.assertEqual((cd["spring_days"], cd["opening_days"]), (41, 74))
+
+    def test_countdown_spring_in_progress(self):
+        cd = fetch_mlb.fetch_countdown(date(2026, 3, 1))
+        self.assertTrue(cd["spring_started"])
+        html = fetch_mlb.render_countdown(cd)
+        self.assertIn("春訓進行中", html)
+        self.assertNotIn("距離春訓", html)
+        self.assertIn("距離開幕戰", html)
+        self.assertIn('<span class="num">24</span> 天', html)
+
+    def test_countdown_failure_hides_block(self):
+        self.api.seasons_by_year = {2027: None}
+        self.assertIsNone(fetch_mlb.fetch_countdown(date(2026, 11, 18)))
+        self.assertEqual(fetch_mlb.render_countdown(None), "")
+        out = self.page(OFFSEASON_NOW, standings="standings_2026", transactions="transactions_weekly")
+        self.assertNotIn('id="cd-h"', out)
+        self.assertIn('id="wk-h"', out)  # 其他區塊不受影響
+
+    def test_weekly_range_and_limit_and_order(self):
+        self.api.transactions = "transactions_weekly"
+        tx = fetch_mlb.fetch_weekly_transactions(date(2026, 11, 18))
+        url = [c for c in self.api.calls if "/transactions" in c][0]
+        self.assertIn("startDate=2026-11-11", url)
+        self.assertIn("endDate=2026-11-17", url)
+        self.assertEqual(len(tx), 8)  # 上限 8
+        dates = [t["date"] for t in tx]
+        self.assertEqual(dates, sorted(dates, reverse=True))  # 新到舊
+        descs = " ".join(t["description"] for t in tx)
+        self.assertIn("contract extension", descs)  # 延長合約保留
+        self.assertIn("traded", descs)  # 交易保留
+        self.assertNotIn("minor league", descs)
+        self.assertNotIn("assigned", descs)
+        self.assertNotIn("released", descs)
+        self.assertNotIn("Korean club", descs)
+
+    def test_weekly_zero_and_failure(self):
+        self.api.transactions = "transactions_empty"
+        self.assertEqual(fetch_mlb.fetch_weekly_transactions(date(2026, 11, 18)), [])
+        self.assertIn("本週無重大人事異動", fetch_mlb.render_weekly_transactions([]))
+        self.api.transactions = None
+        self.assertIsNone(fetch_mlb.fetch_weekly_transactions(date(2026, 11, 18)))
+        self.assertIn("暫時無法取得", fetch_mlb.render_weekly_transactions(None))
+
+    def test_weekly_render_links_and_team(self):
+        self.api.transactions = "transactions_weekly"
+        html = fetch_mlb.render_weekly_transactions(fetch_mlb.fetch_weekly_transactions(date(2026, 11, 18)))
+        self.assertIn("近 7 天 · 8 筆", html)
+        self.assertIn('savant-player/624413"', html)
+        self.assertIn(">Pete Alonso</a>", html)
+        self.assertIn("紐約大都會", html)
+        self.assertIn('datetime="2026-11-17">11/17</time>', html)
+
+    def test_weekly_translation_applied_and_fallback(self):
+        os.environ["GEMINI_API_KEY"] = "SECRETKEY"
+        self.api.transactions = "transactions_weekly"
+        seen = []
+
+        def fake(u, p, h, timeout=30):
+            items = request_items(p)
+            seen.extend(items)
+            return gemini_response([f"譯文{it['id']} " + " ".join(it["keep"]) for it in items])
+
+        with mock.patch.object(fetch_mlb, "post_json", side_effect=fake) as m:
+            out = self.page(OFFSEASON_NOW, standings="standings_2026", transactions="transactions_weekly")
+        self.assertEqual(m.call_count, 1)  # 首頁需翻譯內容一次批次
+        self.assertEqual(len(seen), 8)
+        self.assertIn("譯文", out)
+        self.assertIn(">Pete Alonso</a>", out)  # 保留英文人名與連結
+        fetch_mlb.TX_TRANSLATION_CACHE.clear()  # 前一段已寫入譯文快取，這裡模擬沒有戰報譯文可沿用
+        with mock.patch.object(fetch_mlb, "post_json", return_value=None):
+            out = self.page(OFFSEASON_NOW, standings="standings_2026", transactions="transactions_weekly")
+        self.assertIn("signed free agent 1B", out)  # 失敗退回英文原文
+        self.assertNotIn("譯文", out)
+
+    def test_weekly_xss_escaped(self):
+        self.api.transactions = "transactions_weekly"
+        html = fetch_mlb.render_weekly_transactions(fetch_mlb.fetch_weekly_transactions(date(2026, 11, 18)))
+        self.assertNotIn("<img src=x", html)
+        self.assertIn("&lt;img src=x onerror=1&gt;", html)
+
+    def test_offseason_page_blocks(self):
+        out = self.page(OFFSEASON_NOW, standings="standings_2026", transactions="transactions_weekly",
+                        seasons_by_year={2027: "seasons_2027"})
+        self.assertIn('id="cd-h"', out)
+        self.assertIn('id="wk-h"', out)
+        self.assertNotIn('id="gp-h"', out)
+        self.assertNotIn("今日賽事預告", out)
+        self.assertIn("2026 例行賽最終戰績", out)
+        self.assertIn('class="latest"', out)
+        self.assertIn('href="teams.html"', out)
+        self.assertIn('id="recent-h"', out)
+        self.assertLess(out.index('id="cd-h"'), out.index('id="wk-h"'))
+        self.assertLess(out.index('id="wk-h"'), out.index('class="teams-entry"'))
+
+
+class ReviewFixTests(SidebarBase):
+    """S2 審查修正：時鐘固定、翻譯不重複耗時、延長合約比對、缺欄位、動態圖例等。"""
+
+    def test_clock_is_fixed_by_default(self):
+        self.assertEqual(fetch_mlb.get_taipei_now().date(), date(2026, 11, 18))
+
+    def test_extension_regex_is_narrow(self):
+        def tx(desc, code="SGN"):
+            return {"description": desc, "type_code": code, "date": "2026-11-17"}
+        picked = fetch_mlb.select_weekly_highlights([
+            tx("Phillies signed C Foo to a 3-year contract extension."),
+            tx("Yankees agreed to terms with RHP Bar on a 1-year contract."),
+            tx("Mets placed RHP Baz in extended spring training."),
+            tx("Cubs designated RHP Qux for assignment.", "DES"),
+        ])
+        self.assertEqual([t["description"] for t in picked], ["Phillies signed C Foo to a 3-year contract extension."])
+
+    def test_weekly_missing_transactions_field_is_failure(self):
+        for body in ({"copyright": "x"}, {"transactions": None}, {"transactions": "oops"}):
+            with mock.patch.object(fetch_mlb, "fetch_json", return_value=body):
+                self.assertIsNone(fetch_mlb.fetch_weekly_transactions(date(2026, 11, 18)), body)
+        with mock.patch.object(fetch_mlb, "fetch_json", return_value={"transactions": []}):
+            self.assertEqual(fetch_mlb.fetch_weekly_transactions(date(2026, 11, 18)), [])
+        html = fetch_mlb.render_weekly_transactions(None)
+        self.assertIn("暫時無法取得", html)
+        self.assertNotIn("本週無重大人事異動", html)
+
+    def test_translation_skipped_after_retryable_failure(self):
+        os.environ["GEMINI_API_KEY"] = "SECRETKEY"
+        fetch_mlb.LAST_POST["retryable"] = True  # 戰報翻譯已因 429/5xx/逾時耗盡重試
+        weekly = [{"description": "New York Mets signed free agent 1B Pete Alonso.", "person_name": "Pete Alonso"}]
+        with mock.patch.object(fetch_mlb, "post_json") as m, contextlib.redirect_stdout(io.StringIO()) as out:
+            fetch_mlb.translate_weekly_transactions(weekly)
+        m.assert_not_called()
+        self.assertNotIn("description_zh", weekly[0])  # 使用原文
+        self.assertIn("不再重試", out.getvalue())
+
+    def test_report_translation_reused_for_weekly(self):
+        os.environ["GEMINI_API_KEY"] = "SECRETKEY"
+        desc = "New York Mets signed free agent 1B Pete Alonso."
+        fetch_mlb.TX_TRANSLATION_CACHE[desc] = "紐約大都會簽下自由球員 1B Pete Alonso。"
+        weekly = [{"description": desc, "person_name": "Pete Alonso", "person_id": 624413}]
+        with mock.patch.object(fetch_mlb, "post_json") as m, contextlib.redirect_stdout(io.StringIO()):
+            fetch_mlb.translate_weekly_transactions(weekly)
+        m.assert_not_called()  # 全部沿用戰報譯文，不呼叫 Gemini
+        self.assertEqual(weekly[0]["description_zh"], "紐約大都會簽下自由球員 1B Pete Alonso。")
+
+    def test_apply_translations_fills_cache(self):
+        os.environ["GEMINI_API_KEY"] = "SECRETKEY"
+        tx = [{"description": "Atlanta Braves signed free agent RHP Big Name.", "person_name": "Big Name"}]
+        with mock.patch.object(fetch_mlb, "post_json",
+                               return_value=gemini_response(["勇士簽下自由球員 RHP Big Name。"])), \
+                contextlib.redirect_stdout(io.StringIO()):
+            fetch_mlb.apply_translations(None, [], tx)
+        self.assertEqual(fetch_mlb.TX_TRANSLATION_CACHE[tx[0]["description"]], "勇士簽下自由球員 RHP Big Name。")
+
+    def test_seasons_current_year_requested_once(self):
+        self.build(OFFSEASON_NOW, standings="standings_2026", transactions="transactions_weekly",
+                   seasons_by_year={2027: "seasons_2027"})
+        year_calls = [c for c in self.api.calls if "/seasons/2026" in c]
+        self.assertEqual(len(year_calls), 1)
+
+    def test_resolve_roster_context_still_fetches_by_itself(self):
+        fetch_mlb.resolve_roster_context(date(2026, 7, 1))
+        self.assertEqual(len([c for c in self.api.calls if "/seasons/2026" in c]), 1)
+
+    def test_dynamic_legend_lists_only_present_marks(self):
+        data = load_fixture("standings_2026")
+        for rec in data["records"]:
+            for tr in rec["teamRecords"]:
+                tr.pop("clinchIndicator", None)
+        data["records"][0]["teamRecords"][0]["clinchIndicator"] = "x"
+        data["records"][0]["teamRecords"][1]["clinchIndicator"] = "q"
+        with mock.patch.object(fetch_mlb, "fetch_json", return_value=data):
+            st = fetch_mlb.fetch_standings(2026)
+        html = fetch_mlb.render_standings_aside(st, 2026, False, OFFSEASON_NOW)
+        legend = html[html.index('class="st-legend"'):]
+        self.assertIn("<dt>x</dt><dd>取得季後賽資格</dd>", legend)
+        self.assertNotIn("<dt>z</dt>", legend)
+        self.assertNotIn("<dt>q</dt>", legend)  # 未知字母不入圖例
+        self.assertRegex(html, r'aria-label="[^"]*，取得季後賽資格"')  # sup 為 aria-hidden，說明放在連結 aria-label
+        self.assertRegex(html, r'aria-label="[^"]*，標記 q"')
+        self.assertIn(">q</sup>", html)
+
+    def test_no_clinch_marks_means_no_legend(self):
+        data = load_fixture("standings_2026")
+        for rec in data["records"]:
+            for tr in rec["teamRecords"]:
+                tr.pop("clinchIndicator", None)
+        with mock.patch.object(fetch_mlb, "fetch_json", return_value=data):
+            st = fetch_mlb.fetch_standings(2026)
+        self.assertNotIn("st-legend", fetch_mlb.render_standings_aside(st, 2026, True, SEASON_NOW))
+
+    def _preview_with(self, games):
+        data = {"dates": [{"date": "2026-07-30", "games": games}]}
+        with mock.patch.object(fetch_mlb, "fetch_json", side_effect=lambda u, *a, **k: data if "/schedule" in u else None):
+            return fetch_mlb.fetch_game_previews("2026-07-30", 2026, {})
+
+    @staticmethod
+    def _g(pk, when, status="Preview", tbd=False, away=147, home=111):
+        return {"gamePk": pk, "gameDate": when, "doubleHeader": "N", "gameNumber": 1,
+                "status": {"detailedState": status, "startTimeTBD": tbd},
+                "teams": {"away": {"team": {"id": away}}, "home": {"team": {"id": home}}}}
+
+    def test_naive_game_date_treated_as_utc(self):
+        games = self._preview_with([self._g(1, "2026-07-30T16:10:00")])
+        self.assertEqual(games[0]["start"].strftime("%m-%d %H:%M"), "07-31 00:10")
+
+    def test_cancelled_and_postponed_excluded(self):
+        games = self._preview_with([
+            self._g(1, "2026-07-30T16:10:00Z", status="Cancelled"),
+            self._g(2, "2026-07-30T17:10:00Z", status="Postponed"),
+            self._g(3, "2026-07-30T18:10:00Z"),
+        ])
+        self.assertEqual([g["pk"] for g in games], [3])
+
+    def test_tbd_games_sorted_last_and_range_text_omits_time(self):
+        games = self._preview_with([
+            self._g(1, "2026-07-30T16:10:00Z", tbd=True),
+            self._g(2, "2026-07-30T23:10:00Z"),
+        ])
+        self.assertEqual([g["pk"] for g in games], [2, 1])
+        html = fetch_mlb.render_game_previews(games)
+        self.assertIn('<span class="gp-time">待定</span>', html)
+        self.assertIn("台北時間 7/31（五） 07:10 起 · 2 場", html)
+        text = fetch_mlb.preview_range_text([g for g in games if g["tbd"]])
+        self.assertEqual(text, "開賽時間待定 · 1 場")
+        self.assertNotIn("凌晨", text)
+
+    def test_drawer_js_marks_intro_inert_too(self):
+        js = (REPO_ROOT / "assets" / "standings.js").read_text(encoding="utf-8")
+        self.assertIn(".intro-wrap", js)
+        tpl = (REPO_ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('class="wrap intro-wrap"', tpl)
+
+
+class SidebarFailureIsolationTests(SidebarBase):
+    def run_flags(self, *flags):
+        with mock.patch.object(sys, "argv", ["fetch_mlb.py", "--date", DATE, *flags]), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            try:
+                fetch_mlb.main()
+            except SystemExit as e:
+                return e.code
+        return None
+
+    def test_all_sources_failing_main_still_exits_zero(self):
+        self.api.schedule = "schedule_normal"
+        self.api.standings = None
+        self.api.seasons = None
+        self.api.transactions = None
+        with mock.patch.object(fetch_mlb, "get_taipei_now", return_value=OFFSEASON_NOW):
+            code = self.run_flags()
+        self.assertIsNone(code)
+        self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
+        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        self.assertIn("戰績暫時無法取得", index)
+        self.assertIn('class="latest"', index)
+        self.discord.assert_called_once()
+
+    def test_exceptions_inside_blocks_do_not_break_main(self):
+        self.api.schedule = "schedule_normal"
+        with mock.patch.object(fetch_mlb, "fetch_standings", side_effect=RuntimeError("boom")), \
+                mock.patch.object(fetch_mlb, "fetch_countdown", side_effect=RuntimeError("boom")), \
+                mock.patch.object(fetch_mlb, "fetch_weekly_transactions", side_effect=ValueError("boom")), \
+                mock.patch.object(fetch_mlb, "get_taipei_now", return_value=OFFSEASON_NOW):
+            code = self.run_flags()
+        self.assertIsNone(code)
+        self.assertTrue((self.tmp / "reports" / "metadata.json").exists())
+        self.assertIn("戰績暫時無法取得", (self.tmp / "index.html").read_text(encoding="utf-8"))
+
+    def test_build_index_extras_total_failure_still_writes_index(self):
+        self.api.schedule = "schedule_normal"
+        with mock.patch.object(fetch_mlb, "build_index_extras", side_effect=RuntimeError("boom")):
+            code = self.run_flags()
+        self.assertIsNone(code)
+        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        self.assertIn('class="latest"', index)
+        self.assertNotIn("<!--SLOT:", index)
+        # 仍輸出側欄錯誤版與手機按鈕，桌機右側不會是空欄
+        self.assertIn('<aside class="standings is-error"', index)
+        self.assertIn("戰績暫時無法取得", index)
+        self.assertIn('class="st-fab"', index)
+
+    def test_rosters_and_notify_only_do_not_fetch_sidebar_data(self):
+        self.api.schedule = "schedule_normal"
+        self.run_flags()
+        self.api.calls.clear()
+        self.discord.reset_mock()
+        self.run_flags("--notify-only")
+        self.assertEqual(self.api.calls, [])
+        with mock.patch.object(fetch_mlb, "fetch_rosters", return_value=1) as m, \
+                mock.patch.object(sys, "argv", ["fetch_mlb.py", "--rosters"]), \
+                mock.patch.object(fetch_mlb, "build_index_extras") as b:
+            with self.assertRaises(SystemExit):
+                fetch_mlb.main()
+        m.assert_called_once()
+        b.assert_not_called()
+
+
+class SidebarAssetsTests(unittest.TestCase):
+    def test_standings_js_has_no_innerhtml_and_no_design_only_switches(self):
+        js = (REPO_ROOT / "assets" / "standings.js").read_text(encoding="utf-8")
+        self.assertNotIn("innerHTML", js)
+        self.assertNotIn("outerHTML", js)
+        self.assertNotIn("insertAdjacentHTML", js)
+        self.assertNotIn("state=error", js)
+        self.assertIn("localStorage", js)
+        self.assertIn("mlbdaily.standings.collapsed", js)
+        self.assertIn("inert", js)
+        self.assertIn("Escape", js)
+
+    def test_style_css_has_sidebar_rules(self):
+        css = (REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        for needle in (".standings", ".st-panel", ".st-table", ".st-fab", ".st-rail", ".gp-game", ".countdown",
+                       ".wk-tx", "html.standings-collapsed", "html.st-drawer-open", ".layout"):
+            self.assertIn(needle, css)
+        self.assertNotIn("mode-season", css)
+        self.assertNotIn("is-season-only", css)
+
+    def test_template_has_slots_and_head_script(self):
+        tpl = (REPO_ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+        for slot in ("LATEST", "UPCOMING", "TEAMS", "RECENT", "STANDINGS", "STANDINGS_UI"):
+            self.assertIn(f"<!--SLOT:{slot}-->", tpl)
+        head = tpl[:tpl.index("</head>")]
+        self.assertIn("mlbdaily.standings.collapsed", head)
+        self.assertIn('src="assets/standings.js"', head)
+        self.assertNotIn("mode=season", tpl)
+
+    def test_render_index_without_extras_has_no_leftover_slots(self):
+        out = fetch_mlb.render_index({"2026-11-16": {"date": "2026-11-16", "summary": "ok"}})
+        self.assertNotIn("<!--SLOT:", out)
+        self.assertIn('class="teams-entry"', out)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,206 @@
+{
+  "copyright": "x",
+  "transactions": [
+    {
+      "id": 1,
+      "date": "2026-11-11",
+      "typeCode": "SFA",
+      "description": "Boston Red Sox signed free agent RHP Player1.",
+      "person": {
+        "id": 880001,
+        "fullName": "Player1"
+      },
+      "toTeam": {
+        "id": 111
+      }
+    },
+    {
+      "id": 2,
+      "date": "2026-11-11",
+      "typeCode": "SFA",
+      "description": "Boston Red Sox signed free agent RHP Player2 to a minor league contract.",
+      "person": {
+        "id": 880002,
+        "fullName": "Player2"
+      },
+      "toTeam": {
+        "id": 111
+      }
+    },
+    {
+      "id": 3,
+      "date": "2026-11-12",
+      "typeCode": "ASG",
+      "description": "New York Yankees assigned RHP Player3 to Scranton.",
+      "person": {
+        "id": 880003,
+        "fullName": "Player3"
+      },
+      "toTeam": {
+        "id": 147
+      }
+    },
+    {
+      "id": 4,
+      "date": "2026-11-12",
+      "typeCode": "TR",
+      "description": "Seattle Mariners traded RHP Player4 to Tampa Bay Rays for 1B Other.",
+      "person": {
+        "id": 880004,
+        "fullName": "Player4"
+      },
+      "toTeam": {
+        "id": 139
+      },
+      "fromTeam": {
+        "id": 136
+      }
+    },
+    {
+      "id": 5,
+      "date": "2026-11-17",
+      "typeCode": "SGN",
+      "description": "Philadelphia Phillies signed C Player5 to a 3-year contract extension.",
+      "person": {
+        "id": 880005,
+        "fullName": "Player5"
+      },
+      "toTeam": {
+        "id": 143
+      }
+    },
+    {
+      "id": 6,
+      "date": "2026-11-13",
+      "typeCode": "REL",
+      "description": "Detroit Tigers released LHP Player6.",
+      "person": {
+        "id": 880006,
+        "fullName": "Player6"
+      },
+      "toTeam": {
+        "id": 116
+      }
+    },
+    {
+      "id": 7,
+      "date": "2026-11-14",
+      "typeCode": "SFA",
+      "description": "Atlanta Braves signed free agent LHP Player7.",
+      "person": {
+        "id": 880007,
+        "fullName": "Player7"
+      },
+      "toTeam": {
+        "id": 144
+      }
+    },
+    {
+      "id": 8,
+      "date": "2026-11-14",
+      "typeCode": "SFA",
+      "description": "Chicago Cubs signed free agent 2B Player8.",
+      "person": {
+        "id": 880008,
+        "fullName": "Player8"
+      },
+      "toTeam": {
+        "id": 112
+      }
+    },
+    {
+      "id": 9,
+      "date": "2026-11-15",
+      "typeCode": "TR",
+      "description": "Houston Astros traded 3B Player9 to Texas Rangers.",
+      "person": {
+        "id": 880009,
+        "fullName": "Player9"
+      },
+      "toTeam": {
+        "id": 140
+      },
+      "fromTeam": {
+        "id": 117
+      }
+    },
+    {
+      "id": 10,
+      "date": "2026-11-15",
+      "typeCode": "SFA",
+      "description": "Pittsburgh Pirates signed free agent RHP Player10.",
+      "person": {
+        "id": 880010,
+        "fullName": "Player10"
+      },
+      "toTeam": {
+        "id": 134
+      }
+    },
+    {
+      "id": 11,
+      "date": "2026-11-16",
+      "typeCode": "SFA",
+      "description": "Miami Marlins signed free agent OF Player11.",
+      "person": {
+        "id": 880011,
+        "fullName": "Player11"
+      },
+      "toTeam": {
+        "id": 146
+      }
+    },
+    {
+      "id": 12,
+      "date": "2026-11-16",
+      "typeCode": "SFA",
+      "description": "Colorado Rockies signed free agent RHP Player12.",
+      "person": {
+        "id": 880012,
+        "fullName": "Player12"
+      },
+      "toTeam": {
+        "id": 115
+      }
+    },
+    {
+      "id": 13,
+      "date": "2026-11-17",
+      "typeCode": "SFA",
+      "description": "New York Mets signed free agent 1B Pete Alonso.",
+      "person": {
+        "id": 624413,
+        "fullName": "Pete Alonso"
+      },
+      "toTeam": {
+        "id": 121
+      }
+    },
+    {
+      "id": 14,
+      "date": "2026-11-17",
+      "typeCode": "SFA",
+      "description": "Toronto Blue Jays signed free agent RHP <img src=x onerror=1>.",
+      "person": {
+        "id": 880014,
+        "fullName": "<img src=x onerror=1>"
+      },
+      "toTeam": {
+        "id": 141
+      }
+    },
+    {
+      "id": 15,
+      "date": "2026-11-17",
+      "typeCode": "SFA",
+      "description": "Free agent signed with Korean club Player15.",
+      "person": {
+        "id": 880015,
+        "fullName": "Player15"
+      },
+      "toTeam": {
+        "id": 999
+      }
+    }
+  ]
+}

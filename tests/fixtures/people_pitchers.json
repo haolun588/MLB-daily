@@ -1,0 +1,176 @@
+{
+  "people": [
+    {
+      "id": 543037,
+      "fullName": "Gerrit Cole",
+      "stats": [
+        {
+          "type": {
+            "displayName": "season"
+          },
+          "group": {
+            "displayName": "pitching"
+          },
+          "splits": [
+            {
+              "season": "2026",
+              "stat": {
+                "wins": 11,
+                "losses": 6,
+                "era": "3.21"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 676979,
+      "fullName": "Garrett Crochet",
+      "stats": [
+        {
+          "type": {
+            "displayName": "season"
+          },
+          "group": {
+            "displayName": "pitching"
+          },
+          "splits": [
+            {
+              "season": "2026",
+              "stat": {
+                "wins": 13,
+                "losses": 7,
+                "era": "2.85"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 668390,
+      "fullName": "Cole Winn",
+      "stats": [
+        {
+          "type": {
+            "displayName": "season"
+          },
+          "group": {
+            "displayName": "pitching"
+          },
+          "splits": [
+            {
+              "season": "2026",
+              "stat": {
+                "wins": 3,
+                "losses": 4,
+                "era": "4.50"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 669373,
+      "fullName": "Tarik Skubal",
+      "stats": [
+        {
+          "type": {
+            "displayName": "season"
+          },
+          "group": {
+            "displayName": "pitching"
+          },
+          "splits": [
+            {
+              "season": "2026",
+              "stat": {
+                "wins": 18,
+                "losses": 4,
+                "era": "2.21"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 657746,
+      "fullName": "Joe Ryan",
+      "stats": [
+        {
+          "type": {
+            "displayName": "season"
+          },
+          "group": {
+            "displayName": "pitching"
+          },
+          "splits": [
+            {
+              "season": "2026",
+              "stat": {
+                "wins": 12,
+                "losses": 8,
+                "era": "3.35"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 641927,
+      "fullName": "Bailey Ober",
+      "stats": [
+        {
+          "type": {
+            "displayName": "season"
+          },
+          "group": {
+            "displayName": "pitching"
+          },
+          "splits": [
+            {
+              "season": "2026",
+              "stat": {
+                "wins": 8,
+                "losses": 7,
+                "era": "4.02"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 656302,
+      "fullName": "Dylan Cease",
+      "stats": [
+        {
+          "type": {
+            "displayName": "season"
+          },
+          "group": {
+            "displayName": "pitching"
+          },
+          "splits": [
+            {
+              "season": "2026",
+              "stat": {
+                "wins": 14,
+                "losses": 8,
+                "era": "3.17"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 999,
+      "fullName": "No Stats Guy"
+    }
+  ]
+}

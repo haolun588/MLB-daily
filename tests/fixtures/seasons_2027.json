@@ -1,0 +1,11 @@
+{
+  "seasons": [
+    {
+      "seasonId": "2027",
+      "springStartDate": "2027-02-19",
+      "regularSeasonStartDate": "2027-03-25",
+      "postSeasonEndDate": "2027-10-31",
+      "seasonEndDate": "2027-10-31"
+    }
+  ]
+}

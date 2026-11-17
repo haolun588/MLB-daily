@@ -1,0 +1,1341 @@
+{
+  "copyright": "x",
+  "records": [
+    {
+      "standingsType": "regularSeason",
+      "league": {
+        "id": 103
+      },
+      "division": {
+        "id": 201,
+        "name": "American League East"
+      },
+      "teamRecords": [
+        {
+          "team": {
+            "id": 147,
+            "name": "Yankees"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W5",
+            "streakType": "wins",
+            "streakNumber": 5
+          },
+          "divisionRank": "5",
+          "gamesBack": "24.0",
+          "leagueRecord": {
+            "wins": 65,
+            "losses": 97,
+            "ties": 0,
+            "pct": ".401"
+          },
+          "wins": 65,
+          "losses": 97,
+          "winningPercentage": ".401",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 5,
+                "losses": 5,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 141,
+            "name": "Blue Jays"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L4",
+            "streakType": "wins",
+            "streakNumber": 4
+          },
+          "divisionRank": "4",
+          "gamesBack": "18.0",
+          "leagueRecord": {
+            "wins": 71,
+            "losses": 91,
+            "ties": 0,
+            "pct": ".438"
+          },
+          "wins": 71,
+          "losses": 91,
+          "winningPercentage": ".438",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 6,
+                "losses": 4,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 139,
+            "name": "Rays"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W3",
+            "streakType": "wins",
+            "streakNumber": 3
+          },
+          "divisionRank": "3",
+          "gamesBack": "12.0",
+          "leagueRecord": {
+            "wins": 77,
+            "losses": 85,
+            "ties": 0,
+            "pct": ".475"
+          },
+          "wins": 77,
+          "losses": 85,
+          "winningPercentage": ".475",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 7,
+                "losses": 3,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 111,
+            "name": "Red Sox"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L2",
+            "streakType": "wins",
+            "streakNumber": 2
+          },
+          "divisionRank": "2",
+          "gamesBack": "6.0",
+          "leagueRecord": {
+            "wins": 83,
+            "losses": 79,
+            "ties": 0,
+            "pct": ".512"
+          },
+          "wins": 83,
+          "losses": 79,
+          "winningPercentage": ".512",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 8,
+                "losses": 2,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          },
+          "clinchIndicator": "w"
+        },
+        {
+          "team": {
+            "id": 110,
+            "name": "Orioles"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W1",
+            "streakType": "wins",
+            "streakNumber": 1
+          },
+          "divisionRank": "1",
+          "gamesBack": "-",
+          "leagueRecord": {
+            "wins": 89,
+            "losses": 73,
+            "ties": 0,
+            "pct": ".549"
+          },
+          "wins": 89,
+          "losses": 73,
+          "winningPercentage": ".549",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 9,
+                "losses": 1,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          },
+          "clinchIndicator": "z"
+        }
+      ]
+    },
+    {
+      "standingsType": "regularSeason",
+      "league": {
+        "id": 103
+      },
+      "division": {
+        "id": 202,
+        "name": "American League Central"
+      },
+      "teamRecords": [
+        {
+          "team": {
+            "id": 145,
+            "name": "White Sox"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W5",
+            "streakType": "wins",
+            "streakNumber": 5
+          },
+          "divisionRank": "5",
+          "gamesBack": "24.0",
+          "leagueRecord": {
+            "wins": 64,
+            "losses": 98,
+            "ties": 0,
+            "pct": ".395"
+          },
+          "wins": 64,
+          "losses": 98,
+          "winningPercentage": ".395",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 5,
+                "losses": 5,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 142,
+            "name": "Twins"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L4",
+            "streakType": "wins",
+            "streakNumber": 4
+          },
+          "divisionRank": "4",
+          "gamesBack": "18.0",
+          "leagueRecord": {
+            "wins": 70,
+            "losses": 92,
+            "ties": 0,
+            "pct": ".432"
+          },
+          "wins": 70,
+          "losses": 92,
+          "winningPercentage": ".432",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 6,
+                "losses": 4,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 118,
+            "name": "Royals"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W3",
+            "streakType": "wins",
+            "streakNumber": 3
+          },
+          "divisionRank": "3",
+          "gamesBack": "12.0",
+          "leagueRecord": {
+            "wins": 76,
+            "losses": 86,
+            "ties": 0,
+            "pct": ".469"
+          },
+          "wins": 76,
+          "losses": 86,
+          "winningPercentage": ".469",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 7,
+                "losses": 3,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 116,
+            "name": "Tigers"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L2",
+            "streakType": "wins",
+            "streakNumber": 2
+          },
+          "divisionRank": "2",
+          "gamesBack": "6.0",
+          "leagueRecord": {
+            "wins": 82,
+            "losses": 80,
+            "ties": 0,
+            "pct": ".506"
+          },
+          "wins": 82,
+          "losses": 80,
+          "winningPercentage": ".506",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 8,
+                "losses": 2,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 114,
+            "name": "Guardians"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W1",
+            "streakType": "wins",
+            "streakNumber": 1
+          },
+          "divisionRank": "1",
+          "gamesBack": "-",
+          "leagueRecord": {
+            "wins": 88,
+            "losses": 74,
+            "ties": 0,
+            "pct": ".543"
+          },
+          "wins": 88,
+          "losses": 74,
+          "winningPercentage": ".543",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 9,
+                "losses": 1,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "standingsType": "regularSeason",
+      "league": {
+        "id": 103
+      },
+      "division": {
+        "id": 200,
+        "name": "American League West"
+      },
+      "teamRecords": [
+        {
+          "team": {
+            "id": 140,
+            "name": "Rangers"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W5",
+            "streakType": "wins",
+            "streakNumber": 5
+          },
+          "divisionRank": "5",
+          "gamesBack": "24.0",
+          "leagueRecord": {
+            "wins": 66,
+            "losses": 96,
+            "ties": 0,
+            "pct": ".407"
+          },
+          "wins": 66,
+          "losses": 96,
+          "winningPercentage": ".407",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 5,
+                "losses": 5,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 136,
+            "name": "Mariners"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L4",
+            "streakType": "wins",
+            "streakNumber": 4
+          },
+          "divisionRank": "4",
+          "gamesBack": "18.0",
+          "leagueRecord": {
+            "wins": 72,
+            "losses": 90,
+            "ties": 0,
+            "pct": ".444"
+          },
+          "wins": 72,
+          "losses": 90,
+          "winningPercentage": ".444",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 6,
+                "losses": 4,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 133,
+            "name": "Athletics"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W3",
+            "streakType": "wins",
+            "streakNumber": 3
+          },
+          "divisionRank": "3",
+          "gamesBack": "12.0",
+          "leagueRecord": {
+            "wins": 78,
+            "losses": 84,
+            "ties": 0,
+            "pct": ".481"
+          },
+          "wins": 78,
+          "losses": 84,
+          "winningPercentage": ".481",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 7,
+                "losses": 3,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 117,
+            "name": "Astros"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L2",
+            "streakType": "wins",
+            "streakNumber": 2
+          },
+          "divisionRank": "2",
+          "gamesBack": "6.0",
+          "leagueRecord": {
+            "wins": 84,
+            "losses": 78,
+            "ties": 0,
+            "pct": ".519"
+          },
+          "wins": 84,
+          "losses": 78,
+          "winningPercentage": ".519",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 8,
+                "losses": 2,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 108,
+            "name": "Angels"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W1",
+            "streakType": "wins",
+            "streakNumber": 1
+          },
+          "divisionRank": "1",
+          "gamesBack": "-",
+          "leagueRecord": {
+            "wins": 90,
+            "losses": 72,
+            "ties": 0,
+            "pct": ".556"
+          },
+          "wins": 90,
+          "losses": 72,
+          "winningPercentage": ".556",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 9,
+                "losses": 1,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "standingsType": "regularSeason",
+      "league": {
+        "id": 104
+      },
+      "division": {
+        "id": 204,
+        "name": "National League East"
+      },
+      "teamRecords": [
+        {
+          "team": {
+            "id": 146,
+            "name": "Marlins"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W5",
+            "streakType": "wins",
+            "streakNumber": 5
+          },
+          "divisionRank": "5",
+          "gamesBack": "24.0",
+          "leagueRecord": {
+            "wins": 69,
+            "losses": 93,
+            "ties": 0,
+            "pct": ".426"
+          },
+          "wins": 69,
+          "losses": 93,
+          "winningPercentage": ".426",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 5,
+                "losses": 5,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 144,
+            "name": "Braves"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L4",
+            "streakType": "wins",
+            "streakNumber": 4
+          },
+          "divisionRank": "4",
+          "gamesBack": "18.0",
+          "leagueRecord": {
+            "wins": 75,
+            "losses": 87,
+            "ties": 0,
+            "pct": ".463"
+          },
+          "wins": 75,
+          "losses": 87,
+          "winningPercentage": ".463",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 6,
+                "losses": 4,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 143,
+            "name": "Phillies"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W3",
+            "streakType": "wins",
+            "streakNumber": 3
+          },
+          "divisionRank": "3",
+          "gamesBack": "12.0",
+          "leagueRecord": {
+            "wins": 81,
+            "losses": 81,
+            "ties": 0,
+            "pct": ".500"
+          },
+          "wins": 81,
+          "losses": 81,
+          "winningPercentage": ".500",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 7,
+                "losses": 3,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 121,
+            "name": "Mets"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L2",
+            "streakType": "wins",
+            "streakNumber": 2
+          },
+          "divisionRank": "2",
+          "gamesBack": "6.0",
+          "leagueRecord": {
+            "wins": 87,
+            "losses": 75,
+            "ties": 0,
+            "pct": ".537"
+          },
+          "wins": 87,
+          "losses": 75,
+          "winningPercentage": ".537",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 8,
+                "losses": 2,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 120,
+            "name": "Nationals"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W1",
+            "streakType": "wins",
+            "streakNumber": 1
+          },
+          "divisionRank": "1",
+          "gamesBack": "-",
+          "leagueRecord": {
+            "wins": 93,
+            "losses": 69,
+            "ties": 0,
+            "pct": ".574"
+          },
+          "wins": 93,
+          "losses": 69,
+          "winningPercentage": ".574",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 9,
+                "losses": 1,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "standingsType": "regularSeason",
+      "league": {
+        "id": 104
+      },
+      "division": {
+        "id": 205,
+        "name": "National League Central"
+      },
+      "teamRecords": [
+        {
+          "team": {
+            "id": 158,
+            "name": "Brewers"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W5",
+            "streakType": "wins",
+            "streakNumber": 5
+          },
+          "divisionRank": "5",
+          "gamesBack": "24.0",
+          "leagueRecord": {
+            "wins": 68,
+            "losses": 94,
+            "ties": 0,
+            "pct": ".420"
+          },
+          "wins": 68,
+          "losses": 94,
+          "winningPercentage": ".420",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 5,
+                "losses": 5,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 138,
+            "name": "Cardinals"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L4",
+            "streakType": "wins",
+            "streakNumber": 4
+          },
+          "divisionRank": "4",
+          "gamesBack": "18.0",
+          "leagueRecord": {
+            "wins": 74,
+            "losses": 88,
+            "ties": 0,
+            "pct": ".457"
+          },
+          "wins": 74,
+          "losses": 88,
+          "winningPercentage": ".457",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 6,
+                "losses": 4,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 134,
+            "name": "Pirates"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W3",
+            "streakType": "wins",
+            "streakNumber": 3
+          },
+          "divisionRank": "3",
+          "gamesBack": "12.0",
+          "leagueRecord": {
+            "wins": 80,
+            "losses": 82,
+            "ties": 0,
+            "pct": ".494"
+          },
+          "wins": 80,
+          "losses": 82,
+          "winningPercentage": ".494",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 7,
+                "losses": 3,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 113,
+            "name": "Reds"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L2",
+            "streakType": "wins",
+            "streakNumber": 2
+          },
+          "divisionRank": "2",
+          "gamesBack": "6.0",
+          "leagueRecord": {
+            "wins": 86,
+            "losses": 76,
+            "ties": 0,
+            "pct": ".531"
+          },
+          "wins": 86,
+          "losses": 76,
+          "winningPercentage": ".531",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 8,
+                "losses": 2,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 112,
+            "name": "Cubs"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W1",
+            "streakType": "wins",
+            "streakNumber": 1
+          },
+          "divisionRank": "1",
+          "gamesBack": "-",
+          "leagueRecord": {
+            "wins": 92,
+            "losses": 70,
+            "ties": 0,
+            "pct": ".568"
+          },
+          "wins": 92,
+          "losses": 70,
+          "winningPercentage": ".568",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 9,
+                "losses": 1,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          },
+          "clinchIndicator": "y"
+        }
+      ]
+    },
+    {
+      "standingsType": "regularSeason",
+      "league": {
+        "id": 104
+      },
+      "division": {
+        "id": 203,
+        "name": "National League West"
+      },
+      "teamRecords": [
+        {
+          "team": {
+            "id": 137,
+            "name": "Giants"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W5",
+            "streakType": "wins",
+            "streakNumber": 5
+          },
+          "divisionRank": "5",
+          "gamesBack": "24.0",
+          "leagueRecord": {
+            "wins": 70,
+            "losses": 92,
+            "ties": 0,
+            "pct": ".432"
+          },
+          "wins": 70,
+          "losses": 92,
+          "winningPercentage": ".432",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 5,
+                "losses": 5,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 135,
+            "name": "Padres"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L4",
+            "streakType": "wins",
+            "streakNumber": 4
+          },
+          "divisionRank": "4",
+          "gamesBack": "18.0",
+          "leagueRecord": {
+            "wins": 76,
+            "losses": 86,
+            "ties": 0,
+            "pct": ".469"
+          },
+          "wins": 76,
+          "losses": 86,
+          "winningPercentage": ".469",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 6,
+                "losses": 4,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 119,
+            "name": "Dodgers"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W3",
+            "streakType": "wins",
+            "streakNumber": 3
+          },
+          "divisionRank": "3",
+          "gamesBack": "12.0",
+          "leagueRecord": {
+            "wins": 82,
+            "losses": 80,
+            "ties": 0,
+            "pct": ".506"
+          },
+          "wins": 82,
+          "losses": 80,
+          "winningPercentage": ".506",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 7,
+                "losses": 3,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 115,
+            "name": "Rockies"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "L2",
+            "streakType": "wins",
+            "streakNumber": 2
+          },
+          "divisionRank": "2",
+          "gamesBack": "6.0",
+          "leagueRecord": {
+            "wins": 88,
+            "losses": 74,
+            "ties": 0,
+            "pct": ".543"
+          },
+          "wins": 88,
+          "losses": 74,
+          "winningPercentage": ".543",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 8,
+                "losses": 2,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          }
+        },
+        {
+          "team": {
+            "id": 109,
+            "name": "Diamondbacks"
+          },
+          "season": "2026",
+          "streak": {
+            "streakCode": "W1",
+            "streakType": "wins",
+            "streakNumber": 1
+          },
+          "divisionRank": "1",
+          "gamesBack": "-",
+          "leagueRecord": {
+            "wins": 94,
+            "losses": 68,
+            "ties": 0,
+            "pct": ".580"
+          },
+          "wins": 94,
+          "losses": 68,
+          "winningPercentage": ".580",
+          "records": {
+            "splitRecords": [
+              {
+                "wins": 40,
+                "losses": 20,
+                "type": "home"
+              },
+              {
+                "wins": 9,
+                "losses": 1,
+                "type": "lastTen"
+              },
+              {
+                "wins": 3,
+                "losses": 1,
+                "type": "oneRun"
+              }
+            ]
+          },
+          "clinchIndicator": "y"
+        }
+      ]
+    }
+  ]
+}

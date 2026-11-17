@@ -1,0 +1,329 @@
+{
+  "copyright": "x",
+  "dates": [
+    {
+      "date": "2026-07-30",
+      "games": [
+        {
+          "gamePk": 9005,
+          "gameType": "R",
+          "gameDate": "2026-07-31T01:05:00Z",
+          "officialDate": "2026-07-30",
+          "status": {
+            "abstractGameState": "Preview",
+            "detailedState": "Preview",
+            "startTimeTBD": false
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 147,
+                "name": "API NAME 147"
+              },
+              "leagueRecord": {
+                "wins": 60,
+                "losses": 40,
+                "pct": ".500"
+              },
+              "probablePitcher": {
+                "id": 543037,
+                "fullName": "Gerrit Cole"
+              }
+            },
+            "home": {
+              "team": {
+                "id": 111,
+                "name": "API NAME 111"
+              },
+              "leagueRecord": {
+                "wins": 55,
+                "losses": 45,
+                "pct": ".500"
+              },
+              "probablePitcher": {
+                "id": 676979,
+                "fullName": "Garrett Crochet"
+              }
+            }
+          },
+          "doubleHeader": "N",
+          "gameNumber": 1,
+          "venue": {
+            "id": 1,
+            "name": "SHOULD NOT SHOW PARK"
+          }
+        },
+        {
+          "gamePk": 9001,
+          "gameType": "R",
+          "gameDate": "2026-07-30T16:10:00Z",
+          "officialDate": "2026-07-30",
+          "status": {
+            "abstractGameState": "Preview",
+            "detailedState": "Preview",
+            "startTimeTBD": false
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 140,
+                "name": "API NAME 140"
+              },
+              "leagueRecord": {
+                "wins": 55,
+                "losses": 54,
+                "pct": ".500"
+              },
+              "probablePitcher": {
+                "id": 668390,
+                "fullName": "Cole Winn"
+              }
+            },
+            "home": {
+              "team": {
+                "id": 139,
+                "name": "API NAME 139"
+              },
+              "leagueRecord": {
+                "wins": 70,
+                "losses": 39,
+                "pct": ".500"
+              }
+            }
+          },
+          "doubleHeader": "N",
+          "gameNumber": 1,
+          "venue": {
+            "id": 1,
+            "name": "SHOULD NOT SHOW PARK"
+          }
+        },
+        {
+          "gamePk": 9002,
+          "gameType": "R",
+          "gameDate": "2026-07-30T18:15:00Z",
+          "officialDate": "2026-07-30",
+          "status": {
+            "abstractGameState": "Preview",
+            "detailedState": "Preview",
+            "startTimeTBD": false
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 116,
+                "name": "API NAME 116"
+              },
+              "leagueRecord": {
+                "wins": 50,
+                "losses": 55,
+                "pct": ".500"
+              },
+              "probablePitcher": {
+                "id": 669373,
+                "fullName": "Tarik Skubal"
+              }
+            },
+            "home": {
+              "team": {
+                "id": 142,
+                "name": "API NAME 142"
+              },
+              "leagueRecord": {
+                "wins": 52,
+                "losses": 53,
+                "pct": ".500"
+              },
+              "probablePitcher": {
+                "id": 657746,
+                "fullName": "Joe Ryan"
+              }
+            }
+          },
+          "doubleHeader": "S",
+          "gameNumber": 1,
+          "venue": {
+            "id": 1,
+            "name": "SHOULD NOT SHOW PARK"
+          }
+        },
+        {
+          "gamePk": 9003,
+          "gameType": "R",
+          "gameDate": "2026-07-30T23:45:00Z",
+          "officialDate": "2026-07-30",
+          "status": {
+            "abstractGameState": "Preview",
+            "detailedState": "Preview",
+            "startTimeTBD": false
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 116,
+                "name": "API NAME 116"
+              },
+              "leagueRecord": {
+                "wins": 50,
+                "losses": 55,
+                "pct": ".500"
+              }
+            },
+            "home": {
+              "team": {
+                "id": 142,
+                "name": "API NAME 142"
+              },
+              "leagueRecord": {
+                "wins": 52,
+                "losses": 53,
+                "pct": ".500"
+              },
+              "probablePitcher": {
+                "id": 641927,
+                "fullName": "Bailey Ober"
+              }
+            }
+          },
+          "doubleHeader": "S",
+          "gameNumber": 2,
+          "venue": {
+            "id": 1,
+            "name": "SHOULD NOT SHOW PARK"
+          }
+        },
+        {
+          "gamePk": 9004,
+          "gameType": "R",
+          "gameDate": "2026-07-30T23:10:00Z",
+          "officialDate": "2026-07-30",
+          "status": {
+            "abstractGameState": "Preview",
+            "detailedState": "Postponed",
+            "startTimeTBD": false
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 114,
+                "name": "API NAME 114"
+              },
+              "leagueRecord": {
+                "wins": 1,
+                "losses": 1,
+                "pct": ".500"
+              }
+            },
+            "home": {
+              "team": {
+                "id": 118,
+                "name": "API NAME 118"
+              },
+              "leagueRecord": {
+                "wins": 1,
+                "losses": 1,
+                "pct": ".500"
+              }
+            }
+          },
+          "doubleHeader": "N",
+          "gameNumber": 1,
+          "venue": {
+            "id": 1,
+            "name": "SHOULD NOT SHOW PARK"
+          }
+        },
+        {
+          "gamePk": 9006,
+          "gameType": "R",
+          "gameDate": "2026-07-31T00:00:00Z",
+          "officialDate": "2026-07-30",
+          "status": {
+            "abstractGameState": "Preview",
+            "detailedState": "Preview",
+            "startTimeTBD": false
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 159,
+                "name": "API NAME 159"
+              },
+              "leagueRecord": {
+                "wins": 0,
+                "losses": 0,
+                "pct": ".500"
+              }
+            },
+            "home": {
+              "team": {
+                "id": 160,
+                "name": "API NAME 160"
+              },
+              "leagueRecord": {
+                "wins": 0,
+                "losses": 0,
+                "pct": ".500"
+              }
+            }
+          },
+          "doubleHeader": "N",
+          "gameNumber": 1,
+          "venue": {
+            "id": 1,
+            "name": "SHOULD NOT SHOW PARK"
+          }
+        },
+        {
+          "gamePk": 9007,
+          "gameType": "R",
+          "gameDate": "2026-07-31T02:10:00Z",
+          "officialDate": "2026-07-30",
+          "status": {
+            "abstractGameState": "Preview",
+            "detailedState": "Preview",
+            "startTimeTBD": false
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 119,
+                "name": "API NAME 119"
+              },
+              "leagueRecord": {
+                "wins": 70,
+                "losses": 40,
+                "pct": ".500"
+              },
+              "probablePitcher": {
+                "id": "bad-id",
+                "fullName": "<script>alert('P')</script>"
+              }
+            },
+            "home": {
+              "team": {
+                "id": 135,
+                "name": "API NAME 135"
+              },
+              "leagueRecord": {
+                "wins": 60,
+                "losses": 50,
+                "pct": ".500"
+              },
+              "probablePitcher": {
+                "id": 656302,
+                "fullName": "Dylan Cease"
+              }
+            }
+          },
+          "doubleHeader": "N",
+          "gameNumber": 1,
+          "venue": {
+            "id": 1,
+            "name": "SHOULD NOT SHOW PARK"
+          }
+        }
+      ]
+    }
+  ]
+}
