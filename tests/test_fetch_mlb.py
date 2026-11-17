@@ -1773,6 +1773,279 @@ class NotifyContentTests(MlbTestBase):
         self.assertNotIn("新聞", embed["description"])
 
 
+# ---------------------------------------------------------------- Gemini 翻譯
+def gemini_response(translations):
+    """依文件 Interactions 回應結構包裝：steps[].model_output.content[].text。"""
+    return {"id": "i1", "status": "completed", "steps": [
+        {"type": "model_output", "content": [{"type": "text", "text": json.dumps({"translations": translations})}]}]}
+
+
+def request_items(payload):
+    return json.loads(payload["input"].split("輸入：\n", 1)[1])
+
+
+def zh_echo(payload):
+    """假模型：每則回「中文N」並附上 keep 字串（保留英文姓名）。"""
+    return gemini_response([f"中文{it['id']} " + " ".join(it["keep"]) for it in request_items(payload)])
+
+
+class PostJsonTests(unittest.TestCase):
+    def test_retry_once_then_none_and_no_key_in_message(self):
+        err = io.StringIO()
+        with mock.patch("urllib.request.urlopen", side_effect=OSError("boom")) as m, \
+                mock.patch.object(fetch_mlb.time, "sleep"), contextlib.redirect_stderr(err):
+            self.assertIsNone(fetch_mlb.post_json("https://x.test/a", {}, {"x-goog-api-key": "SECRETKEY"}))
+        self.assertEqual(m.call_count, 2)
+        self.assertNotIn("SECRETKEY", err.getvalue())
+        self.assertNotIn("x.test", err.getvalue())
+
+    def test_success_returns_dict(self):
+        class R:
+            def __enter__(s): return s
+            def __exit__(s, *a): return False
+            def read(s): return b'{"a": 1}'
+        with mock.patch("urllib.request.urlopen", return_value=R()):
+            self.assertEqual(fetch_mlb.post_json("https://x.test", {}, {}), {"a": 1})
+
+
+class TranslateTextsTests(MlbTestBase):
+    def setUp(self):
+        super().setUp()
+        os.environ["GEMINI_API_KEY"] = "SECRETKEY"
+
+    def items(self, n=2):
+        return [{"text": f"Text {i} Aaron Judge", "keep": ["Aaron Judge"]} for i in range(n)]
+
+    def test_success(self):
+        with mock.patch.object(fetch_mlb, "post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)):
+            self.assertEqual(fetch_mlb.translate_texts(self.items()), ["中文0 Aaron Judge", "中文1 Aaron Judge"])
+
+    def test_no_key_does_not_call(self):
+        os.environ.pop("GEMINI_API_KEY")
+        with mock.patch.object(fetch_mlb, "post_json") as m:
+            self.assertIsNone(fetch_mlb.translate_texts(self.items()))
+        m.assert_not_called()
+
+    def test_empty_items_does_not_call(self):
+        with mock.patch.object(fetch_mlb, "post_json") as m:
+            self.assertIsNone(fetch_mlb.translate_texts([]))
+        m.assert_not_called()
+
+    def test_length_mismatch_returns_none(self):
+        with mock.patch.object(fetch_mlb, "post_json", return_value=gemini_response(["只有一則 Aaron Judge"])):
+            self.assertIsNone(fetch_mlb.translate_texts(self.items()))
+
+    def test_non_json_text_returns_none(self):
+        resp = {"steps": [{"type": "model_output", "content": [{"type": "text", "text": "not json"}]}]}
+        with mock.patch.object(fetch_mlb, "post_json", return_value=resp):
+            self.assertIsNone(fetch_mlb.translate_texts(self.items()))
+
+    def test_post_failure_returns_none(self):
+        with mock.patch.object(fetch_mlb, "post_json", return_value=None):
+            self.assertIsNone(fetch_mlb.translate_texts(self.items()))
+
+    def test_missing_keep_uses_original_for_that_item_only(self):
+        resp = gemini_response(["好 Aaron Judge", "遺失姓名", ""])
+        items = self.items(3)
+        with mock.patch.object(fetch_mlb, "post_json", return_value=resp):
+            out = fetch_mlb.translate_texts(items)
+        self.assertEqual(out, ["好 Aaron Judge", items[1]["text"], items[2]["text"]])
+
+    def test_batching_over_60(self):
+        with mock.patch.object(fetch_mlb, "post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)) as m:
+            out = fetch_mlb.translate_texts(self.items(130))
+        self.assertEqual(m.call_count, 3)
+        self.assertEqual([len(request_items(c.args[1])) for c in m.call_args_list], [60, 60, 10])
+        self.assertEqual(len(out), 130)
+
+    def test_one_failed_batch_falls_back_for_that_batch_only(self):
+        calls = []
+
+        def fake(u, p, h, timeout=30):
+            calls.append(1)
+            return None if len(calls) == 1 else zh_echo(p)
+        items = self.items(70)
+        with mock.patch.object(fetch_mlb, "post_json", side_effect=fake):
+            out = fetch_mlb.translate_texts(items)
+        self.assertEqual(out[:60], [it["text"] for it in items[:60]])
+        self.assertTrue(out[60].startswith("中文0"))
+
+    def test_request_shape_key_in_header_only_no_sampling_params(self):
+        with mock.patch.object(fetch_mlb, "post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)) as m:
+            fetch_mlb.translate_texts(self.items(), [(147, "New York Yankees")])
+        url, payload, headers = m.call_args.args[:3]
+        self.assertEqual(url, "https://generativelanguage.googleapis.com/v1beta/interactions")
+        self.assertEqual(headers["x-goog-api-key"], "SECRETKEY")
+        self.assertNotIn("SECRETKEY", url)
+        self.assertNotIn("SECRETKEY", json.dumps(payload))
+        dumped = json.dumps(payload)
+        for bad in ("temperature", "top_p", "top_k"):
+            self.assertNotIn(bad, dumped)
+        self.assertEqual(payload["model"], "gemini-3.5-flash-lite")
+        self.assertEqual(payload["response_format"]["mime_type"], "application/json")
+        self.assertIn("New York Yankees -> 紐約洋基", payload["system_instruction"])
+        self.assertIn("Yankees -> 洋基", payload["system_instruction"])
+
+    def test_model_env_override(self):
+        os.environ["GEMINI_MODEL"] = "gemini-x"
+        with mock.patch.object(fetch_mlb, "post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)) as m:
+            fetch_mlb.translate_texts(self.items())
+        self.assertEqual(m.call_args.args[1]["model"], "gemini-x")
+
+
+class TranslatedPageTests(MlbTestBase):
+    BAD, LOGO_IMG, NEWS_IMG = XssSweepTests.BAD, XssSweepTests.LOGO_IMG, XssSweepTests.NEWS_IMG
+    assert_clean = XssSweepTests.assert_clean
+
+    def setUp(self):
+        super().setUp()
+        os.environ["GEMINI_API_KEY"] = "SECRETKEY"
+        self.api.news = "news_rss.xml"
+        self.api.transactions = "transactions_default"
+        self.seen = []
+
+    def fake_post(self, mapping=None):
+        def fake(u, p, h, timeout=30):
+            items = request_items(p)
+            self.seen.extend(it["text"] for it in items)
+            outs = []
+            for it in items:
+                tr = (mapping or {}).get(it["text"])
+                outs.append(tr if tr is not None else f"中文譯文{it['id']} " + " ".join(it["keep"]))
+            return gemini_response(outs)
+        return mock.patch.object(fetch_mlb, "post_json", side_effect=fake)
+
+    def test_season_page_translated(self):
+        with self.fake_post() as m:
+            meta, html = self.generate("schedule_normal", transactions="transactions_default")
+        self.assertEqual(m.call_count, 1)  # 整頁只呼叫一次
+        self.assertTrue(meta["translated"])
+        self.assertIn("中文譯文", html)
+        for en in ("Yankees top Red Sox 5-3", "Hall of Fame announces 2027 ballot", "recalled RHP"):
+            self.assertNotIn(en, html)
+        # 人事異動：保留英文姓名且仍有 Savant 連結
+        self.assertIn('href="https://baseballsavant.mlb.com/savant-player/777004"', html)
+        self.assertIn(">Big Name</a>", html)
+
+    def test_offseason_page_translated(self):
+        with self.fake_post() as m:
+            self.assertEqual(self.run_main("schedule_empty"), 0)
+        self.assertEqual(m.call_count, 1)
+        self.assertTrue(self.read_metadata()[DATE]["translated"])
+        html = self.read_report()
+        self.assertIn("中文譯文", html)
+        self.assertNotIn("Hall of Fame announces 2027 ballot", html)
+        self.assertNotIn("signed free agent", html)
+        self.assertIn('savant-player/777004"', html)
+        self.assertIn(">Big Name</a>", html)
+
+    def test_translation_with_script_is_escaped(self):
+        evil = "<script>alert('XSS_MARKER')</script> <img src=x onerror=1>"
+        with self.fake_post({"Hall of Fame announces 2027 ballot": evil}):
+            _, html = self.generate("schedule_normal", transactions="transactions_default")
+        self.assertIn("&lt;script&gt;alert(&#x27;XSS_MARKER&#x27;)&lt;/script&gt;", html)
+        self.assert_clean(html)
+
+    def test_game_recap_translated(self):
+        with self.fake_post():
+            _, html = self.generate("schedule_normal")
+        self.assertNotIn("Yankees top Red Sox", html)
+
+    def test_translation_failure_shows_english_and_flag_false(self):
+        with mock.patch.object(fetch_mlb, "post_json", return_value=None):
+            meta, html = self.generate("schedule_normal", transactions="transactions_default")
+        self.assertFalse(meta["translated"])
+        self.assertIn("Hall of Fame announces 2027 ballot", html)
+        self.assertIn("Yankees top Red Sox 5-3", html)
+        self.assertIn("signed free agent RHP", html)
+
+    def test_no_key_metadata_false_and_no_call(self):
+        os.environ.pop("GEMINI_API_KEY")
+        with mock.patch.object(fetch_mlb, "post_json") as m:
+            self.run_main("schedule_empty")
+        m.assert_not_called()
+        self.assertFalse(self.read_metadata()[DATE]["translated"])
+
+    def test_fallback_headline_not_sent_for_translation(self):
+        with self.fake_post():
+            self.generate("schedule_normal")
+        self.assertFalse(any("賽事總結" in t for t in self.seen))
+
+
+class TranslationDiagnosticsTests(MlbTestBase):
+    def setUp(self):
+        super().setUp()
+        os.environ["GEMINI_API_KEY"] = "SECRETKEY"
+
+    def test_http_error_body_message_printed_and_key_redacted(self):
+        import urllib.error
+        body = json.dumps({"error": {"code": 400, "status": "INVALID_ARGUMENT",
+                                     "message": "API key SECRETKEY not valid. " + "x" * 300}}).encode()
+        err = urllib.error.HTTPError("https://x.test", 400, "Bad", {}, io.BytesIO(body))
+        out = io.StringIO()
+        with mock.patch("urllib.request.urlopen", side_effect=err), \
+                mock.patch.object(fetch_mlb.time, "sleep"), contextlib.redirect_stderr(out):
+            self.assertIsNone(fetch_mlb.post_json("https://x.test", {}, {"x-goog-api-key": "SECRETKEY"}))
+        text = out.getvalue()
+        self.assertIn("HTTP 400", text)
+        self.assertIn("status=INVALID_ARGUMENT", text)
+        self.assertIn("API key *** not valid.", text)
+        self.assertNotIn("SECRETKEY", text)
+        self.assertNotIn("x" * 201, text)  # message 截斷為 200 字
+
+    def test_http_error_non_json_body_only_code(self):
+        import urllib.error
+        err = urllib.error.HTTPError("https://x.test", 503, "Unavail", {}, io.BytesIO(b"<html>oops</html>"))
+        out = io.StringIO()
+        with mock.patch("urllib.request.urlopen", side_effect=err), \
+                mock.patch.object(fetch_mlb.time, "sleep"), contextlib.redirect_stderr(out):
+            fetch_mlb.post_json("https://x.test", {}, {})
+        self.assertIn("HTTP 503", out.getvalue())
+        self.assertNotIn("oops", out.getvalue())
+
+    def run_translate(self, resp):
+        err = io.StringIO()
+        with mock.patch.object(fetch_mlb, "post_json", return_value=resp), contextlib.redirect_stderr(err):
+            out = fetch_mlb.translate_texts([{"text": "A", "keep": []}])
+        return out, err.getvalue()
+
+    def test_missing_text_prints_keys_and_step_types_not_content(self):
+        resp = {"id": "i1", "status": "failed", "steps": [{"type": "thought", "content": "SECRET THOUGHT"}, {"type": "other"}]}
+        out, err = self.run_translate(resp)
+        self.assertIsNone(out)
+        self.assertIn("['id', 'status', 'steps']", err)
+        self.assertIn("['thought', 'other']", err)
+        self.assertNotIn("SECRET THOUGHT", err)
+
+    def test_invalid_json_and_length_mismatch_warnings(self):
+        bad = {"steps": [{"type": "model_output", "content": [{"type": "text", "text": "not json"}]}]}
+        _, err = self.run_translate(bad)
+        self.assertIn("not valid JSON", err)
+        _, err = self.run_translate(gemini_response(["a", "b"]))
+        self.assertIn("expected 1, got 2", err)
+
+    def run_apply(self, news=(), env_key=True, post=None):
+        if not env_key:
+            os.environ.pop("GEMINI_API_KEY")
+        out = io.StringIO()
+        news = [{"title": t} for t in news]
+        with mock.patch.object(fetch_mlb, "post_json", side_effect=post or (lambda u, p, h, timeout=30: zh_echo(p))), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            fetch_mlb.apply_translations(news, [], [])
+        return out.getvalue()
+
+    def test_info_line_success(self):
+        self.assertIn("Translation: 成功 2/2 則（模型 gemini-3.5-flash-lite）", self.run_apply(["a", "b"]))
+
+    def test_info_line_partial_success_counts_only_translated(self):
+        post = lambda u, p, h, timeout=30: gemini_response(["中文", ""])
+        self.assertIn("Translation: 成功 1/2 則", self.run_apply(["a", "b"], post=post))
+
+    def test_info_line_failure_and_no_key(self):
+        self.assertIn("Translation: 失敗，使用原文", self.run_apply(["a"], post=lambda *a, **k: None))
+        self.assertIn("Translation: 未啟用（無金鑰）", self.run_apply(["a"], env_key=False))
+
+
 class SlotTests(unittest.TestCase):
     def test_fill_slots_single_pass_and_missing_slot(self):
         out = fetch_mlb.fill_slots("a<!--SLOT:X-->b<!--SLOT:Y-->c", {"X": "<!--SLOT:Y-->"})

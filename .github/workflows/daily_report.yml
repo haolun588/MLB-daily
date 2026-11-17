@@ -61,6 +61,7 @@ jobs:
       - name: Generate Daily Report
         env:
           REPORT_DATE: ${{ steps.date.outputs.date }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python fetch_mlb.py --check-wait --no-notify --date "$REPORT_DATE"
 
