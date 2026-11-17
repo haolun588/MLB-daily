@@ -21,16 +21,16 @@
 
 分支分工：
 
-- `main`：只存程式碼、模板、共用資源、文件，以及 `reports/metadata.json` 與首頁 `index.html`。每日戰報 HTML 被 `.gitignore` 忽略。
+- `main`：只存程式碼、模板、共用資源、文件。歷史索引 `reports/metadata.json`、首頁 `index.html` 與每日戰報 HTML 都不進 `main`（`.gitignore` 忽略）。
 - `gh-pages`：存放完整網頁（戰報、首頁、`archive.html`、`assets/`），由 workflow 部署，`keep_files: true` 保留歷史戰報。
 
 Workflow（`.github/workflows/daily_report.yml`）步驟順序：
 
 1. **Run Unit Tests**：`python -m unittest discover -s tests -v`，失敗即中止，不產生、不部署、不通知。
 2. **Resolve report date**：手動輸入的日期，或預設台北時間昨日。
-3. **Generate Daily Report**：`python fetch_mlb.py --check-wait --no-notify --date ...`。尚有未完賽場次時每 30 分鐘重新檢查，最多 8 次；達上限後照常產出並把未完成場次標示為「未完賽」。
-4. **Update Team Rosters**：`python fetch_mlb.py --rosters`，更新 `data/teams/`。`continue-on-error`，失敗不影響戰報與通知。
-5. **Commit and Push Metadata to Main**：把 `index.html` 與 `reports/metadata.json` 推回 `main`（先 `git pull --rebase`，失敗最多重試 3 次）；`data/` 不進 `main`。
+3. **Restore history from gh-pages**（位於產生報表之前）：從 `gh-pages` 取回 `reports/metadata.json`；取不到或不是合法 JSON 物件即失敗，避免以單筆 metadata 覆蓋歷史。
+4. **Generate Daily Report**：`python fetch_mlb.py --check-wait --no-notify --date ...`。尚有未完賽場次時每 30 分鐘重新檢查，最多 8 次；達上限後照常產出並把未完成場次標示為「未完賽」。
+5. **Update Team Rosters**：`python fetch_mlb.py --rosters`，更新 `data/teams/`。`continue-on-error`，失敗不影響戰報與通知。
 6. **Deploy Site to gh-pages**：`peaceiris/actions-gh-pages`，並以 `exclude_assets` 排除程式與文件；`data/teams/` 隨之部署。
 7. **Wait for GitHub Pages**：輪詢當日戰報網址直到回應 200（最多約 5 分鐘）。
 8. **Send Discord Notification**：`python fetch_mlb.py --notify-only --date ...`，只讀既有 metadata，不呼叫 API。僅在排程觸發，或手動觸發且 `notify` 勾選時執行。
@@ -114,7 +114,7 @@ archive.html              歷史存檔頁（讀取 reports/metadata.json）
 teams.html                球隊名單頁（讀取 data/teams/*.json）
 data/teams/               名單 JSON（index.json、{teamId}.json；僅部署於 gh-pages，main 忽略）
 reports/
-  metadata.json           每日索引（main 追蹤；戰報 HTML 不追蹤）
+  metadata.json           每日索引（僅存在 gh-pages；workflow 每次先取回）
 tests/
   test_fetch_mlb.py       單元測試（unittest）
   fixtures/               測試用 API 假資料

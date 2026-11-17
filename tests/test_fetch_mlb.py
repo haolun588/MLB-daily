@@ -120,12 +120,13 @@ class FakeApi:
 
 class MlbTestBase(unittest.TestCase):
     def setUp(self):
-        # 暫存工作目錄：複製 templates 與 index.html，reports 為空
+        # 暫存工作目錄：複製 templates 並放入模擬首頁，reports 為空
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.tmp = Path(tmp.name)
         shutil.copytree(REPO_ROOT / "templates", self.tmp / "templates")
-        shutil.copy(REPO_ROOT / "index.html", self.tmp / "index.html")
+        # index.html 只存在 gh-pages；以模板骨架模擬 gh-pages 上既有的首頁
+        shutil.copy(REPO_ROOT / "templates" / "index.html", self.tmp / "index.html")
         (self.tmp / "reports").mkdir()
         old_cwd = os.getcwd()
         os.chdir(self.tmp)
@@ -2759,6 +2760,8 @@ class SiteNavTests(MlbTestBase):
             self.assertEqual([h for h, _, _ in links], hrefs, name)
             self.assertEqual([t for _, t, cur in links if cur], [current], name)
             for href, _, _ in links:
+                if href == "index.html":
+                    continue  # 首頁為產生檔，只存在 gh-pages，main 上不存在
                 self.assertTrue((REPO_ROOT / href).exists(), href)
 
     def test_teams_page_files(self):

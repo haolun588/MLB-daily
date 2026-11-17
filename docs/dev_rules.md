@@ -32,7 +32,7 @@
    - 金鑰（`DISCORD_WEBHOOK_URL`、`GEMINI_API_KEY`）只能放 GitHub Secrets 或本機環境變數，不得寫進程式、文件或測試。
    - 所有來自外部的字串輸出到 HTML 前一律經過 `esc()`。
 6. **通知與傳送及 GitHub Pages 發布架構**：
-   - `main` 主分頁僅保留程式碼、模板、共用資源（`assets/`）、文件，以及 `reports/metadata.json` 索引檔與首頁 `index.html`；每日戰報 `.html` 檔由 `.gitignore` 忽略以維護倉庫輕量化。
+   - `main` 主分頁僅保留程式碼、模板、共用資源（`assets/`）、文件，；`reports/metadata.json` 索引檔、首頁 `index.html` 與每日戰報 `.html` 皆只存在 gh-pages，由 `.gitignore` 忽略。
    - workflow 步驟順序：單元測試 → 產生（`--check-wait --no-notify`）→ 將 metadata 與首頁推回 `main` → 以 `peaceiris/actions-gh-pages` 部署到 `gh-pages` → 等待 GitHub Pages 上線 → 以 `--notify-only` 發送 Discord 通知。
    - **通知時機**：必須在部署完成且 Pages 回應 200 之後才發送，連結才能直接開啟。休賽季快報若新聞與人事異動皆為 0，不發通知。
    - 部署時以 `exclude_assets` 排除程式、文件與 `.gitignore`；`.gitignore` 若被部署，會讓新戰報被忽略。

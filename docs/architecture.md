@@ -15,9 +15,9 @@ assets/archive.js         歷史存檔頁腳本
 assets/teams.js           球隊名單頁腳本
 teams.html                球隊名單頁（執行時以 JS 讀取 data/teams/*.json）
 data/teams/               名單 JSON（僅存在於 gh-pages，main 以 .gitignore 忽略）
-index.html                首頁（腳本全量重新產生，不是局部修改）
+index.html                首頁（腳本全量重新產生；僅存在於 gh-pages，main 忽略）
 archive.html              歷史存檔頁（靜態檔，執行時以 JS 讀取 metadata）
-reports/metadata.json     每日索引
+reports/metadata.json     每日索引（僅存在於 gh-pages，workflow 先取回）
 reports/YYYY/MM/YYYY-MM-DD.html   戰報（僅存在於 gh-pages，main 忽略）
 tests/test_fetch_mlb.py   單元測試
 tests/fixtures/           API 假資料（schedule、boxscore、content、transactions、RSS）
@@ -47,7 +47,7 @@ graph TD
 2. **測試**：`python -m unittest discover -s tests -v`。
 3. **產生**：`python fetch_mlb.py --check-wait --no-notify --date <日期>`，環境變數帶入 `GEMINI_API_KEY`。
 4. **更新名單**：`python fetch_mlb.py --rosters`（`continue-on-error: true`），見「球隊名單」一節。
-5. **push main**：只提交 `index.html` 與 `reports/metadata.json`；`git pull --rebase origin main` 後 push，失敗重試 3 次。`data/` 不進 main。
+5. **歷史只在 gh-pages**：`index.html` 與 `reports/metadata.json` 不進 main；workflow 在產生報表前先從 gh-pages 取回 `metadata.json`（取不到或非 JSON 物件即失敗），產生後隨 gh-pages 部署。
 6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
 7. **等待 Pages**：每 15 秒檢查當日戰報網址，最多 20 次（約 5 分鐘），逾時只警告、仍繼續下一步。
 8. **通知**：`python fetch_mlb.py --notify-only --date <日期>`，僅排程觸發或手動勾選 `notify` 時執行。
