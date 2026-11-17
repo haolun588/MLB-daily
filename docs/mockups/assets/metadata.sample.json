@@ -1,0 +1,836 @@
+{
+  "2026-07-01": {
+    "date": "2026-07-01",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-07-02": {
+    "date": "2026-07-02",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-07-03": {
+    "date": "2026-07-03",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-07-04": {
+    "date": "2026-07-04",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-07-05": {
+    "date": "2026-07-05",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-07-06": {
+    "date": "2026-07-06",
+    "total_games": 11,
+    "postponed": 0,
+    "summary": "費城費城人 7–3 亞特蘭大勇士，拿下系列賽首戰。"
+  },
+  "2026-07-07": {
+    "date": "2026-07-07",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-07-08": {
+    "date": "2026-07-08",
+    "total_games": 15,
+    "postponed": 1,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-07-09": {
+    "date": "2026-07-09",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-07-10": {
+    "date": "2026-07-10",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-07-11": {
+    "date": "2026-07-11",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-07-12": {
+    "date": "2026-07-12",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-07-13": {
+    "date": "2026-07-13",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "全明星假期，當日無安排例行賽事。"
+  },
+  "2026-07-14": {
+    "date": "2026-07-14",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "全明星賽。"
+  },
+  "2026-07-15": {
+    "date": "2026-07-15",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "全明星假期，當日無安排例行賽事。"
+  },
+  "2026-07-16": {
+    "date": "2026-07-16",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "全明星假期，當日無安排例行賽事。"
+  },
+  "2026-07-17": {
+    "date": "2026-07-17",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-07-18": {
+    "date": "2026-07-18",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-07-19": {
+    "date": "2026-07-19",
+    "total_games": 12,
+    "postponed": 1,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-07-20": {
+    "date": "2026-07-20",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-07-21": {
+    "date": "2026-07-21",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-07-22": {
+    "date": "2026-07-22",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "費城費城人 7–3 亞特蘭大勇士，拿下系列賽首戰。"
+  },
+  "2026-07-23": {
+    "date": "2026-07-23",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-07-24": {
+    "date": "2026-07-24",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-07-25": {
+    "date": "2026-07-25",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-07-26": {
+    "date": "2026-07-26",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-07-27": {
+    "date": "2026-07-27",
+    "total_games": 11,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-07-28": {
+    "date": "2026-07-28",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-07-29": {
+    "date": "2026-07-29",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-07-30": {
+    "date": "2026-07-30",
+    "total_games": 15,
+    "postponed": 1,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-07-31": {
+    "date": "2026-07-31",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-08-01": {
+    "date": "2026-08-01",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-08-02": {
+    "date": "2026-08-02",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-08-03": {
+    "date": "2026-08-03",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-08-04": {
+    "date": "2026-08-04",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-08-05": {
+    "date": "2026-08-05",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-08-06": {
+    "date": "2026-08-06",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-08-07": {
+    "date": "2026-08-07",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "費城費城人 7–3 亞特蘭大勇士，拿下系列賽首戰。"
+  },
+  "2026-08-08": {
+    "date": "2026-08-08",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-08-09": {
+    "date": "2026-08-09",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-08-10": {
+    "date": "2026-08-10",
+    "total_games": 13,
+    "postponed": 1,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-08-11": {
+    "date": "2026-08-11",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-08-12": {
+    "date": "2026-08-12",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-08-13": {
+    "date": "2026-08-13",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-08-14": {
+    "date": "2026-08-14",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-08-15": {
+    "date": "2026-08-15",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "費城費城人 7–3 亞特蘭大勇士，拿下系列賽首戰。"
+  },
+  "2026-08-16": {
+    "date": "2026-08-16",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-08-17": {
+    "date": "2026-08-17",
+    "total_games": 11,
+    "postponed": 0,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-08-18": {
+    "date": "2026-08-18",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-08-19": {
+    "date": "2026-08-19",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-08-20": {
+    "date": "2026-08-20",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-08-21": {
+    "date": "2026-08-21",
+    "total_games": 15,
+    "postponed": 1,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-08-22": {
+    "date": "2026-08-22",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-08-23": {
+    "date": "2026-08-23",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "費城費城人 7–3 亞特蘭大勇士，拿下系列賽首戰。"
+  },
+  "2026-08-24": {
+    "date": "2026-08-24",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-08-25": {
+    "date": "2026-08-25",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-08-26": {
+    "date": "2026-08-26",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-08-27": {
+    "date": "2026-08-27",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-08-28": {
+    "date": "2026-08-28",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-08-29": {
+    "date": "2026-08-29",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-08-30": {
+    "date": "2026-08-30",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-08-31": {
+    "date": "2026-08-31",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "費城費城人 7–3 亞特蘭大勇士，拿下系列賽首戰。"
+  },
+  "2026-09-01": {
+    "date": "2026-09-01",
+    "total_games": 12,
+    "postponed": 1,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-09-02": {
+    "date": "2026-09-02",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-09-03": {
+    "date": "2026-09-03",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-09-04": {
+    "date": "2026-09-04",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-09-05": {
+    "date": "2026-09-05",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-09-06": {
+    "date": "2026-09-06",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-09-07": {
+    "date": "2026-09-07",
+    "total_games": 11,
+    "postponed": 0,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-09-08": {
+    "date": "2026-09-08",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "費城費城人 7–3 亞特蘭大勇士，拿下系列賽首戰。"
+  },
+  "2026-09-09": {
+    "date": "2026-09-09",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-09-10": {
+    "date": "2026-09-10",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-09-11": {
+    "date": "2026-09-11",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-09-12": {
+    "date": "2026-09-12",
+    "total_games": 13,
+    "postponed": 1,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-09-13": {
+    "date": "2026-09-13",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-09-14": {
+    "date": "2026-09-14",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-09-15": {
+    "date": "2026-09-15",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-09-16": {
+    "date": "2026-09-16",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "費城費城人 7–3 亞特蘭大勇士，拿下系列賽首戰。"
+  },
+  "2026-09-17": {
+    "date": "2026-09-17",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-09-18": {
+    "date": "2026-09-18",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-09-19": {
+    "date": "2026-09-19",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-09-20": {
+    "date": "2026-09-20",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "克里夫蘭守護者 6–5 底特律老虎，延長賽驚險獲勝。"
+  },
+  "2026-09-21": {
+    "date": "2026-09-21",
+    "total_games": 13,
+    "postponed": 0,
+    "summary": "紐約洋基 6–4 波士頓紅襪；Aaron Judge 單場 4 打點。"
+  },
+  "2026-09-22": {
+    "date": "2026-09-22",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "洛杉磯道奇延長 11 局 5–4 擊敗舊金山巨人；Shohei Ohtani 雙響砲。"
+  },
+  "2026-09-23": {
+    "date": "2026-09-23",
+    "total_games": 14,
+    "postponed": 1,
+    "summary": "巴爾的摩金鶯 4–1 坦帕灣光芒；Gunnar Henderson 轟炸加盜壘。"
+  },
+  "2026-09-24": {
+    "date": "2026-09-24",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "費城費城人 7–3 亞特蘭大勇士，拿下系列賽首戰。"
+  },
+  "2026-09-25": {
+    "date": "2026-09-25",
+    "total_games": 12,
+    "postponed": 0,
+    "summary": "休士頓太空人 5–2 西雅圖水手；Yordan Alvarez 長打支援。"
+  },
+  "2026-09-26": {
+    "date": "2026-09-26",
+    "total_games": 15,
+    "postponed": 0,
+    "summary": "多倫多藍鳥 3–2 波士頓紅襪，九局下再見安打。"
+  },
+  "2026-09-27": {
+    "date": "2026-09-27",
+    "total_games": 14,
+    "postponed": 0,
+    "summary": "匹茲堡海盜 2–0 聖路易紅雀；Paul Skenes 完封。"
+  },
+  "2026-09-28": {
+    "date": "2026-09-28",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-09-28 當日無安排任何大聯盟賽事。"
+  },
+  "2026-09-29": {
+    "date": "2026-09-29",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-09-29 當日無安排任何大聯盟賽事。"
+  },
+  "2026-09-30": {
+    "date": "2026-09-30",
+    "total_games": 4,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-01": {
+    "date": "2026-10-01",
+    "total_games": 4,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-02": {
+    "date": "2026-10-02",
+    "total_games": 2,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-03": {
+    "date": "2026-10-03",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-03 當日無安排任何大聯盟賽事。"
+  },
+  "2026-10-04": {
+    "date": "2026-10-04",
+    "total_games": 4,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-05": {
+    "date": "2026-10-05",
+    "total_games": 4,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-06": {
+    "date": "2026-10-06",
+    "total_games": 3,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-07": {
+    "date": "2026-10-07",
+    "total_games": 3,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-08": {
+    "date": "2026-10-08",
+    "total_games": 2,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-09": {
+    "date": "2026-10-09",
+    "total_games": 2,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-10": {
+    "date": "2026-10-10",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "季後賽賽事結果。"
+  },
+  "2026-10-11": {
+    "date": "2026-10-11",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-11 當日無安排任何大聯盟賽事。"
+  },
+  "2026-10-12": {
+    "date": "2026-10-12",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-12 當日無安排任何大聯盟賽事。"
+  },
+  "2026-10-13": {
+    "date": "2026-10-13",
+    "total_games": 2,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-14": {
+    "date": "2026-10-14",
+    "total_games": 2,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-15": {
+    "date": "2026-10-15",
+    "total_games": 2,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-16": {
+    "date": "2026-10-16",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-17": {
+    "date": "2026-10-17",
+    "total_games": 2,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-18": {
+    "date": "2026-10-18",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-19": {
+    "date": "2026-10-19",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-20": {
+    "date": "2026-10-20",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-21": {
+    "date": "2026-10-21",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-22": {
+    "date": "2026-10-22",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-23": {
+    "date": "2026-10-23",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-24": {
+    "date": "2026-10-24",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-25": {
+    "date": "2026-10-25",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "聯盟冠軍賽，系列賽持續進行。"
+  },
+  "2026-10-26": {
+    "date": "2026-10-26",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-26 當日無安排任何大聯盟賽事。"
+  },
+  "2026-10-27": {
+    "date": "2026-10-27",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-27 當日無安排任何大聯盟賽事。"
+  },
+  "2026-10-28": {
+    "date": "2026-10-28",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-28 當日無安排任何大聯盟賽事。"
+  },
+  "2026-10-29": {
+    "date": "2026-10-29",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-29 當日無安排任何大聯盟賽事。"
+  },
+  "2026-10-30": {
+    "date": "2026-10-30",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-30 當日無安排任何大聯盟賽事。"
+  },
+  "2026-10-31": {
+    "date": "2026-10-31",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-10-31 當日無安排任何大聯盟賽事。"
+  },
+  "2026-11-01": {
+    "date": "2026-11-01",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-11-01 當日無安排任何大聯盟賽事。"
+  },
+  "2026-11-02": {
+    "date": "2026-11-02",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-11-02 當日無安排任何大聯盟賽事。"
+  },
+  "2026-11-03": {
+    "date": "2026-11-03",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "世界大賽第 1 戰。"
+  },
+  "2026-11-04": {
+    "date": "2026-11-04",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "世界大賽第 2 戰。"
+  },
+  "2026-11-05": {
+    "date": "2026-11-05",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "世界大賽第 3 戰。"
+  },
+  "2026-11-06": {
+    "date": "2026-11-06",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-11-06 當日無安排任何大聯盟賽事。"
+  },
+  "2026-11-07": {
+    "date": "2026-11-07",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "世界大賽第 4 戰。"
+  },
+  "2026-11-08": {
+    "date": "2026-11-08",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "世界大賽第 5 戰。"
+  },
+  "2026-11-09": {
+    "date": "2026-11-09",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-11-09 當日無安排任何大聯盟賽事。"
+  },
+  "2026-11-10": {
+    "date": "2026-11-10",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "世界大賽第 6 戰。"
+  },
+  "2026-11-11": {
+    "date": "2026-11-11",
+    "total_games": 1,
+    "postponed": 0,
+    "summary": "世界大賽第 7 戰。"
+  },
+  "2026-11-12": {
+    "date": "2026-11-12",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-11-12 當日無安排任何大聯盟賽事。"
+  },
+  "2026-11-13": {
+    "date": "2026-11-13",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-11-13 當日無安排任何大聯盟賽事。"
+  },
+  "2026-11-14": {
+    "date": "2026-11-14",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-11-14 當日無安排任何大聯盟賽事。"
+  },
+  "2026-11-15": {
+    "date": "2026-11-15",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-11-15 當日無安排任何大聯盟賽事。"
+  },
+  "2026-11-16": {
+    "date": "2026-11-16",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "2026-11-16 當日無安排任何大聯盟賽事。"
+  }
+}

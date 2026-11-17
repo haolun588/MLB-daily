@@ -1,0 +1,169 @@
+/* 歷史存檔頁。設計稿讀 assets/metadata.sample.json；正式版改讀 reports/metadata.json。
+   所有外部資料一律以 textContent / setAttribute 寫入，不使用 innerHTML 拼接。 */
+(function () {
+  'use strict';
+
+  var DATA_URL = 'assets/metadata.sample.json';
+  var WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
+
+  var params = new URLSearchParams(location.search);
+  var app = document.getElementById('app');
+  var content = document.getElementById('content');
+  var nav = document.getElementById('monthNav');
+  var summaryLine = document.getElementById('summaryLine');
+
+  function el(tag, opts, children) {
+    var node = document.createElement(tag);
+    opts = opts || {};
+    if (opts.cls) node.className = opts.cls;
+    if (opts.text != null) node.textContent = opts.text;
+    if (opts.attrs) {
+      Object.keys(opts.attrs).forEach(function (k) { node.setAttribute(k, opts.attrs[k]); });
+    }
+    (children || []).forEach(function (c) { node.appendChild(c); });
+    return node;
+  }
+
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+  function weekday(dateStr) {
+    var p = dateStr.split('-').map(Number);
+    return WEEKDAYS[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()];
+  }
+
+  function isDate(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s); }
+
+  // ---------- 狀態畫面 ----------
+  function showLoading() {
+    app.setAttribute('aria-busy', 'true');
+    nav.hidden = true;
+    clear(content);
+    var grid = el('div', { cls: 'days', attrs: { 'aria-hidden': 'true' } });
+    for (var i = 0; i < 12; i++) grid.appendChild(el('div', { cls: 'skeleton' }));
+    content.appendChild(el('div', { cls: 'state-box', attrs: { role: 'status' } }, [
+      el('h2', { text: '讀取中…' }),
+      el('p', { text: '正在載入存檔索引' })
+    ]));
+    content.appendChild(grid);
+  }
+
+  function showError(err) {
+    app.setAttribute('aria-busy', 'false');
+    nav.hidden = true;
+    clear(content);
+    var retry = el('button', { cls: 'btn', text: '重試', attrs: { type: 'button' } });
+    retry.addEventListener('click', load);
+    content.appendChild(el('div', { cls: 'state-box is-error', attrs: { role: 'alert' } }, [
+      el('h2', { text: '無法讀取存檔索引' }),
+      el('p', { text: '請檢查網路連線後再試一次。' }),
+      el('p', { cls: 'detail', text: String(err && err.message ? err.message : err) }),
+      retry
+    ]));
+  }
+
+  function showEmpty() {
+    app.setAttribute('aria-busy', 'false');
+    nav.hidden = true;
+    clear(content);
+    content.appendChild(el('div', { cls: 'state-box' }, [
+      el('h2', { text: '目前沒有存檔' }),
+      el('p', { text: '尚未產生任何戰報，請稍後再來。' })
+    ]));
+  }
+
+  // ---------- 正常畫面 ----------
+  function render(data) {
+    var dates = Object.keys(data).filter(isDate).sort().reverse(); // 新到舊
+    if (!dates.length) { showEmpty(); return; }
+
+    // 依月份分組
+    var months = [];
+    var byMonth = {};
+    dates.forEach(function (d) {
+      var m = d.slice(0, 7);
+      if (!byMonth[m]) { byMonth[m] = []; months.push(m); }
+      byMonth[m].push(d);
+    });
+
+    summaryLine.textContent = '共 ' + dates.length + ' 期 · ' + dates[dates.length - 1] + ' 至 ' + dates[0];
+
+    clear(nav);
+    clear(content);
+
+    months.forEach(function (m) {
+      var parts = m.split('-');
+      var label = parts[0] + ' 年 ' + parts[1] + ' 月';
+      var id = 'm-' + m;
+
+      var chip = el('a', { cls: 'chip', attrs: { href: '#' + id } }, [
+        document.createTextNode(Number(parts[1]) + ' 月'),
+        el('span', { cls: 'num', text: byMonth[m].length })
+      ]);
+      nav.appendChild(chip);
+
+      var list = el('ul', { cls: 'days' });
+      byMonth[m].forEach(function (d) {
+        var info = data[d] || {};
+        var games = Number(info.total_games) || 0;
+        var pp = Number(info.postponed) || 0;
+        var day = d.slice(8);
+        var yy = d.slice(0, 4), mm = d.slice(5, 7);
+        var href = 'reports/' + yy + '/' + mm + '/' + d + '.html';
+
+        var top = el('span', { cls: 'top' }, [
+          el('span', { cls: 'd', text: mm + '-' + day }),
+          el('span', { cls: 'wk', text: '週' + weekday(d) })
+        ]);
+        var count = el('span', { cls: 'c', text: games ? games + ' 場' : '休賽' });
+        var kids = [top, count];
+        if (pp) kids.push(el('span', { cls: 'pp', text: '延賽 ' + pp }));
+
+        var a = el('a', {
+          cls: 'day' + (games ? '' : ' is-off'),
+          attrs: {
+            href: href,
+            title: info.summary ? String(info.summary) : d
+          }
+        }, kids);
+        list.appendChild(el('li', {}, [a]));
+      });
+
+      content.appendChild(el('section', { cls: 'month', attrs: { id: id, 'aria-labelledby': id + '-h' } }, [
+        el('div', { cls: 'section-head' }, [
+          el('h2', { text: label, attrs: { id: id + '-h' } }),
+          el('span', { cls: 'count', text: byMonth[m].length + ' 期' })
+        ]),
+        list
+      ]));
+    });
+
+    nav.hidden = false;
+    app.setAttribute('aria-busy', 'false');
+  }
+
+  // ---------- 載入 ----------
+  function load() {
+    showLoading();
+    var delay = params.get('slow') === '1' ? 60000 : 250; // 讓讀取中畫面看得到
+
+    setTimeout(function () {
+      var url = params.get('fail') === '1' ? 'assets/__missing__.json' : DATA_URL;
+      if (params.get('empty') === '1') { showEmpty(); return; }
+
+      fetch(url, { cache: 'no-store' })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status + '（' + url + '）');
+          return res.json();
+        })
+        .then(function (data) {
+          if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            throw new Error('索引格式不正確');
+          }
+          render(data);
+        })
+        .catch(showError);
+    }, delay);
+  }
+
+  load();
+})();
