@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import html as html_lib
 import json
 import os
+import re
 import sys
 import time
 import urllib.request
@@ -79,6 +81,14 @@ GAME_TYPE_LABELS = {
     "A": "明星賽",
 }
 
+# 渲染用常數
+TEMPLATE_DIR = "templates"
+SAVANT_URL = "https://baseballsavant.mlb.com/savant-player/{}"
+LOGO_URL = "https://www.mlbstatic.com/team-logos/team-cap-on-{}/{}.svg"
+WEEKDAYS_ZH = "一二三四五六日"
+DARK_LUMINANCE_THRESHOLD = 0.08  # 隊色相對亮度低於此值，色條加淺色外框
+SLOT_RE = re.compile(r"<!--SLOT:([A-Z_]+)-->")
+
 def get_taipei_now():
     tz_taipei = timezone(timedelta(hours=8))
     return datetime.now(timezone.utc).astimezone(tz_taipei)
@@ -101,19 +111,6 @@ def fetch_json(url, retries=3, delay=5):
                 time.sleep(delay)
     return None
 
-def format_cumulative(count, season_total):
-    if count == 1:
-        return f"1({season_total})"
-    else:
-        parts = []
-        for i in range(count):
-            parts.append(f"({season_total - count + 1 + i})")
-        return f"{count}{''.join(parts)}"
-
-def get_team_info(team_id, english_name):
-    if team_id in TEAM_META:
-        return TEAM_META[team_id]
-    return {"name": english_name, "abbr": english_name[:3].upper(), "color": "#6b7280"}
 
 class ApiError(Exception):
     """API 抓取失敗，或回應缺少預期結構（與「確實無賽事」不同）。"""
@@ -178,15 +175,18 @@ def fetch_game_news(game_pk, away_abbr, home_abbr, away_r, home_r):
         
     return {"headline": backup_headline, "blurb": backup_blurb}
 
+
 def fetch_daily_transactions(date_str):
+    """抓取當日人事異動（已套用過濾規則）。description 為 API 原文（未 escape），
+    輸出 HTML 前一律經 render_tx_description() 處理。"""
     url = f"https://statsapi.mlb.com/api/v1/transactions?date={date_str}&sportId=1"
     data = fetch_json(url)
     if not data or not data.get("transactions"):
         return []
-        
+
     tx_list = []
     seen_descriptions = set()
-    
+
     for tx in data["transactions"]:
         desc = tx.get("description")
         if not desc or desc in seen_descriptions:
@@ -199,102 +199,219 @@ def fetch_daily_transactions(date_str):
             if not any(ind in desc_lower for ind in indicators):
                 continue
         seen_descriptions.add(desc)
-        
-        to_team_id = tx.get("toTeam", {}).get("id")
-        from_team_id = tx.get("fromTeam", {}).get("id")
-        
-        person_info = tx.get("person", {})
-        person_id = person_info.get("id")
-        person_name = person_info.get("fullName")
-        
-        if person_id and person_name and person_name in desc:
-            link_html = f'<a href="https://baseballsavant.mlb.com/savant-player/{person_id}" target="_blank" class="player-link">{person_name}</a>'
-            desc = desc.replace(person_name, link_html)
-            
+
+        person_info = tx.get("person") or {}
         tx_list.append({
-            "to_team_id": to_team_id,
-            "from_team_id": from_team_id,
-            "description": desc
+            "to_team_id": (tx.get("toTeam") or {}).get("id"),
+            "from_team_id": (tx.get("fromTeam") or {}).get("id"),
+            "person_id": person_info.get("id"),
+            "person_name": person_info.get("fullName"),
+            "description": desc,
         })
-        
+
     return tx_list
 
-def build_transactions_section_html(daily_tx_list):
-    grouped_other_tx = {}
-    for tx in daily_tx_list:
-        to_team_id = tx["to_team_id"]
-        from_team_id = tx["from_team_id"]
-        
-        team_id = None
-        if to_team_id in TEAM_META:
-            team_id = to_team_id
-        elif from_team_id in TEAM_META:
-            team_id = from_team_id
-            
-        if team_id:
-            grouped_other_tx.setdefault(team_id, []).append(tx["description"])
-        else:
-            grouped_other_tx.setdefault("Other", []).append(tx["description"])
-            
-    total_other_tx = sum(len(descs) for descs in grouped_other_tx.values())
-    
-    if total_other_tx > 0:
-        other_cards_html = []
-        sorted_other_team_ids = sorted([tid for tid in grouped_other_tx.keys() if tid != "Other"])
-        if "Other" in grouped_other_tx:
-            sorted_other_team_ids.append("Other")
-            
-        for tid in sorted_other_team_ids:
-            descs = grouped_other_tx[tid]
-            li_parts = [f"<li>{desc}</li>" for desc in descs]
-            
-            if tid == "Other":
-                logo_url = "https://www.mlbstatic.com/team-logos/team-cap-on-dark/mlb.svg"
-                team_name = "其他異動"
-            else:
-                logo_url = f"https://www.mlbstatic.com/team-logos/team-cap-on-dark/{tid}.svg"
-                team_name = TEAM_META[tid]["name"]
-                
-            team_card_html = f"""        <!-- Team Transactions: {tid} -->
-        <div class="team-tx-card">
-          <div class="team-tx-header">
-            <img src="{logo_url}" class="team-tx-logo" alt="logo">
-            <span class="team-tx-name">{team_name}</span>
-          </div>
-          <ul class="team-tx-list">
-            {"".join(li_parts)}
-          </ul>
-        </div>"""
-            other_cards_html.append(team_card_html)
-            
-        return f"""    <section class="transactions-section">
-      <h2 class="transactions-header">
-        <span>其他球隊人事異動</span>
-        <span class="tx-badge">{total_other_tx}</span>
-      </h2>
-      <div class="transactions-grid">
-{"\n".join(other_cards_html)}
-      </div>
-    </section>"""
-    else:
-        return f"""    <section class="transactions-section">
-      <h2 class="transactions-header">
-        <span>其他球隊人事異動</span>
-        <span class="tx-badge">0</span>
-      </h2>
-      <div style="color:var(--text-muted);font-size:0.85rem;padding:1.5rem;text-align:center;background:rgba(255,255,255,0.01);border:1px dashed var(--card-border);border-radius:12px;">
-        本日無其他球隊人事異動。
-      </div>
-    </section>"""
 
+# ---------------------------------------------------------------- 渲染：共用工具
+def esc(s):
+    """所有來自 API 的字串輸出到 HTML（含屬性值）前一律經過此函式。"""
+    return html_lib.escape(str(s), quote=True)
+
+
+def fmt_date_long(date_str):
+    """'2026-07-30' -> '2026 年 07 月 30 日（四）'；格式不符時原樣回傳。"""
+    try:
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+    except (ValueError, TypeError):
+        return str(date_str)
+    return f"{dt.year} 年 {dt.month:02d} 月 {dt.day:02d} 日（{WEEKDAYS_ZH[dt.weekday()]}）"
+
+
+def report_href(date_str):
+    """自網站根目錄起算的戰報路徑：reports/YYYY/MM/YYYY-MM-DD.html。"""
+    y, m, _ = date_str.split("-")
+    return f"reports/{y}/{m}/{date_str}.html"
+
+
+def safe_color(color):
+    return color if re.fullmatch(r"#[0-9A-Fa-f]{6}", str(color)) else "#6b7280"
+
+
+def relative_luminance(color):
+    """WCAG 相對亮度（0 = 黑、1 = 白）。"""
+    color = safe_color(color)
+    channels = []
+    for i in (1, 3, 5):
+        c = int(color[i:i + 2], 16) / 255
+        channels.append(c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4)
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+
+
+def is_dark_color(color):
+    """隊色相對深色背景過暗（色條會消失）時為 True。"""
+    return relative_luminance(color) < DARK_LUMINANCE_THRESHOLD
+
+
+def stripe_class(color):
+    """隊色過暗時回傳需追加的 class（含前導空白），否則空字串。"""
+    return " team-stripe--dark" if is_dark_color(color) else ""
+
+
+def _int_id(value):
+    """id 必須是整數（或純數字字串），否則回傳 None。"""
+    if isinstance(value, bool):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def logo_picture(team_id, abbr, size):
+    """隊徽；id 不是整數時不輸出圖片（回傳空字串）。"""
+    tid = _int_id(team_id)
+    if tid is None:
+        return ""
+    return (
+        f'<picture><source media="(prefers-color-scheme: light)" srcset="{LOGO_URL.format("light", tid)}">'
+        f'<img src="{LOGO_URL.format("dark", tid)}" width="{size}" height="{size}" alt="{esc(abbr)}" loading="lazy"></picture>'
+    )
+
+
+def player_link(player_id, name):
+    """球員 Savant 連結；id 不是整數時退回只輸出 escape 後的名字。"""
+    pid = _int_id(player_id)
+    if pid is None:
+        return esc(name)
+    return (
+        f'<a class="plink" href="{SAVANT_URL.format(pid)}" '
+        f'target="_blank" rel="noopener">{esc(name)}</a>'
+    )
+
+
+def render_tx_description(description, person_id=None, person_name=None):
+    """對原文以球員名切分，各段分別 escape，再以 Savant 連結串接（避免名字命中 &amp; 等實體）。"""
+    if person_name and _int_id(person_id) is not None and person_name in description:
+        link = player_link(person_id, person_name)
+        return link.join(esc(part) for part in description.split(person_name))
+    return esc(description)
+
+
+def render_tx_items(tx_list):
+    return "".join(
+        f"<li>{render_tx_description(tx['description'], tx.get('person_id'), tx.get('person_name'))}</li>"
+        for tx in tx_list
+    )
+
+
+def load_template(name):
+    path = os.path.join(TEMPLATE_DIR, name)
+    if not os.path.exists(path):
+        print(f"Error: Template file {path} not found.", file=sys.stderr)
+        sys.exit(1)
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def fill_slots(template, slots):
+    """以 <!--SLOT:NAME--> 為插槽，一次性替換（插槽內容不會被再次替換）；未提供的插槽輸出空字串。"""
+    return SLOT_RE.sub(lambda m: str(slots.get(m.group(1), "")), template)
+
+
+def render_page(slots):
+    """戰報與休賽季快報共用的頁面殼（templates/report.html）。slots 的值須為已處理好的 HTML。"""
+    return fill_slots(load_template("report.html"), slots)
+
+
+# ---------------------------------------------------------------- 渲染：總覽與區塊
+def render_summary(page_type, total_games=0, postponed=0, news_count=None, transactions_count=0):
+    """news_count 為 None（新聞功能尚未接上）時，休賽季總覽省略「新聞」一格。"""
+    if page_type == "offseason":
+        items = []
+        if news_count is not None:
+            items.append(f"<div><dt>新聞</dt><dd>{int(news_count)} 則</dd></div>")
+        items.append(f"<div><dt>人事異動</dt><dd>{int(transactions_count)} 筆</dd></div>")
+    else:
+        alert = ' class="is-alert"' if postponed else ""
+        items = [
+            f"<div><dt>總場數</dt><dd>{int(total_games)}</dd></div>",
+            f"<div{alert}><dt>延賽</dt><dd>{int(postponed)}</dd></div>",
+        ]
+    return f'<div class="wrap">\n  <dl class="overview">\n    {"".join(items)}\n  </dl>\n</div>'
+
+
+def render_search():
+    return """<div class="searchbar">
+  <div class="wrap">
+    <form id="searchForm" role="search" autocomplete="off">
+      <label class="visually-hidden" for="q">搜尋隊名或縮寫</label>
+      <input id="q" type="search" placeholder="隊名或縮寫（如 洋基、LAD）" enterkeyhint="search">
+      <button class="btn" type="submit">搜尋</button>
+    </form>
+    <p id="searchHint" class="search-hint" role="status" aria-live="polite">輸入隊名或縮寫，例：洋基、LAD</p>
+  </div>
+</div>"""
+
+
+def render_games_section(cards_html):
+    return (
+        '<section class="section wrap" aria-labelledby="games-h">\n'
+        f'  <div class="section-head"><h2 id="games-h">賽事結果</h2><span class="count">{len(cards_html)} 場</span></div>\n'
+        '  <div class="games">\n' + "\n".join(cards_html) + "\n  </div>\n</section>"
+    )
+
+
+def render_transactions_section(tx_list, heading="其他球隊人事異動", empty_text="本日無其他球隊人事異動。"):
+    """依球隊分組顯示人事異動（to_team 優先，其次 from_team，皆非 30 隊者歸入「其他異動」）。"""
+    grouped = {}
+    for tx in tx_list:
+        if tx["to_team_id"] in TEAM_META:
+            key = tx["to_team_id"]
+        elif tx["from_team_id"] in TEAM_META:
+            key = tx["from_team_id"]
+        else:
+            key = "Other"
+        grouped.setdefault(key, []).append(tx)
+
+    head = (
+        f'<div class="section-head"><h2 id="tx-h">{esc(heading)}</h2>'
+        f'<span class="count">{len(tx_list)} 筆</span></div>'
+    )
+    if not tx_list:
+        body = f'<p class="section-empty">{esc(empty_text)}</p>'
+    else:
+        keys = sorted(k for k in grouped if k != "Other")
+        if "Other" in grouped:
+            keys.append("Other")
+        groups = []
+        for key in keys:
+            items = render_tx_items(grouped[key])
+            if key == "Other":
+                groups.append(
+                    f'<div class="tx-group"><h3>其他異動</h3><ul class="tx-list">{items}</ul></div>'
+                )
+            else:
+                meta = TEAM_META[key]
+                groups.append(
+                    f'<div class="tx-group{stripe_class(meta["color"])}" style="--team:{safe_color(meta["color"])}">'
+                    f'<h3>{logo_picture(key, meta["abbr"], 22)}{esc(meta["name"])}</h3>'
+                    f'<ul class="tx-list">{items}</ul></div>'
+                )
+        body = '<div class="tx-grid">' + "".join(groups) + "</div>"
+    return f'<section class="section wrap" aria-labelledby="tx-h">{head}{body}</section>'
+
+
+# ---------------------------------------------------------------- 比賽狀態與分類
 def game_type_label(game):
     """依 gameType 回傳卡片標題用的賽事類型文字。"""
     return GAME_TYPE_LABELS.get(game.get("gameType"), "比賽")
 
+
 def classify_game_status(game, linescore=None):
     """判斷比賽狀態，回傳 (badge_text, badge_class, is_final)。
 
-    - 完賽：Final（9 局或與預定局數相同）、Final/N（延長賽，extra）、Final/N（提前結束）。
+    badge_class 對應 CSS 徽章：final / extra（延長賽）/ early（提前結束）/ suspended。
+    - 完賽：Final（9 局或與預定局數相同）、Final/N（延長賽，extra）、Final/N（提前結束，early）。
     - Suspended：暫停比賽；其餘仍為 Preview/Live（等待達上限）：未完賽。兩者 is_final 皆為 False。
     """
     if linescore is None:
@@ -314,622 +431,532 @@ def classify_game_status(game, linescore=None):
         return "Final", "final", True
     if played > scheduled:
         return f"Final/{played}", "extra", True
-    return f"Final/{played}（提前結束）", "final", True
+    return f"Final/{played}（提前結束）", "early", True
 
-def render_fallback_card(game, away_info, home_info, teams_data_str):
-    """boxscore 抓取失敗時，僅用 schedule 資料產生簡化卡片。回傳 (card_html, summary_sentence)。"""
-    away_team_obj = game["teams"]["away"]["team"]
-    home_team_obj = game["teams"]["home"]["team"]
-    linescore = game.get("linescore", {}).get("teams", {})
-    away_r = game["teams"]["away"].get("score", linescore.get("away", {}).get("runs", 0))
-    home_r = game["teams"]["home"].get("score", linescore.get("home", {}).get("runs", 0))
-    away_rec = game["teams"]["away"].get("leagueRecord", {})
-    home_rec = game["teams"]["home"].get("leagueRecord", {})
-    away_rec_str = f"({away_rec.get('wins', 0)}-{away_rec.get('losses', 0)})"
-    home_rec_str = f"({home_rec.get('wins', 0)}-{home_rec.get('losses', 0)})"
-    status_text, status_class, _ = classify_game_status(game)
-    card_html = f"""
-      <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} (Fallback) -->
-      <div class="game-card" style="grid-template-columns: 1fr;" data-teams="{teams_data_str}">
-        <div class="game-card-upper">
-          <div class="game-header">
-            <span class="game-title">{game_type_label(game)} #{game["gamePk"]}</span>
-            <span class="status-badge {status_class}">{status_text}</span>
-          </div>
-          <div class="score-table-wrapper">
-            <table class="score-table">
-              <thead>
-                <tr>
-                  <th style="text-align: left; width: 50%;">隊伍</th>
-                  <th>R</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="team-cell">
-                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{away_team_obj['id']}.svg" class="team-logo" alt="{away_info['abbr']}">
-                    <span>{away_info['name']} {away_rec_str}</span>
-                  </td>
-                  <td class="num-cell runs-cell">{away_r}</td>
-                </tr>
-                <tr>
-                  <td class="team-cell">
-                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{home_team_obj['id']}.svg" class="team-logo" alt="{home_info['abbr']}">
-                    <span>{home_info['name']} {home_rec_str}</span>
-                  </td>
-                  <td class="num-cell runs-cell">{home_r}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem;">詳細數據暫缺</div>
-        </div>
-      </div>
-"""
-    summary = f"{away_info['abbr']} @ {home_info['abbr']}，比分 {away_r}:{home_r}"
-    return card_html, summary
+
+# ---------------------------------------------------------------- 資料抽取（boxscore -> 焦點球員）
+def format_cumulative(count, season_total):
+    """單場次數與賽季累計：1(9) / 2(10)(11)。賽季累計缺漏或小於單場次數（資料異常）時只輸出次數。"""
+    if count <= 0:
+        return ""
+    if not isinstance(season_total, int) or season_total < count:
+        return str(count)
+    if count == 1:
+        return f"1({season_total})"
+    return f"{count}" + "".join(f"({season_total - count + 1 + i})" for i in range(count))
+
+
+def get_team_info(team_id, english_name):
+    if team_id in TEAM_META:
+        return TEAM_META[team_id]
+    return {"name": english_name, "abbr": english_name[:3].upper(), "color": "#6b7280"}
+
+
+def collect_candidates(boxscore, away_abbr, home_abbr):
+    """從 boxscore 取出打者／投手候選人並評分（分數由高到低）。"""
+    teams = boxscore.get("teams", {})
+    starters = {
+        side: (teams.get(side, {}).get("pitchers") or [None])[0] for side in ("away", "home")
+    }
+    candidates = []
+
+    for side, team_abbr in (("away", away_abbr), ("home", home_abbr)):
+        for _, p_info in (teams.get(side, {}).get("players") or {}).items():
+            person = p_info.get("person", {})
+            p_id = person.get("id")
+            p_name = person.get("fullName", "")
+            pos = p_info.get("position", {}).get("abbreviation", "")
+            if p_id is None:
+                continue
+
+            # 打者：有打數，或雖無打數但有盜壘／得分（代跑者，L4）
+            bat = p_info.get("stats", {}).get("batting", {})
+            if bat:
+                ab = bat.get("atBats", 0)
+                r = bat.get("runs", 0)
+                h = bat.get("hits", 0)
+                d = bat.get("doubles", 0)
+                t = bat.get("triples", 0)
+                hr = bat.get("homeRuns", 0)
+                rbi = bat.get("rbi", 0)
+                bb = bat.get("baseOnBalls", 0)
+                so = bat.get("strikeOuts", 0)
+                sb = bat.get("stolenBases", 0)
+                if ab > 0 or sb > 0 or r > 0:
+                    # Score = H*1 + 2B*2 + 3B*3 + HR*4 + RBI*1.5 + R*1 + SB*1 + BB*1
+                    score = h * 1.0 + d * 2.0 + t * 3.0 + hr * 4.0 + rbi * 1.5 + r * 1.0 + sb * 1.0 + bb * 1.0
+                    season = p_info.get("seasonStats", {}).get("batting", {})
+                    candidates.append({
+                        "type": "batter", "id": p_id, "name": p_name, "team": team_abbr,
+                        "pos": pos, "score": score,
+                        "stats": {
+                            "ab": ab, "r": r, "h": h, "rbi": rbi, "bb": bb, "so": so,
+                            "d": d, "t": t, "hr": hr, "sb": sb,
+                            "season_d": season.get("doubles", 0),
+                            "season_t": season.get("triples", 0),
+                            "season_hr": season.get("homeRuns", 0),
+                            "season_sb": season.get("stolenBases", 0),
+                        },
+                    })
+
+            # 投手
+            pit = p_info.get("stats", {}).get("pitching", {})
+            ip_str = pit.get("inningsPitched") if pit else None
+            if ip_str and ip_str != "0.0":
+                h = pit.get("hits", 0)
+                r = pit.get("runs", 0)
+                er = pit.get("earnedRuns", 0)
+                bb = pit.get("baseOnBalls", 0)
+                so = pit.get("strikeOuts", 0)
+                parts = ip_str.split(".")
+                ip_outs = int(parts[0]) * 3 + (int(parts[1]) if len(parts) > 1 else 0)
+                is_win = pit.get("wins", 0) > 0
+                is_save = pit.get("saves", 0) > 0
+                is_loss = pit.get("losses", 0) > 0
+                # Score = IP_outs + K*1 - ER*2 - H*1 - BB*1 + (Win ? 5 : 0) + (Save ? 4 : 0)
+                score = ip_outs + so * 1.0 - er * 2.0 - h * 1.0 - bb * 1.0 + (5.0 if is_win else 0.0) + (4.0 if is_save else 0.0)
+                decision = "W" if is_win else ("S" if is_save else ("L" if is_loss else ""))
+                candidates.append({
+                    "type": "pitcher", "id": p_id, "name": p_name, "team": team_abbr,
+                    "pos": pos, "score": score, "is_starter": p_id == starters[side],
+                    "decision": decision,
+                    "stats": {
+                        "ip": ip_str, "h": h, "r": r, "er": er, "bb": bb, "so": so,
+                        "pitches": pit.get("numberOfPitches", 0), "strikes": pit.get("strikes", 0),
+                    },
+                })
+
+    candidates.sort(key=lambda x: x["score"], reverse=True)
+    return candidates
+
+
+def select_performers(candidates):
+    """雙門檻：前 3 名保證入選；其餘打者 >= 7、先發 >= 15、後援 >= 8。回傳 (打者, 投手, 全部入選)。"""
+    selected = []
+    for idx, cand in enumerate(candidates):
+        if idx < 3:
+            selected.append(cand)
+        elif cand["type"] == "batter":
+            if cand["score"] >= 7.0:
+                selected.append(cand)
+        else:
+            if cand["score"] >= (15.0 if cand["is_starter"] else 8.0):
+                selected.append(cand)
+    return (
+        [c for c in selected if c["type"] == "batter"],
+        [c for c in selected if c["type"] == "pitcher"],
+        selected,
+    )
+
+
+def build_decisions(dec_obj, players_away, players_home):
+    """投球決定：{'w'|'l'|'s': {'id','name','record'} 或 None}。"""
+    def lookup(pid):
+        obj = players_away.get(f"ID{pid}") or players_home.get(f"ID{pid}")
+        if obj:
+            return obj["person"]["fullName"], obj.get("seasonStats", {}).get("pitching", {})
+        return None, None
+
+    out = {"w": None, "l": None, "s": None}
+    for key, field in (("w", "winner"), ("l", "loser"), ("s", "save")):
+        entry = dec_obj.get(field)
+        if not entry:
+            continue
+        pid = entry["id"]
+        name, stats = lookup(pid)
+        if name:
+            if key == "s":
+                record = f"({stats.get('saves', 0)})"
+            else:
+                record = f"({stats.get('wins', 0)}-{stats.get('losses', 0)})"
+        else:
+            name, record = entry.get("fullName", ""), None
+        out[key] = {"id": pid, "name": name, "record": record}
+    return out
+
+
+def split_game_transactions(tx_list, away, home):
+    """把與本場兩隊相關的異動分出來。away/home 為 {'id','abbr','name','color'}。
+    回傳 (本場球隊分組, 其餘異動)。"""
+    groups = []
+    matched = set()
+    for side in (away, home):
+        items = [tx for tx in tx_list if side["id"] in (tx["to_team_id"], tx["from_team_id"])]
+        if items:
+            groups.append({"team": side, "items": items})
+            matched.update(tx["description"] for tx in items)
+    remaining = [tx for tx in tx_list if tx["description"] not in matched]
+    return groups, remaining
+
+
+# ---------------------------------------------------------------- 渲染：比賽卡片
+def batter_tags(stats):
+    """長打與速度標籤：[(css_class, 文字)]，順序 2B、3B、HR、SB。"""
+    tags = []
+    for label, key, season_key, css in (
+        ("2B", "d", "season_d", "tag"),
+        ("3B", "t", "season_t", "tag"),
+        ("HR", "hr", "season_hr", "tag hr"),
+        ("SB", "sb", "season_sb", "tag sb"),
+    ):
+        if stats[key] > 0:
+            tags.append((css, f"{label}: {format_cumulative(stats[key], stats[season_key])}"))
+    return tags
+
+
+def _statline(pairs, extra_class=""):
+    cells = "".join(f"<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in pairs)
+    return f'<dl class="statline{extra_class}">{cells}</dl>'
+
+
+def render_batter(b):
+    s = b["stats"]
+    tags = "".join(f'<span class="{css}">{esc(text)}</span>' for css, text in batter_tags(s))
+    tags_html = f'<span class="tags">{tags}</span>' if tags else ""
+    statline = _statline([("AB", s["ab"]), ("R", s["r"]), ("H", s["h"]), ("RBI", s["rbi"]), ("BB", s["bb"]), ("SO", s["so"])])
+    return (
+        f'<li><div class="p-head"><span class="p-name">{player_link(b["id"], b["name"])}</span>'
+        f'<span class="p-meta">{esc(b["team"])} · {esc(b["pos"])}</span>{tags_html}</div>{statline}</li>'
+    )
+
+
+def render_pitcher(p):
+    s = p["stats"]
+    tags_html = f'<span class="tags"><span class="tag dec">{esc(p["decision"])}</span></span>' if p.get("decision") else ""
+    statline = _statline(
+        [("IP", s["ip"]), ("H", s["h"]), ("R", s["r"]), ("ER", s["er"]), ("BB", s["bb"]), ("SO", s["so"]),
+         ("P-S", f"{s['pitches']}-{s['strikes']}")],
+        " is-pitch",
+    )
+    return (
+        f'<li><div class="p-head"><span class="p-name">{player_link(p["id"], p["name"])}</span>'
+        f'<span class="p-meta">{esc(p["team"])} · {esc(p["pos"])}</span>{tags_html}</div>{statline}</li>'
+    )
+
+
+def render_decisions(decisions, is_final, status_text=""):
+    """投球決定：只有完賽（is_final）才列出勝／敗／救援，否則顯示說明文字。"""
+    if not is_final:
+        note = "本場暫停，尚未產生勝敗，無投球決定。" if status_text == "暫停比賽" else "本場尚未完賽，無投球決定。"
+        return f'<section><h4 class="sub">投球決定</h4><p class="empty-note">{note}</p></section>'
+
+    def row(label, entry, win=False):
+        dt = f'<dt class="is-w">{label}</dt>' if win else f"<dt>{label}</dt>"
+        if not entry:
+            return f"{dt}<dd>無</dd>"
+        rec = f' <span class="rec">{esc(entry["record"])}</span>' if entry.get("record") else ""
+        return f'{dt}<dd>{player_link(entry["id"], entry["name"])}{rec}</dd>'
+
+    d = decisions or {}
+    return (
+        '<section><h4 class="sub">投球決定</h4><dl class="decisions">'
+        + row("勝", d.get("w"), True) + row("敗", d.get("l")) + row("救援", d.get("s"))
+        + "</dl></section>"
+    )
+
+
+def render_news_box(news):
+    if not news:
+        return ""
+    return (
+        '<section><h4 class="sub">賽後新聞</h4><article class="mini-news">'
+        f'<h5>{esc(news["headline"])}</h5><p>{esc(news["blurb"])}</p></article></section>'
+    )
+
+
+def render_card_transactions(groups):
+    if not groups:
+        return ""
+    parts = []
+    for g in groups:
+        team = g["team"]
+        parts.append(
+            f'<div class="tx-group{stripe_class(team["color"])}" style="--team:{safe_color(team["color"])}">'
+            f'<h5>{logo_picture(team["id"], team["abbr"], 18)}{esc(team["name"])}</h5>'
+            f'<ul class="tx-list">{render_tx_items(g["items"])}</ul></div>'
+        )
+    return '<section><h4 class="sub">本場相關人事異動</h4>' + "".join(parts) + "</section>"
+
+
+def _card_open(view):
+    away, home = view["away"], view["home"]
+    tokens = []
+    for side in (away, home):
+        tokens += [side["abbr"], side["name"], side.get("name_en", "")]
+    teams = "|".join(str(t).replace("|", " ") for t in tokens)
+    label = f'{away["name"]}對{home["name"]}'
+    return f'<article class="game" data-teams="{esc(teams)}" aria-label="{esc(label)}">'
+
+
+def _card_head(view):
+    return (
+        f'<div class="game-head"><h3 class="game-title">{esc(view["type_label"])} '
+        f'<span class="num">#{esc(view["game_pk"])}</span></h3>'
+        f'<span class="badge is-{esc(view["status_class"])}">{esc(view["status_text"])}</span></div>'
+    )
+
+
+def _score_table(view):
+    rows = []
+    for side in (view["away"], view["home"]):
+        tr = '<tr class="is-win">' if side.get("winner") else "<tr>"
+        rows.append(
+            f'{tr}<td class="team{stripe_class(side["color"])}" style="--team:{safe_color(side["color"])}">'
+            f'<div class="team-inner">{logo_picture(side["id"], side["abbr"], 24)}'
+            f'<span class="tname"><span class="name">{esc(side["name"])}</span>'
+            f'<span class="record">{esc(side["record"])}</span></span></div></td>'
+            f'<td class="n runs">{esc(side["r"])}</td><td class="n">{esc(side["h"])}</td>'
+            f'<td class="n">{esc(side["e"])}</td></tr>'
+        )
+    caption = f'{view["away"]["name"]}對{view["home"]["name"]}'
+    return (
+        f'<table class="score"><caption class="visually-hidden">{esc(caption)}</caption>'
+        '<thead><tr><th scope="col">隊伍</th><th scope="col" class="col-r">R</th>'
+        '<th scope="col" class="col-h">H</th><th scope="col" class="col-e">E</th></tr></thead>'
+        "<tbody>" + "".join(rows) + "</tbody></table>"
+    )
+
+
+def render_game_card(view):
+    """完整比賽卡片（有 boxscore）。view 為 build_game_view() 的輸出加上 news、tx_groups。"""
+    batters = "".join(render_batter(b) for b in view["batters"])
+    pitchers = "".join(render_pitcher(p) for p in view["pitchers"])
+    batters_html = f'<ul class="perf">{batters}</ul>' if batters else '<p class="empty-note">本場無突出打擊表現。</p>'
+    pitchers_html = f'<ul class="perf">{pitchers}</ul>' if pitchers else '<p class="empty-note">本場無突出投手表現。</p>'
+    decisions = render_decisions(view["decisions"], view["is_final"], view["status_text"])
+    return (
+        f"{_card_open(view)}\n  {_card_head(view)}\n  {_score_table(view)}\n"
+        '  <div class="game-body">\n    <div class="col-left">\n      '
+        f'{decisions}{render_news_box(view.get("news"))}{render_card_transactions(view.get("tx_groups"))}\n    </div>\n'
+        '    <div class="col-right">\n'
+        f'<div class="perf-group"><h4 class="sub">打擊焦點</h4>{batters_html}</div>\n'
+        f'<div class="perf-group"><h4 class="sub">投球焦點</h4>{pitchers_html}</div>\n'
+        "    </div>\n  </div>\n</article>"
+    )
+
+
+def render_fallback_card(view):
+    """boxscore 抓取失敗時，僅用 schedule 資料的簡化卡片（H／E 無資料以 — 表示）。"""
+    return (
+        f"{_card_open(view)}\n  {_card_head(view)}\n  {_score_table(view)}\n"
+        '  <div class="note-strip"><strong>詳細數據暫缺</strong>：本場 boxscore 暫時無法取得，僅顯示比分。</div>\n'
+        "</article>"
+    )
+
+
+def render_postponed_card(view):
+    """延賽／取消卡。view 需含 note_title、notice、icon。"""
+    def side(s):
+        return f'<span class="side">{logo_picture(s["id"], s["abbr"], 24)}{esc(s["name"])}</span>'
+    return (
+        f"{_card_open(view)}\n  {_card_head(view)}\n"
+        f'  <div class="game-note">\n    <div class="icon" aria-hidden="true">{view["icon"]}</div>\n'
+        f'    <h3>{esc(view["note_title"])}</h3>\n'
+        f'    <div class="matchup">{side(view["away"])}<span class="at">@</span>{side(view["home"])}</div>\n'
+        f'    <p>{esc(view["notice"])}</p>\n  </div>\n</article>'
+    )
+
+
+# ---------------------------------------------------------------- 組裝：schedule / boxscore -> view
+def _side_view(game, side, info):
+    team_obj = game["teams"][side]["team"]
+    rec = game["teams"][side].get("leagueRecord", {})
+    return {
+        "id": team_obj["id"],
+        "abbr": info["abbr"],
+        "name": info["name"],
+        "name_en": team_obj.get("name", ""),
+        "color": info["color"],
+        "record": f"({rec.get('wins', 0)}-{rec.get('losses', 0)})",
+        "r": 0, "h": "—", "e": "—", "winner": False,
+    }
+
+
+def build_base_view(game, away_info, home_info):
+    """狀態、隊伍與比分（來源為 schedule 的 linescore，缺漏時 R 退回 teams.score；H／E 缺漏為 —）。"""
+    linescore = game.get("linescore", {})
+    ls_teams = linescore.get("teams", {})
+    status_text, status_class, is_final = classify_game_status(game, linescore)
+    view = {
+        "game_pk": game["gamePk"],
+        "type_label": game_type_label(game),
+        "status_text": status_text,
+        "status_class": status_class,
+        "is_final": is_final,
+        "away": _side_view(game, "away", away_info),
+        "home": _side_view(game, "home", home_info),
+    }
+    for side in ("away", "home"):
+        ls = ls_teams.get(side, {})
+        view[side]["r"] = ls.get("runs", game["teams"][side].get("score", 0))
+        view[side]["h"] = ls.get("hits", "—")
+        view[side]["e"] = ls.get("errors", "—")
+    away_r, home_r = view["away"]["r"], view["home"]["r"]
+    view["away"]["winner"] = bool(is_final and away_r > home_r)
+    view["home"]["winner"] = bool(is_final and home_r > away_r)
+    return view
+
+
+def build_postponed_view(game, away_info, home_info):
+    view = build_base_view(game, away_info, home_info)
+    status = game.get("status", {})
+    type_label = game_type_label(game)
+    if status.get("detailedState") == "Cancelled":
+        reason_raw = status.get("reason")
+        reason_eng = f"Cancelled - {reason_raw}" if reason_raw else "Cancelled"
+        reason_chi = POSTPONED_REASONS.get(reason_raw, "賽事延期").replace("延期", "取消")
+        view.update(
+            status_text="Cancelled", status_class="cancelled", icon="🚫",
+            note_title="賽事取消",
+            notice=f"原定於當日舉行的{type_label}賽事，{reason_chi} ({reason_eng})。",
+        )
+    else:
+        reason_eng = status.get("reason", "Postponed")
+        reason_chi = POSTPONED_REASONS.get(reason_eng, "賽事延期")
+        view.update(
+            status_text="Postponed", status_class="postponed", icon="🌧️",
+            note_title=reason_chi,
+            notice=f"原定於當日舉行的{type_label}賽事，{reason_chi} (Postponed - {reason_eng})。補賽日期將另行公布。",
+        )
+    return view
+
+
+def build_game_view(game, boxscore, away_info, home_info):
+    """有 boxscore 的完整卡片資料。回傳 (view, 入選焦點球員清單)。"""
+    view = build_base_view(game, away_info, home_info)
+    teams = boxscore.get("teams", {})
+    players_away = teams.get("away", {}).get("players", {})
+    players_home = teams.get("home", {}).get("players", {})
+    view["decisions"] = build_decisions(game.get("decisions", {}), players_away, players_home)
+
+    candidates = collect_candidates(boxscore, away_info["abbr"], home_info["abbr"])
+    print(f"  Game {game['gamePk']} ({away_info['abbr']} @ {home_info['abbr']}) candidates score log:")
+    for cand in candidates[:5]:
+        print(f"    - {cand['name']} ({cand['team']} - {cand['type']}): score={cand['score']:.1f}")
+    batters, pitchers, selected = select_performers(candidates)
+    view["batters"], view["pitchers"] = batters, pitchers
+    return view, selected
+
+
+def build_summary_sentence(view, selected):
+    sentence = f"{view['away']['abbr']} @ {view['home']['abbr']}，比分 {view['away']['r']}:{view['home']['r']}"
+    if selected:
+        top = selected[0]
+        if top["type"] == "batter" and top["stats"]["hr"] > 0:
+            sentence += f"，{top['name']} 擊出全壘打"
+        elif top["type"] == "pitcher" and top["stats"]["so"] >= 5:
+            sentence += f"，{top['name']} 投出 {top['stats']['so']} 次三振"
+    return sentence
+
+
+# ---------------------------------------------------------------- 組裝：整頁
+def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news_html=""):
+    """賽季戰報與休賽季快報共用：組出所有插槽後交給 render_page。"""
+    cards_html = list(cards_html)
+    tx_list = list(tx_list)
+    if page_type == "offseason":
+        subtitle, title_suffix = "休賽季快報", " 休賽季快報"
+        summary = render_summary("offseason", transactions_count=len(tx_list))
+        games = ""
+        transactions = render_transactions_section(tx_list, "大聯盟人事異動", "本日無大聯盟人事異動。")
+    else:
+        subtitle, title_suffix = "賽事結果", ""
+        summary = render_summary("season", total_games=len(cards_html), postponed=postponed_count)
+        games = render_games_section(cards_html)
+        transactions = render_transactions_section(tx_list)
+    return render_page({
+        "TITLE": esc(f"MLB 每日戰報 - {date_str}{title_suffix}"),
+        "DATE_LONG": esc(fmt_date_long(date_str)),
+        "SUBTITLE": esc(subtitle),
+        "SUMMARY": summary,
+        "SEARCH": render_search() if cards_html else "",
+        "NEWS": news_html,
+        "GAMES": games,
+        "TRANSACTIONS": transactions,
+        "GENERATED_AT": esc(get_taipei_now().strftime("%Y-%m-%d %H:%M")),
+    })
+
+
+def write_report(date_str, html_content):
+    year, month, _ = date_str.split("-")
+    output_dir = os.path.join("reports", year, month)
+    os.makedirs(output_dir, exist_ok=True)
+    path = os.path.join(output_dir, f"{date_str}.html")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print(f"Successfully generated report: {path}")
+    return path
+
 
 def generate_report(date_str, games):
     print(f"Generating report for {date_str} with {len(games)} games...")
     total_games = len(games)
     postponed_count = 0
-    games_cards_html = []
-    
-    # Simple summary log for index metadata
+    cards_html = []
     key_matchups_summary = []
-    
-    # Fetch daily transactions
-    daily_tx_list = fetch_daily_transactions(date_str)
-    
+
+    tx_list = fetch_daily_transactions(date_str)
+    transactions_count = len(tx_list)
+
     for game in games:
         game_pk = game["gamePk"]
-        detailed_state = game.get("status", {}).get("detailedState")
-        
-        # Get team basics
         away_team_obj = game["teams"]["away"]["team"]
         home_team_obj = game["teams"]["home"]["team"]
-        
         away_info = get_team_info(away_team_obj["id"], away_team_obj["name"])
         home_info = get_team_info(home_team_obj["id"], home_team_obj["name"])
-        
-        # 1. Postponed Game Card
-        teams_data_str = f"{away_info['abbr']} {away_info['name']} {away_team_obj.get('name', '')} {home_info['abbr']} {home_info['name']} {home_team_obj.get('name', '')}"
-        if detailed_state in ["Postponed", "Cancelled"]:
+
+        # 1. 延賽／取消
+        if game.get("status", {}).get("detailedState") in ("Postponed", "Cancelled"):
             postponed_count += 1
-            type_label = game_type_label(game)
-            if detailed_state == "Cancelled":
-                reason_raw = game.get("status", {}).get("reason")
-                reason_eng = f"Cancelled - {reason_raw}" if reason_raw else "Cancelled"
-                reason_chi = POSTPONED_REASONS.get(reason_raw, "賽事延期").replace("延期", "取消")
-                notice = f"原定於當日舉行的{type_label}賽事，{reason_chi} ({reason_eng})。"
-                badge_html = '<span class="status-badge postponed">Cancelled</span>'
-                card_label = "Cancelled"
-            else:
-                reason_eng = game.get("status", {}).get("reason", "Postponed")
-                reason_chi = POSTPONED_REASONS.get(reason_eng, "賽事延期")
-                notice = f"原定於當日舉行的{type_label}賽事，{reason_chi} (Postponed - {reason_eng})。補賽日期將另行公布。"
-                badge_html = '<span class="status-badge postponed">Postponed</span>'
-                card_label = "Postponed"
-            
-            card_html = f"""
-      <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} ({card_label}) -->
-      <div class="game-card" style="grid-template-columns: 1fr;" data-teams="{teams_data_str}">
-        <div class="postponed-game-body">
-          <div class="postponed-icon">🌧️</div>
-          <div class="postponed-title">{away_info['name']} @ {home_info['name']}</div>
-          <p>{notice}</p>
-          {badge_html}
-        </div>
-      </div>
-"""
-            games_cards_html.append(card_html)
+            cards_html.append(render_postponed_card(build_postponed_view(game, away_info, home_info)))
             continue
-            
-        # 2. Played Game Card (Final or Final/Innings)
-        # Fetch boxscore data
-        boxscore_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
-        boxscore = fetch_json(boxscore_url)
+
+        # 2. 已進行的比賽：先取 boxscore，失敗則簡化卡
+        boxscore = fetch_json(f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore")
         if not boxscore:
             print(f"Warning: Could not fetch boxscore for game {game_pk}. Using fallback card.", file=sys.stderr)
-            fallback_html, fallback_summary = render_fallback_card(game, away_info, home_info, teams_data_str)
-            games_cards_html.append(fallback_html)
-            key_matchups_summary.append(fallback_summary)
+            view = build_base_view(game, away_info, home_info)
+            cards_html.append(render_fallback_card(view))
+            key_matchups_summary.append(build_summary_sentence(view, []))
             continue
-            
-        # Extract R-H-E from linescore
-        linescore = game.get("linescore", {})
-        away_r = linescore.get("teams", {}).get("away", {}).get("runs", 0)
-        away_h = linescore.get("teams", {}).get("away", {}).get("hits", 0)
-        away_e = linescore.get("teams", {}).get("away", {}).get("errors", 0)
-        
-        home_r = linescore.get("teams", {}).get("home", {}).get("runs", 0)
-        home_h = linescore.get("teams", {}).get("home", {}).get("hits", 0)
-        home_e = linescore.get("teams", {}).get("home", {}).get("errors", 0)
-        
-        # Determine status badge (Final / Final/X / 暫停比賽 / 未完賽) and winner
-        status_text, status_class, is_final = classify_game_status(game, linescore)
-        
-        away_winner = is_final and away_r > home_r
-        home_winner = is_final and home_r > away_r
-        away_winner_class = "winner-row" if away_winner else ""
-        home_winner_class = "winner-row" if home_winner else ""
-        
-        # Get team records
-        away_rec = game["teams"]["away"].get("leagueRecord", {})
-        home_rec = game["teams"]["home"].get("leagueRecord", {})
-        away_rec_str = f"({away_rec.get('wins', 0)}-{away_rec.get('losses', 0)})"
-        home_rec_str = f"({home_rec.get('wins', 0)}-{home_rec.get('losses', 0)})"
-        
-        # Extract Decisions info
-        dec_obj = game.get("decisions", {})
-        w_pitcher_str = "無"
-        l_pitcher_str = "無"
-        s_pitcher_str = "無"
-        
-        # Resolve W-L-S Pitchers W-L stats from boxscore seasonStats
-        players_away = boxscore["teams"]["away"].get("players", {})
-        players_home = boxscore["teams"]["home"].get("players", {})
-        
-        def find_pitcher_stats(pitcher_id):
-            p_key = f"ID{pitcher_id}"
-            p_obj = players_away.get(p_key) or players_home.get(p_key)
-            if p_obj:
-                name = p_obj["person"]["fullName"]
-                p_stats = p_obj.get("seasonStats", {}).get("pitching", {})
-                return name, p_stats
-            return None, None
-            
-        if "winner" in dec_obj:
-            p_id = dec_obj["winner"]["id"]
-            name, stats = find_pitcher_stats(p_id)
-            if name:
-                w_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{name}</a> ({stats.get("wins", 0)}-{stats.get("losses", 0)})'
-            else:
-                w_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{dec_obj["winner"]["fullName"]}</a>'
-                
-        if "loser" in dec_obj:
-            p_id = dec_obj["loser"]["id"]
-            name, stats = find_pitcher_stats(p_id)
-            if name:
-                l_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{name}</a> ({stats.get("wins", 0)}-{stats.get("losses", 0)})'
-            else:
-                l_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{dec_obj["loser"]["fullName"]}</a>'
-                
-        if "save" in dec_obj:
-            p_id = dec_obj["save"]["id"]
-            name, stats = find_pitcher_stats(p_id)
-            if name:
-                s_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{name}</a> ({stats.get("saves", 0)})'
-            else:
-                s_pitcher_str = f'<a href="https://baseballsavant.mlb.com/savant-player/{p_id}" target="_blank" class="player-link">{dec_obj["save"]["fullName"]}</a>'
-                
-        # Determine starting pitchers for away and home teams
-        away_pitchers = boxscore["teams"]["away"].get("pitchers", [])
-        home_pitchers = boxscore["teams"]["home"].get("pitchers", [])
-        away_starter_id = away_pitchers[0] if away_pitchers else None
-        home_starter_id = home_pitchers[0] if home_pitchers else None
 
-        # Parse Player Highlights (Notable Performers) using unified score formulas
-        all_candidates = []
-        
-        # Loop teams
-        for team_type, team_abbr in [("away", away_info["abbr"]), ("home", home_info["abbr"])]:
-            team_players = boxscore["teams"][team_type].get("players", {})
-            for p_id, p_info in team_players.items():
-                p_name = p_info["person"]["fullName"]
-                p_id_int = p_info["person"]["id"]
-                pos = p_info.get("position", {}).get("abbreviation", "")
-                
-                # Batter check
-                bat_stats = p_info.get("stats", {}).get("batting", {})
-                if bat_stats and bat_stats.get("atBats", 0) > 0:
-                    ab = bat_stats.get("atBats", 0)
-                    r = bat_stats.get("runs", 0)
-                    h = bat_stats.get("hits", 0)
-                    d = bat_stats.get("doubles", 0)
-                    t = bat_stats.get("triples", 0)
-                    hr = bat_stats.get("homeRuns", 0)
-                    rbi = bat_stats.get("rbi", 0)
-                    bb = bat_stats.get("baseOnBalls", 0)
-                    so = bat_stats.get("strikeOuts", 0)
-                    sb = bat_stats.get("stolenBases", 0)
-                    
-                    # Score = H*1 + 2B*2 + 3B*3 + HR*4 + RBI*1.5 + R*1 + SB*1 + BB*1
-                    score = h * 1.0 + d * 2.0 + t * 3.0 + hr * 4.0 + rbi * 1.5 + r * 1.0 + sb * 1.0 + bb * 1.0
-                    
-                    season_bat = p_info.get("seasonStats", {}).get("batting", {})
-                    season_hr = season_bat.get("homeRuns", 0)
-                    season_sb = season_bat.get("stolenBases", 0)
-                    
-                    all_candidates.append({
-                        "type": "batter",
-                        "id": p_id_int,
-                        "name": p_name,
-                        "team": team_abbr,
-                        "pos": pos,
-                        "score": score,
-                        "stats": {
-                            "ab": ab, "r": r, "h": h, "rbi": rbi, "bb": bb, "so": so,
-                            "hr": hr, "sb": sb, "season_hr": season_hr, "season_sb": season_sb
-                        }
-                    })
-                        
-                # Pitcher check
-                pit_stats = p_info.get("stats", {}).get("pitching", {})
-                if pit_stats and pit_stats.get("inningsPitched") and pit_stats.get("inningsPitched") != "0.0":
-                    ip_str = pit_stats.get("inningsPitched")
-                    h = pit_stats.get("hits", 0)
-                    r = pit_stats.get("runs", 0)
-                    er = pit_stats.get("earnedRuns", 0)
-                    bb = pit_stats.get("baseOnBalls", 0)
-                    so = pit_stats.get("strikeOuts", 0)
-                    num_pitches = pit_stats.get("numberOfPitches", 0)
-                    strikes = pit_stats.get("strikes", 0)
-                    
-                    is_starter = (p_id_int == away_starter_id) or (p_id_int == home_starter_id)
-                    
-                    # Resolve IP outs
-                    parts = ip_str.split('.')
-                    innings = int(parts[0])
-                    outs = int(parts[1]) if len(parts) > 1 else 0
-                    ip_outs = innings * 3 + outs
-                    
-                    # Decisions info
-                    wins_game = pit_stats.get("wins", 0)
-                    saves_game = pit_stats.get("saves", 0)
-                    losses_game = pit_stats.get("losses", 0)
-                    
-                    is_win = wins_game > 0
-                    is_save = saves_game > 0
-                    
-                    # Score = IP_outs + K*1 - ER*2 - H*1 - BB*1 + (Win ? 5 : 0) + (Save ? 4 : 0)
-                    score = ip_outs + so * 1.0 - er * 2.0 - h * 1.0 - bb * 1.0 + (5.0 if is_win else 0.0) + (4.0 if is_save else 0.0)
-                    
-                    season_pit = p_info.get("seasonStats", {}).get("pitching", {})
-                    s_wins = season_pit.get("wins", 0)
-                    s_losses = season_pit.get("losses", 0)
-                    s_saves = season_pit.get("saves", 0)
-                    
-                    tag = ""
-                    if is_win:
-                        tag = f'<span class="performer-tag pitcher-win">W ({s_wins}-{s_losses})</span>'
-                    elif is_save:
-                        tag = f'<span class="performer-tag pitcher-win">S ({s_saves})</span>'
-                    elif losses_game > 0:
-                        tag = f'<span class="performer-tag" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);">L ({s_wins}-{s_losses})</span>'
-                    elif is_starter:
-                        tag = '<span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Starter</span>'
-                    else:
-                        tag = '<span class="performer-tag" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--card-border);">Relief</span>'
-                        
-                    all_candidates.append({
-                        "type": "pitcher",
-                        "id": p_id_int,
-                        "name": p_name,
-                        "team": team_abbr,
-                        "pos": pos,
-                        "score": score,
-                        "is_starter": is_starter,
-                        "tag": tag,
-                        "stats": {
-                            "ip": ip_str, "h": h, "r": r, "er": er, "bb": bb, "so": so,
-                            "pitches": num_pitches, "strikes": strikes
-                        }
-                    })
-                        
-        # Sort candidates by score descending
-        all_candidates.sort(key=lambda x: x["score"], reverse=True)
-        
-        # Output candidate scores for debugging/logging
-        print(f"  Game {game_pk} ({away_info['abbr']} @ {home_info['abbr']}) candidates score log:")
-        for cand in all_candidates[:5]:
-            print(f"    - {cand['name']} ({cand['team']} - {cand['type']}): score={cand['score']:.1f}")
-        
-        # Pick top performers using dual-threshold approach
-        selected_candidates = []
-        for idx, cand in enumerate(all_candidates):
-            if idx < 3:
-                # Guarantee top 3
-                selected_candidates.append(cand)
-            else:
-                # Check thresholds
-                if cand["type"] == "batter":
-                    if cand["score"] >= 7.0:
-                        selected_candidates.append(cand)
-                elif cand["type"] == "pitcher":
-                    threshold = 15.0 if cand["is_starter"] else 8.0
-                    if cand["score"] >= threshold:
-                        selected_candidates.append(cand)
-                        
-        # Split back to batters and pitchers
-        selected_batters = [c for c in selected_candidates if c["type"] == "batter"]
-        selected_pitchers = [c for c in selected_candidates if c["type"] == "pitcher"]
-        
-        # Build batters HTML list
-        batters_html_list = []
-        for b in selected_batters:
-            b_stats = b["stats"]
-            tags = []
-            if b_stats["hr"] > 0:
-                tags.append(f'<span class="performer-tag hr">HR: {format_cumulative(b_stats["hr"], b_stats["season_hr"])}</span>')
-            if b_stats["sb"] > 0:
-                tags.append(f'<span class="performer-tag sb">SB: {format_cumulative(b_stats["sb"], b_stats["season_sb"])}</span>')
-                
-            tags_str = " ".join(tags)
-            tags_container = f'<div class="performer-tags">{tags_str}</div>' if tags_str else ''
-            
-            batter_card = f"""              <!-- Batter Highlight: {b['name']} -->
-              <div class="performer-item">
-                <div class="performer-name-row">
-                  <div>
-                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/{b['id']}" target="_blank" class="player-link">{b['name']}</a></span>
-                    <span class="performer-team">{b['team']} · {b['pos']}</span>
-                  </div>
-                  {tags_container}
-                </div>
-                <div class="performer-stats">
-                  單場表現：打數 <span class="performer-stats-numbers">{b_stats['ab']}</span> | 得分 <span class="performer-stats-numbers">{b_stats['r']}</span> | 安打 <span class="performer-stats-numbers">{b_stats['h']}</span> | 打點 <span class="performer-stats-numbers">{b_stats['rbi']}</span> | 保送 <span class="performer-stats-numbers">{b_stats['bb']}</span>
-                </div>
-              </div>"""
-            batters_html_list.append(batter_card)
-            
-        # Build pitchers HTML list
-        pitchers_html_list = []
-        for p in selected_pitchers:
-            p_stats = p["stats"]
-            pitcher_card = f"""              <!-- Pitcher Highlight: {p['name']} -->
-              <div class="performer-item">
-                <div class="performer-name-row">
-                  <div>
-                    <span class="performer-name"><a href="https://baseballsavant.mlb.com/savant-player/{p['id']}" target="_blank" class="player-link">{p['name']}</a></span>
-                    <span class="performer-team">{p['team']} · {p['pos']}</span>
-                  </div>
-                  <div class="performer-tags">
-                    {p['tag']}
-                  </div>
-                </div>
-                <div class="performer-stats">
-                  投球內容：局數 <span class="performer-stats-numbers">{p_stats['ip']}</span> | 被安打 <span class="performer-stats-numbers">{p_stats['h']}</span> | 失分 <span class="performer-stats-numbers">{p_stats['r']}</span> | 自責 <span class="performer-stats-numbers">{p_stats['er']}</span> | 保送 <span class="performer-stats-numbers">{p_stats['bb']}</span> | 三振 <span class="performer-stats-numbers">{p_stats['so']}</span> (球數 <span class="performer-stats-numbers">{p_stats['pitches']}/{p_stats['strikes']}</span>)
-                </div>
-              </div>"""
-            pitchers_html_list.append(pitcher_card)
-            
-        batters_section_html = "\n".join(batters_html_list) if batters_html_list else "              <div style='color:var(--text-muted);font-size:0.85rem;padding:0.5rem;'>今日無突出打擊表現。</div>"
-        pitchers_section_html = "\n".join(pitchers_html_list) if pitchers_html_list else "              <div style='color:var(--text-muted);font-size:0.85rem;padding:0.5rem;'>今日無突出投手表現。</div>"
-        
-        # Log summary sentence for index.html description
-        summary_sentence = f"{away_info['abbr']} @ {home_info['abbr']}，比分 {away_r}:{home_r}"
-        if selected_candidates:
-            top_perf = selected_candidates[0]
-            if top_perf["type"] == "batter" and top_perf["stats"]["hr"] > 0:
-                summary_sentence += f"，{top_perf['name']} 擊出全壘打"
-            elif top_perf["type"] == "pitcher" and top_perf["stats"]["so"] >= 5:
-                summary_sentence += f"，{top_perf['name']} 投出 {top_perf['stats']['so']} 次三振"
-        key_matchups_summary.append(summary_sentence)
-        
-        # Fetch game news (Headline & Blurb)
-        news = fetch_game_news(game_pk, away_info["abbr"], home_info["abbr"], away_r, home_r)
-        news_box_html = f"""            <div class="game-news-box">
-              <h4 class="game-news-title">{news['headline']}</h4>
-              <p class="game-news-content">{news['blurb']}</p>
-            </div>"""
+        view, selected = build_game_view(game, boxscore, away_info, home_info)
+        key_matchups_summary.append(build_summary_sentence(view, selected))
+        view["news"] = fetch_game_news(
+            game_pk, away_info["abbr"], home_info["abbr"], view["away"]["r"], view["home"]["r"]
+        )
+        view["tx_groups"], tx_list = split_game_transactions(tx_list, view["away"], view["home"])
+        cards_html.append(render_game_card(view))
 
-        # Roster Transactions for this game
-        game_tx_html_parts = []
-        
-        def render_card_team_tx(team_id, team_info, tx_descriptions):
-            tx_li_parts = [f"<li>{desc}</li>" for desc in tx_descriptions]
-            logo_url = f"https://www.mlbstatic.com/team-logos/team-cap-on-dark/{team_id}.svg"
-            return f"""              <div class="card-team-tx">
-                <div class="card-team-tx-header">
-                  <img src="{logo_url}" class="card-tx-logo" alt="{team_info['abbr']}">
-                  <span class="card-tx-team-name">{team_info['name']}</span>
-                </div>
-                <ul class="card-tx-list">
-                  {"".join(tx_li_parts)}
-                </ul>
-              </div>"""
+    write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list))
 
-        # Roster transactions matching away team
-        away_tx_descs = [tx["description"] for tx in daily_tx_list if tx["to_team_id"] == away_team_obj["id"] or tx["from_team_id"] == away_team_obj["id"]]
-        if away_tx_descs:
-            game_tx_html_parts.append(render_card_team_tx(away_team_obj["id"], away_info, away_tx_descs))
-            
-        # Roster transactions matching home team
-        home_tx_descs = [tx["description"] for tx in daily_tx_list if tx["to_team_id"] == home_team_obj["id"] or tx["from_team_id"] == home_team_obj["id"]]
-        if home_tx_descs:
-            game_tx_html_parts.append(render_card_team_tx(home_team_obj["id"], home_info, home_tx_descs))
-            
-        # Remove these matched transactions from the global list
-        matched_descriptions = set(away_tx_descs + home_tx_descs)
-        daily_tx_list = [tx for tx in daily_tx_list if tx["description"] not in matched_descriptions]
-        
-        game_tx_box_html = ""
-        if game_tx_html_parts:
-            game_tx_box_html = f"""            <div class="game-transactions-box">
-              <h4 class="game-tx-sub-header">球員異動</h4>
-              {"".join(game_tx_html_parts)}
-            </div>"""
-            
-        decisions_html = ""
-        if is_final:
-            decisions_html = f"""<h3 class="section-sub-header">投球決定</h3>
-            <div class="decisions-container">
-              <div class="decision-row">
-                <span class="decision-label">勝投</span>
-                <span class="decision-value">{w_pitcher_str}</span>
-              </div>
-              <div class="decision-row">
-                <span class="decision-label">敗投</span>
-                <span class="decision-value">{l_pitcher_str}</span>
-              </div>
-              <div class="decision-row">
-                <span class="decision-label">救援</span>
-                <span class="decision-value">{s_pitcher_str}</span>
-              </div>
-            </div>"""
-
-        # Build Game Card HTML
-        card_html = f"""
-      <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} -->
-      <div class="game-card" data-teams="{teams_data_str}">
-        <!-- Upper Part: Matchup & Scores (Full-width) -->
-        <div class="game-card-upper">
-          <div class="game-header">
-            <span class="game-title">{game_type_label(game)} #{game_pk}</span>
-            <span class="status-badge {status_class}">{status_text}</span>
-          </div>
-          
-          <div class="score-table-wrapper">
-            <table class="score-table">
-              <thead>
-                <tr>
-                  <th style="text-align: left; width: 50%;">隊伍</th>
-                  <th>R</th>
-                  <th>H</th>
-                  <th>E</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="{away_winner_class}">
-                  <td class="team-cell">
-                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{away_team_obj['id']}.svg" class="team-logo" alt="{away_info['abbr']}">
-                    <span>{away_info['name']} {away_rec_str}</span>
-                  </td>
-                  <td class="num-cell runs-cell">{away_r}</td>
-                  <td class="num-cell">{away_h}</td>
-                  <td class="num-cell">{away_e}</td>
-                </tr>
-                <tr class="{home_winner_class}">
-                  <td class="team-cell">
-                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{home_team_obj['id']}.svg" class="team-logo" alt="{home_info['abbr']}">
-                    <span>{home_info['name']} {home_rec_str}</span>
-                  </td>
-                  <td class="num-cell runs-cell">{home_r}</td>
-                  <td class="num-cell">{home_h}</td>
-                  <td class="num-cell">{home_e}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Lower Part: Two Columns (Decisions & Highlights) -->
-        <div class="game-card-lower">
-          <!-- Left Column: Pitching Decisions & News Summary -->
-          <div class="decisions-section">
-            {decisions_html}
-            {news_box_html}
-            {game_tx_box_html}
-          </div>
-
-          <!-- Right Column: Key Performers Highlights -->
-          <div class="highlights-section">
-            <h3 class="highlights-header">單場焦點球員</h3>
-            
-            <!-- Batting Highlights -->
-            <div class="performer-group">
-              <span class="performer-category-title">打擊焦點</span>
-              <div class="performer-list">
-{batters_section_html}
-              </div>
-            </div>
-
-            <!-- Pitching Highlights -->
-            <div class="performer-group">
-              <span class="performer-category-title">投手焦點</span>
-              <div class="performer-list">
-{pitchers_section_html}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-"""
-        games_cards_html.append(card_html)
-        
-    # Build complete HTML by reading template
-    template_path = "templates/report_template.html"
-    if not os.path.exists(template_path):
-        print(f"Error: Template file {template_path} not found.", file=sys.stderr)
-        sys.exit(1)
-        
-    with open(template_path, "r", encoding="utf-8") as f:
-        html_content = f.read()
-        
-    # Replace placeholders
-    # Date formatting: e.g., 2026 年 07 月 19 日
-    try:
-        dt = datetime.strptime(date_str, "%Y-%m-%d")
-        date_formatted = dt.strftime("%Y 年 %m 月 %d 日")
-    except:
-        date_formatted = date_str
-        
-    html_content = html_content.replace("<!--DATE_PLACEHOLDER-->2026-07-19<!--/DATE_PLACEHOLDER-->", date_str)
-    html_content = html_content.replace("<!--DATE_PLACEHOLDER-->2026 年 07 月 19 日<!--/DATE_PLACEHOLDER-->", date_formatted)
-    
-    # Overall summary block
-    summary_panel_html = f"""<div class="summary-panel">
-        <div class="summary-item">
-          <span class="summary-label">總場數</span>
-          <span class="summary-value highlight-blue">{total_games}</span>
-        </div>
-        <div class="summary-divider"></div>
-        <div class="summary-item">
-          <span class="summary-label">延賽場數</span>
-          <span class="summary-value highlight-red">{postponed_count}</span>
-        </div>
-      </div>"""
-    
-    # We replace from <!--OVERALL_SUMMARY_PLACEHOLDER--> to <!--/OVERALL_SUMMARY_PLACEHOLDER-->
-    start_tag = "<!--OVERALL_SUMMARY_PLACEHOLDER-->"
-    end_tag = "<!--/OVERALL_SUMMARY_PLACEHOLDER-->"
-    if start_tag in html_content and end_tag in html_content:
-        pre = html_content.split(start_tag)[0]
-        post = html_content.split(end_tag)[1]
-        html_content = pre + start_tag + "\n      " + summary_panel_html + "\n      " + end_tag + post
-        
-    # Games list block
-    start_g_tag = "<!--GAMES_LIST-->"
-    end_g_tag = "<!--/GAMES_LIST-->"
-    if start_g_tag in html_content and end_g_tag in html_content:
-        pre_g = html_content.split(start_g_tag)[0]
-        post_g = html_content.split(end_g_tag)[1]
-        games_html = "\n".join(games_cards_html)
-        html_content = pre_g + start_g_tag + "\n" + games_html + "\n      " + end_g_tag + post_g
-        
-    # Transactions section block
-    start_tx_tag = "<!--TRANSACTIONS_SECTION-->"
-    end_tx_tag = "<!--/TRANSACTIONS_SECTION-->"
-    if start_tx_tag in html_content and end_tx_tag in html_content:
-        pre_tx = html_content.split(start_tx_tag)[0]
-        post_tx = html_content.split(end_tx_tag)[1]
-        tx_section_html = build_transactions_section_html(daily_tx_list)
-        html_content = pre_tx + start_tx_tag + "\n" + tx_section_html + "\n      " + end_tx_tag + post_tx
-        
-    # Output to hierarchical reports directory
-    parts = date_str.split('-')
-    year = parts[0]
-    month = parts[1]
-    output_dir = os.path.join("reports", year, month)
-    os.makedirs(output_dir, exist_ok=True)
-    report_output_path = os.path.join(output_dir, f"{date_str}.html")
-    with open(report_output_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
-    print(f"Successfully generated report: {report_output_path}")
-    
-    # Return metadata for index update
     summary_sentence = f"昨日共進行了 {total_games} 場賽事。"
     if postponed_count > 0:
         summary_sentence += f"其中有 {postponed_count} 場賽事延期。"
     if key_matchups_summary:
         summary_sentence += " " + "；".join(key_matchups_summary[:3]) + "。"
-        
+
     return {
         "date": date_str,
         "total_games": total_games,
         "postponed": postponed_count,
-        "summary": summary_sentence
+        "summary": summary_sentence,
+        "type": "season",
+        "transactions_count": transactions_count,
+    }
+
+
+def generate_offseason_report(date_str):
+    """無賽事日：產出「休賽季快報」頁面（目前只有人事異動；新聞區塊待接上），回傳 metadata。"""
+    tx_list = fetch_daily_transactions(date_str)
+    write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list))
+    return {
+        "date": date_str,
+        "total_games": 0,
+        "postponed": 0,
+        "summary": f"{date_str} 當日無安排任何大聯盟賽事。",
+        "type": "offseason",
+        "transactions_count": len(tx_list),
     }
 
 def load_metadata(metadata_path):
@@ -963,107 +990,120 @@ def save_metadata(metadata_path, metadata_db):
             pass
         sys.exit(1)
 
+
+# ---------------------------------------------------------------- 首頁
+DATE_KEY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _to_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def entry_type(entry):
+    """metadata 項目的頁面類型；舊資料缺 type 時以 total_games 推斷。"""
+    t = entry.get("type")
+    if t in ("season", "offseason"):
+        return t
+    return "season" if _to_int(entry.get("total_games")) > 0 else "offseason"
+
+
+def _offseason_counts(entry):
+    """休賽季項目的 [(標籤, 文字)]；缺欄位則省略該數字。"""
+    out = []
+    if "news_count" in entry:
+        out.append(("新聞", f"{_to_int(entry['news_count'])} 則"))
+    if "transactions_count" in entry:
+        out.append(("人事異動", f"{_to_int(entry['transactions_count'])} 筆"))
+    return out
+
+
+def render_latest_card(date_str, entry):
+    kind = entry_type(entry)
+    date_main, _, weekday = fmt_date_long(date_str).partition("（")
+    wk = f"（{weekday}" if weekday else ""
+    if kind == "offseason":
+        eyebrow = "休賽季快報"
+        stats = [("", label, text) for label, text in _offseason_counts(entry)]
+    else:
+        eyebrow = "戰報"
+        postponed = _to_int(entry.get("postponed"))
+        stats = [
+            ("", "總場數", str(_to_int(entry.get("total_games")))),
+            (' class="is-alert"' if postponed else "", "延賽", str(postponed)),
+        ]
+    stat_html = ""
+    if stats:
+        stat_html = '\n      <dl class="stat-row">' + "".join(
+            f"<div{cls}><dt>{esc(label)}</dt><dd>{esc(text)}</dd></div>" for cls, label, text in stats
+        ) + "</dl>"
+    return f"""  <article class="latest" aria-labelledby="latest-h">
+    <div>
+      <p class="eyebrow">最新一期<span class="sep" aria-hidden="true">/</span>{eyebrow}</p>
+      <h2 id="latest-h"><time datetime="{esc(date_str)}">{esc(date_main)}</time><span class="wk">{esc(wk)}</span></h2>
+      <p class="summary">{esc(entry.get("summary", ""))}</p>{stat_html}
+    </div>
+    <a class="btn" href="{esc(report_href(date_str))}">閱讀完整戰報 →</a>
+  </article>"""
+
+
+def render_recent_item(date_str, entry):
+    kind = entry_type(entry)
+    date_main, _, weekday = fmt_date_long(date_str).partition("（")
+    wk = f"（{weekday}" if weekday else ""
+    summary = str(entry.get("summary", ""))
+    if kind == "offseason":
+        label, label_cls = "休賽季", "k is-off"
+        counts = "、".join(f"{lab} {text}" for lab, text in _offseason_counts(entry))
+        if counts:
+            summary = f"{summary}（{counts}）" if summary else counts
+    else:
+        label, label_cls = f"{_to_int(entry.get('total_games'))} 場", "k"
+    return (
+        f'      <li><a class="issue" href="{esc(report_href(date_str))}">'
+        f'<span class="d">{esc(date_str)}<span class="wk">{esc(wk)}</span></span>'
+        f'<span class="{label_cls}">{esc(label)}</span><span class="s">{esc(summary)}</span></a></li>'
+    )
+
+
+def render_index(metadata):
+    """首頁：最新一期大卡 + 近期 6 期（不含最新一期）。每次由 templates/index.html 全量重新產生。"""
+    dates = sorted(
+        (d for d, v in metadata.items() if DATE_KEY_RE.match(str(d)) and isinstance(v, dict)),
+        reverse=True,
+    )
+    if not dates:
+        return fill_slots(load_template("index.html"), {
+            "LATEST": '  <p class="section-empty">尚無戰報。</p>',
+            "RECENT": "",
+        })
+    latest = render_latest_card(dates[0], metadata[dates[0]])
+    recent_dates = dates[1:7]
+    items = "\n".join(render_recent_item(d, metadata[d]) for d in recent_dates)
+    if items:
+        ol = f'\n    <ol class="issues">\n{items}\n    </ol>'
+        count = f"最新 {len(recent_dates)} 期"
+    else:
+        ol = '\n    <p class="section-empty">尚無更早的戰報。</p>'
+        count = "0 期"
+    recent = f"""  <section class="section" aria-labelledby="recent-h">
+    <div class="section-head"><h2 id="recent-h">近期</h2><span class="count">{count}</span></div>{ol}
+    <p class="more"><a class="btn is-quiet" href="archive.html">查看全部歷史 →</a></p>
+  </section>"""
+    return fill_slots(load_template("index.html"), {"LATEST": latest, "RECENT": recent})
+
+
 def update_index_page(new_metadata):
     metadata_path = "reports/metadata.json"
     metadata_db = load_metadata(metadata_path)
-
-    # Update/Add new metadata
     metadata_db[new_metadata["date"]] = new_metadata
-
-    # Save back
     save_metadata(metadata_path, metadata_db)
 
-    # Read index.html
-    index_path = "index.html"
-    if not os.path.exists(index_path):
-        print(f"Error: index.html not found at root.", file=sys.stderr)
-        return
-        
-    with open(index_path, "r", encoding="utf-8") as f:
-        index_content = f.read()
-        
-    # Get sorted dates (newest first)
-    sorted_dates = sorted(metadata_db.keys(), reverse=True)
-    if not sorted_dates:
-        return
-        
-    latest_date = sorted_dates[0]
-    latest_meta = metadata_db[latest_date]
-    
-    # 1. Update LATEST_REPORT section
-    try:
-        dt = datetime.strptime(latest_date, "%Y-%m-%d")
-        date_formatted = dt.strftime("%Y 年 %m 月 %d 日")
-    except:
-        date_formatted = latest_date
-        
-    parts_latest = latest_date.split('-')
-    latest_path = f"reports/{parts_latest[0]}/{parts_latest[1]}/{latest_date}.html"
-    latest_html = f"""<a href="{latest_path}" class="latest-card-anchor">
-        <div class="latest-card">
-          <span class="latest-tag">最新戰報</span>
-          <div class="latest-date">{date_formatted}</div>
-          <div class="latest-summary">{latest_meta['summary']}</div>
-          <div class="latest-stats-row">
-            <div class="stat-box">
-              <span class="stat-label">總場數</span>
-              <span class="stat-value blue">{latest_meta['total_games']}</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-label">延賽場數</span>
-              <span class="stat-value red">{latest_meta['postponed']}</span>
-            </div>
-          </div>
-          <div class="open-btn-container">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </div>
-        </div>
-      </a>"""
-      
-    start_tag = "<!-- LATEST_REPORT_START -->"
-    end_tag = "<!-- /LATEST_REPORT_END -->"
-    if start_tag in index_content and end_tag in index_content:
-        pre = index_content.split(start_tag)[0]
-        post = index_content.split(end_tag)[1]
-        index_content = pre + start_tag + "\n      " + latest_html + "\n      " + end_tag + post
-        
-    # 2. Update REPORTS_LIST archive section (only keep latest 6)
-    archive_cards = []
-    for date_str in sorted_dates[:6]:
-        meta = metadata_db[date_str]
-        parts_card = date_str.split('-')
-        card_path = f"reports/{parts_card[0]}/{parts_card[1]}/{date_str}.html"
-        card = f"""          <!-- History Item {date_str} -->
-          <a href="{card_path}" class="history-card">
-            <div>
-              <div class="history-date">{date_str}</div>
-              <div class="history-details">
-                <span><span>總比賽場數：</span><strong>{meta['total_games']} 場</strong></span>
-                <span><span>延賽場數：</span><strong>{meta['postponed']} 場</strong></span>
-              </div>
-            </div>
-            <div class="history-link-text">
-              開啟焦點戰報
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </div>
-          </a>"""
-        archive_cards.append(card)
-        
-    archive_html = "\n\n".join(archive_cards)
-    start_a_tag = "<!-- REPORTS_LIST_START -->"
-    end_a_tag = "<!-- REPORTS_LIST_END -->"
-    if start_a_tag in index_content and end_a_tag in index_content:
-        pre_a = index_content.split(start_a_tag)[0]
-        post_a = index_content.split(end_a_tag)[1]
-        index_content = pre_a + start_a_tag + "\n\n" + archive_html + "\n\n          " + end_a_tag + post_a
-        
-    # Save index.html
-    with open(index_path, "w", encoding="utf-8") as f:
-        f.write(index_content)
+    # 首頁每次由模板與 metadata 全量重新產生
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(render_index(metadata_db))
     print("Successfully updated index.html index page.")
 
 def send_discord_notification(new_meta):
@@ -1127,6 +1167,7 @@ def send_discord_notification(new_meta):
             print(f"Discord notification sent successfully. Response code: {response.getcode()}")
     except Exception as e:
         print(f"Error sending Discord notification: {e}", file=sys.stderr)
+
 
 def main():
     parser = argparse.ArgumentParser(description="MLB Daily Report Generator Script")
@@ -1205,69 +1246,13 @@ def main():
 
     # Check if there are games scheduled
     if not games:
-        print(f"No games scheduled or found on {date_str}. Generating empty card/log.")
-        # Create empty metadata to avoid breaking index page
-        empty_meta = {
-            "date": date_str,
-            "total_games": 0,
-            "postponed": 0,
-            "summary": f"{date_str} 當日無安排任何大聯盟賽事。"
-        }
-        
-        # Build empty card report html
-        template_path = "templates/report_template.html"
-        if os.path.exists(template_path):
-            with open(template_path, "r", encoding="utf-8") as f:
-                html_content = f.read()
-            html_content = html_content.replace("<!--DATE_PLACEHOLDER-->2026-07-19<!--/DATE_PLACEHOLDER-->", date_str)
-            try:
-                dt = datetime.strptime(date_str, "%Y-%m-%d")
-                date_formatted = dt.strftime("%Y 年 %m 月 %d 日")
-            except:
-                date_formatted = date_str
-            html_content = html_content.replace("<!--DATE_PLACEHOLDER-->2026 年 07 年 19 日<!--/DATE_PLACEHOLDER-->", date_formatted)
-            
-            empty_card = f"""
-      <div class="game-card">
-        <div class="postponed-game-body">
-          <div class="postponed-icon">📅</div>
-          <div class="postponed-title">今日無賽事</div>
-          <p>{date_str} 當日無安排任何大聯盟例行賽事。</p>
-        </div>
-      </div>
-"""
-            # Replace games list
-            start_g = "<!--GAMES_LIST-->"
-            end_g = "<!--/GAMES_LIST-->"
-            if start_g in html_content and end_g in html_content:
-                pre = html_content.split(start_g)[0]
-                post = html_content.split(end_g)[1]
-                html_content = pre + start_g + "\n" + empty_card + "\n      " + end_g + post
-                
-            # Replace transactions section
-            daily_tx_list = fetch_daily_transactions(date_str)
-            start_tx_tag = "<!--TRANSACTIONS_SECTION-->"
-            end_tx_tag = "<!--/TRANSACTIONS_SECTION-->"
-            if start_tx_tag in html_content and end_tx_tag in html_content:
-                pre_tx = html_content.split(start_tx_tag)[0]
-                post_tx = html_content.split(end_tx_tag)[1]
-                tx_section_html = build_transactions_section_html(daily_tx_list)
-                html_content = pre_tx + start_tx_tag + "\n" + tx_section_html + "\n      " + end_tx_tag + post_tx
-                
-            parts = date_str.split('-')
-            year = parts[0]
-            month = parts[1]
-            output_dir = os.path.join("reports", year, month)
-            os.makedirs(output_dir, exist_ok=True)
-            report_output_path = os.path.join(output_dir, f"{date_str}.html")
-            with open(report_output_path, "w", encoding="utf-8") as f:
-                f.write(html_content)
-                
+        print(f"No games scheduled or found on {date_str}. Generating offseason report.")
+        empty_meta = generate_offseason_report(date_str)
         update_index_page(empty_meta)
         if not args.no_notify:
             send_discord_notification(empty_meta)
         sys.exit(0)
-        
+
     # 3. Generate report files
     new_meta = generate_report(date_str, games)
     
