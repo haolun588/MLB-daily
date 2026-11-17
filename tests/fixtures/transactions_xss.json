@@ -1,0 +1,15 @@
+{
+  "transactions": [
+    {
+      "description": "Tampa Bay Rays selected the contract of Evil <script>alert('XSS_MARKER')</script> & Son from Triple-A <b>Durham</b>.",
+      "person": {
+        "id": 424242,
+        "fullName": "Evil <script>alert('XSS_MARKER')</script> & Son"
+      },
+      "toTeam": {
+        "id": 139
+      },
+      "fromTeam": {}
+    }
+  ]
+}

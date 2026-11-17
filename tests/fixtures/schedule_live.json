@@ -1,0 +1,66 @@
+{
+  "totalItems": 1,
+  "totalGames": 1,
+  "dates": [
+    {
+      "date": "2026-11-15",
+      "totalGames": 1,
+      "games": [
+        {
+          "gamePk": 7001,
+          "status": {
+            "abstractGameState": "Live",
+            "detailedState": "In Progress"
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 147,
+                "name": "New York Yankees"
+              },
+              "leagueRecord": {
+                "wins": 90,
+                "losses": 72
+              }
+            },
+            "home": {
+              "team": {
+                "id": 111,
+                "name": "Boston Red Sox"
+              },
+              "leagueRecord": {
+                "wins": 80,
+                "losses": 82
+              }
+            }
+          },
+          "linescore": {
+            "innings": [
+              {
+                "num": 1
+              },
+              {
+                "num": 2
+              },
+              {
+                "num": 3
+              }
+            ],
+            "teams": {
+              "away": {
+                "runs": 1,
+                "hits": 4,
+                "errors": 0
+              },
+              "home": {
+                "runs": 0,
+                "hits": 3,
+                "errors": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

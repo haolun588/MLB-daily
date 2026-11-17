@@ -1,0 +1,184 @@
+{
+  "totalItems": 2,
+  "totalGames": 2,
+  "dates": [
+    {
+      "date": "2026-11-15",
+      "totalGames": 2,
+      "games": [
+        {
+          "gamePk": 1001,
+          "status": {
+            "abstractGameState": "Final",
+            "detailedState": "Final"
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 147,
+                "name": "New York Yankees"
+              },
+              "leagueRecord": {
+                "wins": 90,
+                "losses": 72
+              }
+            },
+            "home": {
+              "team": {
+                "id": 111,
+                "name": "Boston Red Sox"
+              },
+              "leagueRecord": {
+                "wins": 80,
+                "losses": 82
+              }
+            }
+          },
+          "linescore": {
+            "innings": [
+              {
+                "num": 1
+              },
+              {
+                "num": 2
+              },
+              {
+                "num": 3
+              },
+              {
+                "num": 4
+              },
+              {
+                "num": 5
+              },
+              {
+                "num": 6
+              },
+              {
+                "num": 7
+              },
+              {
+                "num": 8
+              },
+              {
+                "num": 9
+              }
+            ],
+            "teams": {
+              "away": {
+                "runs": 5,
+                "hits": 8,
+                "errors": 0
+              },
+              "home": {
+                "runs": 3,
+                "hits": 6,
+                "errors": 1
+              }
+            }
+          },
+          "decisions": {
+            "winner": {
+              "id": 10012,
+              "fullName": "Away Starter 1001"
+            },
+            "loser": {
+              "id": 10017,
+              "fullName": "Home Starter 1001"
+            },
+            "save": {
+              "id": 10013,
+              "fullName": "Away Closer 1001"
+            }
+          }
+        },
+        {
+          "gamePk": 1002,
+          "status": {
+            "abstractGameState": "Final",
+            "detailedState": "Final"
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 119,
+                "name": "Los Angeles Dodgers"
+              },
+              "leagueRecord": {
+                "wins": 98,
+                "losses": 64
+              }
+            },
+            "home": {
+              "team": {
+                "id": 137,
+                "name": "San Francisco Giants"
+              },
+              "leagueRecord": {
+                "wins": 75,
+                "losses": 87
+              }
+            }
+          },
+          "linescore": {
+            "innings": [
+              {
+                "num": 1
+              },
+              {
+                "num": 2
+              },
+              {
+                "num": 3
+              },
+              {
+                "num": 4
+              },
+              {
+                "num": 5
+              },
+              {
+                "num": 6
+              },
+              {
+                "num": 7
+              },
+              {
+                "num": 8
+              },
+              {
+                "num": 9
+              }
+            ],
+            "teams": {
+              "away": {
+                "runs": 2,
+                "hits": 5,
+                "errors": 0
+              },
+              "home": {
+                "runs": 4,
+                "hits": 7,
+                "errors": 1
+              }
+            }
+          },
+          "decisions": {
+            "winner": {
+              "id": 10027,
+              "fullName": "Home Starter 1002"
+            },
+            "loser": {
+              "id": 10022,
+              "fullName": "Away Starter 1002"
+            },
+            "save": {
+              "id": 10028,
+              "fullName": "Home Closer 1002"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

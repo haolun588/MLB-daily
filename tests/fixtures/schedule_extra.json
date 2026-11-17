@@ -1,0 +1,104 @@
+{
+  "totalItems": 1,
+  "totalGames": 1,
+  "dates": [
+    {
+      "date": "2026-11-15",
+      "totalGames": 1,
+      "games": [
+        {
+          "gamePk": 2001,
+          "status": {
+            "abstractGameState": "Final",
+            "detailedState": "Final"
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 108,
+                "name": "Los Angeles Angels"
+              },
+              "leagueRecord": {
+                "wins": 70,
+                "losses": 92
+              }
+            },
+            "home": {
+              "team": {
+                "id": 117,
+                "name": "Houston Astros"
+              },
+              "leagueRecord": {
+                "wins": 88,
+                "losses": 74
+              }
+            }
+          },
+          "linescore": {
+            "innings": [
+              {
+                "num": 1
+              },
+              {
+                "num": 2
+              },
+              {
+                "num": 3
+              },
+              {
+                "num": 4
+              },
+              {
+                "num": 5
+              },
+              {
+                "num": 6
+              },
+              {
+                "num": 7
+              },
+              {
+                "num": 8
+              },
+              {
+                "num": 9
+              },
+              {
+                "num": 10
+              },
+              {
+                "num": 11
+              }
+            ],
+            "teams": {
+              "away": {
+                "runs": 3,
+                "hits": 6,
+                "errors": 0
+              },
+              "home": {
+                "runs": 4,
+                "hits": 7,
+                "errors": 1
+              }
+            }
+          },
+          "decisions": {
+            "winner": {
+              "id": 20017,
+              "fullName": "Home Starter 2001"
+            },
+            "loser": {
+              "id": 20012,
+              "fullName": "Away Starter 2001"
+            },
+            "save": {
+              "id": 20018,
+              "fullName": "Home Closer 2001"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

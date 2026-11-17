@@ -1,0 +1,72 @@
+{
+  "totalItems": 1,
+  "totalGames": 1,
+  "dates": [
+    {
+      "date": "2026-11-15",
+      "totalGames": 1,
+      "games": [
+        {
+          "gamePk": 4001,
+          "status": {
+            "abstractGameState": "Live",
+            "detailedState": "Suspended: Rain"
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 136,
+                "name": "Seattle Mariners"
+              },
+              "leagueRecord": {
+                "wins": 88,
+                "losses": 74
+              }
+            },
+            "home": {
+              "team": {
+                "id": 140,
+                "name": "Texas Rangers"
+              },
+              "leagueRecord": {
+                "wins": 81,
+                "losses": 81
+              }
+            }
+          },
+          "linescore": {
+            "innings": [
+              {
+                "num": 1
+              },
+              {
+                "num": 2
+              },
+              {
+                "num": 3
+              },
+              {
+                "num": 4
+              },
+              {
+                "num": 5
+              }
+            ],
+            "teams": {
+              "away": {
+                "runs": 2,
+                "hits": 5,
+                "errors": 0
+              },
+              "home": {
+                "runs": 2,
+                "hits": 5,
+                "errors": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

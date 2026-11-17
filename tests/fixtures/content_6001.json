@@ -1,0 +1,10 @@
+{
+  "editorial": {
+    "recap": {
+      "mlb": {
+        "headline": "Headline <script>alert('XSS_MARKER')</script> & more",
+        "blurb": "Blurb A & B <img src=x onerror=alert('XSS_MARKER')>"
+      }
+    }
+  }
+}

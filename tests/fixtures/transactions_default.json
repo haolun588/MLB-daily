@@ -1,0 +1,74 @@
+{
+  "transactions": [
+    {
+      "description": "New York Yankees recalled RHP Jose Test from Triple-A Scranton/Wilkes-Barre.",
+      "person": {
+        "id": 777001,
+        "fullName": "Jose Test"
+      },
+      "toTeam": {
+        "id": 147
+      },
+      "fromTeam": {
+        "id": 531
+      }
+    },
+    {
+      "description": "Boston Red Sox signed free agent RHP Minor Guy to a minor league contract.",
+      "person": {
+        "id": 777002,
+        "fullName": "Minor Guy"
+      },
+      "toTeam": {
+        "id": 111
+      }
+    },
+    {
+      "description": "Chicago Cubs signed RHP Plain Signing.",
+      "person": {
+        "id": 777003,
+        "fullName": "Plain Signing"
+      },
+      "toTeam": {
+        "id": 112
+      }
+    },
+    {
+      "description": "Atlanta Braves signed free agent RHP Big Name.",
+      "person": {
+        "id": 777004,
+        "fullName": "Big Name"
+      },
+      "toTeam": {
+        "id": 144
+      }
+    },
+    {
+      "description": "Atlanta Braves signed free agent RHP Big Name.",
+      "person": {
+        "id": 777004,
+        "fullName": "Big Name"
+      },
+      "toTeam": {
+        "id": 144
+      }
+    },
+    {
+      "description": "Free-floating club released LHP Nowhere Man.",
+      "person": {
+        "id": 777005,
+        "fullName": "Nowhere Man"
+      }
+    },
+    {
+      "description": "Seattle Mariners signed 2B Long Term to a 5-year contract extension.",
+      "person": {
+        "id": 777006,
+        "fullName": "Long Term"
+      },
+      "toTeam": {
+        "id": 136
+      }
+    }
+  ]
+}
