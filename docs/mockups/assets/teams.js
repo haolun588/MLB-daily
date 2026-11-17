@@ -9,11 +9,9 @@
   var SAVANT = "https://baseballsavant.mlb.com/savant-player/";
   var DASH = "—";
 
-  var GROUPS = [
-    ["SP", "SP 先發投手"], ["RP", "RP 後援投手"], ["C", "C 捕手"], ["1B", "1B 一壘手"],
-    ["2B", "2B 二壘手"], ["3B", "3B 三壘手"], ["SS", "SS 游擊手"], ["LF", "LF 左外野手"],
-    ["CF", "CF 中外野手"], ["RF", "RF 右外野手"], ["DH", "DH 指定打擊"], ["UTIL", "UTIL 多功能（含二刀流）"]
-  ];
+  // 守位排序順序：C→1B→2B→3B→SS→LF→CF→RF→DH→其他（IF/OF/UT/TWP 等）
+  var POS_ORDER = ["C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH"];
+  function posRank(p) { var i = POS_ORDER.indexOf(p); return i < 0 ? POS_ORDER.length : i; }
   var DIVISIONS = [
     ["AL", "E", "美聯東區"], ["AL", "C", "美聯中區"], ["AL", "W", "美聯西區"],
     ["NL", "E", "國聯東區"], ["NL", "C", "國聯中區"], ["NL", "W", "國聯西區"]
@@ -134,6 +132,7 @@
     var c = cols.filter(function (x) { return x.k === st.key; })[0];
     function val(r) {
       if (st.key === "_name") return r.name.toLowerCase();
+      if (st.key === "_pos") return posRank(r.pos);
       if (st.key === "_num") { var n = parseInt(r.number, 10); return isNaN(n) ? null : n; }
       return r.stats ? c.sort(r.stats) : null;
     }
@@ -143,6 +142,13 @@
       if (x == null) return 1;           // 「—」永遠排最後（不受升降冪影響）
       if (y == null) return -1;
       var r = typeof x === "string" ? x.localeCompare(y) : x - y;
+      if (r === 0 && st.key === "_pos") {   // 同守位內依 PA 由高到低（無打席資料者排後）
+        var pa = a.stats ? a.stats.pa : null, pb = b.stats ? b.stats.pa : null;
+        if (pa == null && pb == null) return 0;
+        if (pa == null) return 1;
+        if (pb == null) return -1;
+        return pb - pa;
+      }
       return st.dir === "asc" ? r : -r;
     });
   }
@@ -156,7 +162,7 @@
   }
 
   /* ---------- 表格 ---------- */
-  function buildTable(tkey, rows, cols, defaultSort) {
+  function buildTable(tkey, rows, cols, defaultSort, hasPos) {
     var st = state.sorts[tkey] || (state.sorts[tkey] = defaultSort);
     var scroll = el("div", { "class": "tbl-scroll", tabindex: "0", role: "region", "aria-label": "可左右捲動的球員數據表" });
     var table = el("table", { "class": "roster", "data-tkey": tkey });
@@ -174,6 +180,7 @@
       tr.appendChild(h);
     }
     th("_num", "#", "c-num", "背號", "asc");
+    if (hasPos) th("_pos", "守位", "c-pos", "守位（C、1B、2B、3B、SS、LF、CF、RF、DH、其他）", "asc");
     th("_name", "球員", "c-name", "依姓名排序", "asc");
     // 越低越好的欄位（ERA/WHIP/FIP）第一次點擊先升冪，其餘先降冪
     cols.forEach(function (c) { th(c.k, c.label, "", c.tip, /^(era|whip|fip)$/.test(c.k) ? "asc" : "desc"); });
@@ -185,6 +192,11 @@
     sortRows(rows, cols, st).forEach(function (r) {
       var row = el("tr");
       row.appendChild(el("td", { "class": "c-num" }, r.number || DASH));
+      if (hasPos) {
+        var posTd = el("td", { "class": "c-pos" });
+        posTd.appendChild(el("span", { "class": "pos" }, r.pos || DASH));
+        row.appendChild(posTd);
+      }
       var nameTd = el("td", { "class": "c-name" });
       nameTd.appendChild(el("a", { "class": "plink", href: SAVANT + r.id, target: "_blank", rel: "noopener" }, r.name));
       if (r.twp) nameTd.appendChild(el("small", { "class": "tag tag-twp" }, "二刀流"));
@@ -209,7 +221,7 @@
     return s;
   }
 
-  function row(p, stats, twp) { return { id: p.id, name: p.name, number: p.number, stats: stats, twp: twp }; }
+  function row(p, stats, twp) { return { id: p.id, name: p.name, number: p.number, pos: p.pos, stats: stats, twp: twp }; }
 
   /* ---------- 球隊 ---------- */
   function renderTeam(abbr, refocus) {
@@ -237,34 +249,26 @@
     var players = team.players;
     box.appendChild(titleBar(info, players.length));
 
-    GROUPS.forEach(function (g) {
-      var list = players.filter(function (p) { return p.group === g[0]; });
+    // 投手：SP／RP 各一張表；二刀流（pitchingGroup）依 SP/RP 判定放進對應表
+    ["SP", "RP"].forEach(function (g) {
+      var list = players.filter(function (p) { return p.group === g || p.pitchingGroup === g; });
       if (!list.length) return;
-      var s = section(g[1], list.length);
-      if (g[0] === "SP" || g[0] === "RP") {
-        s.appendChild(buildTable(abbr + ":" + g[0],
-          list.map(function (p) { return row(p, p.pitching); }),
-          g[0] === "SP" ? SP_COLS : RP_COLS, { key: "ip", dir: "desc" }));
-      } else if (g[0] === "UTIL") {
-        // 二刀流：同區塊內「打擊」「投球」各一張表，球員名旁標「二刀流」
-        var two = list.filter(function (p) { return p.hitting && p.pitching; });
-        if (two.length) s.appendChild(el("p", { "class": "sub-head" }, "打擊"));
-        s.appendChild(buildTable(abbr + ":UTIL:bat",
-          list.map(function (p) { return row(p, p.hitting, !!(p.hitting && p.pitching)); }),
-          HIT_COLS, { key: "pa", dir: "desc" }));
-        if (two.length) {
-          s.appendChild(el("p", { "class": "sub-head" }, "投球（二刀流）"));
-          s.appendChild(buildTable(abbr + ":UTIL:pit",
-            two.map(function (p) { return row(p, p.pitching, true); }),
-            SP_COLS, { key: "ip", dir: "desc" }));
-        }
-      } else {
-        s.appendChild(buildTable(abbr + ":" + g[0],
-          list.map(function (p) { return row(p, p.hitting); }),
-          HIT_COLS, { key: "pa", dir: "desc" }));
-      }
+      var s = section(g === "SP" ? "SP 先發投手" : "RP 後援投手", list.length);
+      s.appendChild(buildTable(abbr + ":" + g,
+        list.map(function (p) { return row(p, p.pitching, !!(p.hitting && p.pitching)); }),
+        g === "SP" ? SP_COLS : RP_COLS, { key: "ip", dir: "desc" }));
       box.appendChild(s);
     });
+
+    // 野手：全部合併一張表（含二刀流的打擊數據，守位 TWP）
+    var bats = players.filter(function (p) { return p.group === "POS"; });
+    if (bats.length) {
+      var bs = section("野手", bats.length);
+      bs.appendChild(buildTable(abbr + ":POS",
+        bats.map(function (p) { return row(p, p.hitting, !!(p.hitting && p.pitching)); }),
+        HIT_COLS, { key: "_pos", dir: "asc" }, true));
+      box.appendChild(bs);
+    }
 
     if (refocus) {      // 排序後重繪，把焦點還給剛按的表頭按鈕
       var tables = box.querySelectorAll("table");

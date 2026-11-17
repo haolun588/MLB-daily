@@ -118,6 +118,7 @@
 
 .roster {
   --numw: 3rem;
+  --posw: 3.75rem;
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -148,9 +149,25 @@
 .roster td.is-empty { color: var(--text-3); }
 
 /* 背號＋球員：sticky 固定於左側，需不透明背景與右側邊線 */
-.roster .c-num, .roster .c-name { position: sticky; z-index: 1; }
-.roster thead .c-num, .roster thead .c-name { z-index: 3; }
+.roster .c-num, .roster .c-pos, .roster .c-name { position: sticky; z-index: 1; }
+.roster thead .c-num, .roster thead .c-pos, .roster thead .c-name { z-index: 3; }
 .roster .c-num { left: 0; width: var(--numw); min-width: var(--numw); max-width: var(--numw); text-align: right; }
+
+.roster .c-pos { left: var(--numw); width: var(--posw); min-width: var(--posw); max-width: var(--posw); text-align: left; }
+.roster .c-pos ~ .c-name { left: calc(var(--numw) + var(--posw)); }
+
+/* 守位小標籤：等寬、細框、不用彩色 */
+.pos {
+  display: inline-block;
+  min-width: 2.1em;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font: 700 0.6875rem/1.6 var(--font-mono);
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--text-2);
+}
 
 .roster .c-name {
   left: var(--numw);
@@ -204,8 +221,11 @@
   .picker-select { display: block; }
   .team-title { gap: 10px; padding: 10px 12px; }
   .team-title img { width: 36px; height: 36px; }
-  .roster { --numw: 2.75rem; }
+  .roster { --numw: 1.875rem; --posw: 2.875rem; }
+  .roster .c-num, .roster .c-pos { padding-left: 4px; padding-right: 4px; }
+  .roster thead .c-num .sort-btn, .roster thead .c-pos .sort-btn { padding: 0 4px; }
+  .pos { min-width: 0; padding: 0 3px; font-size: 0.625rem; }
   .roster th, .roster td { padding: 7px 8px; }
   .sort-btn { padding: 0 8px; }
-  .roster .c-name { min-width: 8rem; max-width: 8.5rem; }
+  .roster .c-name { min-width: 7rem; max-width: 7.5rem; padding-left: 6px; padding-right: 6px; }
 }
