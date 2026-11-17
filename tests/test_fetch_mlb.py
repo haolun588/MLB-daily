@@ -38,6 +38,11 @@ def load_fixture(name):
         return json.load(f)
 
 
+def load_text_fixture(name):
+    with open(FIXTURES / name, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 def fixture_exists(name):
     return (FIXTURES / f"{name}.json").exists()
 
@@ -50,6 +55,8 @@ class FakeApi:
         self.schedule_sequence = None  # 若設定，依呼叫次數依序回傳（None 代表該次失敗）；用完後重複最後一筆
         self.schedule_calls = 0
         self.transactions = "transactions_empty"
+        self.news = None  # RSS fixture 檔名（含副檔名）；None 代表抓取失敗（預設，不影響既有測試）
+        self.news_text = None  # 若設定，直接作為 RSS 回應文字（優先於 news）
         self.fail_boxscore = set()
         self.boxscore_overrides = {}  # gamePk -> 自訂 boxscore dict（覆蓋 fixture）
         self.calls = []
@@ -77,6 +84,15 @@ class FakeApi:
         return None
 
 
+    def fetch_text(self, url, retries=3, delay=5):
+        self.calls.append(url)
+        if "/feeds/news/rss.xml" in url:
+            if self.news_text is not None:
+                return self.news_text
+            return load_text_fixture(self.news) if self.news else None
+        return None
+
+
 class MlbTestBase(unittest.TestCase):
     def setUp(self):
         # 暫存工作目錄：複製 templates 與 index.html，reports 為空
@@ -101,6 +117,7 @@ class MlbTestBase(unittest.TestCase):
         self.api = FakeApi()
         for p in (
             mock.patch.object(fetch_mlb, "fetch_json", side_effect=self.api.fetch),
+            mock.patch.object(fetch_mlb, "fetch_text", side_effect=self.api.fetch_text),
             mock.patch("urllib.request.urlopen", side_effect=AssertionError("測試不得連網")),
             mock.patch.object(fetch_mlb.time, "sleep"),
         ):
@@ -321,7 +338,7 @@ class GenerateReportTests(MlbTestBase):
         self.assertIn("Jose Test", nyy_card)
         self.assertIn("本場相關人事異動", nyy_card)
         self.assertNotIn("Jose Test", lad_card)
-        # 其餘 3 筆（Braves、Nowhere Man、Mariners）進入「其他球隊人事異動」
+        # 其餘 3 筆（Braves、Tigers、Mariners）進入「其他球隊人事異動」
         other = html[html.index('aria-labelledby="tx-h"'):]
         self.assertIn('<span class="count">3 筆</span>', other)
         self.assertNotIn("Jose Test", other)
@@ -334,7 +351,7 @@ class GenerateReportTests(MlbTestBase):
     def test_meta_new_fields_season(self):
         meta, _ = self.generate("schedule_normal", transactions="transactions_default")
         self.assertEqual(meta["type"], "season")
-        self.assertNotIn("news_count", meta)  # 新聞功能（階段 2）接上前不寫入
+        self.assertNotIn("news_count", meta)  # 新聞抓取失敗（FakeApi 預設）時不寫入
         # 4 筆（卡片內 1 + 其他 3）：transactions_count 為該頁顯示的全部異動筆數
         self.assertEqual(meta["transactions_count"], 4)
 
@@ -555,7 +572,7 @@ class MainFlowTests(MlbTestBase):
         self.assertEqual(meta["type"], "offseason")
         self.assertNotIn("news_count", meta)
         self.assertIn("休賽季快報", self.read_report())
-        self.discord.assert_called_once()
+        self.discord.assert_not_called()  # 無新聞、無人事異動的休賽季快報不發通知
 
     def test_invalid_date_exits_nonzero(self):
         with mock.patch.object(sys, "argv", ["fetch_mlb.py", "--date", "2026/11/15"]), \
@@ -1233,19 +1250,24 @@ class XssSweepTests(MlbTestBase):
 
     # 渲染層自己產生的隊徽 <img>（網址只含整數 id）是合法標籤，檢查前先移除
     LOGO_IMG = re.compile(r'<img src="https://www\.mlbstatic\.com/team-logos/[a-z-]+/\d+\.svg" width="\d+" height="\d+" alt="[^"<>]*" loading="lazy">')
+    NEWS_IMG = re.compile(r'<img class="lead-img" src="https://img\.mlbstatic\.com/[^"<>\s]*" alt="[^"<>]*" loading="lazy">')
 
     def assert_clean(self, html, allow_shell_script=True):
         if allow_shell_script:
             # 頁面殼自己的搜尋 <script> 是唯一允許的；先移除它再檢查
             html = re.sub(r"<script>\s*\(function \(\) \{.*?</script>", "", html, flags=re.S)
         html = self.LOGO_IMG.sub("", html)
+        html = self.NEWS_IMG.sub("", html)
         for bad in self.BAD:
             self.assertNotIn(bad, html)
         self.assertNotIn("<script", html)
 
     def test_season_page(self):
+        self.api.news = "news_rss.xml"
         _, html = self.generate("schedule_xss", transactions="transactions_xss")
         self.assert_clean(html)
+        self.assertIn('aria-labelledby="news-h"', html)
+        self.assertIn("Evil &lt;script&gt;", html)
         self.assertIn("&amp; more", html)
         self.assertIn("Evil &lt;script&gt;", html)
 
@@ -1262,9 +1284,11 @@ class XssSweepTests(MlbTestBase):
 
     def test_offseason_page(self):
         self.api.transactions = "transactions_xss"
+        self.api.news = "news_rss.xml"
         self.run_main("schedule_empty")
         html = self.read_report()
         self.assert_clean(html)
+        self.assertIn("&lt;script&gt;alert(&#x27;XSS_MARKER&#x27;)&lt;/script&gt;", html)
         self.assertIn("&lt;b&gt;Durham&lt;/b&gt;", html)
 
     def test_index_page(self):
@@ -1333,6 +1357,420 @@ class RobustnessTests(MlbTestBase):
         one = fetch_mlb.render_index({"2026-11-01": db["2026-11-01"]})
         self.assertIn("尚無更早的戰報", one)
         self.assertNotIn("最新 6 期", one)
+
+
+class FetchTextTests(unittest.TestCase):
+    """fetch_text 本身：重試行為與回傳型別（urlopen 以 mock 取代，不連網）。"""
+
+    class FakeResponse:
+        def __init__(self, data):
+            self.data = data
+
+        def read(self):
+            return self.data
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def test_returns_text(self):
+        with mock.patch("urllib.request.urlopen", return_value=self.FakeResponse("héllo".encode("utf-8"))) as m:
+            self.assertEqual(fetch_mlb.fetch_text("https://example.test/x"), "héllo")
+        self.assertTrue(m.call_args[0][0].get_header("User-agent").startswith("Mozilla/5.0"))
+
+    def test_retries_then_returns_none(self):
+        with mock.patch("urllib.request.urlopen", side_effect=OSError("boom")) as m, \
+                mock.patch.object(fetch_mlb.time, "sleep") as sl, \
+                contextlib.redirect_stderr(io.StringIO()):
+            self.assertIsNone(fetch_mlb.fetch_text("https://example.test/x", retries=3, delay=5))
+        self.assertEqual(m.call_count, 3)
+        self.assertEqual(sl.call_count, 2)
+
+    def test_retry_then_success(self):
+        with mock.patch("urllib.request.urlopen", side_effect=[OSError("boom"), self.FakeResponse(b"ok")]), \
+                mock.patch.object(fetch_mlb.time, "sleep"), \
+                contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(fetch_mlb.fetch_text("https://example.test/x"), "ok")
+
+
+class DailyNewsTests(MlbTestBase):
+    def fetch(self, date=DATE, **kw):
+        self.api.news = "news_rss.xml"
+        with contextlib.redirect_stderr(io.StringIO()):
+            return fetch_mlb.fetch_daily_news(date, **kw)
+
+    def test_only_report_day_in_taipei_time_sorted_newest_first(self):
+        news = self.fetch()
+        titles = [n["title"] for n in news]
+        self.assertEqual(len(news), 3)  # 當日 4 則，其中 1 則 link 不安全被捨棄
+        self.assertEqual(titles[0], "Hall of Fame announces 2027 ballot")
+        self.assertTrue(titles[1].startswith("Evil <script>"))  # 解析後為原文（渲染時才 escape）
+        self.assertEqual(titles[2], "Midnight story without image")
+        times = [n["published"] for n in news]
+        self.assertEqual(times, sorted(times, reverse=True))
+        self.assertEqual(news[0]["published"].strftime("%H:%M"), "23:59")
+        self.assertEqual(news[2]["published"].strftime("%H:%M"), "00:00")
+
+    def test_timezone_boundaries(self):
+        """台北 11/15 = UTC 11/14 16:00 ~ 11/15 15:59：15:59Z 算當日、16:00Z 算隔日。"""
+        titles = [n["title"] for n in self.fetch()]
+        self.assertNotIn("Previous day story (out of range)", titles)  # 11/14 15:59Z
+        self.assertNotIn("Next day story (out of range)", titles)  # 11/15 16:00Z
+        self.assertIn("Midnight story without image", titles)  # 11/14 16:00Z
+        self.assertIn("Hall of Fame announces 2027 ballot", titles)  # 11/15 15:59Z
+        self.assertEqual([n["title"] for n in self.fetch("2026-11-14")], ["Previous day story (out of range)"])
+        self.assertEqual([n["title"] for n in self.fetch("2026-11-16")], ["Next day story (out of range)"])
+
+    def test_limit(self):
+        limited = self.fetch(limit=2)
+        self.assertEqual(len(limited), 2)
+        self.assertEqual(limited[0]["title"], "Hall of Fame announces 2027 ballot")
+
+    def test_unsafe_link_item_is_dropped(self):
+        news = self.fetch()
+        self.assertFalse(any("javascript" in n["link"] for n in news))
+        self.assertNotIn("Unsafe link story", [n["title"] for n in news])
+
+    def test_unsafe_image_becomes_none_and_missing_image_is_none(self):
+        by_title = {n["title"][:4]: n for n in self.fetch()}
+        self.assertTrue(by_title["Hall"]["image"].startswith("https://img.mlbstatic.com/"))
+        self.assertIsNone(by_title["Evil"]["image"])  # http://evil.example.com
+        self.assertIsNone(by_title["Midn"]["image"])  # 無 <image>
+
+    def test_safe_url_rules(self):
+        ok = fetch_mlb._safe_mlb_url
+        self.assertEqual(ok("https://www.mlb.com/news/x"), "https://www.mlb.com/news/x")
+        self.assertEqual(ok("https://img.mlbstatic.com/a"), "https://img.mlbstatic.com/a")
+        self.assertEqual(ok("https://x.mlbstatic.com/a"), "https://x.mlbstatic.com/a")
+        for bad in ("http://www.mlb.com/x", "javascript:alert(1)", "https://evil.com/x", "https://www.mlb.com.evil.com/x",
+                    "https://evilmlbstatic.com/x", "https://user@www.mlb.com/x", "https://www.mlb.com:8443/x",
+                    "//www.mlb.com/x", "https://www.mlb.com/a b", "", None, 5):
+            self.assertIsNone(ok(bad), bad)
+
+    def test_fetch_failure_returns_none(self):
+        self.api.news = None
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertIsNone(fetch_mlb.fetch_daily_news(DATE))
+
+    def test_malformed_xml_returns_none(self):
+        for bad in ("<rss><channel><item>", "not xml at all", "<html><body>blocked</body></html>"):
+            self.api.news_text = bad
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertIsNone(fetch_mlb.fetch_daily_news(DATE), bad)
+
+    def test_success_with_zero_items_is_empty_list(self):
+        self.api.news_text = '<?xml version="1.0"?><rss version="2.0"><channel><title>t</title></channel></rss>'
+        self.assertEqual(fetch_mlb.fetch_daily_news(DATE), [])
+        self.assertEqual(self.fetch("2026-12-25"), [])
+
+    def test_bad_item_does_not_break_others(self):
+        self.api.news_text = (
+            '<rss version="2.0"><channel>'
+            "<item><title>No date</title><link>https://www.mlb.com/news/a</link></item>"
+            "<item><title>Bad date</title><link>https://www.mlb.com/news/b</link><pubDate>yesterday-ish</pubDate></item>"
+            "<item><link>https://www.mlb.com/news/c</link><pubDate>Sun, 15 Nov 2026 01:00:00 GMT</pubDate></item>"
+            "<item><title>Good</title><link>https://www.mlb.com/news/d</link><pubDate>Sun, 15 Nov 2026 01:00:00 GMT</pubDate></item>"
+            "</channel></rss>")
+        self.assertEqual([n["title"] for n in fetch_mlb.fetch_daily_news(DATE)], ["Good"])
+
+
+class NewsRenderTests(MlbTestBase):
+    def news(self):
+        self.api.news = "news_rss.xml"
+        return fetch_mlb.fetch_daily_news(DATE)
+
+    def test_season_section_structure(self):
+        out = fetch_mlb.render_news_section(self.news(), "season")
+        self.assertIn('aria-labelledby="news-h"', out)
+        self.assertIn('<span class="count">3 則</span>', out)
+        self.assertIn('<ol class="news">', out)
+        self.assertNotIn("lead-story", out)
+        self.assertIn('<time datetime="2026-11-15T23:59">23:59</time>', out)
+        self.assertIn('target="_blank" rel="noopener">Hall of Fame announces 2027 ballot</a>', out)
+        self.assertIn("MLB.com · 11/15 23:59", out)
+        self.assertEqual(out.count("<li>"), 3)
+
+    def test_offseason_first_item_is_lead_story_with_image(self):
+        out = fetch_mlb.render_news_section(self.news(), "offseason")
+        self.assertIn('<article class="lead-story">', out)
+        self.assertIn('<p class="kicker">頭條 · 11/15 23:59</p>', out)
+        self.assertIn('<img class="lead-img" src="https://img.mlbstatic.com/mlb-images/image/upload/t_16x9/t_w1024/mlb/hof"'
+                      ' alt="Hall of Fame announces 2027 ballot" loading="lazy">', out)
+        self.assertIn('<p class="src">MLB.com</p>', out)
+        self.assertIn('<ol class="news is-two-col">', out)
+        self.assertEqual(out.count("<li>"), 2)  # 頭條不重複出現在清單
+        self.assertEqual(out.count("Hall of Fame announces 2027 ballot</a>"), 1)
+
+    def test_lead_without_image_has_no_img_tag(self):
+        item = {"title": "T", "link": "https://www.mlb.com/news/t", "image": None,
+                "published": fetch_mlb.datetime(2026, 11, 15, 8, 0, tzinfo=fetch_mlb.TAIPEI_TZ)}
+        out = fetch_mlb.render_news_section([item], "offseason")
+        self.assertNotIn("<img", out)
+        self.assertNotIn("<ol", out)
+        self.assertIn('<span class="count">1 則</span>', out)
+
+    def test_none_renders_nothing_and_empty_list_shows_empty_state(self):
+        self.assertEqual(fetch_mlb.render_news_section(None, "season"), "")
+        self.assertEqual(fetch_mlb.render_news_section(None, "offseason"), "")
+        out = fetch_mlb.render_news_section([], "season")
+        self.assertIn('<p class="section-empty">當日無新聞。</p>', out)
+        self.assertIn('<span class="count">0 則</span>', out)
+
+    def test_title_is_escaped(self):
+        out = fetch_mlb.render_news_section(self.news(), "season")
+        self.assertNotIn("<script>", out)
+        self.assertIn("Evil &lt;script&gt;alert(&#x27;XSS_MARKER&#x27;)&lt;/script&gt; &amp; Son signs for &quot;free&quot; agency", out)
+        self.assertIn('href="https://www.mlb.com/news/evil-son?a=1&amp;b=2"', out)
+
+
+class NewsPageTests(MlbTestBase):
+    def test_season_page_with_news(self):
+        self.api.news = "news_rss.xml"
+        meta, html = self.generate("schedule_normal")
+        self.assertEqual(meta["news_count"], 3)
+        self.assertIn("今日新聞", html)
+        self.assertLess(html.index('aria-labelledby="news-h"'), html.index('aria-labelledby="games-h"'))
+        # 賽季總覽仍只有總場數與延賽，不加新聞格
+        overview = html[html.index('<dl class="overview">'):html.index("</dl>")]
+        self.assertNotIn("新聞", overview)
+        self.assertIn("總場數", overview)
+
+    def test_season_news_fetch_failure_no_section_no_metadata_key(self):
+        self.api.news = None
+        meta, html = self.generate("schedule_normal")
+        self.assertNotIn("news_count", meta)
+        self.assertNotIn('aria-labelledby="news-h"', html)
+        self.assertNotIn("今日新聞", html)
+
+    def test_season_zero_news_shows_empty_state(self):
+        self.api.news_text = '<rss version="2.0"><channel><title>t</title></channel></rss>'
+        meta, html = self.generate("schedule_normal")
+        self.assertEqual(meta["news_count"], 0)
+        self.assertIn("當日無新聞", html)
+        self.assertIn('<span class="count">0 則</span>', html)
+
+    def test_offseason_page_with_news_lead_and_summary(self):
+        self.api.news = "news_rss.xml"
+        self.api.transactions = "transactions_default"
+        self.assertEqual(self.run_main("schedule_empty"), 0)
+        meta = self.read_metadata()[DATE]
+        self.assertEqual(meta["type"], "offseason")
+        self.assertEqual(meta["news_count"], 3)
+        self.assertEqual(meta["transactions_count"], 4)
+        html = self.read_report()
+        self.assertIn('<article class="lead-story">', html)
+        self.assertIn("<div><dt>新聞</dt><dd>3 則</dd></div>", html)
+        self.assertIn("<div><dt>人事異動</dt><dd>4 筆</dd></div>", html)
+
+    def test_offseason_news_fetch_failure(self):
+        self.api.news = None
+        self.run_main("schedule_empty")
+        meta = self.read_metadata()[DATE]
+        self.assertNotIn("news_count", meta)
+        html = self.read_report()
+        self.assertNotIn('aria-labelledby="news-h"', html)
+        self.assertNotIn("<dt>新聞</dt>", html)
+
+    def test_offseason_zero_news(self):
+        self.api.news_text = '<rss version="2.0"><channel><title>t</title></channel></rss>'
+        self.run_main("schedule_empty")
+        self.assertEqual(self.read_metadata()[DATE]["news_count"], 0)
+        html = self.read_report()
+        self.assertIn("當日無新聞", html)
+        self.assertIn("<div><dt>新聞</dt><dd>0 則</dd></div>", html)
+
+    def test_index_shows_news_count_for_offseason(self):
+        self.api.news = "news_rss.xml"
+        self.run_main("schedule_empty")
+        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        self.assertIn("新聞", index)
+        self.assertIn("3 則", index)
+
+
+class MajorLeagueTransactionTests(MlbTestBase):
+    def txs(self, payload):
+        self.api.transactions = None
+        with mock.patch.object(fetch_mlb, "fetch_json", side_effect=lambda url, **k:
+                               payload if "/transactions" in url else self.api.fetch(url)):
+            return fetch_mlb.fetch_daily_transactions(DATE)
+
+    def tx(self, desc, to=None, frm=None):
+        out = {"description": desc, "person": {"id": 1, "fullName": "X"}}
+        if to is not None:
+            out["toTeam"] = {"id": to}
+        if frm is not None:
+            out["fromTeam"] = {"id": frm}
+        return out
+
+    def test_fixture_rules(self):
+        self.api.transactions = "transactions_default"
+        descs = [t["description"] for t in fetch_mlb.fetch_daily_transactions(DATE)]
+        self.assertEqual(len(descs), 4)
+        self.assertTrue(any("Jose Test" in d for d in descs))  # 大聯盟 toTeam，自小聯盟 fromTeam 召回
+        self.assertTrue(any("Release Guy" in d for d in descs))  # 只有 fromTeam 為大聯盟（REL）
+        self.assertFalse(any("Winter Ball" in d for d in descs))  # 冬季聯盟指派
+        self.assertFalse(any("Farm Hand" in d for d in descs))  # 小聯盟球隊之間
+        self.assertFalse(any("Nowhere Man" in d for d in descs))  # 兩隊皆無
+
+    def test_rules(self):
+        out = self.txs({"transactions": [
+            self.tx("MLB trade A", to=147, frm=111),
+            self.tx("Winter assign B", to=696),
+            self.tx("Minor to minor C", to=533, frm=531),
+            self.tx("Only from MLB D", frm=119),
+            self.tx("Only to MLB E", to=119),
+            self.tx("No team F"),
+            self.tx("Weird team id G", to="abc"),
+        ]})
+        self.assertEqual([t["description"] for t in out], ["MLB trade A", "Only from MLB D", "Only to MLB E"])
+
+    def test_assigned_is_not_treated_as_signed(self):
+        out = self.txs({"transactions": [
+            self.tx("Winter assigned RHP A to Tiburones de La Guaira.", to=696),
+            self.tx("Seattle Mariners assigned RHP B outright to Triple-A Tacoma.", to=136, frm=136),
+            self.tx("Minor assigned C", to=533, frm=531),
+        ]})
+        self.assertEqual([t["description"] for t in out],
+                         ["Seattle Mariners assigned RHP B outright to Triple-A Tacoma."])
+
+    def test_signed_word_boundary_and_minor_league(self):
+        out = self.txs({"transactions": [
+            self.tx("Yankees signed RHP Plain.", to=147),  # 仍被 signed 規則排除
+            self.tx("Yankees resigned RHP Re to a 2-year deal.", to=147),  # resigned 非單字 signed，不套 signed 規則
+            self.tx("Yankees signed RHP M to a minor league contract.", to=147),
+            self.tx("Yankees signed RHP Q to a Minor League deal.", to=147),
+        ]})
+        self.assertEqual([t["description"] for t in out], ["Yankees resigned RHP Re to a 2-year deal."])
+
+    def test_non_mlb_duplicate_does_not_shadow_mlb_entry(self):
+        out = self.txs({"transactions": [
+            self.tx("Same text", to=696),
+            self.tx("Same text", to=147),
+        ]})
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["to_team_id"], 147)
+
+    def test_filters_still_apply_before_team_rule(self):
+        out = self.txs({"transactions": [
+            self.tx("Yankees signed RHP Z to a minor league contract.", to=147),
+            self.tx("Yankees signed RHP Plain.", to=147),
+            self.tx("Yankees signed free agent RHP Ok.", to=147),
+        ]})
+        self.assertEqual([t["description"] for t in out], ["Yankees signed free agent RHP Ok."])
+
+
+class NotifyContentTests(MlbTestBase):
+    """--notify-only 的休賽季無內容略過，與 send_discord_notification 的文字。"""
+
+    def setUp(self):
+        self._real_send = fetch_mlb.send_discord_notification  # 基底 setUp 會以 mock 取代它
+        super().setUp()
+
+    def run_notify_only(self, entry):
+        (self.tmp / "reports" / "metadata.json").write_text(
+            json.dumps({DATE: entry}, ensure_ascii=False), encoding="utf-8")
+        with mock.patch.object(sys, "argv", ["fetch_mlb.py", "--date", DATE, "--notify-only"]), \
+                contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()):
+            try:
+                fetch_mlb.main()
+            except SystemExit as e:
+                return e.code, out.getvalue()
+        return None, out.getvalue()
+
+    def entry(self, **kw):
+        base = {"date": DATE, "total_games": 0, "postponed": 0, "summary": "s", "type": "offseason"}
+        base.update(kw)
+        return base
+
+    def test_offseason_empty_not_sent(self):
+        for e in (self.entry(news_count=0, transactions_count=0), self.entry(transactions_count=0), self.entry()):
+            self.discord.reset_mock()
+            code, out = self.run_notify_only(e)
+            self.assertIsNone(code)
+            self.discord.assert_not_called()
+            self.assertIn("不發送", out)
+
+    def test_offseason_with_content_sent(self):
+        for e in (self.entry(news_count=2, transactions_count=0), self.entry(news_count=0, transactions_count=1)):
+            self.discord.reset_mock()
+            self.run_notify_only(e)
+            self.discord.assert_called_once_with(e)
+
+    def run_main_empty_day(self, **meta_kw):
+        self.api.schedule = "schedule_empty"
+        self.api.transactions = meta_kw.get("tx", "transactions_empty")
+        self.api.news = meta_kw.get("news")
+        with mock.patch.object(sys, "argv", ["fetch_mlb.py", "--date", DATE]),                 contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as cm:
+                fetch_mlb.main()
+        self.assertEqual(cm.exception.code, 0)
+        return out.getvalue()
+
+    def test_main_normal_path_skips_empty_offseason(self):
+        out = self.run_main_empty_day()  # 新聞抓取失敗且無異動
+        self.discord.assert_not_called()
+        self.assertIn("不發送", out)
+        self.assertTrue((self.tmp / "reports" / "2026" / "11" / f"{DATE}.html").exists())
+
+    def test_main_normal_path_sends_offseason_with_content(self):
+        self.run_main_empty_day(news="news_rss.xml")
+        self.discord.assert_called_once()
+        self.assertEqual(self.discord.call_args[0][0]["news_count"], 3)
+        self.discord.reset_mock()
+        self.run_main_empty_day(tx="transactions_default")
+        self.discord.assert_called_once()
+
+    def test_season_always_sent(self):
+        e = self.entry(type="season", total_games=3, news_count=0, transactions_count=0)
+        self.run_notify_only(e)
+        self.discord.assert_called_once_with(e)
+
+    def send(self, entry):
+        """呼叫真正的 send_discord_notification，攔下 urlopen 的 request，回傳 embed。"""
+        os.environ["DISCORD_WEBHOOK_URL"] = "https://discord.test/webhook"
+        sent = {}
+
+        class Resp:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def getcode(self):
+                return 204
+
+        def fake_urlopen(req, timeout=None):
+            sent["req"] = req
+            return Resp()
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen), contextlib.redirect_stdout(io.StringIO()):
+            self._real_send(entry)
+        self.assertEqual(sent["req"].full_url, "https://discord.test/webhook")
+        return json.loads(sent["req"].data.decode("utf-8"))["embeds"][0]
+
+    def test_offseason_text(self):
+        embed = self.send(self.entry(news_count=3, transactions_count=4))
+        self.assertEqual(embed["description"], "休賽季快報：新聞 3 則、人事異動 4 筆")
+        self.assertNotIn("昨日無安排", json.dumps(embed, ensure_ascii=False))
+        self.assertEqual(embed["fields"], [])
+        self.assertIn("/reports/2026/11/2026-11-15.html", embed["url"])
+
+    def test_offseason_text_omits_missing_fields(self):
+        embed = self.send(self.entry(transactions_count=2))
+        self.assertEqual(embed["description"], "休賽季快報：人事異動 2 筆")
+        embed = self.send(self.entry(news_count=5))
+        self.assertEqual(embed["description"], "休賽季快報：新聞 5 則")
+
+    def test_season_text_adds_news_line_only_when_present(self):
+        base = {"date": DATE, "total_games": 2, "postponed": 0, "summary": "摘要", "type": "season"}
+        embed = self.send(dict(base, news_count=7))
+        self.assertIn("新聞 7 則", embed["description"])
+        self.assertEqual(len(embed["fields"]), 2)
+        embed = self.send(base)
+        self.assertNotIn("新聞", embed["description"])
 
 
 class SlotTests(unittest.TestCase):

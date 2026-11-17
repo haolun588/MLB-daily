@@ -310,6 +310,17 @@ img { max-width: 100%; height: auto; }
   border-bottom: 1px solid var(--line);
 }
 
+.lead-story .lead-img {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  background: var(--panel);
+}
+
 .lead-story .kicker {
   font: 700 0.75rem var(--font-mono);
   letter-spacing: 0.14em;

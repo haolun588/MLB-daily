@@ -69,6 +69,39 @@
       "toTeam": {
         "id": 136
       }
+    },
+    {
+      "description": "RHP Winter Ball assigned to Tiburones de La Guaira.",
+      "person": {
+        "id": 777007,
+        "fullName": "Winter Ball"
+      },
+      "toTeam": {
+        "id": 696
+      }
+    },
+    {
+      "description": "Scranton/Wilkes-Barre RailRiders optioned RHP Farm Hand to Somerset Patriots.",
+      "person": {
+        "id": 777008,
+        "fullName": "Farm Hand"
+      },
+      "toTeam": {
+        "id": 533
+      },
+      "fromTeam": {
+        "id": 531
+      }
+    },
+    {
+      "description": "Detroit Tigers released LHP Release Guy.",
+      "person": {
+        "id": 777009,
+        "fullName": "Release Guy"
+      },
+      "fromTeam": {
+        "id": 116
+      }
     }
   ]
 }

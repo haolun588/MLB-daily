@@ -8,8 +8,11 @@ import os
 import re
 import sys
 import time
+import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 
 # Reconfigure standard I/O encoding to UTF-8 to avoid encoding errors on Windows (CP950)
 if hasattr(sys.stdout, 'reconfigure'):
@@ -89,6 +92,11 @@ WEEKDAYS_ZH = "一二三四五六日"
 DARK_LUMINANCE_THRESHOLD = 0.08  # 隊色相對亮度低於此值，色條加淺色外框
 SLOT_RE = re.compile(r"<!--SLOT:([A-Z_]+)-->")
 
+# 每日新聞（MLB 官方 RSS）
+NEWS_RSS_URL = "https://www.mlb.com/feeds/news/rss.xml"
+NEWS_SOURCE = "MLB.com"
+TAIPEI_TZ = timezone(timedelta(hours=8))
+
 def get_taipei_now():
     tz_taipei = timezone(timedelta(hours=8))
     return datetime.now(timezone.utc).astimezone(tz_taipei)
@@ -105,6 +113,21 @@ def fetch_json(url, retries=3, delay=5):
         try:
             with urllib.request.urlopen(req, timeout=15) as response:
                 return json.loads(response.read().decode('utf-8'))
+        except Exception as e:
+            print(f"Error fetching {url} (attempt {attempt + 1}/{retries}): {e}", file=sys.stderr)
+            if attempt < retries - 1:
+                time.sleep(delay)
+    return None
+
+
+def fetch_text(url, retries=3, delay=5):
+    """與 fetch_json 相同的重試與 User-Agent，回傳回應文字（str）；全部失敗回傳 None。"""
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    req = urllib.request.Request(url, headers=headers)
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as response:
+                return response.read().decode('utf-8')
         except Exception as e:
             print(f"Error fetching {url} (attempt {attempt + 1}/{retries}): {e}", file=sys.stderr)
             if attempt < retries - 1:
@@ -176,9 +199,19 @@ def fetch_game_news(game_pk, away_abbr, home_abbr, away_r, home_r):
     return {"headline": backup_headline, "blurb": backup_blurb}
 
 
+def _is_mlb_team(team_obj):
+    """toTeam／fromTeam 物件的 id 是否為 30 支大聯盟球隊之一。"""
+    if not isinstance(team_obj, dict):
+        return False
+    return _int_id(team_obj.get("id")) in TEAM_META
+
+
 def fetch_daily_transactions(date_str):
-    """抓取當日人事異動（已套用過濾規則）。description 為 API 原文（未 escape），
-    輸出 HTML 前一律經 render_tx_description() 處理。"""
+    """抓取當日大聯盟層級人事異動（已套用過濾規則）。description 為 API 原文（未 escape），
+    輸出 HTML 前一律經 render_tx_description() 處理。
+
+    過濾：排除 minor league 關鍵字；signed 類需有大聯盟特徵詞；toTeam／fromTeam 至少一方為 30 隊之一
+    （排除冬季聯盟指派、小聯盟球隊之間的異動）；描述去重。"""
     url = f"https://statsapi.mlb.com/api/v1/transactions?date={date_str}&sportId=1"
     data = fetch_json(url)
     if not data or not data.get("transactions"):
@@ -192,12 +225,14 @@ def fetch_daily_transactions(date_str):
         if not desc or desc in seen_descriptions:
             continue
         desc_lower = desc.lower()
-        if "minor league" in desc_lower:
+        if re.search(r"\bminor league", desc_lower):
             continue
-        if "signed" in desc_lower:
+        if re.search(r"\bsigned\b", desc_lower):  # 單字比對，避免 assigned 命中
             indicators = ["free agent", "major league", "extension", "arbitration", "-year"]
             if not any(ind in desc_lower for ind in indicators):
                 continue
+        if not (_is_mlb_team(tx.get("toTeam")) or _is_mlb_team(tx.get("fromTeam"))):
+            continue
         seen_descriptions.add(desc)
 
         person_info = tx.get("person") or {}
@@ -210,6 +245,67 @@ def fetch_daily_transactions(date_str):
         })
 
     return tx_list
+
+
+def _safe_mlb_url(url):
+    """只接受 https 且主機為 www.mlb.com 或 *.mlbstatic.com 的網址；否則回傳 None。"""
+    if not isinstance(url, str):
+        return None
+    url = url.strip()
+    if not url or any(ch.isspace() or ord(ch) < 32 for ch in url):
+        return None
+    try:
+        parsed = urllib.parse.urlparse(url)
+        host = (parsed.hostname or "").lower()
+        port = parsed.port
+    except ValueError:
+        return None
+    if parsed.scheme != "https" or parsed.username or parsed.password or port not in (None, 443):
+        return None
+    if host == "www.mlb.com" or host == "mlbstatic.com" or host.endswith(".mlbstatic.com"):
+        return url
+    return None
+
+
+def fetch_daily_news(date_str, limit=12):
+    """抓取 MLB 官方 RSS，回傳 date_str 當天（台北時間 00:00–24:00）發布的新聞，新到舊、最多 limit 則。
+
+    每則為 {"title", "link", "published"（台北時間 datetime）, "image"（網址或 None）}。
+    link 不安全的新聞整則捨棄；image 不安全則設為 None。
+    抓取或解析失敗回傳 None（與「成功但 0 則」的 [] 區分）。"""
+    text = fetch_text(NEWS_RSS_URL)
+    if not text:
+        return None
+    try:
+        day_start = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=TAIPEI_TZ)
+        day_end = day_start + timedelta(days=1)
+        root = ET.fromstring(text)
+        if root.tag != "rss":
+            raise ValueError(f"unexpected root element: {root.tag}")
+        found = []
+        for item in root.iter("item"):
+            title = (item.findtext("title") or "").strip()
+            link = _safe_mlb_url(item.findtext("link"))
+            pub = (item.findtext("pubDate") or "").strip()
+            if not title or not link or not pub:
+                continue
+            try:
+                published = parsedate_to_datetime(pub)
+            except (TypeError, ValueError):
+                continue
+            if published.tzinfo is None:
+                published = published.replace(tzinfo=timezone.utc)
+            published = published.astimezone(TAIPEI_TZ)
+            if not (day_start <= published < day_end):
+                continue
+            image_el = item.find("image")
+            image = _safe_mlb_url(image_el.get("href")) if image_el is not None else None
+            found.append({"title": title, "link": link, "published": published, "image": image})
+    except Exception as e:
+        print(f"Warning: Could not parse news RSS ({e}). Skipping news section.", file=sys.stderr)
+        return None
+    found.sort(key=lambda n: n["published"], reverse=True)
+    return found[:limit]
 
 
 # ---------------------------------------------------------------- 渲染：共用工具
@@ -359,6 +455,39 @@ def render_games_section(cards_html):
         f'  <div class="section-head"><h2 id="games-h">賽事結果</h2><span class="count">{len(cards_html)} 場</span></div>\n'
         '  <div class="games">\n' + "\n".join(cards_html) + "\n  </div>\n</section>"
     )
+
+
+def render_news_section(news, page_type):
+    """每日新聞區塊。news 為 None（抓取失敗）時不輸出；[] 時顯示空狀態。
+    休賽季版首則為頭條樣式（有圖片才顯示圖片）。所有文字與網址皆 escape。"""
+    if news is None:
+        return ""
+    head = f'<div class="section-head"><h2 id="news-h">今日新聞</h2><span class="count">{len(news)} 則</span></div>'
+    if not news:
+        body = '<p class="section-empty">當日無新聞。</p>'
+    else:
+        rest = list(news)
+        lead = ""
+        if page_type == "offseason":
+            top = rest.pop(0)
+            image = ""
+            if top.get("image"):
+                image = f'<img class="lead-img" src="{esc(top["image"])}" alt="{esc(top["title"])}" loading="lazy">'
+            lead = (
+                f'<article class="lead-story">{image}'
+                f'<p class="kicker">頭條 · {esc(top["published"].strftime("%m/%d %H:%M"))}</p>'
+                f'<h3><a href="{esc(top["link"])}" target="_blank" rel="noopener">{esc(top["title"])}</a></h3>'
+                f'<p class="src">{esc(NEWS_SOURCE)}</p></article>'
+            )
+        items = "".join(
+            f'<li><time datetime="{esc(n["published"].strftime("%Y-%m-%dT%H:%M"))}">{esc(n["published"].strftime("%H:%M"))}</time>'
+            f'<div><a class="title" href="{esc(n["link"])}" target="_blank" rel="noopener">{esc(n["title"])}</a>'
+            f'<span class="src">{esc(NEWS_SOURCE)} · {esc(n["published"].strftime("%m/%d %H:%M"))}</span></div></li>'
+            for n in rest
+        )
+        cls = "news is-two-col" if page_type == "offseason" else "news"
+        body = lead + (f'<ol class="{cls}">{items}</ol>' if items else "")
+    return f'<section class="section wrap" aria-labelledby="news-h">{head}{body}</section>'
 
 
 def render_transactions_section(tx_list, heading="其他球隊人事異動", empty_text="本日無其他球隊人事異動。"):
@@ -850,13 +979,14 @@ def build_summary_sentence(view, selected):
 
 
 # ---------------------------------------------------------------- 組裝：整頁
-def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news_html=""):
+def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news=None):
     """賽季戰報與休賽季快報共用：組出所有插槽後交給 render_page。"""
     cards_html = list(cards_html)
     tx_list = list(tx_list)
     if page_type == "offseason":
         subtitle, title_suffix = "休賽季快報", " 休賽季快報"
-        summary = render_summary("offseason", transactions_count=len(tx_list))
+        summary = render_summary(
+            "offseason", news_count=None if news is None else len(news), transactions_count=len(tx_list))
         games = ""
         transactions = render_transactions_section(tx_list, "大聯盟人事異動", "本日無大聯盟人事異動。")
     else:
@@ -870,7 +1000,7 @@ def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list
         "SUBTITLE": esc(subtitle),
         "SUMMARY": summary,
         "SEARCH": render_search() if cards_html else "",
-        "NEWS": news_html,
+        "NEWS": render_news_section(news, page_type),
         "GAMES": games,
         "TRANSACTIONS": transactions,
         "GENERATED_AT": esc(get_taipei_now().strftime("%Y-%m-%d %H:%M")),
@@ -897,6 +1027,7 @@ def generate_report(date_str, games):
 
     tx_list = fetch_daily_transactions(date_str)
     transactions_count = len(tx_list)
+    news = fetch_daily_news(date_str)
 
     for game in games:
         game_pk = game["gamePk"]
@@ -928,7 +1059,7 @@ def generate_report(date_str, games):
         view["tx_groups"], tx_list = split_game_transactions(tx_list, view["away"], view["home"])
         cards_html.append(render_game_card(view))
 
-    write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list))
+    write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list, news))
 
     summary_sentence = f"昨日共進行了 {total_games} 場賽事。"
     if postponed_count > 0:
@@ -936,7 +1067,7 @@ def generate_report(date_str, games):
     if key_matchups_summary:
         summary_sentence += " " + "；".join(key_matchups_summary[:3]) + "。"
 
-    return {
+    meta = {
         "date": date_str,
         "total_games": total_games,
         "postponed": postponed_count,
@@ -944,13 +1075,17 @@ def generate_report(date_str, games):
         "type": "season",
         "transactions_count": transactions_count,
     }
+    if news is not None:  # 抓取失敗時不寫 news_count
+        meta["news_count"] = len(news)
+    return meta
 
 
 def generate_offseason_report(date_str):
-    """無賽事日：產出「休賽季快報」頁面（目前只有人事異動；新聞區塊待接上），回傳 metadata。"""
+    """無賽事日：產出「休賽季快報」頁面（新聞＋大聯盟人事異動），回傳 metadata。"""
     tx_list = fetch_daily_transactions(date_str)
-    write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list))
-    return {
+    news = fetch_daily_news(date_str)
+    write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list, news=news))
+    meta = {
         "date": date_str,
         "total_games": 0,
         "postponed": 0,
@@ -958,6 +1093,9 @@ def generate_offseason_report(date_str):
         "type": "offseason",
         "transactions_count": len(tx_list),
     }
+    if news is not None:  # 抓取失敗時不寫 news_count
+        meta["news_count"] = len(news)
+    return meta
 
 def load_metadata(metadata_path):
     """讀取 metadata。不存在 -> 空 dict；讀取/解析失敗 -> 結束程式，不覆寫原檔。"""
@@ -1106,6 +1244,13 @@ def update_index_page(new_metadata):
         f.write(render_index(metadata_db))
     print("Successfully updated index.html index page.")
 
+def should_notify(entry):
+    """休賽季快報在新聞與人事異動皆為 0（缺欄位視為 0）時不發通知；其餘照常。"""
+    if entry_type(entry) == "offseason":
+        return _to_int(entry.get("news_count")) > 0 or _to_int(entry.get("transactions_count")) > 0
+    return True
+
+
 def send_discord_notification(new_meta):
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
     if not webhook_url:
@@ -1122,11 +1267,18 @@ def send_discord_notification(new_meta):
     parts = date_str.split('-')
     report_url = f"https://haolun588.github.io/MLB-daily/reports/{parts[0]}/{parts[1]}/{date_str}.html"
     
-    if new_meta.get("total_games", 0) == 0:
-        description = "昨日無安排任何大聯盟例行賽事。"
+    if entry_type(new_meta) == "offseason":
+        parts_text = []
+        if "news_count" in new_meta:
+            parts_text.append(f"新聞 {_to_int(new_meta['news_count'])} 則")
+        if "transactions_count" in new_meta:
+            parts_text.append(f"人事異動 {_to_int(new_meta['transactions_count'])} 筆")
+        description = "休賽季快報：" + "、".join(parts_text) if parts_text else "休賽季快報已生成。"
         fields = []
     else:
         description = "昨日焦點戰報與最新賽況已生成，點擊下方連結即可瀏覽完整內容！"
+        if "news_count" in new_meta:
+            description += f"\n新聞 {_to_int(new_meta['news_count'])} 則"
         fields = [
             {
                 "name": "📊 賽事統計",
@@ -1206,6 +1358,9 @@ def main():
         if not entry:
             print(f"Error: reports/metadata.json 中找不到 {date_str} 的資料，無法發送通知。", file=sys.stderr)
             sys.exit(1)
+        if not should_notify(entry):
+            print(f"{date_str} 為休賽季快報且無新聞、無人事異動，不發送 Discord 通知。")
+            return
         send_discord_notification(entry)
         return
 
@@ -1250,7 +1405,10 @@ def main():
         empty_meta = generate_offseason_report(date_str)
         update_index_page(empty_meta)
         if not args.no_notify:
-            send_discord_notification(empty_meta)
+            if should_notify(empty_meta):
+                send_discord_notification(empty_meta)
+            else:
+                print("休賽季快報無新聞、無人事異動，不發送 Discord 通知。")
         sys.exit(0)
 
     # 3. Generate report files
