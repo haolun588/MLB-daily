@@ -723,6 +723,10 @@
     "date": "2026-11-16",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-16 當日無安排任何大聯盟賽事。"
+    "summary": "2026-11-16 當日無安排任何大聯盟賽事。",
+    "type": "offseason",
+    "transactions_count": 0,
+    "translated": true,
+    "news_count": 4
   }
 }
