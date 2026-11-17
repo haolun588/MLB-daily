@@ -2767,5 +2767,26 @@ class SiteNavTests(MlbTestBase):
         self.assertEqual(css.count('.nav-links a + a'), 1)
 
 
+class TeamGlossaryTests(unittest.TestCase):
+    def test_slang_aliases_in_glossary(self):
+        lines = fetch_mlb.build_team_glossary()
+        for line in ("Yanks -> 洋基", "O's -> 金鶯", "D-backs -> 響尾蛇", "Mets -> 大都會", "Yankees -> 洋基"):
+            self.assertIn(line, lines)
+
+    def test_glossary_has_no_duplicate_lines(self):
+        lines = fetch_mlb.build_team_glossary()
+        self.assertEqual(len(lines), len(set(lines)))
+        keys = [ln.split(" -> ")[0] for ln in lines]
+        self.assertEqual(len(keys), len(set(keys)))
+
+    def test_every_nickname_in_glossary(self):
+        lines = fetch_mlb.build_team_glossary()
+        for _tid, (_full, nick, zh) in fetch_mlb.TEAM_NAMES_EN.items():
+            self.assertIn(f"{nick} -> {zh}", lines)
+
+    def test_translate_system_has_list_rule(self):
+        self.assertIn("以逗號或頓號列舉的球隊名稱與簡稱也必須依對照表翻成中文", fetch_mlb.TRANSLATE_SYSTEM)
+
+
 if __name__ == "__main__":
     unittest.main()

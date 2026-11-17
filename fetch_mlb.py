@@ -150,6 +150,25 @@ TEAM_NAMES_EN = {
     158: ("Milwaukee Brewers", "Brewers", "釀酒人"),
 }
 
+# 球隊口語簡稱（team id -> 英文簡稱）；中文沿用 TEAM_NAMES_EN 的中文簡稱。
+# 刻意不收 "Sox"（紅襪／白襪有歧義）。
+TEAM_SLANG_ALIASES = {
+    108: ["Halos"],
+    109: ["D-backs", "Dbacks"],
+    110: ["O's"],
+    115: ["Rox"],
+    120: ["Nats"],
+    133: ["A's"],
+    134: ["Bucs"],
+    135: ["Friars"],
+    136: ["M's"],
+    138: ["Cards"],
+    141: ["Jays"],
+    143: ["Phils"],
+    147: ["Yanks"],
+    158: ["Brew Crew"],
+}
+
 def get_taipei_now():
     tz_taipei = timezone(timedelta(hours=8))
     return datetime.now(timezone.utc).astimezone(tz_taipei)
@@ -463,7 +482,12 @@ def build_team_glossary(extra_names=()):
     lines = []
     for tid, (full_en, nick_en, short_zh) in TEAM_NAMES_EN.items():
         lines.append(f"{full_en} -> {TEAM_META[tid]['name']}")
-        lines.append(f"{nick_en} -> {short_zh}")
+        if nick_en != full_en:
+            lines.append(f"{nick_en} -> {short_zh}")
+    for tid, aliases in TEAM_SLANG_ALIASES.items():
+        short_zh = TEAM_NAMES_EN[tid][2]
+        for alias in aliases:
+            lines.append(f"{alias} -> {short_zh}")
     seen = {ln.split(" -> ")[0] for ln in lines}
     for tid, name_en in extra_names:
         if tid in TEAM_META and name_en and name_en not in seen:
@@ -476,6 +500,7 @@ TRANSLATE_SYSTEM = (
     "你是專業的美國職棒大聯盟（MLB）新聞編譯。請把使用者提供的英文文字翻成繁體中文（台灣用語、體育新聞語氣）。"
     "規則：每則的 keep 清單內的字串必須逐字保留英文原樣出現在譯文中；球員姓名一律保留英文原名；"
     "數據與縮寫（如 HR、RBI、IP、ERA、MVP）保留；球隊名稱必須依下列對照表翻譯；"
+    "標題中以逗號或頓號列舉的球隊名稱與簡稱也必須依對照表翻成中文；球員姓名仍保留英文。"
     "不要加入原文沒有的內容，也不要附上英文原文。只輸出 JSON。\n"
     "球隊名稱對照（英文 -> 中文）：\n"
 )
