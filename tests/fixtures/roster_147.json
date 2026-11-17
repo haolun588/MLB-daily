@@ -1,0 +1,770 @@
+{
+ "roster": [
+  {
+   "person": {
+    "id": 543037,
+    "fullName": "Gerrit Cole",
+    "stats": [
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 22,
+         "gamesStarted": 22,
+         "homeRuns": 22,
+         "strikeOuts": 131,
+         "baseOnBalls": 25,
+         "avg": ".235",
+         "obp": ".275",
+         "slg": ".422",
+         "stolenBases": 6,
+         "era": "3.61",
+         "inningsPitched": "127.0",
+         "wins": 10,
+         "losses": 9,
+         "saves": 0,
+         "holds": 0,
+         "whip": "1.10",
+         "gamesPitched": 22,
+         "strikeoutsPer9Inn": "9.28"
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "fip": 3.92645,
+         "war": 2.14725
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "jerseyNumber": "45",
+   "position": {
+    "abbreviation": "P"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  },
+  {
+   "person": {
+    "id": 687396,
+    "fullName": "Brent Headrick",
+    "stats": [
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 81,
+         "gamesStarted": 0,
+         "homeRuns": 5,
+         "strikeOuts": 98,
+         "baseOnBalls": 27,
+         "avg": ".231",
+         "obp": ".295",
+         "slg": ".364",
+         "stolenBases": 2,
+         "era": "2.18",
+         "inningsPitched": "78.1",
+         "wins": 7,
+         "losses": 4,
+         "saves": 0,
+         "holds": 29,
+         "whip": "1.21",
+         "gamesPitched": 81,
+         "strikeoutsPer9Inn": "11.26"
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "fip": 2.46138,
+         "war": 2.09243
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "jerseyNumber": "47",
+   "position": {
+    "abbreviation": "P"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  },
+  {
+   "person": {
+    "id": 661563,
+    "fullName": "Luis Gil",
+    "stats": [
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 9,
+         "gamesStarted": 4,
+         "homeRuns": 6,
+         "strikeOuts": 17,
+         "baseOnBalls": 18,
+         "avg": ".206",
+         "obp": ".347",
+         "slg": ".412",
+         "stolenBases": 1,
+         "era": "4.61",
+         "inningsPitched": "27.1",
+         "wins": 1,
+         "losses": 2,
+         "saves": 0,
+         "holds": 0,
+         "whip": "1.43",
+         "gamesPitched": 9,
+         "strikeoutsPer9Inn": "5.60"
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "fip": 7.12407,
+         "war": -0.468503
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "jerseyNumber": "81",
+   "position": {
+    "abbreviation": "P"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  },
+  {
+   "person": {
+    "id": 592450,
+    "fullName": "Aaron Judge",
+    "stats": [
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 66,
+         "homeRuns": 18,
+         "strikeOuts": 85,
+         "baseOnBalls": 43,
+         "avg": ".241",
+         "obp": ".360",
+         "slg": ".511",
+         "stolenBases": 5,
+         "plateAppearances": 285
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "wRcPlus": 140.1,
+         "war": 2.00024
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "jerseyNumber": "99",
+   "position": {
+    "abbreviation": "RF"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  },
+  {
+   "person": {
+    "id": 671218,
+    "fullName": "Heliot Ramos",
+    "stats": [
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "numTeams": 2,
+        "stat": {
+         "gamesPlayed": 112,
+         "homeRuns": 13,
+         "strikeOuts": 121,
+         "baseOnBalls": 31,
+         "avg": ".245",
+         "obp": ".305",
+         "slg": ".411",
+         "stolenBases": 4,
+         "plateAppearances": 442
+        }
+       },
+       {
+        "season": "2026",
+        "team": {
+         "id": 137,
+         "name": "San Francisco Giants",
+         "link": "/api/v1/teams/137"
+        },
+        "stat": {
+         "gamesPlayed": 74,
+         "homeRuns": 9,
+         "strikeOuts": 82,
+         "baseOnBalls": 16,
+         "avg": ".264",
+         "obp": ".304",
+         "slg": ".424",
+         "stolenBases": 3,
+         "plateAppearances": 306
+        }
+       },
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 38,
+         "homeRuns": 4,
+         "strikeOuts": 39,
+         "baseOnBalls": 15,
+         "avg": ".198",
+         "obp": ".309",
+         "slg": ".379",
+         "stolenBases": 1,
+         "plateAppearances": 136
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "numTeams": 2,
+        "stat": {
+         "wRcPlus": 98.55098461538462,
+         "war": 0.21254
+        }
+       },
+       {
+        "season": "2026",
+        "team": {
+         "id": 137,
+         "name": "San Francisco Giants",
+         "link": "/api/v1/teams/137"
+        },
+        "stat": {
+         "wRcPlus": 100.804,
+         "war": 0.70017
+        }
+       },
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "wRcPlus": 93.4817,
+         "war": -0.48763
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "jerseyNumber": "34",
+   "position": {
+    "abbreviation": "LF"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  },
+  {
+   "person": {
+    "id": 682617,
+    "fullName": "Marco Luciano",
+    "stats": []
+   },
+   "jerseyNumber": "",
+   "position": {
+    "abbreviation": "SS"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  },
+  {
+   "person": {
+    "id": 518585,
+    "fullName": "Fernando Cruz",
+    "stats": [
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 61,
+         "gamesStarted": 0,
+         "homeRuns": 7,
+         "strikeOuts": 67,
+         "baseOnBalls": 32,
+         "avg": ".207",
+         "obp": ".321",
+         "slg": ".369",
+         "stolenBases": 3,
+         "era": "3.13",
+         "inningsPitched": "54.2",
+         "wins": 4,
+         "losses": 6,
+         "saves": 2,
+         "holds": 19,
+         "whip": "1.34",
+         "gamesPitched": 61,
+         "strikeoutsPer9Inn": "11.03"
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 61,
+         "homeRuns": 0,
+         "strikeOuts": 0,
+         "baseOnBalls": 0,
+         "avg": ".000",
+         "obp": ".000",
+         "slg": ".000",
+         "stolenBases": 0,
+         "plateAppearances": 0
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "fip": 4.17894,
+         "war": 0.374692
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "war": 0.0
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "jerseyNumber": "63",
+   "position": {
+    "abbreviation": "P"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  },
+  {
+   "person": {
+    "id": 660271,
+    "fullName": "Test Twoway",
+    "stats": [
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 66,
+         "homeRuns": 18,
+         "strikeOuts": 85,
+         "baseOnBalls": 43,
+         "avg": ".241",
+         "obp": ".360",
+         "slg": ".511",
+         "stolenBases": 5,
+         "plateAppearances": 285
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "wRcPlus": 140.1,
+         "war": 2.00024
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 22,
+         "gamesStarted": 22,
+         "homeRuns": 22,
+         "strikeOuts": 131,
+         "baseOnBalls": 25,
+         "avg": ".235",
+         "obp": ".275",
+         "slg": ".422",
+         "stolenBases": 6,
+         "era": "3.61",
+         "inningsPitched": "127.0",
+         "wins": 10,
+         "losses": 9,
+         "saves": 0,
+         "holds": 0,
+         "whip": "1.10",
+         "gamesPitched": 22,
+         "strikeoutsPer9Inn": "9.28"
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "pitching"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "fip": 3.92645,
+         "war": 2.14725
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "jerseyNumber": "17",
+   "position": {
+    "abbreviation": "TWP"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  },
+  {
+   "person": {
+    "id": 900001,
+    "fullName": "Test Utility",
+    "stats": [
+     {
+      "type": {
+       "displayName": "season"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "gamesPlayed": 66,
+         "homeRuns": 18,
+         "strikeOuts": 85,
+         "baseOnBalls": 43,
+         "avg": ".241",
+         "obp": ".360",
+         "slg": ".511",
+         "stolenBases": 5,
+         "plateAppearances": 285
+        }
+       }
+      ]
+     },
+     {
+      "type": {
+       "displayName": "sabermetrics"
+      },
+      "group": {
+       "displayName": "hitting"
+      },
+      "splits": [
+       {
+        "season": "2026",
+        "team": {
+         "id": 147,
+         "name": "New York Yankees",
+         "link": "/api/v1/teams/147"
+        },
+        "stat": {
+         "wRcPlus": 140.1,
+         "war": 2.00024
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "jerseyNumber": "1",
+   "position": {
+    "abbreviation": "UT"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  },
+  {
+   "person": {
+    "id": 900002,
+    "fullName": "No Data Fielder",
+    "stats": []
+   },
+   "jerseyNumber": "2",
+   "position": {
+    "abbreviation": "IF"
+   },
+   "status": {
+    "code": "A",
+    "description": "Active"
+   }
+  }
+ ]
+}

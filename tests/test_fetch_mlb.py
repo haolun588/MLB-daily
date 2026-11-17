@@ -18,6 +18,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -59,6 +60,10 @@ class FakeApi:
         self.news_text = None  # 若設定，直接作為 RSS 回應文字（優先於 news）
         self.fail_boxscore = set()
         self.boxscore_overrides = {}  # gamePk -> 自訂 boxscore dict（覆蓋 fixture）
+        self.seasons = "seasons_2026"  # 賽季 API fixture 檔名；None 代表抓取失敗
+        self.seasons_data = None  # 若設定，直接作為賽季 API 回應（優先於 seasons）
+        self.fail_roster = set()  # 球隊 id 集合，或 "all"；該隊 roster 抓取失敗
+        self.roster_override = None  # 若設定，所有球隊 roster 回應改用此 dict
         self.calls = []
 
     def fetch(self, url, retries=3, delay=5):
@@ -79,6 +84,15 @@ class FakeApi:
                 return self.boxscore_overrides[pk]
             name = f"{kind}_{pk}"
             return load_fixture(name) if fixture_exists(name) else None
+        if "/seasons/" in url:
+            if self.seasons_data is not None:
+                return self.seasons_data
+            return load_fixture(self.seasons) if self.seasons else None
+        m = re.search(r"/teams/(\d+)/roster\?", url)
+        if m:
+            if self.fail_roster == "all" or int(m.group(1)) in self.fail_roster:
+                return None
+            return self.roster_override if self.roster_override is not None else load_fixture("roster_147")
         if "/transactions" in url:
             return load_fixture(self.transactions) if self.transactions else None
         return None
@@ -2133,6 +2147,402 @@ class SummarySentenceTests(MlbTestBase):
             self.assertNotIn("延期", view["notice"])
             # 渲染時外部字串仍會 escape
             self.assertNotIn("<b>", fetch_mlb.render_postponed_card(view))
+
+
+# ---------------------------------------------------------------- 球隊名單（模組 R2）
+def _split(stat, team=None):
+    sp = {"stat": stat}
+    if team:
+        sp["team"] = {"id": team}
+    return sp
+
+
+def _entry(pos, stats=None, pid=1, name="Test Player", number="9"):
+    """組出 roster API 單筆；stats 為 [(type, group, [splits])]。"""
+    return {
+        "person": {"id": pid, "fullName": name,
+                   "stats": [{"type": {"displayName": t}, "group": {"displayName": g}, "splits": sp}
+                             for t, g, sp in (stats or [])]},
+        "jerseyNumber": number,
+        "position": {"abbreviation": pos},
+    }
+
+
+def _pitch_stats(g, gs, **extra):
+    stat = {"gamesPitched": g, "gamesStarted": gs, "inningsPitched": "10.1", "era": "3.50"}
+    stat.update(extra)
+    return [("season", "pitching", [_split(stat)])]
+
+
+class RosterContextTests(MlbTestBase):
+    def ctx(self, today, seasons="seasons_2026"):
+        self.api.seasons = seasons
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            result = fetch_mlb.resolve_roster_context(today)
+        return result, err.getvalue()
+
+    def test_in_season_uses_active_and_current_season(self):
+        ctx, _ = self.ctx(date(2026, 7, 1))
+        self.assertEqual(ctx, {"rosterType": "active", "season": 2026, "rosterSeason": 2026})
+
+    def test_season_boundaries_inclusive(self):
+        self.assertEqual(self.ctx(date(2026, 3, 25))[0]["rosterType"], "active")
+        self.assertEqual(self.ctx(date(2026, 10, 28))[0]["rosterType"], "active")
+
+    def test_before_opening_day_uses_40man_and_previous_stats(self):
+        ctx, _ = self.ctx(date(2026, 3, 24))
+        self.assertEqual(ctx, {"rosterType": "40Man", "season": 2025, "rosterSeason": 2026})
+
+    def test_after_postseason_uses_40man_and_current_stats(self):
+        ctx, _ = self.ctx(date(2026, 10, 29))
+        self.assertEqual(ctx, {"rosterType": "40Man", "season": 2026, "rosterSeason": 2026})
+
+    def test_api_failure_falls_back_to_month_with_warning(self):
+        cases = [(date(2026, 4, 1), "active", 2026), (date(2026, 10, 31), "active", 2026),
+                 (date(2026, 11, 18), "40Man", 2026), (date(2026, 12, 31), "40Man", 2026),
+                 (date(2026, 1, 15), "40Man", 2025), (date(2026, 3, 31), "40Man", 2025)]
+        for today, roster_type, season in cases:
+            ctx, err = self.ctx(today, seasons=None)
+            self.assertEqual((ctx["rosterType"], ctx["season"]), (roster_type, season), today)
+            self.assertIn("Warning", err)
+
+    def test_missing_dates_falls_back(self):
+        self.api.seasons_data = {"seasons": [{}]}
+        ctx, err = self.ctx(date(2026, 7, 1), seasons="__inline__")
+        self.assertEqual(ctx["rosterType"], "active")
+        self.assertIn("Warning", err)
+
+
+class RosterGroupingTests(unittest.TestCase):
+    def test_starter_is_sp(self):
+        p = fetch_mlb.build_player(_entry("P", _pitch_stats(30, 30)))
+        self.assertEqual((p["group"], p["hitting"]), ("SP", None))
+        self.assertNotIn("pitchingGroup", p)
+
+    def test_reliever_is_rp(self):
+        self.assertEqual(fetch_mlb.build_player(_entry("P", _pitch_stats(50, 10)))["group"], "RP")
+
+    def test_half_starts_is_sp(self):
+        self.assertEqual(fetch_mlb.build_player(_entry("P", _pitch_stats(10, 5)))["group"], "SP")
+
+    def test_pitcher_without_stats_is_rp(self):
+        p = fetch_mlb.build_player(_entry("P"))
+        self.assertEqual((p["group"], p["pitching"], p["hitting"]), ("RP", None, None))
+
+    def test_two_way_player_has_hitting_and_pitching_group(self):
+        stats = _pitch_stats(14, 14) + [("season", "hitting", [_split({"gamesPlayed": 100, "plateAppearances": 400})])]
+        p = fetch_mlb.build_player(_entry("TWP", stats))
+        self.assertEqual((p["group"], p["pitchingGroup"]), ("POS", "SP"))
+        self.assertIsNotNone(p["hitting"])
+        self.assertIsNotNone(p["pitching"])
+
+    def test_two_way_player_without_pitching_has_no_pitching_group(self):
+        stats = [("season", "hitting", [_split({"gamesPlayed": 100, "plateAppearances": 400})])]
+        p = fetch_mlb.build_player(_entry("TWP", stats))
+        self.assertNotIn("pitchingGroup", p)
+        self.assertIsNone(p["pitching"])
+
+    def test_if_ut_of_are_pos(self):
+        for pos in ("IF", "UT", "OF", "C", "DH"):
+            p = fetch_mlb.build_player(_entry(pos))
+            self.assertEqual(p["group"], "POS", pos)
+            self.assertEqual(p["pos"], pos)
+
+    def test_position_player_pitching_stats_ignored(self):
+        p = fetch_mlb.build_player(_entry("LF", _pitch_stats(1, 0)))
+        self.assertIsNone(p["pitching"])
+
+
+class RosterStatConversionTests(unittest.TestCase):
+    HIT = {"gamesPlayed": 100, "plateAppearances": 400, "avg": ".285", "obp": ".350", "slg": ".500",
+           "homeRuns": 20, "stolenBases": 5, "baseOnBalls": 40, "strikeOuts": 100}
+
+    def hitting(self, season=None, saber=None):
+        stats = [("season", "hitting", [_split(dict(self.HIT, **(season or {})))])]
+        if saber is not None:
+            stats.append(("sabermetrics", "hitting", [_split(saber)]))
+        return fetch_mlb.build_player(_entry("1B", stats))["hitting"]
+
+    def test_strings_to_floats_and_ints(self):
+        h = self.hitting()
+        self.assertEqual((h["avg"], h["obp"], h["slg"]), (0.285, 0.35, 0.5))
+        self.assertEqual((h["g"], h["pa"], h["hr"], h["sb"]), (100, 400, 20, 5))
+
+    def test_placeholder_strings_become_null(self):
+        h = self.hitting({"avg": "-.--", "obp": ".---", "slg": "*.**"})
+        self.assertEqual((h["avg"], h["obp"], h["slg"]), (None, None, None))
+        p = fetch_mlb.build_player(_entry("P", _pitch_stats(10, 0, era="-.--", whip="*.**")))
+        self.assertEqual((p["pitching"]["era"], p["pitching"]["whip"]), (None, None))
+
+    def test_missing_field_is_null(self):
+        stat = dict(self.HIT)
+        del stat["avg"]
+        h = fetch_mlb.build_player(_entry("1B", [("season", "hitting", [_split(stat)])]))["hitting"]
+        self.assertIsNone(h["avg"])
+
+    def test_bb_k_percentage(self):
+        h = self.hitting()
+        self.assertEqual((h["bbPct"], h["kPct"]), (10.0, 25.0))
+        h = self.hitting({"plateAppearances": 285, "baseOnBalls": 43, "strikeOuts": 85})
+        self.assertEqual((h["bbPct"], h["kPct"]), (15.1, 29.8))
+
+    def test_zero_or_missing_pa_gives_null_percentages(self):
+        h = self.hitting({"plateAppearances": 0})
+        self.assertEqual((h["bbPct"], h["kPct"]), (None, None))
+        stat = dict(self.HIT)
+        del stat["plateAppearances"]
+        h = fetch_mlb.build_player(_entry("1B", [("season", "hitting", [_split(stat)])]))["hitting"]
+        self.assertEqual((h["pa"], h["bbPct"], h["kPct"]), (None, None, None))
+
+    def test_wrc_plus_integer_and_war_one_decimal(self):
+        h = self.hitting(saber={"wRcPlus": 140.1, "war": 2.00024})
+        self.assertEqual((h["wrcPlus"], h["war"]), (140, 2.0))
+        self.assertIsInstance(h["wrcPlus"], int)
+        h = self.hitting(saber={"wRcPlus": 98.55098, "war": -0.0449})
+        self.assertEqual((h["wrcPlus"], h["war"]), (99, -0.0))
+
+    def test_no_sabermetrics_gives_null_wrc_and_war(self):
+        h = self.hitting()
+        self.assertEqual((h["wrcPlus"], h["war"]), (None, None))
+
+    def test_pitching_fields(self):
+        stats = [("season", "pitching", [_split({
+            "gamesPitched": 22, "gamesStarted": 22, "inningsPitched": "127.0", "wins": 10, "losses": 9,
+            "saves": 0, "holds": 0, "era": "3.61", "whip": "1.10", "strikeOuts": 131,
+            "strikeoutsPer9Inn": "9.28"})]),
+            ("sabermetrics", "pitching", [_split({"fip": 3.92645, "war": 2.14725})])]
+        p = fetch_mlb.build_player(_entry("P", stats))["pitching"]
+        self.assertEqual(p, {"g": 22, "gs": 22, "ip": "127.0", "w": 10, "l": 9, "sv": 0, "hld": 0,
+                             "era": 3.61, "whip": 1.1, "so": 131, "k9": 9.28, "fip": 3.93, "war": 2.1})
+        self.assertIsInstance(p["ip"], str)
+
+    def test_pitching_games_falls_back_to_games_played(self):
+        stats = [("season", "pitching", [_split({"gamesPlayed": 8, "gamesStarted": 8})])]
+        p = fetch_mlb.build_player(_entry("P", stats))
+        self.assertEqual((p["pitching"]["g"], p["group"]), (8, "SP"))
+
+    def test_no_season_data_gives_null_groups(self):
+        p = fetch_mlb.build_player(_entry("2B"))
+        self.assertEqual((p["hitting"], p["pitching"]), (None, None))
+        p = fetch_mlb.build_player(_entry("2B", [("season", "hitting", [])]))
+        self.assertIsNone(p["hitting"])
+
+    def test_traded_player_uses_total_split(self):
+        stats = [("season", "hitting", [_split(dict(self.HIT, gamesPlayed=112)),
+                                         _split(dict(self.HIT, gamesPlayed=74), team=137),
+                                         _split(dict(self.HIT, gamesPlayed=38), team=147)])]
+        self.assertEqual(fetch_mlb.build_player(_entry("LF", stats))["hitting"]["g"], 112)
+
+    def test_player_without_id_dropped(self):
+        self.assertIsNone(fetch_mlb.build_player({"person": {"fullName": "x"}, "position": {}}))
+
+    def test_fixture_roster_end_to_end(self):
+        players = fetch_mlb.build_team_players(load_fixture("roster_147"))
+        by_name = {p["name"]: p for p in players}
+        self.assertEqual(by_name["Gerrit Cole"]["group"], "SP")
+        self.assertEqual(by_name["Brent Headrick"]["group"], "RP")
+        self.assertEqual(by_name["Luis Gil"]["group"], "RP")  # 4 GS / 9 G
+        self.assertEqual(by_name["Heliot Ramos"]["hitting"]["g"], 112)
+        self.assertEqual(by_name["Test Twoway"]["pitchingGroup"], "SP")
+        self.assertIsNone(by_name["No Data Fielder"]["hitting"])
+
+
+class RosterUrlTests(unittest.TestCase):
+    def test_brackets_are_encoded(self):
+        url = fetch_mlb.roster_url(147, "40Man", 2026, 2025)
+        self.assertIn("/teams/147/roster?rosterType=40Man&season=2026&hydrate=", url)
+        self.assertIn("type=%5Bseason,sabermetrics%5D,group=%5Bhitting,pitching%5D,season=2025", url)
+        self.assertNotIn("[", url)
+
+
+class RosterFlowTests(MlbTestBase):
+    def run_rosters(self, *extra, date_arg="2026-11-18"):
+        argv = ["fetch_mlb.py", "--rosters"] + ([] if date_arg is None else ["--date", date_arg]) + list(extra)
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(sys, "argv", argv), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            try:
+                fetch_mlb.main()
+            except SystemExit as e:
+                return e.code, out.getvalue(), err.getvalue()
+        return None, out.getvalue(), err.getvalue()
+
+    def read_team(self, tid):
+        return json.loads((self.tmp / "data" / "teams" / f"{tid}.json").read_text(encoding="utf-8"))
+
+    def read_index(self):
+        return json.loads((self.tmp / "data" / "teams" / "index.json").read_text(encoding="utf-8"))
+
+    def snapshot(self):
+        files = {}
+        for sub in ("reports", "templates"):
+            for f in (self.tmp / sub).rglob("*"):
+                if f.is_file():
+                    files[str(f.relative_to(self.tmp))] = f.read_bytes()
+        files["index.html"] = (self.tmp / "index.html").read_bytes()
+        return files
+
+    def test_writes_all_teams_and_index(self):
+        code, out, _ = self.run_rosters()
+        self.assertEqual(code, 0)
+        files = sorted(p.name for p in (self.tmp / "data" / "teams").iterdir())
+        self.assertEqual(len(files), 31)
+        self.assertNotIn("index.json.tmp", files)
+        self.assertFalse(any(n.endswith(".tmp") for n in files))
+        team = self.read_team(147)
+        self.assertEqual(set(team), {"meta", "players"})
+        self.assertEqual(team["meta"]["id"], 147)
+        self.assertEqual(team["meta"]["abbr"], "NYY")
+        self.assertEqual(team["meta"]["rosterType"], "40Man")
+        self.assertEqual(team["meta"]["season"], 2026)
+        self.assertRegex(team["meta"]["updatedAt"], r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+08:00$")
+        self.assertEqual(team["players"][0]["name"], "Gerrit Cole")
+
+    def test_index_structure_matches_sample(self):
+        self.run_rosters()
+        index = self.read_index()
+        self.assertEqual(set(index), {"updatedAt", "rosterType", "season", "teams"})
+        self.assertEqual((index["rosterType"], index["season"]), ("40Man", 2026))
+        self.assertEqual(len(index["teams"]), 30)
+        for t in index["teams"]:
+            self.assertEqual(set(t), {"id", "abbr", "name", "color", "league", "division", "ok", "updatedAt"})
+            self.assertTrue(t["ok"])
+            self.assertIn(t["league"], ("AL", "NL"))
+        sample = json.loads((REPO_ROOT / "docs" / "mockups" / "assets" / "teams.sample.json").read_text(encoding="utf-8"))
+        sample_keys = set(sample["index"]["teams"][0])
+        self.assertTrue(sample_keys <= set(index["teams"][0]))
+
+    def test_player_structure_matches_sample(self):
+        self.run_rosters()
+        sample = json.loads((REPO_ROOT / "docs" / "mockups" / "assets" / "teams.sample.json").read_text(encoding="utf-8"))
+        sample_players = sample["teams"]["NYY"]["players"] + sample["teams"]["LAD"]["players"]
+        sample_hit = next(p["hitting"] for p in sample_players if p["hitting"])
+        sample_pit = next(p["pitching"] for p in sample_players if p["pitching"])
+        players = {p["name"]: p for p in self.read_team(147)["players"]}
+        self.assertEqual(set(players["Aaron Judge"]["hitting"]), set(sample_hit))
+        self.assertEqual(set(players["Gerrit Cole"]["pitching"]), set(sample_pit))
+        base = {"id", "name", "number", "pos", "group", "hitting", "pitching"}
+        self.assertEqual(set(players["Aaron Judge"]), base)
+        self.assertEqual(set(players["Test Twoway"]), base | {"pitchingGroup"})
+
+    def test_requests_use_roster_context(self):
+        self.run_rosters()
+        roster_calls = [u for u in self.api.calls if "/roster?" in u]
+        self.assertEqual(len(roster_calls), 30)
+        self.assertTrue(all("rosterType=40Man&season=2026" in u and "season=2026))" in u for u in roster_calls))
+
+    def test_before_season_requests_previous_stats(self):
+        self.run_rosters(date_arg="2026-02-10")
+        url = next(u for u in self.api.calls if "/roster?" in u)
+        self.assertIn("rosterType=40Man&season=2026", url)
+        self.assertIn("season=2025))", url)
+        self.assertEqual(self.read_index()["season"], 2025)
+
+    def test_in_season_uses_active(self):
+        self.run_rosters(date_arg="2026-07-01")
+        self.assertEqual(self.read_index()["rosterType"], "active")
+        self.assertTrue(all("rosterType=active" in u for u in self.api.calls if "/roster?" in u))
+
+    def test_single_team_failure_marks_not_ok_and_writes_no_file(self):
+        self.api.fail_roster = {147}
+        code, _, err = self.run_rosters()
+        self.assertEqual(code, 0)
+        self.assertFalse((self.tmp / "data" / "teams" / "147.json").exists())
+        self.assertTrue((self.tmp / "data" / "teams" / "119.json").exists())
+        index = self.read_index()
+        nyy = next(t for t in index["teams"] if t["id"] == 147)
+        self.assertFalse(nyy["ok"])
+        self.assertNotIn("updatedAt", nyy)
+        self.assertEqual(sum(t["ok"] for t in index["teams"]), 29)
+        self.assertIn("NYY", err)
+
+    def test_failure_keeps_previous_file(self):
+        self.run_rosters()
+        before = (self.tmp / "data" / "teams" / "147.json").read_bytes()
+        self.api.fail_roster = {147}
+        self.run_rosters()
+        self.assertEqual((self.tmp / "data" / "teams" / "147.json").read_bytes(), before)
+
+    def test_all_failures_exit_1(self):
+        self.api.fail_roster = "all"
+        code, _, _ = self.run_rosters()
+        self.assertEqual(code, 1)
+        index = self.read_index()
+        self.assertFalse(any(t["ok"] for t in index["teams"]))
+
+    def test_malformed_roster_response_counts_as_failure(self):
+        self.api.roster_override = {"unexpected": True}
+        code, _, _ = self.run_rosters()
+        self.assertEqual(code, 1)
+
+    def test_does_not_touch_reports_pages_or_notify(self):
+        before = self.snapshot()
+        self.run_rosters()
+        self.assertEqual(self.snapshot(), before)
+        self.assertFalse((self.tmp / "reports" / "metadata.json").exists())
+        self.discord.assert_not_called()
+        self.assertFalse(any("/schedule" in u for u in self.api.calls))
+
+    def test_sleeps_between_teams(self):
+        self.run_rosters()
+        self.assertEqual(fetch_mlb.time.sleep.call_count, 29)
+        fetch_mlb.time.sleep.assert_called_with(0.5)
+
+    def test_mutually_exclusive_flags(self):
+        for flag in ("--notify-only", "--check-wait"):
+            code, _, err = self.run_rosters(flag)
+            self.assertEqual(code, 1, flag)
+            self.assertIn("--rosters", err)
+        self.assertFalse((self.tmp / "data").exists())
+
+    def test_invalid_date_exits_1(self):
+        code, _, _ = self.run_rosters(date_arg="2026/11/18")
+        self.assertEqual(code, 1)
+
+    def test_default_today_uses_taipei_date(self):
+        with mock.patch.object(fetch_mlb, "get_taipei_now",
+                               return_value=datetime(2026, 7, 1, 12, 0, tzinfo=timezone(timedelta(hours=8)))):
+            code, _, _ = self.run_rosters(date_arg=None)
+        self.assertEqual(code, 0)
+        self.assertEqual(self.read_index()["rosterType"], "active")
+
+
+class TeamAbbrTests(MlbTestBase):
+    def test_unified_abbreviations(self):
+        self.assertEqual(fetch_mlb.TEAM_META[109]["abbr"], "AZ")
+        self.assertEqual(fetch_mlb.TEAM_META[118]["abbr"], "KC")
+        self.assertEqual(fetch_mlb.TEAM_META[133]["abbr"], "ATH")
+        self.assertEqual(fetch_mlb.TEAM_META[133]["name"], "運動家")
+        self.assertEqual(fetch_mlb.TEAM_NAMES_EN[133][0], "Athletics")
+
+    def test_data_teams_includes_legacy_aliases(self):
+        for tid, old in ((109, "ARI"), (118, "KCR"), (133, "OAK")):
+            info = fetch_mlb.TEAM_META[tid]
+            side = {"abbr": info["abbr"], "name": info["name"], "name_en": "X"}
+            other = {"abbr": "NYY", "name": "紐約洋基", "name_en": "New York Yankees"}
+            html = fetch_mlb._card_open({"away": side, "home": other})
+            tokens = re.search(r'data-teams="([^"]*)"', html).group(1).split("|")
+            self.assertIn(old, tokens)
+            self.assertIn(info["abbr"], tokens)
+        # 無別名的球隊不受影響
+        html = fetch_mlb._card_open({"away": {"abbr": "NYY", "name": "紐約洋基", "name_en": "New York Yankees"},
+                                     "home": {"abbr": "BOS", "name": "波士頓紅襪", "name_en": "Boston Red Sox"}})
+        self.assertIn('data-teams="NYY|紐約洋基|New York Yankees|BOS|波士頓紅襪|Boston Red Sox"', html)
+
+    def test_league_and_division_complete(self):
+        self.assertEqual(len(fetch_mlb.TEAM_META), 30)
+        counts = {}
+        for meta in fetch_mlb.TEAM_META.values():
+            counts[(meta["league"], meta["division"])] = counts.get((meta["league"], meta["division"]), 0) + 1
+        self.assertEqual(len(counts), 6)
+        self.assertTrue(all(n == 5 for n in counts.values()))
+        self.assertEqual(sum(1 for m in fetch_mlb.TEAM_META.values() if m["league"] == "AL"), 15)
+        self.assertEqual(sum(1 for m in fetch_mlb.TEAM_META.values() if m["league"] == "NL"), 15)
+        self.assertEqual({m["division"] for m in fetch_mlb.TEAM_META.values()}, {"E", "C", "W"})
+
+    def test_abbreviations_unique(self):
+        abbrs = [m["abbr"] for m in fetch_mlb.TEAM_META.values()]
+        self.assertEqual(len(abbrs), len(set(abbrs)))
 
 
 if __name__ == "__main__":

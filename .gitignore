@@ -28,3 +28,6 @@ reports/*/*/*.html
 reports/*.html
 !reports/metadata.json
 
+
+# Team roster JSON (deployed to gh-pages only)
+data/

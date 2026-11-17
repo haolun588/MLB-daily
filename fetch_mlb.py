@@ -27,39 +27,42 @@ if hasattr(sys.stderr, 'reconfigure'):
     except Exception:
         pass
 
-# MLB Team Metadata: Chinese Name, Abbreviation, and Official Color Hex
+# MLB Team Metadata: Chinese Name, Abbreviation, Official Color Hex, League (AL/NL), Division (E/C/W)
 TEAM_META = {
-    108: {"name": "洛杉磯天使", "abbr": "LAA", "color": "#BA0021"},
-    109: {"name": "亞利桑那響尾蛇", "abbr": "ARI", "color": "#A71930"},
-    110: {"name": "巴爾的摩金鶯", "abbr": "BAL", "color": "#DF4601"},
-    111: {"name": "波士頓紅襪", "abbr": "BOS", "color": "#BD3039"},
-    112: {"name": "芝加哥小熊", "abbr": "CHC", "color": "#0E3386"},
-    113: {"name": "辛辛那提紅人", "abbr": "CIN", "color": "#C6011F"},
-    114: {"name": "克里夫蘭守護者", "abbr": "CLE", "color": "#0C2340"},
-    115: {"name": "科羅拉多洛磯", "abbr": "COL", "color": "#333366"},
-    116: {"name": "底特律老虎", "abbr": "DET", "color": "#0C2340"},
-    117: {"name": "休士頓太空人", "abbr": "HOU", "color": "#EB6E1F"},
-    118: {"name": "堪薩斯皇家", "abbr": "KCR", "color": "#004687"},
-    119: {"name": "洛杉磯道奇", "abbr": "LAD", "color": "#005A9C"},
-    120: {"name": "華盛頓國民", "abbr": "WSH", "color": "#AB0003"},
-    121: {"name": "紐約大都會", "abbr": "NYM", "color": "#FF5910"},
-    133: {"name": "奧克蘭運動家", "abbr": "OAK", "color": "#003831"},
-    134: {"name": "匹茲堡海盜", "abbr": "PIT", "color": "#FDB827"},
-    135: {"name": "聖地牙哥教士", "abbr": "SD", "color": "#2F241D"},
-    136: {"name": "西雅圖水手", "abbr": "SEA", "color": "#0C2C56"},
-    137: {"name": "舊金山巨人", "abbr": "SF", "color": "#FD5A1E"},
-    138: {"name": "聖路易紅雀", "abbr": "STL", "color": "#C41E3A"},
-    139: {"name": "坦帕灣光芒", "abbr": "TB", "color": "#092C5C"},
-    140: {"name": "德州遊騎兵", "abbr": "TEX", "color": "#003278"},
-    141: {"name": "多倫多藍鳥", "abbr": "TOR", "color": "#134A8E"},
-    142: {"name": "明尼蘇達雙城", "abbr": "MIN", "color": "#002B5C"},
-    143: {"name": "費城費城人", "abbr": "PHI", "color": "#E81828"},
-    144: {"name": "亞特蘭大勇士", "abbr": "ATL", "color": "#CE1141"},
-    145: {"name": "芝加哥白襪", "abbr": "CWS", "color": "#27251F"},
-    146: {"name": "邁阿密馬林魚", "abbr": "MIA", "color": "#00A3E0"},
-    147: {"name": "紐約洋基", "abbr": "NYY", "color": "#0C2340"},
-    158: {"name": "密爾瓦基釀酒人", "abbr": "MIL", "color": "#122853"}
+    108: {"name": "洛杉磯天使", "abbr": "LAA", "color": "#BA0021", "league": "AL", "division": "W"},
+    109: {"name": "亞利桑那響尾蛇", "abbr": "AZ", "color": "#A71930", "league": "NL", "division": "W"},
+    110: {"name": "巴爾的摩金鶯", "abbr": "BAL", "color": "#DF4601", "league": "AL", "division": "E"},
+    111: {"name": "波士頓紅襪", "abbr": "BOS", "color": "#BD3039", "league": "AL", "division": "E"},
+    112: {"name": "芝加哥小熊", "abbr": "CHC", "color": "#0E3386", "league": "NL", "division": "C"},
+    113: {"name": "辛辛那提紅人", "abbr": "CIN", "color": "#C6011F", "league": "NL", "division": "C"},
+    114: {"name": "克里夫蘭守護者", "abbr": "CLE", "color": "#0C2340", "league": "AL", "division": "C"},
+    115: {"name": "科羅拉多洛磯", "abbr": "COL", "color": "#333366", "league": "NL", "division": "W"},
+    116: {"name": "底特律老虎", "abbr": "DET", "color": "#0C2340", "league": "AL", "division": "C"},
+    117: {"name": "休士頓太空人", "abbr": "HOU", "color": "#EB6E1F", "league": "AL", "division": "W"},
+    118: {"name": "堪薩斯皇家", "abbr": "KC", "color": "#004687", "league": "AL", "division": "C"},
+    119: {"name": "洛杉磯道奇", "abbr": "LAD", "color": "#005A9C", "league": "NL", "division": "W"},
+    120: {"name": "華盛頓國民", "abbr": "WSH", "color": "#AB0003", "league": "NL", "division": "E"},
+    121: {"name": "紐約大都會", "abbr": "NYM", "color": "#FF5910", "league": "NL", "division": "E"},
+    133: {"name": "運動家", "abbr": "ATH", "color": "#003831", "league": "AL", "division": "W"},
+    134: {"name": "匹茲堡海盜", "abbr": "PIT", "color": "#FDB827", "league": "NL", "division": "C"},
+    135: {"name": "聖地牙哥教士", "abbr": "SD", "color": "#2F241D", "league": "NL", "division": "W"},
+    136: {"name": "西雅圖水手", "abbr": "SEA", "color": "#0C2C56", "league": "AL", "division": "W"},
+    137: {"name": "舊金山巨人", "abbr": "SF", "color": "#FD5A1E", "league": "NL", "division": "W"},
+    138: {"name": "聖路易紅雀", "abbr": "STL", "color": "#C41E3A", "league": "NL", "division": "C"},
+    139: {"name": "坦帕灣光芒", "abbr": "TB", "color": "#092C5C", "league": "AL", "division": "E"},
+    140: {"name": "德州遊騎兵", "abbr": "TEX", "color": "#003278", "league": "AL", "division": "W"},
+    141: {"name": "多倫多藍鳥", "abbr": "TOR", "color": "#134A8E", "league": "AL", "division": "E"},
+    142: {"name": "明尼蘇達雙城", "abbr": "MIN", "color": "#002B5C", "league": "AL", "division": "C"},
+    143: {"name": "費城費城人", "abbr": "PHI", "color": "#E81828", "league": "NL", "division": "E"},
+    144: {"name": "亞特蘭大勇士", "abbr": "ATL", "color": "#CE1141", "league": "NL", "division": "E"},
+    145: {"name": "芝加哥白襪", "abbr": "CWS", "color": "#27251F", "league": "AL", "division": "C"},
+    146: {"name": "邁阿密馬林魚", "abbr": "MIA", "color": "#00A3E0", "league": "NL", "division": "E"},
+    147: {"name": "紐約洋基", "abbr": "NYY", "color": "#0C2340", "league": "AL", "division": "E"},
+    158: {"name": "密爾瓦基釀酒人", "abbr": "MIL", "color": "#122853", "league": "NL", "division": "C"}
 }
+
+# 舊縮寫別名（搜尋時舊縮寫仍可命中；縮寫已統一為 MLB 官方 API）
+LEGACY_ABBR_ALIASES = {"AZ": "ARI", "KC": "KCR", "ATH": "OAK"}
 
 POSTPONED_REASONS = {
     "Rain": "因雨延期",
@@ -129,7 +132,7 @@ TEAM_NAMES_EN = {
     119: ("Los Angeles Dodgers", "Dodgers", "道奇"),
     120: ("Washington Nationals", "Nationals", "國民"),
     121: ("New York Mets", "Mets", "大都會"),
-    133: ("Oakland Athletics", "Athletics", "運動家"),
+    133: ("Athletics", "Athletics", "運動家"),
     134: ("Pittsburgh Pirates", "Pirates", "海盜"),
     135: ("San Diego Padres", "Padres", "教士"),
     136: ("Seattle Mariners", "Mariners", "水手"),
@@ -1062,6 +1065,8 @@ def _card_open(view):
     tokens = []
     for side in (away, home):
         tokens += [side["abbr"], side["name"], side.get("name_en", "")]
+        if side["abbr"] in LEGACY_ABBR_ALIASES:
+            tokens.append(LEGACY_ABBR_ALIASES[side["abbr"]])
     teams = "|".join(str(t).replace("|", " ") for t in tokens)
     label = f'{away["name"]}對{home["name"]}'
     return f'<article class="game" data-teams="{esc(teams)}" aria-label="{esc(label)}">'
@@ -1608,12 +1613,247 @@ def send_discord_notification(new_meta):
         print(f"Error sending Discord notification: {e}", file=sys.stderr)
 
 
+# ---------------------------------------------------------------- 球隊名單（--rosters）
+ROSTER_DIR = os.path.join("data", "teams")
+ROSTER_FETCH_INTERVAL = 0.5
+
+
+def _parse_iso_date(value):
+    try:
+        return datetime.strptime(str(value)[:10], "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
+
+
+def resolve_roster_context(today):
+    """依台北日期 today（date）判斷名單類型與數據賽季。
+
+    回傳 dict：rosterType（active／40Man）、season（數據賽季 statsSeason）、rosterSeason（名單 season 參數）。
+    賽季 API 失敗或缺日期時退回以月份推估並印 warning。
+    """
+    year = today.year
+    start = end = None
+    data = fetch_json(f"https://statsapi.mlb.com/api/v1/seasons/{year}?sportId=1")
+    try:
+        info = data["seasons"][0]
+        start = _parse_iso_date(info.get("regularSeasonStartDate"))
+        end = _parse_iso_date(info.get("postSeasonEndDate")) or _parse_iso_date(info.get("seasonEndDate"))
+    except (TypeError, KeyError, IndexError, AttributeError):
+        pass
+    if start is None or end is None:
+        print(f"Warning: 無法取得 {year} 賽季日期，改以月份推估賽季。", file=sys.stderr)
+        if 4 <= today.month <= 10:
+            return {"rosterType": "active", "season": year, "rosterSeason": year}
+        if today.month >= 11:
+            return {"rosterType": "40Man", "season": year, "rosterSeason": year}
+        return {"rosterType": "40Man", "season": year - 1, "rosterSeason": year}
+    if today < start:
+        return {"rosterType": "40Man", "season": year - 1, "rosterSeason": year}
+    if today > end:
+        return {"rosterType": "40Man", "season": year, "rosterSeason": year}
+    return {"rosterType": "active", "season": year, "rosterSeason": year}
+
+
+def roster_url(team_id, roster_type, roster_season, stats_season):
+    hydrate = (f"person(stats(type=%5Bseason,sabermetrics%5D,group=%5Bhitting,pitching%5D,"
+               f"season={stats_season}))")
+    return (f"https://statsapi.mlb.com/api/v1/teams/{team_id}/roster?rosterType={roster_type}"
+            f"&season={roster_season}&hydrate={hydrate}")
+
+
+def _num(value):
+    """API 數值（含字串如 ".285"）轉 float；"-.--"、".---"、"*.**"、空值或缺漏回傳 None。"""
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(str(value).strip())
+    except ValueError:
+        return None
+
+
+def _round(value, digits):
+    n = _num(value)
+    return None if n is None else round(n, digits)
+
+
+def _int_or_none(value):
+    n = _num(value)
+    return None if n is None else int(round(n))
+
+
+def _find_stat(person, stat_type, group):
+    """取 person.stats 中指定 type／group 的 stat dict；多筆 split（交易球員）取全季合計（無 team 的那筆）。"""
+    for st in person.get("stats") or []:
+        if (st.get("type") or {}).get("displayName") != stat_type:
+            continue
+        if (st.get("group") or {}).get("displayName") != group:
+            continue
+        splits = st.get("splits") or []
+        if not splits:
+            return None
+        chosen = next((sp for sp in splits if "team" not in sp), splits[0])
+        return chosen.get("stat") or None
+    return None
+
+
+def build_hitting(person):
+    season = _find_stat(person, "season", "hitting")
+    if not season:
+        return None
+    saber = _find_stat(person, "sabermetrics", "hitting") or {}
+    pa = _num(season.get("plateAppearances"))
+    bb, so = _num(season.get("baseOnBalls")), _num(season.get("strikeOuts"))
+    bb_pct = round(bb / pa * 100, 1) if pa and bb is not None else None
+    k_pct = round(so / pa * 100, 1) if pa and so is not None else None
+    return {
+        "g": _int_or_none(season.get("gamesPlayed")),
+        "pa": _int_or_none(pa),
+        "avg": _num(season.get("avg")),
+        "obp": _num(season.get("obp")),
+        "slg": _num(season.get("slg")),
+        "hr": _int_or_none(season.get("homeRuns")),
+        "sb": _int_or_none(season.get("stolenBases")),
+        "bbPct": bb_pct,
+        "kPct": k_pct,
+        "wrcPlus": _int_or_none(saber.get("wRcPlus")),
+        "war": _round(saber.get("war"), 1),
+    }
+
+
+def build_pitching(person):
+    season = _find_stat(person, "season", "pitching")
+    if not season:
+        return None
+    saber = _find_stat(person, "sabermetrics", "pitching") or {}
+    g = season.get("gamesPitched")
+    if g is None:
+        g = season.get("gamesPlayed")
+    ip = season.get("inningsPitched")
+    return {
+        "g": _int_or_none(g),
+        "gs": _int_or_none(season.get("gamesStarted")),
+        "ip": None if ip in (None, "") else str(ip),
+        "w": _int_or_none(season.get("wins")),
+        "l": _int_or_none(season.get("losses")),
+        "sv": _int_or_none(season.get("saves")),
+        "hld": _int_or_none(season.get("holds")),
+        "era": _num(season.get("era")),
+        "whip": _num(season.get("whip")),
+        "so": _int_or_none(season.get("strikeOuts")),
+        "k9": _num(season.get("strikeoutsPer9Inn")),
+        "fip": _round(saber.get("fip"), 2),
+        "war": _round(saber.get("war"), 1),
+    }
+
+
+def pitcher_group(pitching):
+    """GS／G >= 0.5 為 SP，其餘（含無數據）為 RP。"""
+    if pitching and pitching.get("g") and (pitching.get("gs") or 0) / pitching["g"] >= 0.5:
+        return "SP"
+    return "RP"
+
+
+def build_player(entry):
+    """roster 單筆 -> 精簡球員 dict；缺 person.id 回傳 None。"""
+    person = entry.get("person") or {}
+    pid = person.get("id")
+    if pid is None:
+        return None
+    pos = (entry.get("position") or {}).get("abbreviation") or ""
+    player = {
+        "id": pid,
+        "name": person.get("fullName") or "",
+        "number": str(entry.get("jerseyNumber") or ""),
+        "pos": pos,
+    }
+    if pos == "P":
+        pitching = build_pitching(person)
+        player.update({"group": pitcher_group(pitching), "hitting": None, "pitching": pitching})
+    elif pos == "TWP":
+        pitching = build_pitching(person)
+        player["group"] = "POS"
+        if pitching:
+            player["pitchingGroup"] = pitcher_group(pitching)
+        player["hitting"] = build_hitting(person)
+        player["pitching"] = pitching
+    else:
+        player.update({"group": "POS", "hitting": build_hitting(person), "pitching": None})
+    return player
+
+
+def build_team_players(roster_data):
+    """roster API 回應 -> 球員清單；回應結構不符回傳 None。"""
+    if not isinstance(roster_data, dict) or not isinstance(roster_data.get("roster"), list):
+        return None
+    players = [build_player(e) for e in roster_data["roster"] if isinstance(e, dict)]
+    return [p for p in players if p]
+
+
+def write_json_atomic(path, data):
+    """先寫暫存檔再 os.replace。"""
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    tmp_path = path + ".tmp"
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
+        os.replace(tmp_path, path)
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+
+
+def fetch_rosters(today):
+    """抓 30 隊名單與數據，寫 data/teams/{id}.json 與 index.json。回傳成功隊數。"""
+    ctx = resolve_roster_context(today)
+    roster_type, season, roster_season = ctx["rosterType"], ctx["season"], ctx["rosterSeason"]
+    print(f"Roster context: rosterType={roster_type}, season={season}, rosterSeason={roster_season}")
+    now_iso = get_taipei_now().isoformat(timespec="seconds")
+    teams_index = []
+    ok_count = 0
+    for i, (tid, meta) in enumerate(sorted(TEAM_META.items(), key=lambda kv: kv[1]["abbr"])):
+        if i:
+            time.sleep(ROSTER_FETCH_INTERVAL)
+        entry = {"id": tid, "abbr": meta["abbr"], "name": meta["name"], "color": meta["color"],
+                 "league": meta["league"], "division": meta["division"], "ok": False}
+        players = None
+        try:
+            players = build_team_players(fetch_json(roster_url(tid, roster_type, roster_season, season)))
+        except Exception as e:
+            print(f"Warning: {meta['abbr']} 名單處理失敗：{e}", file=sys.stderr)
+        if players is None:
+            print(f"Warning: {meta['abbr']} 名單抓取失敗，保留舊檔（若有）。", file=sys.stderr)
+        else:
+            try:
+                write_json_atomic(os.path.join(ROSTER_DIR, f"{tid}.json"), {
+                    "meta": {"id": tid, "abbr": meta["abbr"], "name": meta["name"], "rosterType": roster_type,
+                             "season": season, "updatedAt": now_iso},
+                    "players": players,
+                })
+                entry["ok"] = True
+                entry["updatedAt"] = now_iso
+                ok_count += 1
+            except OSError as e:
+                print(f"Warning: {meta['abbr']} 寫檔失敗：{e}", file=sys.stderr)
+        teams_index.append(entry)
+    write_json_atomic(os.path.join(ROSTER_DIR, "index.json"), {
+        "updatedAt": now_iso, "rosterType": roster_type, "season": season, "teams": teams_index,
+    })
+    print(f"Rosters done: {ok_count}/{len(TEAM_META)} teams updated.")
+    return ok_count
+
+
 def main():
     parser = argparse.ArgumentParser(description="MLB Daily Report Generator Script")
     parser.add_argument("--date", type=str, help="Target report date in YYYY-MM-DD format (defaults to yesterday in Taipei Time)")
     parser.add_argument("--check-wait", action="store_true", help="If active, loops and sleeps 30 minutes until yesterday's games are finished")
     parser.add_argument("--max-wait-checks", type=int, default=MAX_WAIT_CHECKS, help=f"Max number of checks in the --check-wait loop (default {MAX_WAIT_CHECKS})")
     
+    parser.add_argument("--rosters", action="store_true", help="Fetch all 30 team rosters with season stats and write data/teams/*.json (no report, no notification)")
     parser.add_argument("--no-notify", action="store_true", help="Generate report and metadata but do not send Discord notification")
     parser.add_argument("--notify-only", action="store_true", help="Only send Discord notification from existing metadata (no API calls, no file writes)")
 
@@ -1621,10 +1861,25 @@ def main():
     if args.notify_only and (args.check_wait or args.no_notify):
         print("Error: --notify-only cannot be combined with --check-wait or --no-notify", file=sys.stderr)
         sys.exit(1)
+    if args.rosters and (args.notify_only or args.check_wait):
+        print("Error: --rosters cannot be combined with --notify-only or --check-wait", file=sys.stderr)
+        sys.exit(1)
     if args.max_wait_checks < 1:
         print("Error: --max-wait-checks must be >= 1", file=sys.stderr)
         sys.exit(1)
     
+    # --rosters: 只更新 data/teams，不產生戰報、不動 metadata、不發通知
+    if args.rosters:
+        if args.date:
+            try:
+                today = datetime.strptime(args.date, "%Y-%m-%d").date()
+            except ValueError:
+                print("Error: Date format must be YYYY-MM-DD", file=sys.stderr)
+                sys.exit(1)
+        else:
+            today = get_taipei_now().date()
+        sys.exit(0 if fetch_rosters(today) > 0 else 1)
+
     # 1. Resolve date
     if args.date:
         date_str = args.date
