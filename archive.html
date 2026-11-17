@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MLB 每日戰報 - 歷史存檔</title>
+  <meta name="color-scheme" content="dark light">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="masthead wrap">
+  <nav class="nav-row" aria-label="頁面導覽">
+    <a href="index.html">← 首頁</a>
+    <span></span>
+  </nav>
+  <div class="brand">
+    <h1>歷史存檔</h1>
+    <p class="dateline" id="summaryLine">每日戰報與休賽季快報</p>
+  </div>
+</header>
+
+<main class="wrap" id="app" aria-busy="true">
+  <nav class="month-nav" id="monthNav" aria-label="月份快速跳轉" hidden></nav>
+  <div id="content">
+    <div class="state-box" role="status" id="loading">
+      <h2>讀取中…</h2>
+      <p>正在載入存檔索引</p>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap site-footer">
+  <span>資料來源：MLB Stats API</span>
+  <span><a href="index.html">回首頁</a></span>
+</footer>
+
+<script src="assets/archive.js"></script>
+</body>
+</html>
