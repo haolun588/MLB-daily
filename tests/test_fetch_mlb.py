@@ -47,6 +47,8 @@ class FakeApi:
 
     def __init__(self):
         self.schedule = None
+        self.schedule_sequence = None  # 若設定，依呼叫次數依序回傳（None 代表該次失敗）；用完後重複最後一筆
+        self.schedule_calls = 0
         self.transactions = "transactions_empty"
         self.fail_boxscore = set()
         self.calls = []
@@ -54,7 +56,12 @@ class FakeApi:
     def fetch(self, url, retries=3, delay=5):
         self.calls.append(url)
         if "/schedule" in url:
-            return load_fixture(self.schedule) if self.schedule else None
+            name = self.schedule
+            if self.schedule_sequence:
+                idx = min(self.schedule_calls, len(self.schedule_sequence) - 1)
+                name = self.schedule_sequence[idx]
+            self.schedule_calls += 1
+            return load_fixture(name) if name else None
         m = re.search(r"/game/(\d+)/(boxscore|content)", url)
         if m:
             pk, kind = int(m.group(1)), m.group(2)
@@ -370,9 +377,106 @@ class MainFlowTests(MlbTestBase):
         self.assertEqual(cm.exception.code, 1)
 
 
+# ---------------------------------------------------------------- 抓取失敗處理（模組 A：H1 / M3 / M5）
+class FailureHandlingTests(MlbTestBase):
+    def run_main_args(self, *extra):
+        with mock.patch.object(sys, "argv", ["fetch_mlb.py", "--date", DATE, *extra]), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            try:
+                fetch_mlb.main()
+            except SystemExit as e:
+                return e.code
+        return None
+
+    def html_files(self):
+        return list((self.tmp / "reports").rglob("*.html"))
+
+    def test_schedule_failure_without_check_wait_writes_nothing(self):
+        meta_path = self.tmp / "reports" / "metadata.json"
+        original_meta = json.dumps({"2026-11-14": {"date": "2026-11-14", "total_games": 3,
+                                                   "postponed": 0, "summary": "舊"}}, ensure_ascii=False)
+        meta_path.write_text(original_meta, encoding="utf-8")
+        index_before = (self.tmp / "index.html").read_bytes()
+        self.api.schedule = None
+        code = self.run_main_args()
+        self.assertEqual(code, 1)
+        self.assertEqual(meta_path.read_text(encoding="utf-8"), original_meta)
+        self.assertEqual((self.tmp / "index.html").read_bytes(), index_before)
+        self.assertEqual(self.html_files(), [])
+        self.discord.assert_not_called()
+
+    def test_malformed_schedule_response_is_api_failure(self):
+        with mock.patch.object(fetch_mlb, "fetch_json", return_value={"unexpected": True}):
+            with self.assertRaises(fetch_mlb.ApiError):
+                fetch_mlb.check_all_games_finalized(DATE)
+
+    def test_schedule_failure_with_check_wait_retries_after_sleep(self):
+        self.api.schedule_sequence = [None, "schedule_normal"]
+        code = self.run_main_args("--check-wait")
+        self.assertIsNone(code)
+        fetch_mlb.time.sleep.assert_called_once_with(1800)
+        self.assertTrue((self.tmp / "reports" / "2026" / "11" / f"{DATE}.html").exists())
+        self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
+        self.discord.assert_called_once()
+
+    def test_zero_games_success_is_distinct_from_failure(self):
+        self.api.schedule = "schedule_empty"
+        self.assertEqual(fetch_mlb.check_all_games_finalized(DATE), (True, []))
+        code = self.run_main_args()
+        self.assertEqual(code, 0)
+        self.assertEqual(self.read_metadata()[DATE]["total_games"], 0)
+
+    def test_boxscore_failure_renders_fallback_card(self):
+        meta, html = self.generate("schedule_normal", fail_boxscore={1002})
+        self.assertEqual(meta["total_games"], 2)
+        self.assertEqual(html.count(CARD_OPEN), 2)
+        self.assertEqual(html.count("詳細數據暫缺"), 1)
+        cards = html.split(CARD_OPEN)[1:]
+        failed = [c for c in cards if "詳細數據暫缺" in c][0]
+        normal = [c for c in cards if "詳細數據暫缺" not in c][0]
+        self.assertIn("data-teams=", failed)
+        self.assertIn("1002", failed)
+        scores = {g["gamePk"]: g for g in self.games_of("schedule_normal")}[1002]["teams"]
+        for side in ("away", "home"):
+            runs = scores[side].get("score", None)
+            if runs is None:
+                runs = {g["gamePk"]: g for g in self.games_of("schedule_normal")}[1002]["linescore"]["teams"][side]["runs"]
+            self.assertIn(f'<td class="num-cell runs-cell">{runs}</td>', failed)
+        self.assertNotIn("performer-stats", failed)
+        self.assertNotIn("決定", failed.replace("詳細數據暫缺", ""))
+        # 其他場維持完整卡片
+        self.assertIn("1001", normal)
+        self.assertIn("單場焦點球員", normal)
+
+    def test_corrupt_metadata_aborts_without_overwrite(self):
+        meta_path = self.tmp / "reports" / "metadata.json"
+        meta_path.write_text("{bad json", encoding="utf-8")
+        index_before = (self.tmp / "index.html").read_bytes()
+        code = self.run_main("schedule_normal")
+        self.assertEqual(code, 1)
+        self.assertEqual(meta_path.read_text(encoding="utf-8"), "{bad json")
+        self.assertEqual((self.tmp / "index.html").read_bytes(), index_before)
+        self.discord.assert_not_called()
+
+    def test_missing_metadata_is_created(self):
+        meta_path = self.tmp / "reports" / "metadata.json"
+        self.assertFalse(meta_path.exists())
+        code = self.run_main("schedule_normal")
+        self.assertIsNone(code)
+        self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
+        self.assertFalse((self.tmp / "reports" / "metadata.json.tmp").exists())
+
+    def test_metadata_write_failure_exits_nonzero(self):
+        with mock.patch.object(fetch_mlb.os, "replace", side_effect=OSError("disk full")):
+            code = self.run_main("schedule_normal")
+        self.assertEqual(code, 1)
+        self.assertFalse((self.tmp / "reports" / "metadata.json").exists())
+        self.assertFalse((self.tmp / "reports" / "metadata.json.tmp").exists())
+        self.discord.assert_not_called()
+
+
 # ---------------------------------------------------------------- 已知 bug（修好後移除 expectedFailure）
 class KnownBugTests(MlbTestBase):
-    @unittest.expectedFailure
     def test_H1_api_failure_must_not_overwrite_metadata(self):
         """H1: schedule 抓取失敗（fetch_json 回 None）時，應以非零碼結束，且不得改寫 metadata、不得通知。"""
         original = {DATE: {"date": DATE, "total_games": 5, "postponed": 0, "summary": "原本的摘要"}}
@@ -414,7 +518,6 @@ class KnownBugTests(MlbTestBase):
         self.assertNotIn("2026 年 07 月 19 日", html)
         self.assertIn('<span class="summary-value highlight-blue">0</span>', html)
 
-    @unittest.expectedFailure
     def test_M3_boxscore_failure_keeps_card_count_equal_total(self):
         """M3: boxscore 失敗的場次仍應有卡片，卡片數等於 total_games。"""
         meta, html = self.generate("schedule_normal", fail_boxscore={1002})

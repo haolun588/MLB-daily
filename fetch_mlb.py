@@ -100,23 +100,46 @@ def get_team_info(team_id, english_name):
         return TEAM_META[team_id]
     return {"name": english_name, "abbr": english_name[:3].upper(), "color": "#6b7280"}
 
+class ApiError(Exception):
+    """API 抓取失敗，或回應缺少預期結構（與「確實無賽事」不同）。"""
+
+
 def check_all_games_finalized(date_str):
+    """回傳 (finalized, games)。
+
+    - API 失敗（fetch 回 None、回應結構不符）：拋出 ApiError。
+    - 回應成功且確實無賽事（totalGames == 0 或 dates 為空）：回傳 (True, [])。
+    - 有賽事：回傳 (是否全數完賽, games)。
+    """
     url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}&hydrate=linescore,decisions"
     data = fetch_json(url)
-    if not data or not data.get("dates"):
+    if data is None:
+        raise ApiError(f"無法取得 {date_str} 的賽程（API 無回應）")
+    if not isinstance(data, dict) or not isinstance(data.get("dates"), list):
+        raise ApiError(f"{date_str} 的賽程回應缺少預期結構（dates）")
+
+    dates = data["dates"]
+    if not dates:
         return True, []
-    
-    games = data["dates"][0].get("games", [])
+    if not isinstance(dates[0], dict):
+        raise ApiError(f"{date_str} 的賽程回應結構異常（dates[0]）")
+    games = dates[0].get("games")
+    if games is None:
+        if data.get("totalGames") == 0:
+            return True, []
+        raise ApiError(f"{date_str} 的賽程回應缺少預期結構（games）")
+    if not isinstance(games, list):
+        raise ApiError(f"{date_str} 的賽程回應結構異常（games）")
     if not games:
         return True, []
-        
+
     for game in games:
         state = game.get("status", {}).get("abstractGameState")
         detailed = game.get("status", {}).get("detailedState")
         # Games are NOT finalized if they are Preview or Live (excluding explicitly Postponed/Cancelled)
         if state in ["Preview", "Live"] and detailed not in ["Postponed", "Cancelled"]:
             return False, games
-            
+
     return True, games
 
 def fetch_game_news(game_pk, away_abbr, home_abbr, away_r, home_r):
@@ -248,6 +271,59 @@ def build_transactions_section_html(daily_tx_list):
       </div>
     </section>"""
 
+def render_fallback_card(game, away_info, home_info, teams_data_str):
+    """boxscore 抓取失敗時，僅用 schedule 資料產生簡化卡片。回傳 (card_html, summary_sentence)。"""
+    away_team_obj = game["teams"]["away"]["team"]
+    home_team_obj = game["teams"]["home"]["team"]
+    linescore = game.get("linescore", {}).get("teams", {})
+    away_r = game["teams"]["away"].get("score", linescore.get("away", {}).get("runs", 0))
+    home_r = game["teams"]["home"].get("score", linescore.get("home", {}).get("runs", 0))
+    away_rec = game["teams"]["away"].get("leagueRecord", {})
+    home_rec = game["teams"]["home"].get("leagueRecord", {})
+    away_rec_str = f"({away_rec.get('wins', 0)}-{away_rec.get('losses', 0)})"
+    home_rec_str = f"({home_rec.get('wins', 0)}-{home_rec.get('losses', 0)})"
+    status_text = game.get("status", {}).get("detailedState") or "Final"
+    card_html = f"""
+      <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} (Fallback) -->
+      <div class="game-card" style="grid-template-columns: 1fr;" data-teams="{teams_data_str}">
+        <div class="game-card-upper">
+          <div class="game-header">
+            <span class="game-title">例行賽 #{game["gamePk"]}</span>
+            <span class="status-badge final">{status_text}</span>
+          </div>
+          <div class="score-table-wrapper">
+            <table class="score-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left; width: 50%;">隊伍</th>
+                  <th>R</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{away_team_obj['id']}.svg" class="team-logo" alt="{away_info['abbr']}">
+                    <span>{away_info['name']} {away_rec_str}</span>
+                  </td>
+                  <td class="num-cell runs-cell">{away_r}</td>
+                </tr>
+                <tr>
+                  <td class="team-cell">
+                    <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{home_team_obj['id']}.svg" class="team-logo" alt="{home_info['abbr']}">
+                    <span>{home_info['name']} {home_rec_str}</span>
+                  </td>
+                  <td class="num-cell runs-cell">{home_r}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem;">詳細數據暫缺</div>
+        </div>
+      </div>
+"""
+    summary = f"{away_info['abbr']} @ {home_info['abbr']}，比分 {away_r}:{home_r}"
+    return card_html, summary
+
 def generate_report(date_str, games):
     print(f"Generating report for {date_str} with {len(games)} games...")
     total_games = len(games)
@@ -297,7 +373,10 @@ def generate_report(date_str, games):
         boxscore_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
         boxscore = fetch_json(boxscore_url)
         if not boxscore:
-            print(f"Warning: Could not fetch boxscore for game {game_pk}. Skipping details.", file=sys.stderr)
+            print(f"Warning: Could not fetch boxscore for game {game_pk}. Using fallback card.", file=sys.stderr)
+            fallback_html, fallback_summary = render_fallback_card(game, away_info, home_info, teams_data_str)
+            games_cards_html.append(fallback_html)
+            key_matchups_summary.append(fallback_summary)
             continue
             
         # Extract R-H-E from linescore
@@ -798,28 +877,47 @@ def generate_report(date_str, games):
         "summary": summary_sentence
     }
 
-def update_index_page(new_metadata):
-    metadata_path = "reports/metadata.json"
-    metadata_db = {}
-    
-    # Read existing metadata
-    if os.path.exists(metadata_path):
-        try:
-            with open(metadata_path, "r", encoding="utf-8") as f:
-                metadata_db = json.load(f)
-        except Exception as e:
-            print(f"Warning: Could not read metadata.json ({e}). Creating new.", file=sys.stderr)
-            
-    # Update/Add new metadata
-    metadata_db[new_metadata["date"]] = new_metadata
-    
-    # Save back
+def load_metadata(metadata_path):
+    """讀取 metadata。不存在 -> 空 dict；讀取/解析失敗 -> 結束程式，不覆寫原檔。"""
+    if not os.path.exists(metadata_path):
+        return {}
     try:
-        with open(metadata_path, "w", encoding="utf-8") as f:
+        with open(metadata_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError) as e:
+        print(f"Error: Could not read metadata.json ({e}). Aborting without overwriting.", file=sys.stderr)
+        sys.exit(1)
+    if not isinstance(data, dict):
+        print("Error: metadata.json is not a JSON object. Aborting without overwriting.", file=sys.stderr)
+        sys.exit(1)
+    return data
+
+def save_metadata(metadata_path, metadata_db):
+    """先寫到同目錄暫存檔再 os.replace；失敗則結束程式。"""
+    tmp_path = metadata_path + ".tmp"
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(metadata_db, f, indent=2, ensure_ascii=False)
+        os.replace(tmp_path, metadata_path)
     except Exception as e:
         print(f"Error saving metadata.json: {e}", file=sys.stderr)
-        
+        try:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except OSError:
+            pass
+        sys.exit(1)
+
+def update_index_page(new_metadata):
+    metadata_path = "reports/metadata.json"
+    metadata_db = load_metadata(metadata_path)
+
+    # Update/Add new metadata
+    metadata_db[new_metadata["date"]] = new_metadata
+
+    # Save back
+    save_metadata(metadata_path, metadata_db)
+
     # Read index.html
     index_path = "index.html"
     if not os.path.exists(index_path):
@@ -1000,17 +1098,25 @@ def main():
     if args.check_wait:
         print("Enabling check wait loop. Monitoring yesterday's games...")
         while True:
-            finalized, games = check_all_games_finalized(date_str)
+            try:
+                finalized, games = check_all_games_finalized(date_str)
+            except ApiError as e:
+                print(f"Warning: {e}. Treating as not finalized.", file=sys.stderr)
+                finalized, games = False, []
             if finalized:
                 print("All games are finalized (Final or Postponed). Proceeding to build.")
                 break
             print("Some games are not finalized yet. Sleeping for 30 minutes...", flush=True)
             time.sleep(1800)
     else:
-        finalized, games = check_all_games_finalized(date_str)
+        try:
+            finalized, games = check_all_games_finalized(date_str)
+        except ApiError as e:
+            print(f"Error: {e}. Aborting without generating any output.", file=sys.stderr)
+            sys.exit(1)
         if not finalized:
             print("Warning: Some games are still active or not finalized yet.", file=sys.stderr)
-            
+
     # Check if there are games scheduled
     if not games:
         print(f"No games scheduled or found on {date_str}. Generating empty card/log.")
