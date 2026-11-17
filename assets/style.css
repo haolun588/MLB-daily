@@ -1131,3 +1131,450 @@ img { max-width: 100%; height: auto; }
   .sort-btn { padding: 0 8px; }
   .roster .c-name { min-width: 7rem; max-width: 7.5rem; padding-left: 6px; padding-right: 6px; }
 }
+
+/* ==========================================================================
+   首頁戰績側邊欄、今日賽事預告、休賽季區塊（模組 S2）
+   桌機 >= 1024px：右側 sticky 側邊欄，可收合成窄欄。
+   平板／手機 < 1024px：右側抽屜，由右下角「戰績」按鈕叫出。
+   ========================================================================== */
+
+:root {
+  --st-w: 320px;        /* 桌機展開寬度 */
+  --st-rail-w: 44px;    /* 桌機收合後的窄欄寬度 */
+}
+
+/* ---------- 版面骨架 ---------- */
+/* 導言在 .layout 之外；兩欄的上緣由 .layout 的 margin-top 決定，主內容第一張卡不再自帶上邊距 */
+.layout { margin-top: 28px; }
+.layout > main > .latest:first-child { margin-top: 0; }
+
+/* 預設（無 JS、或尚未判斷）：側邊欄不佔版面，直接排在主內容之後 */
+.standings { margin-top: 32px; }
+
+/* ---------- 面板（桌機為卡片；抽屜時為整個抽屜） ---------- */
+.st-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.st-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 12px 10px 14px;
+  background: var(--panel);
+  border-top: 3px solid var(--text);
+  border-bottom: 1px solid var(--line);
+}
+
+.st-head > div:first-child { flex: 1; min-width: 0; }
+
+.st-title {
+  font: 700 1rem/1.35 var(--font-serif);
+  letter-spacing: 0.04em;
+}
+
+.st-meta {
+  margin-top: 3px;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.st-meta .num { letter-spacing: 0; }
+
+.st-actions { display: flex; flex: none; }
+
+/* 面板內的小按鈕（收合／關閉），觸控目標 >= 36px */
+.st-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0 10px;
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font: 500 0.8125rem var(--font-sans);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.st-btn:hover { color: var(--text); border-color: var(--text-2); background: var(--panel-2); }
+
+/* ---------- 區塊與表格 ---------- */
+.st-body { padding: 0 8px 4px; }
+
+.st-div { padding-top: 12px; }
+
+.st-div--league-start {
+  margin-top: 14px;
+  border-top: 1px solid var(--text);
+}
+
+.st-div h3 {
+  padding: 0 6px 5px;
+  font: 700 0.75rem/1.4 var(--font-sans);
+  letter-spacing: 0.14em;
+  color: var(--text-2);
+}
+
+.st-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.st-table thead th {
+  padding: 0 0 4px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+
+.st-table thead th:first-child { text-align: left; padding-left: 14px; }
+
+.st-table col.c-w, .st-table col.c-l { width: 28px; }
+.st-table col.c-pct { width: 42px; }
+.st-table col.c-gb { width: 34px; }
+.st-table col.c-l10 { width: 40px; }
+.st-table col.c-strk { width: 38px; }
+
+.st-row { position: relative; border-bottom: 1px solid var(--line); }
+.st-row:last-child { border-bottom: 0; }
+.st-row:hover { background: var(--panel-2); }
+
+.st-table td,
+.st-table th[scope="row"] {
+  padding: 0;
+  height: 34px;
+  vertical-align: middle;
+}
+
+.st-table td {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.st-table td.is-pct { color: var(--text); }
+.st-table td.is-sub { color: var(--text-2); }
+
+/* 隊名欄：左側隊色細條（沿用 --team 與 .team-stripe--dark） */
+.st-table th[scope="row"] {
+  text-align: left;
+  font-weight: 700;
+  border-left: 3px solid var(--team, var(--line));
+}
+
+.st-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 34px;
+  padding-left: 8px;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+/* 整列可點：連結的虛擬元素撐滿整列 */
+.st-team::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.st-team:focus-visible { outline-offset: -2px; }
+.st-team picture, .st-team img { display: block; flex: none; }
+.st-team img { width: 18px; height: 18px; }
+
+.st-clinch {
+  margin-left: -3px;
+  align-self: flex-start;
+  margin-top: 6px;
+  font: 700 0.625rem/1 var(--font-mono);
+  color: var(--accent-ink);
+}
+
+/* 連勝：預設文字色；連敗：弱化色。不使用色塊 */
+.st-streak.is-w { color: var(--text); font-weight: 500; }
+.st-streak.is-l { color: var(--text-2); }
+
+/* ---------- 圖例 ---------- */
+.st-legend {
+  margin: 12px 6px 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 0.6875rem;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.st-legend h3 {
+  margin-bottom: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.st-legend dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; }
+.st-legend dt { font: 700 0.6875rem/1.55 var(--font-mono); color: var(--accent-ink); }
+.st-legend dd { margin: 0; }
+
+/* ---------- 錯誤狀態 ---------- */
+.st-error {
+  display: none;
+  margin: 14px 8px 16px;
+  padding: 18px 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.st-error strong { display: block; font-size: 0.9375rem; }
+.st-error p { margin-top: 6px; font-size: 0.8125rem; color: var(--text-2); }
+
+.standings.is-error .st-data,
+.standings.is-error .st-meta { display: none; }
+.standings.is-error .st-error { display: block; }
+
+/* ---------- 桌機收合後的窄欄按鈕 ---------- */
+.st-rail {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--st-rail-w);
+  height: 44px;
+  padding: 0;
+  background: var(--panel);
+  color: var(--accent-ink);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--text);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.st-rail:hover { background: var(--panel-2); border-color: var(--text-2); }
+
+/* ---------- 平板／手機：右下角按鈕 + 右側抽屜 ---------- */
+.st-fab {
+  position: fixed;
+  top: 64px;            /* 導覽列（44px）下方、刊頭粗線附近，不壓到「歷史存檔」 */
+  right: 0;             /* 貼齊視窗右緣，左側圓角、右側直角，像書籤標籤 */
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: var(--accent-solid);
+  color: var(--on-accent);
+  border: 0;
+  border-radius: 22px 0 0 22px;
+  cursor: pointer;
+}
+
+.st-fab svg, .st-rail svg { width: 22px; height: 22px; display: block; }
+
+.st-fab:hover { background: var(--accent-solid-hover); }
+.st-fab:focus-visible { outline-color: var(--text); outline-offset: -4px; }
+
+.st-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 59;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (max-width: 1023.98px) {
+  .layout { display: block; }
+
+  .standings {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    width: min(92vw, 380px);
+    margin: 0;
+    visibility: hidden;
+    transform: translateX(100%);
+  }
+
+  .st-panel {
+    height: 100%;
+    border-width: 0 0 0 1px;
+    border-radius: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .st-head { padding-top: 10px; }
+
+  /* 抽屜內不需要「收合」按鈕；改用關閉鈕 */
+  .st-btn[data-st="collapse"] { display: none; }
+
+  .st-rail { display: none !important; }
+
+  html.st-drawer-open .standings { visibility: visible; transform: none; }
+  html.st-drawer-open .st-backdrop { visibility: visible; opacity: 1; }
+  html.st-drawer-open { overflow: hidden; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .standings {
+      transition: transform 0.24s ease, visibility 0s linear 0.24s;
+    }
+    .st-backdrop {
+      transition: opacity 0.24s ease, visibility 0s linear 0.24s;
+    }
+    html.st-drawer-open .standings,
+    html.st-drawer-open .st-backdrop { transition-delay: 0s; }
+  }
+}
+
+/* 很窄的螢幕（<= 360px）：縮小欄寬，確保不產生水平捲軸 */
+@media (max-width: 360px) {
+  .st-table { font-size: 0.75rem; }
+  .st-table col.c-w, .st-table col.c-l { width: 25px; }
+  .st-table col.c-pct { width: 38px; }
+  .st-table col.c-gb { width: 31px; }
+  .st-table col.c-l10 { width: 36px; }
+  .st-table col.c-strk { width: 34px; }
+}
+
+/* ---------- 桌機：兩欄 ---------- */
+@media (min-width: 1024px) {
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--st-w);
+    gap: 0 32px;
+    align-items: start;
+  }
+
+  html.standings-collapsed .layout {
+    grid-template-columns: minmax(0, 1fr) var(--st-rail-w);
+  }
+
+  /* 不 sticky、不內部捲動：隨頁面與主內容一起捲動。導言在 grid 之外，兩欄同一起跑線，頂端結構性對齊 */
+  .standings { margin-top: 0; }
+  .st-panel { overflow: visible; }
+  .st-head { position: static; }
+
+  .st-fab,
+  .st-backdrop,
+  .st-close { display: none; }
+
+  /* 收合：只剩右緣一條窄欄 */
+  .st-rail { display: none; }
+
+  html.standings-collapsed .st-panel { display: none; }
+  html.standings-collapsed .st-rail { display: flex; }
+}
+
+
+/* ---------- 賽季中：今日賽事預告 ---------- */
+.gp-list { list-style: none; }
+
+.gp-game {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr);
+  gap: 0 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.gp-when { padding-top: 2px; }
+.gp-time { display: block; font: 700 1rem/1.4 var(--font-mono); font-variant-numeric: tabular-nums; }
+.gp-note { display: block; margin-top: 2px; font-size: 0.6875rem; line-height: 1.4; color: var(--accent-ink); }
+
+.gp-teams { min-width: 0; }
+
+.gp-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: 2px 12px;
+  padding: 4px 0 4px 10px;
+  border-left: 3px solid var(--team, var(--line));
+}
+
+.gp-side + .gp-side { margin-top: 2px; }
+
+.gp-team { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.gp-team picture, .gp-team img { display: block; flex: none; width: 20px; height: 20px; }
+.gp-name { font-weight: 700; font-size: 0.9375rem; min-width: 0; }
+.gp-rec { flex: none; font: 400 0.75rem var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); }
+
+.gp-pitch { font-size: 0.8125rem; text-align: right; color: var(--text); }
+.gp-stat { font: 400 0.75rem var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); white-space: nowrap; }
+.gp-tbd { color: var(--text-2); }
+
+@media (max-width: 560px) {
+  .gp-game { grid-template-columns: 3.25rem minmax(0, 1fr); gap: 0 8px; }
+  .gp-side { grid-template-columns: minmax(0, 1fr); padding-bottom: 6px; }
+  .gp-pitch { text-align: left; padding-left: 28px; }
+}
+
+/* ---------- 休賽季：開季倒數 ---------- */
+.countdown {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.countdown > div { padding: 14px 18px; }
+.countdown > div + div { border-left: 1px solid var(--line); }
+.countdown dt { font-size: 0.75rem; letter-spacing: 0.14em; color: var(--text-2); }
+.countdown dd { margin: 0; }
+.countdown dd:not(.cd-date) { font: 700 1rem var(--font-sans); }
+.countdown dd .num { font: 700 2.25rem/1.2 var(--font-mono); font-variant-numeric: tabular-nums; margin-right: 2px; }
+.countdown .cd-date { margin-top: 2px; font: 400 0.8125rem var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); }
+
+/* ---------- 休賽季：本週人事異動精選 ---------- */
+.wk-list { list-style: none; }
+
+.wk-tx {
+  display: grid;
+  grid-template-columns: 11.5rem minmax(0, 1fr);
+  gap: 2px 16px;
+  align-items: baseline;
+  padding: 9px 0 9px 10px;
+  border-left: 3px solid var(--team, var(--line));
+  border-bottom: 1px solid var(--line);
+}
+
+.wk-meta { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; font-weight: 700; min-width: 0; }
+.wk-meta time { flex: none; font: 500 0.8125rem var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); }
+.wk-meta img, .wk-meta picture { display: block; flex: none; width: 18px; height: 18px; }
+.wk-txt { font-size: 0.875rem; line-height: 1.6; color: var(--text-2); }
+
+@media (max-width: 640px) {
+  .wk-tx { grid-template-columns: minmax(0, 1fr); }
+  .countdown > div { padding: 12px 12px; }
+  .countdown dd .num { font-size: 1.875rem; }
+}
