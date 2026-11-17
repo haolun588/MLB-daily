@@ -81,643 +81,1071 @@
     "date": "2026-08-01",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 STL @ TOR，比分 1:5；MIN @ SEA，比分 3:4，Logan Gilbert 投出 6 次三振；CWS @ TB，比分 0:1，Drew Rasmussen 投出 10 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 WSH @ ATL，比分 3:8，Martín Pérez 投出 6 次三振；CWS @ TB，比分 0:1，Drew Rasmussen 投出 10 次三振；PHI @ BAL，比分 5:0，Cristopher Sánchez 投出 11 次三振。",
+    "type": "season",
+    "transactions_count": 52,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-02": {
     "date": "2026-08-02",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 PHI @ BAL，比分 8:0；WSH @ ATL，比分 2:4；STL @ TOR，比分 5:1，Matthew Liberatore 投出 7 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 KC @ COL，比分 1:8，Kyle Freeland 投出 8 次三振；AZ @ CLE，比分 0:5，Gavin Williams 投出 10 次三振；PIT @ CIN，比分 2:10，Chase Burns 投出 9 次三振。",
+    "type": "season",
+    "transactions_count": 52,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-03": {
     "date": "2026-08-03",
     "total_games": 8,
     "postponed": 0,
-    "summary": "昨日共進行了 8 場賽事。 WSH @ PHI，比分 3:6，Andrew Alvarez 投出 5 次三振；STL @ NYY，比分 13:7，Alec Burleson 擊出全壘打；PIT @ MIL，比分 4:3，Bubba Chandler 投出 5 次三振。"
+    "summary": "昨日共進行了 8 場賽事。 STL @ NYY，比分 13:7，Alec Burleson 擊出全壘打；SF @ TEX，比分 5:1，Logan Webb 投出 8 次三振；SD @ AZ，比分 1:5。",
+    "type": "season",
+    "transactions_count": 148,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-04": {
     "date": "2026-08-04",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 LAA @ BAL，比分 1:3，Cade Povich 投出 7 次三振；NYM @ CLE，比分 6:2，Luis Torrens 擊出全壘打；OAK @ CIN，比分 4:5，J.T. Ginn 投出 5 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 WSH @ PHI，比分 0:5，Jesús Luzardo 投出 7 次三振；DET @ SEA，比分 8:0；STL @ NYY，比分 0:2，Ryan Weathers 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 130,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-05": {
     "date": "2026-08-05",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 TOR @ HOU，比分 5:4，Hunter Brown 投出 8 次三振；LAD @ CHC，比分 6:7，Pete Crow-Armstrong 擊出全壘打；SF @ TEX，比分 0:6。"
+    "summary": "昨日共進行了 15 場賽事。 MIN @ KC，比分 1:2，Noah Cameron 投出 9 次三振；SD @ AZ，比分 4:10，Mitch Bratt 投出 9 次三振；PIT @ MIL，比分 2:4，Kyle Harrison 投出 10 次三振。",
+    "type": "season",
+    "transactions_count": 45,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-06": {
     "date": "2026-08-06",
     "total_games": 11,
     "postponed": 0,
-    "summary": "昨日共進行了 11 場賽事。 LAA @ BAL，比分 4:1，Zach Neto 擊出全壘打；OAK @ CIN，比分 5:6；NYM @ CLE，比分 13:6，Marcus Semien 擊出全壘打。"
+    "summary": "昨日共進行了 11 場賽事。 TOR @ CHC，比分 2:3，Dylan Cease 投出 10 次三振；DET @ SEA，比分 11:0，Framber Valdez 投出 5 次三振；CWS @ BOS，比分 11:12，Chase Meidroth 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 31,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-07": {
     "date": "2026-08-07",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 NYM @ PIT，比分 6:4；TOR @ PHI，比分 5:4，Josh Smith 擊出全壘打；CIN @ WSH，比分 3:5，Cade Cavalli 投出 8 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 ATH @ BOS，比分 1:13，Payton Tolle 投出 14 次三振；TB @ SEA，比分 2:1，Drew Rasmussen 投出 8 次三振；CLE @ CWS，比分 8:2，Parker Messick 投出 8 次三振。",
+    "type": "season",
+    "transactions_count": 45,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-08": {
     "date": "2026-08-08",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 ATL @ NYY，比分 4:5，Gerrit Cole 投出 9 次三振；OAK @ BOS，比分 7:3，Gage Jump 投出 11 次三振；LAA @ MIA，比分 0:7，Sandy Alcantara 投出 8 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 LAA @ MIA，比分 0:7，Sandy Alcantara 投出 8 次三振；ATL @ NYY，比分 4:5，Gerrit Cole 投出 9 次三振；NYM @ PIT，比分 0:9，Bubba Chandler 投出 5 次三振。",
+    "type": "season",
+    "transactions_count": 31,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-09": {
     "date": "2026-08-09",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 CIN @ WSH，比分 1:7；OAK @ BOS，比分 4:3；NYM @ PIT，比分 11:1，Sean Manaea 投出 11 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 NYM @ PIT，比分 11:1，Sean Manaea 投出 11 次三振；ATL @ NYY，比分 2:1，Cam Schlittler 投出 11 次三振；TOR @ PHI，比分 6:7，Jesús Luzardo 投出 12 次三振。",
+    "type": "season",
+    "transactions_count": 29,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-10": {
     "date": "2026-08-10",
     "total_games": 10,
     "postponed": 0,
-    "summary": "昨日共進行了 10 場賽事。 BOS @ TOR，比分 1:2；NYM @ ATL，比分 8:5，Francisco Lindor 擊出全壘打；BAL @ MIN，比分 5:9，Dean Kremer 投出 7 次三振。"
+    "summary": "昨日共進行了 10 場賽事。 BAL @ MIN，比分 5:9，Dean Kremer 投出 7 次三振；PHI @ STL，比分 6:5，Andrew Painter 投出 6 次三振；TEX @ LAA，比分 4:1，MacKenzie Gore 投出 9 次三振。",
+    "type": "season",
+    "transactions_count": 39,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-11": {
     "date": "2026-08-11",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 CLE @ DET，比分 4:6，Jo Adell 擊出全壘打；PIT @ MIA，比分 0:2，Eury Pérez 投出 7 次三振；CHC @ WSH，比分 8:6，Seiya Suzuki 擊出全壘打。"
+    "summary": "昨日共進行了 15 場賽事。 PIT @ MIA，比分 0:2，Eury Pérez 投出 7 次三振；CIN @ CWS，比分 5:4，Sean Burke 投出 8 次三振；KC @ LAD，比分 4:5，Blake Snell 投出 10 次三振。",
+    "type": "season",
+    "transactions_count": 46,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-12": {
     "date": "2026-08-12",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 BAL @ MIN，比分 5:7，Dylan Beavers 擊出全壘打；PHI @ STL，比分 1:7，Kyle Leahy 投出 6 次三振；TB @ OAK，比分 8:4，Liam Hicks 擊出全壘打。"
+    "summary": "昨日共進行了 15 場賽事。 CIN @ CWS，比分 0:5，Luis Castillo 投出 10 次三振；CHC @ WSH，比分 12:6，Alex Bregman 擊出全壘打；NYM @ ATL，比分 3:6，Tyler Mahle 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 28,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-13": {
     "date": "2026-08-13",
     "total_games": 9,
     "postponed": 0,
-    "summary": "昨日共進行了 9 場賽事。 CLE @ DET，比分 0:3；CIN @ CWS，比分 9:8，Sal Stewart 擊出全壘打；PIT @ MIA，比分 13:1，Braxton Ashcraft 投出 10 次三振。"
+    "summary": "昨日共進行了 9 場賽事。 PIT @ MIA，比分 13:1，Braxton Ashcraft 投出 10 次三振；CHC @ WSH，比分 0:7，Cade Cavalli 投出 10 次三振；BOS @ TOR，比分 7:0。",
+    "type": "season",
+    "transactions_count": 35,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-14": {
     "date": "2026-08-14",
     "total_games": 14,
     "postponed": 0,
-    "summary": "昨日共進行了 14 場賽事。 STL @ CHC，比分 0:3；MIA @ CIN，比分 0:1，Chase Burns 投出 8 次三振；BOS @ PIT，比分 4:8，Bubba Chandler 投出 5 次三振。"
+    "summary": "昨日共進行了 14 場賽事。 AZ @ ATL，比分 2:0，Brandon Pfaadt 投出 7 次三振；MIA @ CIN，比分 0:1，Chase Burns 投出 8 次三振；STL @ CHC，比分 0:3。",
+    "type": "season",
+    "transactions_count": 38,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-15": {
     "date": "2026-08-15",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 CWS @ DET，比分 4:3；STL @ CHC，比分 8:4，Joshua Báez 擊出全壘打；NYY @ TOR，比分 1:4，Cam Schlittler 投出 7 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 KC @ LAA，比分 0:1，Reid Detmers 投出 11 次三振；BOS @ PIT，比分 4:0，Sonny Gray 投出 7 次三振；STL @ CHC，比分 8:4，Joshua Báez 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 28,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-16": {
     "date": "2026-08-16",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 BAL @ TB，比分 10:2，Trevor Rogers 投出 6 次三振；BOS @ PIT，比分 3:8，Connor Wong 擊出全壘打；ARI @ ATL，比分 3:5，Bryce Elder 投出 5 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 KC @ LAA，比分 3:0，Noah Cameron 投出 8 次三振；MIL @ LAD，比分 6:2，Logan Henderson 投出 6 次三振；SD @ CLE，比分 5:0。",
+    "type": "season",
+    "transactions_count": 31,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-17": {
     "date": "2026-08-17",
     "total_games": 11,
     "postponed": 0,
-    "summary": "昨日共進行了 11 場賽事。 STL @ CIN，比分 2:1，Quinn Mathews 投出 7 次三振；STL @ CIN，比分 5:6；BAL @ TB，比分 6:7，Christian Encarnacion-Strand 擊出全壘打。"
+    "summary": "昨日共進行了 11 場賽事。 CWS @ CHC，比分 5:7，Pete Crow-Armstrong 擊出全壘打；LAD @ COL，比分 11:5，Blake Snell 投出 5 次三振；ATH @ KC，比分 5:9，Bobby Witt Jr. 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 46,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-18": {
     "date": "2026-08-18",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 NYY @ BAL，比分 3:1，Shane Baz 投出 10 次三振；DET @ PIT，比分 1:4；SF @ CLE，比分 1:8，Foster Griffin 投出 6 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 LAA @ HOU，比分 3:1，George Klassen 投出 7 次三振；WSH @ TEX，比分 0:5，Cal Quantrill 投出 5 次三振；DET @ PIT，比分 1:4。",
+    "type": "season",
+    "transactions_count": 35,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-19": {
     "date": "2026-08-19",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 DET @ PIT，比分 3:4，Rafael Flores Jr. 擊出全壘打；SD @ NYM，比分 2:4；ATL @ MIN，比分 4:6，Taj Bradley 投出 7 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 WSH @ TEX，比分 6:0，Cade Cavalli 投出 11 次三振；CWS @ CHC，比分 3:0，José Urquidy 投出 8 次三振；MIA @ PHI，比分 1:4，Aaron Nola 投出 8 次三振。",
+    "type": "season",
+    "transactions_count": 53,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-20": {
     "date": "2026-08-20",
     "total_games": 9,
     "postponed": 0,
-    "summary": "昨日共進行了 9 場賽事。 STL @ CIN，比分 10:9，Jordan Walker 擊出全壘打；SF @ CLE，比分 2:5，Gavin Williams 投出 11 次三振；TOR @ TB，比分 5:1，Shane Bieber 投出 7 次三振。"
+    "summary": "昨日共進行了 9 場賽事。 WSH @ TEX，比分 0:2，Jacob deGrom 投出 10 次三振；TOR @ TB，比分 5:1，Shane Bieber 投出 7 次三振；LAA @ HOU，比分 18:3，Grayson Rodriguez 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 22,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-21": {
     "date": "2026-08-21",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 ATL @ MIL，比分 1:2，Jacob Misiorowski 投出 6 次三振；STL @ PHI，比分 6:7，Jordan Walker 擊出全壘打；TOR @ NYY，比分 1:3。"
+    "summary": "昨日共進行了 15 場賽事。 ATL @ MIL，比分 1:2，Jacob Misiorowski 投出 6 次三振；MIN @ SD，比分 2:6；LAA @ TEX，比分 1:2，MacKenzie Gore 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 42,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-22": {
     "date": "2026-08-22",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 TOR @ NYY，比分 4:3，Dylan Cease 投出 8 次三振；ATL @ MIL，比分 1:4；WSH @ MIA，比分 2:4。"
+    "summary": "昨日共進行了 15 場賽事。 STL @ PHI，比分 3:12，Andrew Painter 投出 8 次三振；LAA @ TEX，比分 3:0；DET @ KC，比分 1:3，Michael Wacha 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 22,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-23": {
     "date": "2026-08-23",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 TB @ BAL，比分 3:1；STL @ PHI，比分 4:6；TOR @ NYY，比分 3:8。"
+    "summary": "昨日共進行了 15 場賽事。 TB @ BAL，比分 3:1；PIT @ LAD，比分 0:4，Blake Snell 投出 6 次三振；LAA @ TEX，比分 3:5，Cal Quantrill 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 41,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-24": {
     "date": "2026-08-24",
     "total_games": 10,
     "postponed": 0,
-    "summary": "昨日共進行了 10 場賽事。 TB @ DET，比分 4:1，Drew Rasmussen 投出 5 次三振；BOS @ MIA，比分 4:2，Sandy Alcantara 投出 6 次三振；COL @ WSH，比分 3:13，Cade Cavalli 投出 7 次三振。"
+    "summary": "昨日共進行了 10 場賽事。 CHC @ AZ，比分 7:0，Kevin Gausman 投出 6 次三振；PHI @ SEA，比分 2:9，Cal Raleigh 擊出全壘打；MIN @ ATH，比分 9:6，Zebby Matthews 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 34,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-25": {
     "date": "2026-08-25",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 TB @ DET，比分 1:4；BOS @ MIA，比分 7:3，Mickey Gasper 擊出全壘打；COL @ WSH，比分 3:1，Daylen Lile 擊出全壘打。"
+    "summary": "昨日共進行了 15 場賽事。 PHI @ SEA，比分 1:4，George Kirby 投出 9 次三振；MIN @ ATH，比分 2:4，Gage Jump 投出 9 次三振；BAL @ STL，比分 13:1，Chris Bassitt 投出 5 次三振。",
+    "type": "season",
+    "transactions_count": 48,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-26": {
     "date": "2026-08-26",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 TB @ DET，比分 3:0；CHC @ ARI，比分 0:2，Eduardo Rodriguez 投出 9 次三振；CIN @ SF，比分 10:9，Héctor Rodríguez 擊出全壘打。"
+    "summary": "昨日共進行了 15 場賽事。 PHI @ SEA，比分 6:0，Jesús Luzardo 投出 9 次三振；CHC @ AZ，比分 0:2，Eduardo Rodriguez 投出 9 次三振；TB @ DET，比分 3:0。",
+    "type": "season",
+    "transactions_count": 32,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-27": {
     "date": "2026-08-27",
     "total_games": 7,
     "postponed": 0,
-    "summary": "昨日共進行了 7 場賽事。 COL @ WSH，比分 1:7，Daylen Lile 擊出全壘打；BAL @ STL，比分 5:7；HOU @ NYY，比分 5:1，Hayden Wesneski 投出 6 次三振。"
+    "summary": "昨日共進行了 7 場賽事。 LAD @ ATL，比分 0:1，Chris Sale 投出 11 次三振；KC @ TOR，比分 13:2，Jac Caglianone 擊出全壘打；MIL @ NYM，比分 8:2，Jackson Chourio 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 24,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-28": {
     "date": "2026-08-28",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 CIN @ CHC，比分 10:8，Rhett Lowder 投出 5 次三振；LAD @ DET，比分 2:1，Tarik Skubal 投出 7 次三振；MIA @ WSH，比分 2:9。"
+    "summary": "昨日共進行了 15 場賽事。 KC @ CLE，比分 3:0，Michael Wacha 投出 10 次三振；TEX @ MIL，比分 1:6，Logan Henderson 投出 7 次三振；HOU @ NYM，比分 3:1，Hunter Brown 投出 10 次三振。",
+    "type": "season",
+    "transactions_count": 33,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-29": {
     "date": "2026-08-29",
     "total_games": 17,
     "postponed": 0,
-    "summary": "昨日共進行了 17 場賽事。 BOS @ NYY，比分 6:0，Jake Bennett 投出 7 次三振；BOS @ NYY，比分 2:9；LAD @ DET，比分 1:2，Blake Snell 投出 10 次三振。"
+    "summary": "昨日共進行了 17 場賽事。 CIN @ CHC，比分 5:17，Pete Crow-Armstrong 擊出全壘打；BOS @ NYY，比分 6:0，Jake Bennett 投出 7 次三振；AZ @ SF，比分 7:1，Merrill Kelly 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 29,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-30": {
     "date": "2026-08-30",
     "total_games": 14,
     "postponed": 0,
-    "summary": "昨日共進行了 14 場賽事。 MIA @ WSH，比分 6:2，Andrew Alvarez 投出 6 次三振；COL @ ATL，比分 2:3，Tyler Mahle 投出 9 次三振；BOS @ NYY，比分 1:16，Will Warren 投出 7 次三振。"
+    "summary": "昨日共進行了 14 場賽事。 SEA @ TOR，比分 0:7，Max Scherzer 投出 10 次三振；CWS @ MIN，比分 1:5，Zebby Matthews 投出 5 次三振；LAD @ DET，比分 6:1，Tyler Glasnow 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 35,
+    "translated": false,
+    "news_count": 0
   },
   "2026-08-31": {
     "date": "2026-08-31",
     "total_games": 12,
     "postponed": 0,
-    "summary": "昨日共進行了 12 場賽事。 SF @ ATL，比分 7:3，Anthony Molina 投出 6 次三振；SD @ CIN，比分 5:0，Michael King 投出 6 次三振；NYM @ TB，比分 3:2。"
+    "summary": "昨日共進行了 12 場賽事。 ATH @ TEX，比分 1:8，Jacob deGrom 投出 8 次三振；NYY @ LAA，比分 1:10，Walbert Ureña 投出 8 次三振；DET @ MIN，比分 1:11，Taj Bradley 投出 9 次三振。",
+    "type": "season",
+    "transactions_count": 37,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-01": {
     "date": "2026-09-01",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 SD @ CIN，比分 3:4，Fernando Tatis Jr. 擊出全壘打；SF @ PIT，比分 12:13，Rafael Devers 擊出全壘打；NYM @ TB，比分 2:6，Freddy Peralta 投出 7 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 TOR @ CLE，比分 1:6，Gavin Williams 投出 13 次三振；NYM @ TB，比分 2:6，Freddy Peralta 投出 7 次三振；CWS @ HOU，比分 5:1，Sean Burke 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 105,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-02": {
     "date": "2026-09-02",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 SD @ CIN，比分 3:7，JJ Bleday 擊出全壘打；ATL @ WSH，比分 9:0，Sean Murphy 擊出全壘打；OAK @ TEX，比分 9:2，Henry Bolte 擊出全壘打。"
+    "summary": "昨日共進行了 15 場賽事。 NYY @ LAA，比分 6:3，Cam Schlittler 投出 9 次三振；PHI @ AZ，比分 0:1，Andrew Painter 投出 6 次三振；TOR @ CLE，比分 11:0。",
+    "type": "season",
+    "transactions_count": 31,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-03": {
     "date": "2026-09-03",
     "total_games": 9,
     "postponed": 0,
-    "summary": "昨日共進行了 9 場賽事。 SF @ PIT，比分 2:5，Blade Tidwell 投出 5 次三振；TOR @ CLE，比分 6:3；CWS @ HOU，比分 2:6，Hunter Brown 投出 7 次三振。"
+    "summary": "昨日共進行了 9 場賽事。 MIL @ CHC，比分 1:2，Kevin Gausman 投出 9 次三振；TB @ TEX，比分 0:6，Cal Quantrill 投出 5 次三振；MIA @ KC，比分 3:7，Carter Jensen 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 25,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-04": {
     "date": "2026-09-04",
     "total_games": 16,
     "postponed": 0,
-    "summary": "昨日共進行了 16 場賽事。 DET @ CLE，比分 6:7，Brayan Rocchio 擊出全壘打；DET @ CLE，比分 3:4；MIL @ CIN，比分 10:7。"
+    "summary": "昨日共進行了 16 場賽事。 LAA @ PIT，比分 0:1，Jared Jones 投出 9 次三振；BOS @ BAL，比分 1:0；WSH @ LAD，比分 3:5，Blake Snell 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 41,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-05": {
     "date": "2026-09-05",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 SF @ NYM，比分 9:5，Anthony Molina 投出 6 次三振；CHC @ MIA，比分 6:5，Griffin Conine 擊出全壘打；ATL @ PHI，比分 2:4，Zack Wheeler 投出 9 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 ATH @ SEA，比分 6:2，Jeffrey Springs 投出 6 次三振；BOS @ BAL，比分 5:0，Sonny Gray 投出 7 次三振；ATL @ PHI，比分 2:4，Zack Wheeler 投出 9 次三振。",
+    "type": "season",
+    "transactions_count": 28,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-06": {
     "date": "2026-09-06",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 MIL @ CIN，比分 8:12，Elly De La Cruz 擊出全壘打；ATL @ PHI，比分 5:4，Aaron Nola 投出 5 次三振；BOS @ BAL，比分 3:1，Payton Tolle 投出 12 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 ATH @ SEA，比分 0:2，Bryan Woo 投出 9 次三振；BOS @ BAL，比分 3:1，Payton Tolle 投出 12 次三振；STL @ COL，比分 10:8，Cooper Hjerpe 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 36,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-07": {
     "date": "2026-09-07",
     "total_games": 11,
     "postponed": 0,
-    "summary": "昨日共進行了 11 場賽事。 ATL @ PHI，比分 0:1，Jesús Luzardo 投出 12 次三振；NYM @ MIA，比分 9:4，Jonah Tong 投出 7 次三振；LAA @ BOS，比分 2:5，Brayan Bello 投出 7 次三振。"
+    "summary": "昨日共進行了 11 場賽事。 ATL @ PHI，比分 0:1，Jesús Luzardo 投出 12 次三振；CIN @ LAD，比分 3:6，Emmet Sheehan 投出 10 次三振；CLE @ BAL，比分 4:6，Trevor Rogers 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 31,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-08": {
     "date": "2026-09-08",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 CLE @ BAL，比分 9:5，Travis Bazzana 擊出全壘打；MIN @ DET，比分 3:2；HOU @ PHI，比分 6:5。"
+    "summary": "昨日共進行了 15 場賽事。 COL @ NYY，比分 3:5，Cam Schlittler 投出 10 次三振；LAA @ BOS，比分 6:1，Reid Detmers 投出 9 次三振；PIT @ CWS，比分 9:3，Bubba Chandler 投出 8 次三振。",
+    "type": "season",
+    "transactions_count": 34,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-09": {
     "date": "2026-09-09",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 MIN @ DET，比分 2:7；TOR @ OAK，比分 0:2；STL @ SF，比分 6:7。"
+    "summary": "昨日共進行了 15 場賽事。 CIN @ LAD，比分 1:14，Yoshinobu Yamamoto 投出 10 次三振；WSH @ SD，比分 2:9，Jackson Merrill 擊出全壘打；COL @ NYY，比分 1:6，Will Warren 投出 8 次三振。",
+    "type": "season",
+    "transactions_count": 28,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-10": {
     "date": "2026-09-10",
     "total_games": 5,
     "postponed": 0,
-    "summary": "昨日共進行了 5 場賽事。 TB @ ATL，比分 1:3；HOU @ PHI，比分 2:1，Zack Wheeler 投出 9 次三振；TEX @ SEA，比分 3:4，Jacob deGrom 投出 12 次三振。"
+    "summary": "昨日共進行了 5 場賽事。 PIT @ CWS，比分 2:0，Jared Jones 投出 8 次三振；TEX @ SEA，比分 3:4，Jacob deGrom 投出 12 次三振；HOU @ PHI，比分 2:1，Zack Wheeler 投出 9 次三振。",
+    "type": "season",
+    "transactions_count": 15,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-11": {
     "date": "2026-09-11",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 PIT @ CHC，比分 2:12；COL @ DET，比分 2:6；LAA @ WSH，比分 3:4，Cade Cavalli 投出 9 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 NYM @ NYY，比分 4:6，Carlos Rodón 投出 8 次三振；CIN @ MIL，比分 0:20，Dustin May 投出 6 次三振；LAD @ MIA，比分 6:2，Blake Snell 投出 8 次三振。",
+    "type": "season",
+    "transactions_count": 23,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-12": {
     "date": "2026-09-12",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 COL @ DET，比分 7:11；NYM @ NYY，比分 12:2，Francisco Lindor 擊出全壘打；PIT @ CHC，比分 3:4。"
+    "summary": "昨日共進行了 15 場賽事。 KC @ BOS，比分 1:5，Ranger Suarez 投出 8 次三振；LAA @ WSH，比分 5:6，Andrew Alvarez 投出 8 次三振；SEA @ ATH，比分 19:1，Bryan Woo 投出 5 次三振。",
+    "type": "season",
+    "transactions_count": 29,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-13": {
     "date": "2026-09-13",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 COL @ DET，比分 1:8，Jackson Jobe 投出 8 次三振；LAA @ WSH，比分 5:6，Zach Neto 擊出全壘打；PHI @ ATL，比分 9:4，J.T. Realmuto 擊出全壘打。"
+    "summary": "昨日共進行了 15 場賽事。 NYM @ NYY，比分 0:2，Cam Schlittler 投出 8 次三振；COL @ DET，比分 1:8，Jackson Jobe 投出 8 次三振；CLE @ MIN，比分 9:2，Tanner Bibee 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 29,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-14": {
     "date": "2026-09-14",
     "total_games": 10,
     "postponed": 0,
-    "summary": "昨日共進行了 10 場賽事。 LAD @ CIN，比分 4:1，Tarik Skubal 投出 9 次三振；CWS @ CLE，比分 7:3；DET @ TOR，比分 6:5，Kazuma Okamoto 擊出全壘打。"
+    "summary": "昨日共進行了 10 場賽事。 LAD @ CIN，比分 4:1，Tarik Skubal 投出 9 次三振；SF @ STL，比分 1:2，Quinn Mathews 投出 8 次三振；ATL @ CHC，比分 3:7，David Peterson 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 22,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-15": {
     "date": "2026-09-15",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 LAD @ CIN，比分 4:0，Yoshinobu Yamamoto 投出 7 次三振；OAK @ TB，比分 1:2，Jack Perkins 投出 8 次三振；CWS @ CLE，比分 6:7，Travis Bazzana 擊出全壘打。"
+    "summary": "昨日共進行了 15 場賽事。 LAD @ CIN，比分 4:0，Yoshinobu Yamamoto 投出 7 次三振；NYY @ MIN，比分 8:1，Max Fried 投出 6 次三振；SD @ COL，比分 3:9，Cole Carrigg 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 152,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-16": {
     "date": "2026-09-16",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 CWS @ CLE，比分 3:6，Parker Messick 投出 8 次三振；SF @ STL，比分 6:5，Anthony Molina 投出 6 次三振；NYY @ MIN，比分 4:5，Zebby Matthews 投出 8 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 PHI @ WSH，比分 3:0，Zack Wheeler 投出 5 次三振；ATL @ CHC，比分 4:8，Shota Imanaga 投出 8 次三振；BAL @ NYM，比分 7:1，Chris Bassitt 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 143,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-17": {
     "date": "2026-09-17",
     "total_games": 9,
     "postponed": 0,
-    "summary": "昨日共進行了 9 場賽事。 MIL @ PIT，比分 4:7，Garrett Stallings 投出 6 次三振；LAD @ CIN，比分 8:2，Kyle Tucker 擊出全壘打；OAK @ TB，比分 1:10。"
+    "summary": "昨日共進行了 9 場賽事。 MIN @ LAA，比分 4:5，Walbert Ureña 投出 9 次三振；PHI @ NYM，比分 3:0；LAD @ CIN，比分 8:2，Kyle Tucker 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 19,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-18": {
     "date": "2026-09-18",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 CHC @ CIN，比分 4:6，Ian Happ 擊出全壘打；KCR @ PIT，比分 5:8，Vinnie Pasquantino 擊出全壘打；MIL @ BAL，比分 6:5，Jackson Chourio 擊出全壘打。"
+    "summary": "昨日共進行了 15 場賽事。 MIN @ LAA，比分 3:0，Connor Prielipp 投出 8 次三振；ATH @ CLE，比分 3:5，Joey Cantillo 投出 5 次三振；SF @ LAD，比分 2:8，Tyler Glasnow 投出 10 次三振。",
+    "type": "season",
+    "transactions_count": 40,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-19": {
     "date": "2026-09-19",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 DET @ CWS，比分 1:3，Sean Burke 投出 5 次三振；MIL @ BAL，比分 1:0，Trevor Rogers 投出 10 次三振；BOS @ TB，比分 1:2，Brayan Bello 投出 11 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 MIL @ BAL，比分 1:0，Trevor Rogers 投出 10 次三振；BOS @ TB，比分 1:2，Brayan Bello 投出 11 次三振；ATH @ CLE，比分 6:12，Angel Martínez 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 29,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-20": {
     "date": "2026-09-20",
     "total_games": 15,
     "postponed": 0,
-    "summary": "昨日共進行了 15 場賽事。 PHI @ NYM，比分 7:2，Cristopher Sánchez 投出 6 次三振；KCR @ PIT，比分 3:4，Rafael Flores Jr. 擊出全壘打；CHC @ CIN，比分 9:1，David Peterson 投出 7 次三振。"
+    "summary": "昨日共進行了 15 場賽事。 ATH @ CLE，比分 0:1，Gavin Williams 投出 9 次三振；SEA @ COL，比分 2:1，Kade Anderson 投出 7 次三振；MIN @ LAA，比分 8:0，Dean Kremer 投出 8 次三振。",
+    "type": "season",
+    "transactions_count": 23,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-21": {
     "date": "2026-09-21",
     "total_games": 3,
     "postponed": 0,
-    "summary": "昨日共進行了 3 場賽事。 TOR @ BAL，比分 3:4，Pete Alonso 擊出全壘打；WSH @ DET，比分 2:9，Keider Montero 投出 5 次三振；MIN @ SF，比分 2:5。"
+    "summary": "昨日共進行了 3 場賽事。 WSH @ DET，比分 2:9，Keider Montero 投出 5 次三振；TOR @ BAL，比分 3:4，Pete Alonso 擊出全壘打；MIN @ SF，比分 2:5。",
+    "type": "season",
+    "transactions_count": 25,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-22": {
     "date": "2026-09-22",
     "total_games": 16,
     "postponed": 1,
-    "summary": "昨日共進行了 16 場賽事。其中有 1 場賽事延期。 TB @ NYY，比分 0:2，Carlos Rodón 投出 8 次三振；TB @ NYY，比分 6:1，Drew Rasmussen 投出 11 次三振；WSH @ DET，比分 3:1，CJ Abrams 擊出全壘打。"
+    "summary": "昨日共進行了 16 場賽事。其中有 1 場賽事延期。 TB @ NYY，比分 0:2，Carlos Rodón 投出 8 次三振；STL @ PIT，比分 0:2，Jared Jones 投出 9 次三振；TB @ NYY，比分 6:1，Drew Rasmussen 投出 11 次三振。",
+    "type": "season",
+    "transactions_count": 25,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-23": {
     "date": "2026-09-23",
     "total_games": 16,
     "postponed": 0,
-    "summary": "昨日共進行了 16 場賽事。 WSH @ DET，比分 4:2，Framber Valdez 投出 6 次三振；TOR @ BAL，比分 2:4；TOR @ BAL，比分 2:4，Trey Gibson 投出 7 次三振。"
+    "summary": "昨日共進行了 16 場賽事。 TOR @ BAL，比分 2:4，Trey Gibson 投出 7 次三振；NYM @ TEX，比分 7:2，Nolan McLean 投出 5 次三振；CLE @ BOS，比分 0:1。",
+    "type": "season",
+    "transactions_count": 38,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-24": {
     "date": "2026-09-24",
     "total_games": 12,
     "postponed": 0,
-    "summary": "昨日共進行了 12 場賽事。 STL @ PIT，比分 1:2，Paul Skenes 投出 8 次三振；CWS @ KCR，比分 9:1，David Sandlin 投出 7 次三振；MIA @ CHC，比分 1:2。"
+    "summary": "昨日共進行了 12 場賽事。 HOU @ ATH，比分 7:5，Lucas Spence 擊出全壘打；CWS @ KC，比分 9:1，David Sandlin 投出 7 次三振；STL @ PIT，比分 1:2，Paul Skenes 投出 8 次三振。",
+    "type": "season",
+    "transactions_count": 29,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-25": {
     "date": "2026-09-25",
     "total_games": 17,
     "postponed": 0,
-    "summary": "昨日共進行了 17 場賽事。 CHC @ BOS，比分 3:4；CHC @ BOS，比分 0:2，Jedixson Paez 投出 5 次三振；BAL @ NYY，比分 10:2，Albert Suárez 投出 5 次三振。"
+    "summary": "昨日共進行了 17 場賽事。 ATL @ MIA，比分 0:3，Eury Pérez 投出 8 次三振；LAD @ SF，比分 2:0，Tarik Skubal 投出 10 次三振；LAA @ SEA，比分 7:5，Reid Detmers 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 36,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-26": {
     "date": "2026-09-26",
     "total_games": 13,
     "postponed": 0,
-    "summary": "昨日共進行了 13 場賽事。 NYM @ WSH，比分 7:1，Jonah Tong 投出 9 次三振；PIT @ DET，比分 3:4，Justin Verlander 投出 6 次三振；CIN @ TOR，比分 5:1。"
+    "summary": "昨日共進行了 13 場賽事。 HOU @ ATH，比分 13:2，Hayden Wesneski 投出 5 次三振；CIN @ TOR，比分 5:1；CLE @ KC，比分 11:5，Brayan Rocchio 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 32,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-27": {
     "date": "2026-09-27",
     "total_games": 15,
     "postponed": 1,
-    "summary": "昨日共進行了 15 場賽事。其中有 1 場賽事延期。 NYM @ WSH，比分 4:6，Andrés Chaparro 擊出全壘打；TB @ PHI，比分 3:7，Zack Wheeler 投出 5 次三振；CHC @ BOS，比分 6:2，Alex Bregman 擊出全壘打。"
+    "summary": "昨日共進行了 15 場賽事。其中有 1 場賽事延期。 TEX @ MIN，比分 4:6；CHC @ BOS，比分 6:2，Alex Bregman 擊出全壘打；CIN @ TOR，比分 1:5，Max Scherzer 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 34,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-28": {
     "date": "2026-09-28",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-09-28 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 336 筆",
+    "type": "offseason",
+    "transactions_count": 336,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-29": {
     "date": "2026-09-29",
     "total_games": 4,
     "postponed": 0,
-    "summary": "昨日共進行了 4 場賽事。 PHI @ ATL，比分 3:5，Chris Sale 投出 9 次三振；CWS @ HOU，比分 6:3；BOS @ NYY，比分 0:9，Cam Schlittler 投出 10 次三振。"
+    "summary": "昨日共進行了 4 場賽事。 BOS @ NYY，比分 0:9，Cam Schlittler 投出 10 次三振；CHC @ SD，比分 0:8，Michael King 投出 8 次三振；PHI @ ATL，比分 3:5，Chris Sale 投出 9 次三振。",
+    "type": "season",
+    "transactions_count": 95,
+    "translated": false,
+    "news_count": 0
   },
   "2026-09-30": {
     "date": "2026-09-30",
     "total_games": 4,
     "postponed": 0,
-    "summary": "昨日共進行了 4 場賽事。 PHI @ ATL，比分 4:3，Tyler Mahle 投出 6 次三振；CWS @ HOU，比分 7:3，Chase Meidroth 擊出全壘打；BOS @ NYY，比分 2:9，Max Fried 投出 6 次三振。"
+    "summary": "昨日共進行了 4 場賽事。 BOS @ NYY，比分 2:9，Max Fried 投出 6 次三振；PHI @ ATL，比分 4:3，Tyler Mahle 投出 6 次三振；CWS @ HOU，比分 7:3，Chase Meidroth 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 6,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-01": {
     "date": "2026-10-01",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 PHI @ ATL，比分 2:6，Michael Harris II 擊出全壘打。"
+    "summary": "昨日共進行了 1 場賽事。 PHI @ ATL，比分 2:6，Michael Harris II 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 46,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-02": {
     "date": "2026-10-02",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-10-02 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 17 筆",
+    "type": "offseason",
+    "transactions_count": 17,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-03": {
     "date": "2026-10-03",
     "total_games": 4,
     "postponed": 0,
-    "summary": "昨日共進行了 4 場賽事。 CWS @ CLE，比分 3:0，Grant Taylor 投出 6 次三振；ATL @ LAD，比分 3:5，Tarik Skubal 投出 7 次三振；NYY @ TB，比分 0:1，Drew Rasmussen 投出 10 次三振。"
+    "summary": "昨日共進行了 4 場賽事。 NYY @ TB，比分 0:1，Drew Rasmussen 投出 10 次三振；ATL @ LAD，比分 3:5，Tarik Skubal 投出 7 次三振；CWS @ CLE，比分 3:0，Grant Taylor 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 30,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-04": {
     "date": "2026-10-04",
     "total_games": 2,
     "postponed": 0,
-    "summary": "昨日共進行了 2 場賽事。 SD @ MIL，比分 3:4，Michael King 投出 6 次三振；ATL @ LAD，比分 3:2。"
+    "summary": "昨日共進行了 2 場賽事。 SD @ MIL，比分 3:4，Michael King 投出 6 次三振；ATL @ LAD，比分 3:2。",
+    "type": "season",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-05": {
     "date": "2026-10-05",
     "total_games": 2,
     "postponed": 0,
-    "summary": "昨日共進行了 2 場賽事。 CWS @ CLE，比分 4:3，Sean Burke 投出 6 次三振；NYY @ TB，比分 2:5，Ben Rice 擊出全壘打。"
+    "summary": "昨日共進行了 2 場賽事。 CWS @ CLE，比分 4:3，Sean Burke 投出 6 次三振；NYY @ TB，比分 2:5，Ben Rice 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 2,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-06": {
     "date": "2026-10-06",
     "total_games": 2,
     "postponed": 0,
-    "summary": "昨日共進行了 2 場賽事。 LAD @ ATL，比分 3:1，Yoshinobu Yamamoto 投出 10 次三振；MIL @ SD，比分 3:4，William Contreras 擊出全壘打。"
+    "summary": "昨日共進行了 2 場賽事。 LAD @ ATL，比分 3:1，Yoshinobu Yamamoto 投出 10 次三振；MIL @ SD，比分 3:4，William Contreras 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 5,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-07": {
     "date": "2026-10-07",
     "total_games": 4,
     "postponed": 0,
-    "summary": "昨日共進行了 4 場賽事。 CLE @ CWS，比分 9:3，Foster Griffin 投出 7 次三振；LAD @ ATL，比分 4:1；TB @ NYY，比分 4:3。"
+    "summary": "昨日共進行了 4 場賽事。 LAD @ ATL，比分 4:1；CLE @ CWS，比分 9:3，Foster Griffin 投出 7 次三振；MIL @ SD，比分 3:1。",
+    "type": "season",
+    "transactions_count": 2,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-08": {
     "date": "2026-10-08",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 CLE @ CWS，比分 9:5，José Ramírez 擊出全壘打。"
+    "summary": "昨日共進行了 1 場賽事。 CLE @ CWS，比分 9:5，José Ramírez 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 45,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-09": {
     "date": "2026-10-09",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-10-09 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 4 筆",
+    "type": "offseason",
+    "transactions_count": 4,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-10": {
     "date": "2026-10-10",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 CWS @ CLE，比分 0:2，Gavin Williams 投出 12 次三振。"
+    "summary": "昨日共進行了 1 場賽事。 CWS @ CLE，比分 0:2，Gavin Williams 投出 12 次三振。",
+    "type": "season",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-11": {
     "date": "2026-10-11",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 LAD @ MIL，比分 1:2，Tarik Skubal 投出 7 次三振。"
+    "summary": "昨日共進行了 1 場賽事。 LAD @ MIL，比分 1:2，Tarik Skubal 投出 7 次三振。",
+    "type": "season",
+    "transactions_count": 16,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-12": {
     "date": "2026-10-12",
     "total_games": 2,
     "postponed": 0,
-    "summary": "昨日共進行了 2 場賽事。 LAD @ MIL，比分 4:7，William Contreras 擊出全壘打；CLE @ TB，比分 7:3，Chase DeLauter 擊出全壘打。"
+    "summary": "昨日共進行了 2 場賽事。 CLE @ TB，比分 7:3，Chase DeLauter 擊出全壘打；LAD @ MIL，比分 4:7，William Contreras 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 4,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-13": {
     "date": "2026-10-13",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 CLE @ TB，比分 1:3，Freddy Peralta 投出 6 次三振。"
+    "summary": "昨日共進行了 1 場賽事。 CLE @ TB，比分 1:3，Freddy Peralta 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-14": {
     "date": "2026-10-14",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 MIL @ LAD，比分 6:2。"
+    "summary": "昨日共進行了 1 場賽事。 MIL @ LAD，比分 6:2。",
+    "type": "season",
+    "transactions_count": 1,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-15": {
     "date": "2026-10-15",
     "total_games": 2,
     "postponed": 0,
-    "summary": "昨日共進行了 2 場賽事。 TB @ CLE，比分 2:3，Gavin Williams 投出 9 次三振；MIL @ LAD，比分 6:4。"
+    "summary": "昨日共進行了 2 場賽事。 TB @ CLE，比分 2:3，Gavin Williams 投出 9 次三振；MIL @ LAD，比分 6:4。",
+    "type": "season",
+    "transactions_count": 2,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-16": {
     "date": "2026-10-16",
     "total_games": 1,
     "postponed": 1,
-    "summary": "昨日共進行了 1 場賽事。其中有 1 場賽事延期。"
+    "summary": "昨日共進行了 1 場賽事。其中有 1 場賽事延期。",
+    "type": "season",
+    "transactions_count": 14,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-17": {
     "date": "2026-10-17",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 TB @ CLE，比分 7:3。"
+    "summary": "昨日共進行了 1 場賽事。 TB @ CLE，比分 7:3。",
+    "type": "season",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-18": {
     "date": "2026-10-18",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 TB @ CLE，比分 3:1，Drew Rasmussen 投出 6 次三振。"
+    "summary": "昨日共進行了 1 場賽事。 TB @ CLE，比分 3:1，Drew Rasmussen 投出 6 次三振。",
+    "type": "season",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-19": {
     "date": "2026-10-19",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 CLE @ TB，比分 3:7。"
+    "summary": "昨日共進行了 1 場賽事。 CLE @ TB，比分 3:7。",
+    "type": "season",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-20": {
     "date": "2026-10-20",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-10-20 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 14 筆",
+    "type": "offseason",
+    "transactions_count": 14,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-21": {
     "date": "2026-10-21",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-10-21 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季，無重大消息",
+    "type": "offseason",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-22": {
     "date": "2026-10-22",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-10-22 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 5 筆",
+    "type": "offseason",
+    "transactions_count": 5,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-23": {
     "date": "2026-10-23",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 TB @ MIL，比分 2:3。"
+    "summary": "昨日共進行了 1 場賽事。 TB @ MIL，比分 2:3。",
+    "type": "season",
+    "transactions_count": 4,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-24": {
     "date": "2026-10-24",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 TB @ MIL，比分 4:5。"
+    "summary": "昨日共進行了 1 場賽事。 TB @ MIL，比分 4:5。",
+    "type": "season",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-25": {
     "date": "2026-10-25",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-10-25 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季，無重大消息",
+    "type": "offseason",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-26": {
     "date": "2026-10-26",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 MIL @ TB，比分 10:1。"
+    "summary": "昨日共進行了 1 場賽事。 MIL @ TB，比分 10:1。",
+    "type": "season",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-27": {
     "date": "2026-10-27",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 MIL @ TB，比分 3:4，Cooper Pratt 擊出全壘打。"
+    "summary": "昨日共進行了 1 場賽事。 MIL @ TB，比分 3:4，Cooper Pratt 擊出全壘打。",
+    "type": "season",
+    "transactions_count": 2,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-28": {
     "date": "2026-10-28",
     "total_games": 1,
     "postponed": 0,
-    "summary": "昨日共進行了 1 場賽事。 MIL @ TB，比分 4:1。"
+    "summary": "昨日共進行了 1 場賽事。 MIL @ TB，比分 4:1。",
+    "type": "season",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-29": {
     "date": "2026-10-29",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-10-29 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 181 筆",
+    "type": "offseason",
+    "transactions_count": 181,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-30": {
     "date": "2026-10-30",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-10-30 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 15 筆",
+    "type": "offseason",
+    "transactions_count": 15,
+    "translated": false,
+    "news_count": 0
   },
   "2026-10-31": {
     "date": "2026-10-31",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-10-31 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 9 筆",
+    "type": "offseason",
+    "transactions_count": 9,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-01": {
     "date": "2026-11-01",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-01 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 2 筆",
+    "type": "offseason",
+    "transactions_count": 2,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-02": {
     "date": "2026-11-02",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-02 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 214 筆",
+    "type": "offseason",
+    "transactions_count": 214,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-03": {
     "date": "2026-11-03",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-03 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 3 筆",
+    "type": "offseason",
+    "transactions_count": 3,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-04": {
     "date": "2026-11-04",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-04 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 1 筆",
+    "type": "offseason",
+    "transactions_count": 1,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-05": {
     "date": "2026-11-05",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-05 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季，無重大消息",
+    "type": "offseason",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-06": {
     "date": "2026-11-06",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-06 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 5 筆",
+    "type": "offseason",
+    "transactions_count": 5,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-07": {
     "date": "2026-11-07",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-07 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季，無重大消息",
+    "type": "offseason",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-08": {
     "date": "2026-11-08",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-08 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季，無重大消息",
+    "type": "offseason",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-09": {
     "date": "2026-11-09",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-09 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 2 筆",
+    "type": "offseason",
+    "transactions_count": 2,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-10": {
     "date": "2026-11-10",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-10 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 4 筆",
+    "type": "offseason",
+    "transactions_count": 4,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-11": {
     "date": "2026-11-11",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-11 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季，無重大消息",
+    "type": "offseason",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-12": {
     "date": "2026-11-12",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-12 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 2 筆",
+    "type": "offseason",
+    "transactions_count": 2,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-13": {
     "date": "2026-11-13",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-13 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季，無重大消息",
+    "type": "offseason",
+    "transactions_count": 0,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-14": {
     "date": "2026-11-14",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-14 當日無安排任何大聯盟賽事。"
+    "summary": "Everything you need to know about Baseball Hall of Fame voting。",
+    "type": "offseason",
+    "transactions_count": 1,
+    "translated": false,
+    "news_count": 1
   },
   "2026-11-15": {
     "date": "2026-11-15",
     "total_games": 0,
     "postponed": 0,
-    "summary": "2026-11-15 當日無安排任何大聯盟賽事。"
+    "summary": "休賽季：人事異動 1 筆",
+    "type": "offseason",
+    "transactions_count": 1,
+    "translated": false,
+    "news_count": 0
   },
   "2026-11-16": {
     "date": "2026-11-16",
@@ -738,5 +1166,15 @@
     "transactions_count": 21,
     "translated": true,
     "news_count": 11
+  },
+  "2026-07-19": {
+    "date": "2026-07-19",
+    "total_games": 16,
+    "postponed": 0,
+    "summary": "昨日共進行了 16 場賽事。 LAD @ NYY，比分 8:2，Yoshinobu Yamamoto 投出 7 次三振；NYM @ PHI，比分 6:1，Nolan McLean 投出 10 次三振；CWS @ TOR，比分 3:0，Sean Burke 投出 5 次三振。",
+    "type": "season",
+    "transactions_count": 39,
+    "translated": false,
+    "news_count": 0
   }
 }

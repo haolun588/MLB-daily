@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MLB 每日戰報 - 2026-11-06 休賽季快報</title>
+  <meta name="color-scheme" content="dark light">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body>
+<header class="masthead wrap">
+  <nav class="nav-row" aria-label="頁面導覽">
+    <a href="../../../index.html">← 首頁</a>
+    <span class="nav-links"><a href="../../../teams.html">球隊名單</a><a href="../../../archive.html">歷史存檔</a></span>
+  </nav>
+  <div class="brand">
+    <h1>MLB 每日戰報</h1>
+    <p class="dateline">2026 年 11 月 06 日（五）休賽季快報</p>
+  </div>
+</header>
+<main>
+<div class="wrap">
+  <dl class="overview">
+    <div><dt>新聞</dt><dd>0 則</dd></div><div><dt>人事異動</dt><dd>5 筆</dd></div>
+  </dl>
+</div>
+
+<section class="section wrap" aria-labelledby="news-h"><div class="section-head"><h2 id="news-h">今日新聞</h2><span class="count">0 則</span></div><p class="section-empty">當日無新聞。</p></section>
+
+<section class="section wrap" aria-labelledby="tx-h"><div class="section-head"><h2 id="tx-h">大聯盟人事異動</h2><span class="count">5 筆</span></div><div class="tx-grid"><div class="tx-group" style="--team:#BD3039"><h3><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/111.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" width="22" height="22" alt="BOS" loading="lazy"></picture>波士頓紅襪</h3><ul class="tx-list"><li>Boston Red Sox released RHP <a class="plink" href="https://baseballsavant.mlb.com/savant-player/677161" target="_blank" rel="noopener">Zack Kelly</a>.</li></ul></div><div class="tx-group team-stripe--dark" style="--team:#0C2340"><h3><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/114.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/114.svg" width="22" height="22" alt="CLE" loading="lazy"></picture>克里夫蘭守護者</h3><ul class="tx-list"><li>Cleveland Guardians claimed DH <a class="plink" href="https://baseballsavant.mlb.com/savant-player/677588" target="_blank" rel="noopener">José Tena</a> off waivers from Washington Nationals.</li></ul></div><div class="tx-group team-stripe--dark" style="--team:#0C2340"><h3><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/116.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/116.svg" width="22" height="22" alt="DET" loading="lazy"></picture>底特律老虎</h3><ul class="tx-list"><li>Detroit Tigers sent RHP <a class="plink" href="https://baseballsavant.mlb.com/savant-player/700270" target="_blank" rel="noopener">Yilber Díaz</a> outright to Toledo Mud Hens.</li></ul></div><div class="tx-group" style="--team:#AB0003"><h3><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/120.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/120.svg" width="22" height="22" alt="WSH" loading="lazy"></picture>華盛頓國民</h3><ul class="tx-list"><li>Washington Nationals designated RHP <a class="plink" href="https://baseballsavant.mlb.com/savant-player/693312" target="_blank" rel="noopener">Kyle Nicolas</a> for assignment.</li></ul></div><div class="tx-group" style="--team:#FD5A1E"><h3><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/137.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/137.svg" width="22" height="22" alt="SF" loading="lazy"></picture>舊金山巨人</h3><ul class="tx-list"><li>Washington Nationals traded RHP <a class="plink" href="https://baseballsavant.mlb.com/savant-player/801128" target="_blank" rel="noopener">Robert Cranz</a> to San Francisco Giants for LHP Reiver Sanmartin.</li></ul></div></div></section>
+</main>
+<footer class="wrap site-footer">
+  <span>資料來源：MLB Stats API</span>
+  <span>產生時間：2026-11-18 06:15（台北時間）</span>
+</footer>
+<script>
+(function () {
+  var form = document.getElementById('searchForm');
+  var input = document.getElementById('q');
+  var hint = document.getElementById('searchHint');
+  if (!form || !input || !hint) return;   // 無比賽卡片時不輸出搜尋區
+  var DEFAULT_HINT = hint.textContent;
+  var lastQuery = '', lastIndex = -1, timer = null;
+
+  function say(msg, isError) {
+    hint.textContent = msg;               // 一律 textContent，不拼接 HTML
+    hint.classList.toggle('is-error', !!isError);
+  }
+
+  // data-teams 以 | 分隔：縮寫、中文名、英文名…
+  function find(q) {
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.game[data-teams]'));
+    var exact = [], partial = [];
+    cards.forEach(function (card) {
+      var tokens = card.getAttribute('data-teams').toLowerCase().split('|');
+      if (tokens.indexOf(q) !== -1) exact.push(card);
+      else if (tokens.some(function (t) { return t.indexOf(q) !== -1; })) partial.push(card);
+    });
+    return exact.length ? exact : partial;   // 精確縮寫／全名優先，沒有才用部分比對
+  }
+
+  function flash(card) {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    card.classList.add('is-hit');
+    clearTimeout(timer);
+    timer = setTimeout(function () { card.classList.remove('is-hit'); }, 2200);
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var raw = input.value.trim();
+    var q = raw.toLowerCase();
+    document.querySelectorAll('.game.is-hit').forEach(function (c) { c.classList.remove('is-hit'); });
+    if (!q) { say(DEFAULT_HINT, false); lastQuery = ''; return; }
+
+    var results = find(q);
+    if (!results.length) {
+      say('找不到「' + raw + '」，請輸入隊名或縮寫，例：洋基、LAD', true);
+      lastQuery = ''; lastIndex = -1;
+      return;
+    }
+    lastIndex = (q === lastQuery) ? (lastIndex + 1) % results.length : 0;  // 再按 Enter 跳下一筆
+    lastQuery = q;
+    flash(results[lastIndex]);
+    say(results.length > 1
+      ? '共 ' + results.length + ' 場，目前第 ' + (lastIndex + 1) + ' 場，再按 Enter 跳下一場'
+      : '已跳至「' + raw + '」的比賽', false);
+  });
+
+  input.addEventListener('input', function () { lastQuery = ''; });
+})();
+</script>
+</body>
+</html>
