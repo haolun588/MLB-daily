@@ -382,27 +382,64 @@ def _http_error_detail(err, secrets):
         return ""
 
 
+GEMINI_RETRY_DELAYS = (5, 15, 45)  # 首次失敗後各次重試前的等待秒數（共最多 4 次嘗試）
+GEMINI_RETRY_AFTER_CAP = 120
+GEMINI_RETRYABLE_HTTP = (429, 500, 502, 503, 504)
+GEMINI_FALLBACK_MODEL = "gemini-3.6-flash"
+
+# 最後一次 post_json 的結果狀態：retryable=True 表示失敗屬於可重試類型（429/5xx/逾時/連線錯誤）且重試已耗盡；
+# 不可重試（其他 4xx、解析失敗）或成功時為 False。呼叫端據此決定是否改用備用模型。
+LAST_POST = {"retryable": False}
+
+
+def _retry_after_seconds(err):
+    try:
+        value = err.headers.get("Retry-After") if err.headers else None
+        return float(value) if value is not None and str(value).strip().replace(".", "", 1).isdigit() else None
+    except Exception:
+        return None
+
+
 def post_json(url, payload, headers, timeout=30):
-    """以標準函式庫 POST JSON，回傳解析後的 dict；失敗重試 1 次，仍失敗回傳 None。
+    """以標準函式庫 POST JSON，回傳解析後的 dict；失敗回傳 None。
+    可重試錯誤（HTTP 429/500/502/503/504、逾時、連線錯誤）最多共嘗試 4 次，間隔 GEMINI_RETRY_DELAYS，
+    並尊重數字型 Retry-After（取較大者，上限 120 秒）；其他錯誤不重試。
+    結束時將 LAST_POST["retryable"] 設為「是否因可重試錯誤耗盡而失敗」。
     錯誤訊息只印 HTTP 狀態碼、例外類型，以及 Google 錯誤 JSON 的 error.status／error.message（前 200 字，
     且先把金鑰字串遮成 ***）；不印網址與 header。"""
     secrets = [v for k, v in (headers or {}).items() if "key" in k.lower() and isinstance(v, str) and v]
     data = json.dumps(payload).encode("utf-8")
     hdrs = {"Content-Type": "application/json"}
     hdrs.update(headers or {})
-    for attempt in range(2):
+    total = len(GEMINI_RETRY_DELAYS) + 1
+    LAST_POST["retryable"] = False
+    for attempt in range(total):
+        retry_after = None
         try:
             req = urllib.request.Request(url, data=data, headers=hdrs, method="POST")
             with urllib.request.urlopen(req, timeout=timeout) as response:
                 result = json.loads(response.read().decode("utf-8"))
+            LAST_POST["retryable"] = False
             return result if isinstance(result, dict) else None
         except urllib.error.HTTPError as e:
             detail = _http_error_detail(e, secrets)
-            print(f"Warning: translation request failed (attempt {attempt + 1}/2): HTTP {e.code}{detail}", file=sys.stderr)
+            print(f"Warning: translation request failed (attempt {attempt + 1}/{total}): HTTP {e.code}{detail}", file=sys.stderr)
+            if e.code not in GEMINI_RETRYABLE_HTTP:
+                LAST_POST["retryable"] = False
+                return None
+            retry_after = _retry_after_seconds(e)
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:  # socket.timeout 為 TimeoutError 別名
+            print(f"Warning: translation request failed (attempt {attempt + 1}/{total}): {type(e).__name__}", file=sys.stderr)
         except Exception as e:
-            print(f"Warning: translation request failed (attempt {attempt + 1}/2): {type(e).__name__}", file=sys.stderr)
-        if attempt == 0:
-            time.sleep(2)
+            print(f"Warning: translation request failed (attempt {attempt + 1}/{total}): {type(e).__name__}", file=sys.stderr)
+            LAST_POST["retryable"] = False
+            return None
+        LAST_POST["retryable"] = True
+        if attempt < total - 1:
+            delay = GEMINI_RETRY_DELAYS[attempt]
+            if retry_after is not None:
+                delay = min(max(delay, retry_after), GEMINI_RETRY_AFTER_CAP)
+            time.sleep(delay)
     return None
 
 
@@ -466,9 +503,10 @@ def _translate_chunk(chunk, glossary, api_key, model):
         },
     }
     headers = {"x-goog-api-key": api_key, "Api-Revision": GEMINI_API_REVISION}
+    LAST_POST["retryable"] = False
     resp = post_json(GEMINI_ENDPOINT, payload, headers)
     if resp is None:
-        return None  # post_json 已印出失敗原因
+        return None  # post_json 已印出失敗原因；LAST_POST["retryable"] 記錄是否為可重試類型
     text = _interaction_text(resp)
     if not text:
         steps = resp.get("steps")
@@ -492,6 +530,17 @@ def _translate_chunk(chunk, glossary, api_key, model):
     return out
 
 
+def _fallback_model(primary):
+    """備用模型名稱；環境變數 GEMINI_FALLBACK_MODEL 設為空字串則停用；與主模型相同視為無備用。"""
+    fb = os.environ.get("GEMINI_FALLBACK_MODEL")
+    fb = GEMINI_FALLBACK_MODEL if fb is None else fb.strip()
+    return fb if fb and fb != primary else None
+
+
+# 最近一次 translate_texts 實際用過備用模型的批次數與使用的模型（供 apply_translations 顯示）
+LAST_TRANSLATION = {"primary": None, "fallback": None, "fallback_ok": False}
+
+
 def translate_texts(items, extra_team_names=()):
     """批次翻譯。items: [{"text": 原文, "keep": [逐字保留的英文詞]}]。
     無金鑰、items 為空、或所有批次皆失敗 -> None（呼叫端用原文）；
@@ -500,12 +549,19 @@ def translate_texts(items, extra_team_names=()):
     if not api_key or not items:
         return None
     model = os.environ.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
+    fallback = _fallback_model(model)
+    LAST_TRANSLATION.update(primary=model, fallback=fallback, fallback_ok=False)
     glossary = build_team_glossary(extra_team_names)
     results = []
     any_ok = False
     for start in range(0, len(items), TRANSLATE_BATCH_SIZE):
         chunk = items[start:start + TRANSLATE_BATCH_SIZE]
         out = _translate_chunk(chunk, glossary, api_key, model)
+        if out is None and fallback and LAST_POST["retryable"]:
+            print(f"Warning: 主模型 {model} 持續失敗，改用備用模型 {fallback}", file=sys.stderr)
+            out = _translate_chunk(chunk, glossary, api_key, fallback)
+            if out is not None:
+                LAST_TRANSLATION["fallback_ok"] = True
         if out is None:
             out = [it["text"] for it in chunk]
         else:
@@ -548,7 +604,10 @@ def apply_translations(news, views, tx_items, extra_team_names=()):
             obj[dst] = tr
             done += 1
     model = os.environ.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
-    print(f"Translation: 成功 {done}/{len(items)} 則（模型 {model}）")
+    if LAST_TRANSLATION["fallback_ok"]:
+        print(f"Translation: 成功 {done}/{len(items)} 則（模型 {LAST_TRANSLATION['fallback']}，主模型 {model} 失敗後改用）")
+    else:
+        print(f"Translation: 成功 {done}/{len(items)} 則（模型 {model}）")
     return True
 
 

@@ -50,7 +50,7 @@ Workflow（`.github/workflows/daily_report.yml`）步驟順序：
 | `DISCORD_WEBHOOK_URL` | 要通知時必填 | Discord Webhook 網址 |
 | `GEMINI_API_KEY` | 要翻譯時必填 | 未設定則不翻譯，顯示英文原文 |
 
-可選的環境變數 `GEMINI_MODEL`：覆寫預設的 Gemini 模型名稱。金鑰一律放在 Secrets 或本機環境變數，不得寫進程式或文件。
+可選的環境變數 `GEMINI_MODEL`：覆寫預設的 Gemini 模型名稱。可選的環境變數 `GEMINI_FALLBACK_MODEL`：主模型遇到暫時性錯誤（429／5xx／逾時）重試仍失敗時改用的備用模型，預設 `gemini-3.6-flash`，設為空字串則停用。金鑰一律放在 Secrets 或本機環境變數，不得寫進程式或文件。
 
 ---
 

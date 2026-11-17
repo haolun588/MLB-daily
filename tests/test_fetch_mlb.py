@@ -1804,12 +1804,14 @@ def zh_echo(payload):
 
 
 class PostJsonTests(unittest.TestCase):
-    def test_retry_once_then_none_and_no_key_in_message(self):
+    def test_retry_until_exhausted_then_none_and_no_key_in_message(self):
+        import urllib.error
         err = io.StringIO()
-        with mock.patch("urllib.request.urlopen", side_effect=OSError("boom")) as m, \
+        with mock.patch("urllib.request.urlopen", side_effect=urllib.error.URLError("boom")) as m, \
                 mock.patch.object(fetch_mlb.time, "sleep"), contextlib.redirect_stderr(err):
             self.assertIsNone(fetch_mlb.post_json("https://x.test/a", {}, {"x-goog-api-key": "SECRETKEY"}))
-        self.assertEqual(m.call_count, 2)
+        self.assertEqual(m.call_count, 4)
+        self.assertIn("attempt 4/4", err.getvalue())
         self.assertNotIn("SECRETKEY", err.getvalue())
         self.assertNotIn("x.test", err.getvalue())
 
@@ -1820,6 +1822,131 @@ class PostJsonTests(unittest.TestCase):
             def read(s): return b'{"a": 1}'
         with mock.patch("urllib.request.urlopen", return_value=R()):
             self.assertEqual(fetch_mlb.post_json("https://x.test", {}, {}), {"a": 1})
+
+
+class _OkResp:
+    def __init__(self, obj): self.obj = obj
+    def __enter__(self): return self
+    def __exit__(self, *a): return False
+    def read(self): return json.dumps(self.obj).encode()
+
+
+def http_err(code, retry_after=None):
+    import urllib.error
+    hdrs = {"Retry-After": retry_after} if retry_after is not None else {}
+    body = json.dumps({"error": {"status": "UNAVAILABLE", "message": "high demand"}}).encode()
+    return urllib.error.HTTPError("https://x.test", code, "err", hdrs, io.BytesIO(body))
+
+
+class PostJsonRetryTests(unittest.TestCase):
+    def call(self, effects):
+        with mock.patch("urllib.request.urlopen", side_effect=effects) as m, \
+                mock.patch.object(fetch_mlb.time, "sleep") as sl, contextlib.redirect_stderr(io.StringIO()):
+            res = fetch_mlb.post_json("https://x.test", {}, {})
+        return res, m, sl
+
+    def test_503_twice_then_success(self):
+        res, m, sl = self.call([http_err(503), http_err(503), _OkResp({"a": 1})])
+        self.assertEqual(res, {"a": 1})
+        self.assertEqual(m.call_count, 3)
+        self.assertEqual([c.args[0] for c in sl.call_args_list], [5, 15])
+        self.assertFalse(fetch_mlb.LAST_POST["retryable"])
+
+    def test_503_forever_exhausts_four_attempts(self):
+        res, m, sl = self.call([http_err(503)] * 4)
+        self.assertIsNone(res)
+        self.assertEqual(m.call_count, 4)
+        self.assertEqual([c.args[0] for c in sl.call_args_list], [5, 15, 45])
+        self.assertTrue(fetch_mlb.LAST_POST["retryable"])
+
+    def test_non_retryable_4xx_no_retry(self):
+        for code in (400, 401, 403, 404):
+            res, m, sl = self.call([http_err(code)])
+            self.assertIsNone(res)
+            self.assertEqual(m.call_count, 1, code)
+            sl.assert_not_called()
+            self.assertFalse(fetch_mlb.LAST_POST["retryable"])
+
+    def test_retry_after_used_and_capped(self):
+        _, _, sl = self.call([http_err(429, "30"), _OkResp({})])
+        self.assertEqual(sl.call_args_list[0].args[0], 30)
+        _, _, sl = self.call([http_err(429, "500"), _OkResp({})])
+        self.assertEqual(sl.call_args_list[0].args[0], 120)
+        _, _, sl = self.call([http_err(429, "1"), _OkResp({})])
+        self.assertEqual(sl.call_args_list[0].args[0], 5)
+        _, _, sl = self.call([http_err(429, "Wed, 21 Oct 2026 07:28:00 GMT"), _OkResp({})])
+        self.assertEqual(sl.call_args_list[0].args[0], 5)
+
+    def test_network_errors_retry(self):
+        import urllib.error, socket
+        for exc in (urllib.error.URLError("x"), TimeoutError(), socket.timeout(), ConnectionResetError()):
+            res, m, sl = self.call([exc, _OkResp({"ok": 1})])
+            self.assertEqual(res, {"ok": 1})
+            self.assertEqual(m.call_count, 2)
+
+
+class TranslateFallbackTests(MlbTestBase):
+    def setUp(self):
+        super().setUp()
+        os.environ["GEMINI_API_KEY"] = "SECRETKEY"
+        os.environ.pop("GEMINI_FALLBACK_MODEL", None)
+        os.environ.pop("GEMINI_MODEL", None)
+        self.addCleanup(os.environ.pop, "GEMINI_FALLBACK_MODEL", None)
+
+    def run_apply(self, effects_by_model):
+        """effects_by_model: {模型: 依序的 urlopen 效果 list}；成功效果為 'ok'。"""
+        used = []
+
+        def fake(req, timeout=30):
+            payload = json.loads(req.data.decode())
+            used.append(payload["model"])
+            eff = effects_by_model[payload["model"]].pop(0)
+            if eff == "ok":
+                return _OkResp(zh_echo(payload))
+            raise eff
+        out = io.StringIO()
+        news = [{"title": "a"}, {"title": "b"}]
+        with mock.patch("urllib.request.urlopen", side_effect=fake), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            ok = fetch_mlb.apply_translations(news, [], [])
+        return ok, out.getvalue(), used, news
+
+    def test_fallback_model_used_after_primary_503(self):
+        ok, out, used, news = self.run_apply({
+            "gemini-3.5-flash-lite": [http_err(503)] * 4, "gemini-3.6-flash": ["ok"]})
+        self.assertTrue(ok)
+        self.assertEqual(used, ["gemini-3.5-flash-lite"] * 4 + ["gemini-3.6-flash"])
+        self.assertIn("title_zh", news[0])
+        self.assertIn("Translation: 成功 2/2 則（模型 gemini-3.6-flash，主模型 gemini-3.5-flash-lite 失敗後改用）", out)
+
+    def test_both_fail_falls_back_to_original(self):
+        ok, out, used, news = self.run_apply({
+            "gemini-3.5-flash-lite": [http_err(503)] * 4, "gemini-3.6-flash": [http_err(503)] * 4})
+        self.assertFalse(ok)
+        self.assertEqual(len(used), 8)
+        self.assertNotIn("title_zh", news[0])
+        self.assertIn("Translation: 失敗，使用原文", out)
+
+    def test_non_retryable_does_not_use_fallback(self):
+        for code in (400, 401, 403, 404):
+            ok, out, used, _ = self.run_apply({"gemini-3.5-flash-lite": [http_err(code)], "gemini-3.6-flash": ["ok"]})
+            self.assertFalse(ok)
+            self.assertEqual(used, ["gemini-3.5-flash-lite"])
+
+    def test_empty_env_disables_fallback(self):
+        os.environ["GEMINI_FALLBACK_MODEL"] = ""
+        ok, _, used, _ = self.run_apply({"gemini-3.5-flash-lite": [http_err(503)] * 4})
+        self.assertFalse(ok)
+        self.assertEqual(len(used), 4)
+
+    def test_same_model_not_repeated_and_override(self):
+        os.environ["GEMINI_FALLBACK_MODEL"] = "gemini-3.5-flash-lite"
+        ok, _, used, _ = self.run_apply({"gemini-3.5-flash-lite": [http_err(503)] * 4})
+        self.assertEqual(len(used), 4)
+        os.environ["GEMINI_FALLBACK_MODEL"] = "other-model"
+        ok, out, used, _ = self.run_apply({"gemini-3.5-flash-lite": [http_err(503)] * 4, "other-model": ["ok"]})
+        self.assertTrue(ok)
+        self.assertEqual(used[-1], "other-model")
 
 
 class TranslateTextsTests(MlbTestBase):
