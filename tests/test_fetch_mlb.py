@@ -524,25 +524,195 @@ class KnownBugTests(MlbTestBase):
         self.assertEqual(meta["total_games"], 2)
         self.assertEqual(html.count(CARD_OPEN), meta["total_games"])
 
-    @unittest.expectedFailure
     def test_M4_seven_inning_doubleheader_not_marked_extra(self):
         """M4: 7 局雙重賽不應標成 Final/7 與 extra 樣式。"""
         _, html = self.generate("schedule_doubleheader7")
         self.assertNotIn("Final/7", html)
         self.assertNotIn('<span class="status-badge extra">', html)
+        self.assertIn('<span class="status-badge final">Final</span>', html)
 
-    @unittest.expectedFailure
     def test_M4_suspended_not_marked_final(self):
         """M4: Suspended 的場次不應被標成完賽（Final/5）。"""
         _, html = self.generate("schedule_suspended")
         self.assertNotIn("Final/5", html)
         self.assertNotIn('<span class="status-badge final">', html)
 
-    @unittest.expectedFailure
     def test_M4_tie_has_no_winner(self):
         """M4: 比分相同（2:2）時，兩隊都不應標示勝方。"""
         _, html = self.generate("schedule_suspended")
         self.assertEqual(html.count(WINNER_ROW), 0)
+
+
+# ---------------------------------------------------------------- 狀態判斷與等待迴圈（模組 B：H4 / M4 / L1）
+def make_game(state="Final", detailed="Final", innings=9, scheduled=9, game_type="R", **status_extra):
+    status = {"abstractGameState": state, "detailedState": detailed}
+    status.update(status_extra)
+    linescore = {"innings": [{"num": i} for i in range(1, innings + 1)], "teams": {}}
+    if scheduled is not None:
+        linescore["scheduledInnings"] = scheduled
+    return {"gamePk": 1, "gameType": game_type, "status": status, "linescore": linescore}
+
+
+def games_block(html):
+    return html.split("<!--GAMES_LIST-->")[1].split("<!--/GAMES_LIST-->")[0]
+
+
+class StatusTests(MlbTestBase):
+    def classify(self, **kw):
+        game = make_game(**kw)
+        return fetch_mlb.classify_game_status(game, game["linescore"])
+
+    def test_nine_inning_final(self):
+        self.assertEqual(self.classify(), ("Final", "final", True))
+
+    def test_extra_innings(self):
+        self.assertEqual(self.classify(innings=11), ("Final/11", "extra", True))
+
+    def test_seven_inning_doubleheader(self):
+        self.assertEqual(self.classify(innings=7, scheduled=7), ("Final", "final", True))
+
+    def test_completed_early(self):
+        result = self.classify(detailed="Completed Early: Rain", innings=5, scheduled=9)
+        self.assertEqual(result, ("Final/5（提前結束）", "final", True))
+
+    def test_suspended(self):
+        text, cls, is_final = self.classify(state="Live", detailed="Suspended: Rain", innings=5)
+        self.assertEqual(text, "暫停比賽")
+        self.assertNotEqual(cls, "final")
+        self.assertFalse(is_final)
+
+    def test_live_is_unfinished(self):
+        text, cls, is_final = self.classify(state="Live", detailed="In Progress", innings=3)
+        self.assertEqual(text, "未完賽")
+        self.assertNotEqual(cls, "final")
+        self.assertFalse(is_final)
+
+    def test_missing_scheduled_innings_defaults_to_nine(self):
+        self.assertEqual(self.classify(innings=9, scheduled=None), ("Final", "final", True))
+
+    def test_suspended_card_has_no_winner_and_no_decisions(self):
+        _, html = self.generate("schedule_suspended")
+        self.assertEqual(html.count(WINNER_ROW), 0)
+        self.assertIn("暫停比賽", html)
+        self.assertNotIn("勝投", html)
+        self.assertNotIn("敗投", html)
+        self.assertNotIn("投球決定", html)
+
+    def test_completed_early_card(self):
+        _, html = self.generate("schedule_completed_early")
+        self.assertIn('<span class="status-badge final">Final/5（提前結束）</span>', html)
+        self.assertEqual(html.count(WINNER_ROW), 1)
+
+    def test_extra_card_keeps_decisions(self):
+        _, html = self.generate("schedule_extra")
+        self.assertIn('<span class="status-badge extra">Final/11</span>', html)
+        self.assertIn("投球決定", html)
+
+    def test_fallback_card_uses_classified_status(self):
+        _, html = self.generate("schedule_suspended", fail_boxscore={4001})
+        self.assertIn("詳細數據暫缺", html)
+        self.assertIn("暫停比賽", html)
+        self.assertNotIn('<span class="status-badge final">', html)
+
+
+class WordingTests(MlbTestBase):
+    def test_world_series_title(self):
+        _, html = self.generate("schedule_worldseries")
+        self.assertIn("世界大賽 #8003", html)
+        self.assertNotIn("例行賽", games_block(html))
+
+    def test_regular_season_title(self):
+        _, html = self.generate("schedule_normal")
+        self.assertIn("例行賽 #1001", html)
+
+    def test_game_type_labels(self):
+        expected = {"R": "例行賽", "F": "外卡賽", "D": "分區系列賽", "L": "聯盟冠軍賽",
+                    "W": "世界大賽", "S": "春訓", "E": "熱身賽", "A": "明星賽", "X": "比賽"}
+        for code, label in expected.items():
+            self.assertEqual(fetch_mlb.game_type_label({"gameType": code}), label)
+        self.assertEqual(fetch_mlb.game_type_label({}), "比賽")
+
+    def test_cancelled_card(self):
+        meta, html = self.generate("schedule_cancelled")
+        games = games_block(html)
+        self.assertIn("取消", games)
+        self.assertNotIn("Postponed", games)
+        self.assertNotIn("延期", games)
+        self.assertEqual(meta["postponed"], 1)
+
+    def test_postponed_wording(self):
+        _, html = self.generate("schedule_postponed")
+        games = games_block(html)
+        self.assertNotIn("今日", games)
+        self.assertIn("原定於當日舉行", games)
+        self.assertIn("Postponed", games)
+
+    def test_world_series_postponed_title(self):
+        _, html = self.generate("schedule_worldseries_postponed")
+        games = games_block(html)
+        self.assertIn("世界大賽", games)
+        self.assertNotIn("例行賽", games)
+
+
+class WaitLoopTests(MlbTestBase):
+    def run_wait(self, *extra):
+        argv = ["fetch_mlb.py", "--date", DATE, "--check-wait", *extra]
+        with mock.patch.object(sys, "argv", argv), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            try:
+                fetch_mlb.main()
+            except SystemExit as e:
+                return e.code
+        return None
+
+    def html_files(self):
+        return list((self.tmp / "reports").rglob("*.html"))
+
+    def test_default_cap_sleeps_seven_times_then_reports(self):
+        self.api.schedule = "schedule_live_timeout"
+        code = self.run_wait()
+        self.assertIsNone(code)
+        self.assertEqual(fetch_mlb.MAX_WAIT_CHECKS, 8)
+        self.assertEqual(fetch_mlb.time.sleep.call_count, 7)
+        self.assertEqual(self.api.schedule_calls, 8)
+        html = self.read_report()
+        self.assertIn("未完賽", html)
+        self.assertNotIn('<span class="status-badge final">', html)
+        self.assertEqual(html.count(WINNER_ROW), 0)
+        self.assertNotIn("投球決定", html)
+        self.assertEqual(self.read_metadata()[DATE]["total_games"], 1)
+        self.discord.assert_called_once()
+
+    def test_max_wait_checks_option(self):
+        self.api.schedule = "schedule_live_timeout"
+        code = self.run_wait("--max-wait-checks", "3")
+        self.assertIsNone(code)
+        self.assertEqual(fetch_mlb.time.sleep.call_count, 2)
+        self.assertEqual(self.api.schedule_calls, 3)
+        self.assertIn("未完賽", self.read_report())
+
+    def test_api_error_all_the_way_exits_without_output(self):
+        self.api.schedule = None
+        code = self.run_wait()
+        self.assertEqual(code, 1)
+        self.assertEqual(fetch_mlb.time.sleep.call_count, 7)
+        self.assertEqual(self.html_files(), [])
+        self.assertFalse((self.tmp / "reports" / "metadata.json").exists())
+        self.discord.assert_not_called()
+
+    def test_suspended_does_not_wait(self):
+        self.api.schedule = "schedule_suspended"
+        finalized, _ = fetch_mlb.check_all_games_finalized(DATE)
+        self.assertTrue(finalized)
+        code = self.run_wait()
+        self.assertIsNone(code)
+        fetch_mlb.time.sleep.assert_not_called()
+        self.assertIn("暫停比賽", self.read_report())
+
+    def test_invalid_max_wait_checks(self):
+        self.api.schedule = "schedule_normal"
+        self.assertEqual(self.run_wait("--max-wait-checks", "0"), 1)
+        self.assertEqual(self.html_files(), [])
 
 
 if __name__ == "__main__":

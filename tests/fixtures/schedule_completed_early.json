@@ -1,0 +1,88 @@
+{
+  "totalItems": 1,
+  "totalGames": 1,
+  "dates": [
+    {
+      "date": "2026-11-15",
+      "totalGames": 1,
+      "games": [
+        {
+          "gamePk": 8001,
+          "status": {
+            "abstractGameState": "Final",
+            "detailedState": "Completed Early: Rain"
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 114,
+                "name": "Cleveland Guardians"
+              },
+              "leagueRecord": {
+                "wins": 85,
+                "losses": 77
+              }
+            },
+            "home": {
+              "team": {
+                "id": 116,
+                "name": "Detroit Tigers"
+              },
+              "leagueRecord": {
+                "wins": 78,
+                "losses": 84
+              }
+            }
+          },
+          "linescore": {
+            "innings": [
+              {
+                "num": 1
+              },
+              {
+                "num": 2
+              },
+              {
+                "num": 3
+              },
+              {
+                "num": 4
+              },
+              {
+                "num": 5
+              }
+            ],
+            "teams": {
+              "away": {
+                "runs": 4,
+                "hits": 6,
+                "errors": 0
+              },
+              "home": {
+                "runs": 1,
+                "hits": 4,
+                "errors": 1
+              }
+            },
+            "scheduledInnings": 9
+          },
+          "decisions": {
+            "winner": {
+              "id": 30012,
+              "fullName": "Away Starter 3001"
+            },
+            "loser": {
+              "id": 30017,
+              "fullName": "Home Starter 3001"
+            },
+            "save": {
+              "id": 30013,
+              "fullName": "Away Closer 3001"
+            }
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

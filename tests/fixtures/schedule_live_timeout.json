@@ -1,0 +1,80 @@
+{
+  "totalItems": 1,
+  "totalGames": 1,
+  "dates": [
+    {
+      "date": "2026-11-15",
+      "totalGames": 1,
+      "games": [
+        {
+          "gamePk": 8004,
+          "status": {
+            "abstractGameState": "Live",
+            "detailedState": "In Progress"
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "id": 114,
+                "name": "Cleveland Guardians"
+              },
+              "leagueRecord": {
+                "wins": 85,
+                "losses": 77
+              }
+            },
+            "home": {
+              "team": {
+                "id": 116,
+                "name": "Detroit Tigers"
+              },
+              "leagueRecord": {
+                "wins": 78,
+                "losses": 84
+              }
+            }
+          },
+          "linescore": {
+            "innings": [
+              {
+                "num": 1
+              },
+              {
+                "num": 2
+              },
+              {
+                "num": 3
+              },
+              {
+                "num": 4
+              },
+              {
+                "num": 5
+              },
+              {
+                "num": 6
+              },
+              {
+                "num": 7
+              }
+            ],
+            "teams": {
+              "away": {
+                "runs": 3,
+                "hits": 6,
+                "errors": 0
+              },
+              "home": {
+                "runs": 2,
+                "hits": 4,
+                "errors": 1
+              }
+            },
+            "scheduledInnings": 9
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

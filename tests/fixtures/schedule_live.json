@@ -57,8 +57,10 @@
                 "hits": 3,
                 "errors": 1
               }
-            }
-          }
+            },
+            "scheduledInnings": 9
+          },
+          "gameType": "R"
         }
       ]
     }

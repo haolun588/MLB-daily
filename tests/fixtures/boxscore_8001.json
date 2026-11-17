@@ -1,0 +1,170 @@
+{
+  "teams": {
+    "away": {
+      "players": {
+        "ID30011": {
+          "person": {
+            "id": 30011,
+            "fullName": "Away Batter 3001"
+          },
+          "position": {
+            "abbreviation": "RF"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 4,
+              "runs": 1,
+              "hits": 2,
+              "doubles": 1,
+              "triples": 0,
+              "homeRuns": 1,
+              "rbi": 2,
+              "baseOnBalls": 0,
+              "strikeOuts": 1,
+              "stolenBases": 1
+            }
+          },
+          "seasonStats": {
+            "batting": {
+              "homeRuns": 9,
+              "stolenBases": 15
+            }
+          }
+        },
+        "ID30012": {
+          "person": {
+            "id": 30012,
+            "fullName": "Away Starter 3001"
+          },
+          "position": {
+            "abbreviation": "P"
+          },
+          "stats": {
+            "pitching": {
+              "inningsPitched": "6.0",
+              "hits": 4,
+              "runs": 1,
+              "earnedRuns": 1,
+              "baseOnBalls": 1,
+              "strikeOuts": 7,
+              "numberOfPitches": 95,
+              "strikes": 62,
+              "wins": 1,
+              "losses": 0,
+              "saves": 0
+            }
+          },
+          "seasonStats": {
+            "pitching": {
+              "wins": 10,
+              "losses": 5,
+              "saves": 0
+            }
+          }
+        },
+        "ID30013": {
+          "person": {
+            "id": 30013,
+            "fullName": "Away Closer 3001"
+          },
+          "position": {
+            "abbreviation": "P"
+          },
+          "stats": {
+            "pitching": {
+              "inningsPitched": "1.0",
+              "hits": 0,
+              "runs": 0,
+              "earnedRuns": 0,
+              "baseOnBalls": 0,
+              "strikeOuts": 2,
+              "numberOfPitches": 15,
+              "strikes": 11,
+              "wins": 0,
+              "losses": 0,
+              "saves": 1
+            }
+          },
+          "seasonStats": {
+            "pitching": {
+              "wins": 2,
+              "losses": 1,
+              "saves": 30
+            }
+          }
+        }
+      },
+      "pitchers": [
+        30012,
+        30013
+      ]
+    },
+    "home": {
+      "players": {
+        "ID30016": {
+          "person": {
+            "id": 30016,
+            "fullName": "Home Batter 3001"
+          },
+          "position": {
+            "abbreviation": "RF"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 4,
+              "runs": 1,
+              "hits": 2,
+              "doubles": 1,
+              "triples": 0,
+              "homeRuns": 1,
+              "rbi": 2,
+              "baseOnBalls": 0,
+              "strikeOuts": 1,
+              "stolenBases": 1
+            }
+          },
+          "seasonStats": {
+            "batting": {
+              "homeRuns": 9,
+              "stolenBases": 15
+            }
+          }
+        },
+        "ID30017": {
+          "person": {
+            "id": 30017,
+            "fullName": "Home Starter 3001"
+          },
+          "position": {
+            "abbreviation": "P"
+          },
+          "stats": {
+            "pitching": {
+              "inningsPitched": "6.0",
+              "hits": 4,
+              "runs": 4,
+              "earnedRuns": 4,
+              "baseOnBalls": 1,
+              "strikeOuts": 7,
+              "numberOfPitches": 95,
+              "strikes": 62,
+              "wins": 0,
+              "losses": 1,
+              "saves": 0
+            }
+          },
+          "seasonStats": {
+            "pitching": {
+              "wins": 10,
+              "losses": 5,
+              "saves": 0
+            }
+          }
+        }
+      },
+      "pitchers": [
+        30017
+      ]
+    }
+  }
+}

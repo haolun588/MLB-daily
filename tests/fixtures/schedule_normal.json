@@ -75,7 +75,8 @@
                 "hits": 6,
                 "errors": 1
               }
-            }
+            },
+            "scheduledInnings": 9
           },
           "decisions": {
             "winner": {
@@ -90,7 +91,8 @@
               "id": 10013,
               "fullName": "Away Closer 1001"
             }
-          }
+          },
+          "gameType": "R"
         },
         {
           "gamePk": 1002,
@@ -161,7 +163,8 @@
                 "hits": 7,
                 "errors": 1
               }
-            }
+            },
+            "scheduledInnings": 9
           },
           "decisions": {
             "winner": {
@@ -176,7 +179,8 @@
               "id": 10028,
               "fullName": "Home Closer 1002"
             }
-          }
+          },
+          "gameType": "R"
         }
       ]
     }

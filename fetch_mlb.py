@@ -64,6 +64,21 @@ POSTPONED_REASONS = {
     "Postponed": "賽事延期"
 }
 
+# 等待迴圈：每次檢查未完成時睡 30 分鐘，最多檢查 MAX_WAIT_CHECKS 次
+MAX_WAIT_CHECKS = 8
+WAIT_SLEEP_SECONDS = 1800
+
+GAME_TYPE_LABELS = {
+    "R": "例行賽",
+    "F": "外卡賽",
+    "D": "分區系列賽",
+    "L": "聯盟冠軍賽",
+    "W": "世界大賽",
+    "S": "春訓",
+    "E": "熱身賽",
+    "A": "明星賽",
+}
+
 def get_taipei_now():
     tz_taipei = timezone(timedelta(hours=8))
     return datetime.now(timezone.utc).astimezone(tz_taipei)
@@ -136,8 +151,9 @@ def check_all_games_finalized(date_str):
     for game in games:
         state = game.get("status", {}).get("abstractGameState")
         detailed = game.get("status", {}).get("detailedState")
-        # Games are NOT finalized if they are Preview or Live (excluding explicitly Postponed/Cancelled)
-        if state in ["Preview", "Live"] and detailed not in ["Postponed", "Cancelled"]:
+        # Games are NOT finalized if they are Preview or Live (excluding Postponed/Cancelled,
+        # and Suspended games which will not resume on the same day)
+        if state in ["Preview", "Live"] and detailed not in ["Postponed", "Cancelled"] and not (detailed or "").startswith("Suspended"):
             return False, games
 
     return True, games
@@ -271,6 +287,35 @@ def build_transactions_section_html(daily_tx_list):
       </div>
     </section>"""
 
+def game_type_label(game):
+    """依 gameType 回傳卡片標題用的賽事類型文字。"""
+    return GAME_TYPE_LABELS.get(game.get("gameType"), "比賽")
+
+def classify_game_status(game, linescore=None):
+    """判斷比賽狀態，回傳 (badge_text, badge_class, is_final)。
+
+    - 完賽：Final（9 局或與預定局數相同）、Final/N（延長賽，extra）、Final/N（提前結束）。
+    - Suspended：暫停比賽；其餘仍為 Preview/Live（等待達上限）：未完賽。兩者 is_final 皆為 False。
+    """
+    if linescore is None:
+        linescore = game.get("linescore", {})
+    status = game.get("status", {})
+    abstract = status.get("abstractGameState")
+    detailed = status.get("detailedState") or ""
+
+    if detailed.startswith("Suspended"):
+        return "暫停比賽", "suspended", False
+    if abstract != "Final" or detailed in ("Postponed", "Cancelled"):
+        return "未完賽", "suspended", False
+
+    scheduled = linescore.get("scheduledInnings") or 9
+    played = len(linescore.get("innings", [])) or linescore.get("currentInning") or 0
+    if played == 0 or played == scheduled:
+        return "Final", "final", True
+    if played > scheduled:
+        return f"Final/{played}", "extra", True
+    return f"Final/{played}（提前結束）", "final", True
+
 def render_fallback_card(game, away_info, home_info, teams_data_str):
     """boxscore 抓取失敗時，僅用 schedule 資料產生簡化卡片。回傳 (card_html, summary_sentence)。"""
     away_team_obj = game["teams"]["away"]["team"]
@@ -282,14 +327,14 @@ def render_fallback_card(game, away_info, home_info, teams_data_str):
     home_rec = game["teams"]["home"].get("leagueRecord", {})
     away_rec_str = f"({away_rec.get('wins', 0)}-{away_rec.get('losses', 0)})"
     home_rec_str = f"({home_rec.get('wins', 0)}-{home_rec.get('losses', 0)})"
-    status_text = game.get("status", {}).get("detailedState") or "Final"
+    status_text, status_class, _ = classify_game_status(game)
     card_html = f"""
       <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} (Fallback) -->
       <div class="game-card" style="grid-template-columns: 1fr;" data-teams="{teams_data_str}">
         <div class="game-card-upper">
           <div class="game-header">
-            <span class="game-title">例行賽 #{game["gamePk"]}</span>
-            <span class="status-badge final">{status_text}</span>
+            <span class="game-title">{game_type_label(game)} #{game["gamePk"]}</span>
+            <span class="status-badge {status_class}">{status_text}</span>
           </div>
           <div class="score-table-wrapper">
             <table class="score-table">
@@ -351,17 +396,29 @@ def generate_report(date_str, games):
         teams_data_str = f"{away_info['abbr']} {away_info['name']} {away_team_obj.get('name', '')} {home_info['abbr']} {home_info['name']} {home_team_obj.get('name', '')}"
         if detailed_state in ["Postponed", "Cancelled"]:
             postponed_count += 1
-            reason_eng = game.get("status", {}).get("reason", "Postponed")
-            reason_chi = POSTPONED_REASONS.get(reason_eng, "賽事延期")
+            type_label = game_type_label(game)
+            if detailed_state == "Cancelled":
+                reason_raw = game.get("status", {}).get("reason")
+                reason_eng = f"Cancelled - {reason_raw}" if reason_raw else "Cancelled"
+                reason_chi = POSTPONED_REASONS.get(reason_raw, "賽事延期").replace("延期", "取消")
+                notice = f"原定於當日舉行的{type_label}賽事，{reason_chi} ({reason_eng})。"
+                badge_html = '<span class="status-badge postponed">Cancelled</span>'
+                card_label = "Cancelled"
+            else:
+                reason_eng = game.get("status", {}).get("reason", "Postponed")
+                reason_chi = POSTPONED_REASONS.get(reason_eng, "賽事延期")
+                notice = f"原定於當日舉行的{type_label}賽事，{reason_chi} (Postponed - {reason_eng})。補賽日期將另行公布。"
+                badge_html = '<span class="status-badge postponed">Postponed</span>'
+                card_label = "Postponed"
             
             card_html = f"""
-      <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} (Postponed) -->
+      <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} ({card_label}) -->
       <div class="game-card" style="grid-template-columns: 1fr;" data-teams="{teams_data_str}">
         <div class="postponed-game-body">
           <div class="postponed-icon">🌧️</div>
           <div class="postponed-title">{away_info['name']} @ {home_info['name']}</div>
-          <p>原定於今日舉行的例行賽事，{reason_chi} (Postponed - {reason_eng})。補賽日期將另行公布。</p>
-          <span class="status-badge postponed">Postponed</span>
+          <p>{notice}</p>
+          {badge_html}
         </div>
       </div>
 """
@@ -389,19 +446,13 @@ def generate_report(date_str, games):
         home_h = linescore.get("teams", {}).get("home", {}).get("hits", 0)
         home_e = linescore.get("teams", {}).get("home", {}).get("errors", 0)
         
-        # Determine status badge text (Final or Final/X)
-        innings_played = len(linescore.get("innings", []))
-        if innings_played == 9 or innings_played == 0:
-            status_text = "Final"
-            status_class = "final"
-        else:
-            status_text = f"Final/{innings_played}"
-            status_class = "extra"
-            
-        # Determine Winner
-        away_winner = away_r > home_r
+        # Determine status badge (Final / Final/X / 暫停比賽 / 未完賽) and winner
+        status_text, status_class, is_final = classify_game_status(game, linescore)
+        
+        away_winner = is_final and away_r > home_r
+        home_winner = is_final and home_r > away_r
         away_winner_class = "winner-row" if away_winner else ""
-        home_winner_class = "winner-row" if not away_winner else ""
+        home_winner_class = "winner-row" if home_winner else ""
         
         # Get team records
         away_rec = game["teams"]["away"].get("leagueRecord", {})
@@ -700,6 +751,24 @@ def generate_report(date_str, games):
               {"".join(game_tx_html_parts)}
             </div>"""
             
+        decisions_html = ""
+        if is_final:
+            decisions_html = f"""<h3 class="section-sub-header">投球決定</h3>
+            <div class="decisions-container">
+              <div class="decision-row">
+                <span class="decision-label">勝投</span>
+                <span class="decision-value">{w_pitcher_str}</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">敗投</span>
+                <span class="decision-value">{l_pitcher_str}</span>
+              </div>
+              <div class="decision-row">
+                <span class="decision-label">救援</span>
+                <span class="decision-value">{s_pitcher_str}</span>
+              </div>
+            </div>"""
+
         # Build Game Card HTML
         card_html = f"""
       <!-- Game Card: {away_info['abbr']} @ {home_info['abbr']} -->
@@ -707,7 +776,7 @@ def generate_report(date_str, games):
         <!-- Upper Part: Matchup & Scores (Full-width) -->
         <div class="game-card-upper">
           <div class="game-header">
-            <span class="game-title">例行賽 #{game_pk}</span>
+            <span class="game-title">{game_type_label(game)} #{game_pk}</span>
             <span class="status-badge {status_class}">{status_text}</span>
           </div>
           
@@ -749,21 +818,7 @@ def generate_report(date_str, games):
         <div class="game-card-lower">
           <!-- Left Column: Pitching Decisions & News Summary -->
           <div class="decisions-section">
-            <h3 class="section-sub-header">投球決定</h3>
-            <div class="decisions-container">
-              <div class="decision-row">
-                <span class="decision-label">勝投</span>
-                <span class="decision-value">{w_pitcher_str}</span>
-              </div>
-              <div class="decision-row">
-                <span class="decision-label">敗投</span>
-                <span class="decision-value">{l_pitcher_str}</span>
-              </div>
-              <div class="decision-row">
-                <span class="decision-label">救援</span>
-                <span class="decision-value">{s_pitcher_str}</span>
-              </div>
-            </div>
+            {decisions_html}
             {news_box_html}
             {game_tx_box_html}
           </div>
@@ -1077,8 +1132,12 @@ def main():
     parser = argparse.ArgumentParser(description="MLB Daily Report Generator Script")
     parser.add_argument("--date", type=str, help="Target report date in YYYY-MM-DD format (defaults to yesterday in Taipei Time)")
     parser.add_argument("--check-wait", action="store_true", help="If active, loops and sleeps 30 minutes until yesterday's games are finished")
+    parser.add_argument("--max-wait-checks", type=int, default=MAX_WAIT_CHECKS, help=f"Max number of checks in the --check-wait loop (default {MAX_WAIT_CHECKS})")
     
     args = parser.parse_args()
+    if args.max_wait_checks < 1:
+        print("Error: --max-wait-checks must be >= 1", file=sys.stderr)
+        sys.exit(1)
     
     # 1. Resolve date
     if args.date:
@@ -1096,18 +1155,30 @@ def main():
     
     # 2. Check wait loop if enabled
     if args.check_wait:
-        print("Enabling check wait loop. Monitoring yesterday's games...")
-        while True:
+        max_checks = args.max_wait_checks
+        print(f"Enabling check wait loop (max {max_checks} checks). Monitoring yesterday's games...")
+        games = []
+        have_games = False  # 是否曾成功取得賽程
+        finalized = False
+        for attempt in range(1, max_checks + 1):
             try:
-                finalized, games = check_all_games_finalized(date_str)
+                finalized, fetched_games = check_all_games_finalized(date_str)
+                games = fetched_games
+                have_games = True
             except ApiError as e:
                 print(f"Warning: {e}. Treating as not finalized.", file=sys.stderr)
-                finalized, games = False, []
+                finalized = False
             if finalized:
-                print("All games are finalized (Final or Postponed). Proceeding to build.")
+                print("All games are finalized (Final, Postponed, Cancelled or Suspended). Proceeding to build.")
                 break
-            print("Some games are not finalized yet. Sleeping for 30 minutes...", flush=True)
-            time.sleep(1800)
+            if attempt < max_checks:
+                print(f"Some games are not finalized yet (check {attempt}/{max_checks}). Sleeping for 30 minutes...", flush=True)
+                time.sleep(WAIT_SLEEP_SECONDS)
+        if not finalized:
+            if not have_games:
+                print(f"Error: 已達等待上限（{max_checks} 次檢查）仍無法取得 {date_str} 的賽程。Aborting without generating any output.", file=sys.stderr)
+                sys.exit(1)
+            print(f"Warning: 已達等待上限（{max_checks} 次檢查），仍有未完成場次，將照常產出戰報，未完成場次標示為「未完賽」。", file=sys.stderr)
     else:
         try:
             finalized, games = check_all_games_finalized(date_str)

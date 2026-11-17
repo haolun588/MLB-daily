@@ -12,6 +12,7 @@ permissions:
 jobs:
   run-generator:
     runs-on: ubuntu-latest
+    timeout-minutes: 330
 
     steps:
       - name: Checkout Repository

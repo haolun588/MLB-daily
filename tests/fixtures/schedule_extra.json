@@ -81,7 +81,8 @@
                 "hits": 7,
                 "errors": 1
               }
-            }
+            },
+            "scheduledInnings": 9
           },
           "decisions": {
             "winner": {
@@ -96,7 +97,8 @@
               "id": 20018,
               "fullName": "Home Closer 2001"
             }
-          }
+          },
+          "gameType": "R"
         }
       ]
     }
