@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MLB 每日戰報</title>
+  <meta name="color-scheme" content="dark light">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/nav.css">
+  <link rel="stylesheet" href="assets/standings.css">
+  <!-- 先於繪製前還原桌機收合狀態，避免重新整理時閃一下展開版面（正式版同樣放在 head） -->
+  <script>try{if(localStorage.getItem('mlbdaily.standings.collapsed')==='1')document.documentElement.classList.add('standings-collapsed')}catch(e){}</script>
+  <!-- 設計稿專用：?mode=season 顯示賽季版（預設為休賽季版）。正式版由 Python 依季別直接輸出對應區塊，不需此行 -->
+  <script>try{if(/[?&]mode=season(&|$)/.test(location.search))document.documentElement.classList.add('mode-season')}catch(e){}</script>
+  <script src="assets/standings.js" defer></script>
+</head>
+<body>
+
+<header class="masthead wrap">
+  <nav class="nav-row" aria-label="頁面導覽">
+    <span></span>
+    <span class="nav-links"><a href="teams.html">球隊名單</a><a href="archive.html">歷史存檔</a></span>
+  </nav>
+  <div class="brand">
+    <h1>MLB 每日戰報</h1>
+    <p class="dateline">每日中午自動整理前一日大聯盟賽況</p>
+  </div>
+</header>
+
+<!-- 導言放在兩欄 grid 之外：兩欄從同一條起跑線開始，頂端自然對齊 -->
+<div class="wrap"><p class="intro">焦點球員數據、投球決定、賽後新聞與人事異動，一頁掌握。</p></div>
+
+<div class="layout wrap">
+<main>
+  <article class="latest" aria-labelledby="latest-h">
+    <div>
+      <p class="eyebrow">最新一期<span class="sep" aria-hidden="true">/</span>休賽季快報</p>
+      <h2 id="latest-h"><time datetime="2026-11-17">2026 年 11 月 17 日</time><span class="wk">（二）</span></h2>
+      <p class="summary">Marte將如何融入金鶯擁擠的內野？這重要嗎？；重回總教練寶座，Ausmus帶來了全新視角；大都會毫不浪費時間，與頭號大獎Skubal會面（報導）。</p>
+      <dl class="stat-row"><div><dt>新聞</dt><dd>12 則</dd></div><div><dt>人事異動</dt><dd>1 筆</dd></div></dl>
+    </div>
+    <a class="btn" href="reports/2026/11/2026-11-17.html">閱讀完整戰報 →</a>
+  </article>
+
+  <!-- 賽季版：今日賽事預告（?mode=season）。時間為台北時間，依開賽時間排序；不顯示球場。先發為假資料。 -->
+  <section class="section is-season-only" aria-labelledby="gp-h">
+    <div class="section-head"><h2 id="gp-h">今日賽事預告</h2><span class="count">台北時間 · 11 場</span></div>
+    <ol class="gp-list">
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="01:05">01:05</time></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side team-stripe--dark" style="--team:#0C2340"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/147.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/147.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">紐約洋基</span><span class="gp-rec">93-68</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/543037" target="_blank" rel="noopener">Gerrit Cole</a> <span class="gp-stat">(11-6, 3.21)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side" style="--team:#BD3039"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/111.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">波士頓紅襪</span><span class="gp-rec">87-75</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/676979" target="_blank" rel="noopener">Garrett Crochet</a> <span class="gp-stat">(13-7, 2.85)</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="01:40">01:40</time></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side team-stripe--dark" style="--team:#092C5C"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/139.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/139.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">坦帕灣光芒</span><span class="gp-rec">98-64</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/663556" target="_blank" rel="noopener">Shane McClanahan</a> <span class="gp-stat">(9-5, 3.40)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side team-stripe--dark" style="--team:#134A8E"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/141.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/141.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">多倫多藍鳥</span><span class="gp-rec">79-83</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/592332" target="_blank" rel="noopener">Kevin Gausman</a> <span class="gp-stat">(10-9, 3.88)</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="02:10">02:10</time><span class="gp-note">雙重賽 1/2</span></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side team-stripe--dark" style="--team:#0C2340"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/116.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/116.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">底特律老虎</span><span class="gp-rec">76-86</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/669373" target="_blank" rel="noopener">Tarik Skubal</a> <span class="gp-stat">(18-4, 2.21)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side team-stripe--dark" style="--team:#002B5C"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/142.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/142.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">明尼蘇達雙城</span><span class="gp-rec">77-85</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/657746" target="_blank" rel="noopener">Joe Ryan</a> <span class="gp-stat">(12-8, 3.35)</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="02:10">02:10</time></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side" style="--team:#E81828"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/143.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/143.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">費城費城人</span><span class="gp-rec">88-74</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/554430" target="_blank" rel="noopener">Zack Wheeler</a> <span class="gp-stat">(14-6, 2.78)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side" style="--team:#CE1141"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/144.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/144.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">亞特蘭大勇士</span><span class="gp-rec">94-68</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/519242" target="_blank" rel="noopener">Chris Sale</a> <span class="gp-stat">(15-5, 2.52)</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="03:10">03:10</time></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side team-stripe--dark" style="--team:#0C2340"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/114.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/114.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">克里夫蘭守護者</span><span class="gp-rec">85-77</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/676440" target="_blank" rel="noopener">Tanner Bibee</a> <span class="gp-stat">(11-9, 3.67)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side team-stripe--dark" style="--team:#004687"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/118.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/118.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">堪薩斯皇家</span><span class="gp-rec">69-93</span></span><span class="gp-pitch"><span class="gp-tbd">未定</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="03:40">03:40</time></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side" style="--team:#C41E3A"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/138.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/138.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">聖路易紅雀</span><span class="gp-rec">77-85</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/543243" target="_blank" rel="noopener">Sonny Gray</a> <span class="gp-stat">(12-8, 3.49)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side team-stripe--dark" style="--team:#122853"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/158.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/158.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">密爾瓦基釀酒人</span><span class="gp-rec">103-59</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/642547" target="_blank" rel="noopener">Freddy Peralta</a> <span class="gp-stat">(16-5, 2.91)</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="05:10">05:10</time></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side" style="--team:#EB6E1F"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/117.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/117.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">休士頓太空人</span><span class="gp-rec">81-81</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/664285" target="_blank" rel="noopener">Framber Valdez</a> <span class="gp-stat">(13-10, 3.36)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side team-stripe--dark" style="--team:#003278"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/140.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/140.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">德州遊騎兵</span><span class="gp-rec">80-82</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/594798" target="_blank" rel="noopener">Jacob deGrom</a> <span class="gp-stat">(10-4, 2.64)</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="05:40">05:40</time><span class="gp-note">雙重賽 2/2</span></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side team-stripe--dark" style="--team:#0C2340"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/116.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/116.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">底特律老虎</span><span class="gp-rec">76-86</span></span><span class="gp-pitch"><span class="gp-tbd">未定</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side team-stripe--dark" style="--team:#002B5C"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/142.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/142.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">明尼蘇達雙城</span><span class="gp-rec">77-85</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/641927" target="_blank" rel="noopener">Bailey Ober</a> <span class="gp-stat">(8-7, 4.02)</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="07:05">07:05</time></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side" style="--team:#005A9C"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/119.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">洛杉磯道奇</span><span class="gp-rec">100-62</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/808967" target="_blank" rel="noopener">Yoshinobu Yamamoto</a> <span class="gp-stat">(15-6, 2.60)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side team-stripe--dark" style="--team:#2F241D"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/135.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/135.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">聖地牙哥教士</span><span class="gp-rec">91-71</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/656302" target="_blank" rel="noopener">Dylan Cease</a> <span class="gp-stat">(14-8, 3.17)</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="07:10">07:10</time></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side" style="--team:#FD5A1E"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/137.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/137.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">舊金山巨人</span><span class="gp-rec">65-97</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/592804" target="_blank" rel="noopener">Logan Webb</a> <span class="gp-stat">(13-11, 3.30)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side team-stripe--dark" style="--team:#0C2C56"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/136.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/136.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">西雅圖水手</span><span class="gp-rec">76-86</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/669302" target="_blank" rel="noopener">Logan Gilbert</a> <span class="gp-stat">(10-8, 3.45)</span></span></div></div></li>
+        <li class="gp-game"><div class="gp-when"><time class="gp-time" datetime="07:40">07:40</time></div><div class="gp-teams"><span class="visually-hidden">客隊</span><div class="gp-side" style="--team:#A71930"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/109.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/109.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">亞利桑那響尾蛇</span><span class="gp-rec">86-76</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/668678" target="_blank" rel="noopener">Zac Gallen</a> <span class="gp-stat">(9-10, 4.15)</span></span></div><span class="visually-hidden">主隊</span><div class="gp-side" style="--team:#BA0021"><span class="gp-team"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/108.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/108.svg" width="20" height="20" alt="" loading="lazy"></picture><span class="gp-name">洛杉磯天使</span><span class="gp-rec">62-100</span></span><span class="gp-pitch"><a class="plink" href="https://baseballsavant.mlb.com/savant-player/542881" target="_blank" rel="noopener">Tyler Anderson</a> <span class="gp-stat">(7-9, 4.38)</span></span></div></div></li>
+    </ol>
+  </section>
+
+  <!-- 休賽季版（預設）：開季倒數。日期取自 /api/v1/seasons/2027（springStartDate 2027-02-19、regularSeasonStartDate 2027-03-25） -->
+  <section class="section is-off-only" aria-labelledby="cd-h">
+    <div class="section-head"><h2 id="cd-h">開季倒數</h2><span class="count">2027 球季</span></div>
+    <dl class="countdown">
+      <div><dt>距離春訓</dt><dd><span class="num">93</span> 天</dd><dd class="cd-date"><time datetime="2027-02-19">2027-02-19</time></dd></div>
+      <div><dt>距離開幕戰</dt><dd><span class="num">127</span> 天</dd><dd class="cd-date"><time datetime="2027-03-25">2027-03-25</time></dd></div>
+    </dl>
+  </section>
+
+  <!-- 休賽季版（預設）：本週人事異動精選（近 7 天；假資料） -->
+  <section class="section is-off-only" aria-labelledby="wk-h">
+    <div class="section-head"><h2 id="wk-h">本週人事異動精選</h2><span class="count">近 7 天 · 6 筆</span></div>
+    <ul class="wk-list">
+        <li class="wk-tx" style="--team:#FF5910"><span class="wk-meta"><time class="num">11/17</time><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/121.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" width="18" height="18" alt="" loading="lazy"></picture><span class="wk-team">紐約大都會</span></span><span class="wk-txt">與 1B <a class="plink" href="https://baseballsavant.mlb.com/savant-player/624413" target="_blank" rel="noopener">Pete Alonso</a> 簽下多年合約。</span></li>
+        <li class="wk-tx" style="--team:#E81828"><span class="wk-meta"><time class="num">11/16</time><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/143.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/143.svg" width="18" height="18" alt="" loading="lazy"></picture><span class="wk-team">費城費城人</span></span><span class="wk-txt">與 C <a class="plink" href="https://baseballsavant.mlb.com/savant-player/575929" target="_blank" rel="noopener">Willson Contreras</a> 完成合約延長。</span></li>
+        <li class="wk-tx" style="--team:#FDB827"><span class="wk-meta"><time class="num">11/16</time><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/134.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/134.svg" width="18" height="18" alt="" loading="lazy"></picture><span class="wk-team">匹茲堡海盜</span></span><span class="wk-txt">與自由球員 RHP <a class="plink" href="https://baseballsavant.mlb.com/savant-player/608331" target="_blank" rel="noopener">Max Fried</a> 簽下三年合約。</span></li>
+        <li class="wk-tx team-stripe--dark" style="--team:#0C2C56"><span class="wk-meta"><time class="num">11/15</time><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/136.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/136.svg" width="18" height="18" alt="" loading="lazy"></picture><span class="wk-team">西雅圖水手</span></span><span class="wk-txt">完成交易：自 Tampa Bay Rays 取得 RHP <a class="plink" href="https://baseballsavant.mlb.com/savant-player/656541" target="_blank" rel="noopener">Jeff Hoffman</a>，送出兩名小聯盟球員。</span></li>
+        <li class="wk-tx" style="--team:#BD3039"><span class="wk-meta"><time class="num">11/14</time><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/111.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" width="18" height="18" alt="" loading="lazy"></picture><span class="wk-team">波士頓紅襪</span></span><span class="wk-txt">與 LHP <a class="plink" href="https://baseballsavant.mlb.com/savant-player/676979" target="_blank" rel="noopener">Garrett Crochet</a> 完成合約延長。</span></li>
+        <li class="wk-tx team-stripe--dark" style="--team:#003278"><span class="wk-meta"><time class="num">11/13</time><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/140.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/140.svg" width="18" height="18" alt="" loading="lazy"></picture><span class="wk-team">德州遊騎兵</span></span><span class="wk-txt">自 40 人名單釋出 RHP <a class="plink" href="https://baseballsavant.mlb.com/savant-player/543243" target="_blank" rel="noopener">Sonny Gray</a>。</span></li>
+    </ul>
+  </section>
+
+  <a class="teams-entry" href="teams.html">
+    <span><strong>球隊名單</strong><span class="sub-txt">30 隊球員名單與本季數據，依守備位置分組</span></span>
+    <span class="go" aria-hidden="true">30 隊名單 →</span>
+  </a>
+
+  <section class="section" aria-labelledby="recent-h">
+    <div class="section-head"><h2 id="recent-h">近期</h2><span class="count">最新 6 期</span></div>
+    <ol class="issues">
+      <li><a class="issue" href="reports/2026/11/2026-11-16.html"><span class="d">2026-11-16<span class="wk">（一）</span></span><span class="k is-off">休賽季</span><span class="s">2026-11-16 當日無安排任何大聯盟賽事。（新聞 4 則、人事異動 0 筆）</span></a></li>
+      <li><a class="issue" href="reports/2026/11/2026-11-15.html"><span class="d">2026-11-15<span class="wk">（日）</span></span><span class="k is-off">休賽季</span><span class="s">2026-11-15 當日無安排任何大聯盟賽事。</span></a></li>
+      <li><a class="issue" href="reports/2026/11/2026-11-14.html"><span class="d">2026-11-14<span class="wk">（六）</span></span><span class="k is-off">休賽季</span><span class="s">2026-11-14 當日無安排任何大聯盟賽事。</span></a></li>
+      <li><a class="issue" href="reports/2026/11/2026-11-13.html"><span class="d">2026-11-13<span class="wk">（五）</span></span><span class="k is-off">休賽季</span><span class="s">2026-11-13 當日無安排任何大聯盟賽事。</span></a></li>
+      <li><a class="issue" href="reports/2026/11/2026-11-12.html"><span class="d">2026-11-12<span class="wk">（四）</span></span><span class="k is-off">休賽季</span><span class="s">2026-11-12 當日無安排任何大聯盟賽事。</span></a></li>
+      <li><a class="issue" href="reports/2026/11/2026-11-11.html"><span class="d">2026-11-11<span class="wk">（三）</span></span><span class="k is-off">休賽季</span><span class="s">2026-11-11 當日無安排任何大聯盟賽事。</span></a></li>
+    </ol>
+    <p class="more"><a class="btn is-quiet" href="archive.html">查看全部歷史 →</a></p>
+  </section>
+</main>
+
+<!-- ===== 戰績側邊欄（正式版由 Python 靜態渲染；設計稿直接寫死假資料） =====
+     桌機：右側 sticky 側邊欄，可收合成窄欄。< 1024px：右側抽屜（JS 開啟時加上 role="dialog"、aria-modal）。
+     設計稿專用：網址加 ?state=error 會切到「戰績暫時無法取得」版本。 -->
+<aside class="standings" id="standings" aria-labelledby="standings-title">
+  <button class="st-rail" type="button" data-st="expand" aria-expanded="false" aria-controls="standings-panel" aria-label="展開戰績側邊欄" title="戰績">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+  </button>
+  <div class="st-panel" id="standings-panel">
+    <div class="st-head">
+      <div>
+        <h2 class="st-title" id="standings-title"><span class="is-off-only">2026 例行賽最終戰績</span><span class="is-season-only">2026 例行賽戰績</span></h2>
+        <p class="st-meta">資料來源 MLB Stats API · 更新於 <span class="num">11/18 12:17</span></p>
+      </div>
+      <div class="st-actions">
+        <button class="st-btn" type="button" data-st="collapse" aria-expanded="true" aria-controls="standings-panel">收合 <span aria-hidden="true">›</span></button>
+        <button class="st-btn st-close" type="button" aria-label="關閉戰績">✕</button>
+      </div>
+    </div>
+
+    <div class="st-error" role="status">
+      <strong>戰績暫時無法取得</strong>
+      <p>資料來源暫時沒有回應，不影響每日戰報。將於下次更新時重新取得。</p>
+    </div>
+
+    <div class="st-body st-data">
+      <section class="st-div" aria-labelledby="st-d201">
+        <h3 id="st-d201">美聯東區</h3>
+        <table class="st-table">
+          <caption class="visually-hidden">美聯東區戰績</caption>
+          <colgroup><col><col class="c-w"><col class="c-l"><col class="c-pct"><col class="c-gb"><col class="c-l10"><col class="c-strk"></colgroup>
+          <thead><tr><th scope="col">隊</th><th scope="col">W</th><th scope="col">L</th><th scope="col">PCT</th><th scope="col">GB</th><th scope="col">L10</th><th scope="col">STRK</th></tr></thead>
+          <tbody>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#092C5C"><a class="st-team" href="teams.html#TB" aria-label="坦帕灣光芒，聯盟最佳戰績" title="坦帕灣光芒"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/139.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/139.svg" width="18" height="18" alt="" loading="lazy"></picture><span>TB</span><sup class="st-clinch" title="聯盟最佳戰績" aria-hidden="true">z</sup></a></th><td>98</td><td>64</td><td class="is-pct">.605</td><td class="is-sub">–</td><td class="is-sub">5-5</td><td class="st-streak is-l">L1</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#0C2340"><a class="st-team" href="teams.html#NYY" aria-label="紐約洋基，外卡" title="紐約洋基"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/147.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/147.svg" width="18" height="18" alt="" loading="lazy"></picture><span>NYY</span><sup class="st-clinch" title="外卡" aria-hidden="true">w</sup></a></th><td>93</td><td>68</td><td class="is-pct">.578</td><td class="is-sub">4.5</td><td class="is-sub">5-5</td><td class="st-streak is-w">W1</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#BD3039"><a class="st-team" href="teams.html#BOS" aria-label="波士頓紅襪，外卡" title="波士頓紅襪"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/111.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" width="18" height="18" alt="" loading="lazy"></picture><span>BOS</span><sup class="st-clinch" title="外卡" aria-hidden="true">w</sup></a></th><td>87</td><td>75</td><td class="is-pct">.537</td><td class="is-sub">11.0</td><td class="is-sub">5-5</td><td class="st-streak is-l">L1</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#DF4601"><a class="st-team" href="teams.html#BAL" aria-label="巴爾的摩金鶯" title="巴爾的摩金鶯"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/110.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/110.svg" width="18" height="18" alt="" loading="lazy"></picture><span>BAL</span></a></th><td>79</td><td>82</td><td class="is-pct">.491</td><td class="is-sub">18.5</td><td class="is-sub">6-4</td><td class="st-streak is-l">L1</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#134A8E"><a class="st-team" href="teams.html#TOR" aria-label="多倫多藍鳥" title="多倫多藍鳥"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/141.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/141.svg" width="18" height="18" alt="" loading="lazy"></picture><span>TOR</span></a></th><td>79</td><td>83</td><td class="is-pct">.488</td><td class="is-sub">19.0</td><td class="is-sub">4-6</td><td class="st-streak is-w">W1</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <section class="st-div" aria-labelledby="st-d202">
+        <h3 id="st-d202">美聯中區</h3>
+        <table class="st-table">
+          <caption class="visually-hidden">美聯中區戰績</caption>
+          <colgroup><col><col class="c-w"><col class="c-l"><col class="c-pct"><col class="c-gb"><col class="c-l10"><col class="c-strk"></colgroup>
+          <thead><tr><th scope="col">隊</th><th scope="col">W</th><th scope="col">L</th><th scope="col">PCT</th><th scope="col">GB</th><th scope="col">L10</th><th scope="col">STRK</th></tr></thead>
+          <tbody>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#0C2340"><a class="st-team" href="teams.html#CLE" aria-label="克里夫蘭守護者，分區冠軍" title="克里夫蘭守護者"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/114.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/114.svg" width="18" height="18" alt="" loading="lazy"></picture><span>CLE</span><sup class="st-clinch" title="分區冠軍" aria-hidden="true">y</sup></a></th><td>85</td><td>77</td><td class="is-pct">.525</td><td class="is-sub">–</td><td class="is-sub">8-2</td><td class="st-streak is-l">L1</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#27251F"><a class="st-team" href="teams.html#CWS" aria-label="芝加哥白襪，外卡" title="芝加哥白襪"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/145.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/145.svg" width="18" height="18" alt="" loading="lazy"></picture><span>CWS</span><sup class="st-clinch" title="外卡" aria-hidden="true">w</sup></a></th><td>84</td><td>78</td><td class="is-pct">.519</td><td class="is-sub">1.0</td><td class="is-sub">7-3</td><td class="st-streak is-w">W1</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#002B5C"><a class="st-team" href="teams.html#MIN" aria-label="明尼蘇達雙城" title="明尼蘇達雙城"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/142.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/142.svg" width="18" height="18" alt="" loading="lazy"></picture><span>MIN</span></a></th><td>77</td><td>85</td><td class="is-pct">.475</td><td class="is-sub">8.0</td><td class="is-sub">6-4</td><td class="st-streak is-w">W1</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#0C2340"><a class="st-team" href="teams.html#DET" aria-label="底特律老虎" title="底特律老虎"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/116.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/116.svg" width="18" height="18" alt="" loading="lazy"></picture><span>DET</span></a></th><td>76</td><td>86</td><td class="is-pct">.469</td><td class="is-sub">9.0</td><td class="is-sub">4-6</td><td class="st-streak is-l">L1</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#004687"><a class="st-team" href="teams.html#KC" aria-label="堪薩斯皇家" title="堪薩斯皇家"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/118.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/118.svg" width="18" height="18" alt="" loading="lazy"></picture><span>KC</span></a></th><td>69</td><td>93</td><td class="is-pct">.426</td><td class="is-sub">16.0</td><td class="is-sub">2-8</td><td class="st-streak is-w">W1</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <section class="st-div" aria-labelledby="st-d200">
+        <h3 id="st-d200">美聯西區</h3>
+        <table class="st-table">
+          <caption class="visually-hidden">美聯西區戰績</caption>
+          <colgroup><col><col class="c-w"><col class="c-l"><col class="c-pct"><col class="c-gb"><col class="c-l10"><col class="c-strk"></colgroup>
+          <thead><tr><th scope="col">隊</th><th scope="col">W</th><th scope="col">L</th><th scope="col">PCT</th><th scope="col">GB</th><th scope="col">L10</th><th scope="col">STRK</th></tr></thead>
+          <tbody>
+            <tr class="st-row"><th scope="row" style="--team:#EB6E1F"><a class="st-team" href="teams.html#HOU" aria-label="休士頓太空人，分區冠軍" title="休士頓太空人"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/117.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/117.svg" width="18" height="18" alt="" loading="lazy"></picture><span>HOU</span><sup class="st-clinch" title="分區冠軍" aria-hidden="true">y</sup></a></th><td>81</td><td>81</td><td class="is-pct">.500</td><td class="is-sub">–</td><td class="is-sub">5-5</td><td class="st-streak is-w">W2</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#003278"><a class="st-team" href="teams.html#TEX" aria-label="德州遊騎兵" title="德州遊騎兵"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/140.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/140.svg" width="18" height="18" alt="" loading="lazy"></picture><span>TEX</span></a></th><td>80</td><td>82</td><td class="is-pct">.494</td><td class="is-sub">1.0</td><td class="is-sub">4-6</td><td class="st-streak is-l">L1</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#0C2C56"><a class="st-team" href="teams.html#SEA" aria-label="西雅圖水手" title="西雅圖水手"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/136.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/136.svg" width="18" height="18" alt="" loading="lazy"></picture><span>SEA</span></a></th><td>76</td><td>86</td><td class="is-pct">.469</td><td class="is-sub">5.0</td><td class="is-sub">6-4</td><td class="st-streak is-w">W2</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#003831"><a class="st-team" href="teams.html#ATH" aria-label="運動家" title="運動家"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/133.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/133.svg" width="18" height="18" alt="" loading="lazy"></picture><span>ATH</span></a></th><td>64</td><td>98</td><td class="is-pct">.395</td><td class="is-sub">17.0</td><td class="is-sub">3-7</td><td class="st-streak is-l">L2</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#BA0021"><a class="st-team" href="teams.html#LAA" aria-label="洛杉磯天使" title="洛杉磯天使"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/108.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/108.svg" width="18" height="18" alt="" loading="lazy"></picture><span>LAA</span></a></th><td>62</td><td>100</td><td class="is-pct">.383</td><td class="is-sub">19.0</td><td class="is-sub">4-6</td><td class="st-streak is-l">L2</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <section class="st-div st-div--league-start" aria-labelledby="st-d204">
+        <h3 id="st-d204">國聯東區</h3>
+        <table class="st-table">
+          <caption class="visually-hidden">國聯東區戰績</caption>
+          <colgroup><col><col class="c-w"><col class="c-l"><col class="c-pct"><col class="c-gb"><col class="c-l10"><col class="c-strk"></colgroup>
+          <thead><tr><th scope="col">隊</th><th scope="col">W</th><th scope="col">L</th><th scope="col">PCT</th><th scope="col">GB</th><th scope="col">L10</th><th scope="col">STRK</th></tr></thead>
+          <tbody>
+            <tr class="st-row"><th scope="row" style="--team:#CE1141"><a class="st-team" href="teams.html#ATL" aria-label="亞特蘭大勇士，分區冠軍" title="亞特蘭大勇士"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/144.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/144.svg" width="18" height="18" alt="" loading="lazy"></picture><span>ATL</span><sup class="st-clinch" title="分區冠軍" aria-hidden="true">y</sup></a></th><td>94</td><td>68</td><td class="is-pct">.580</td><td class="is-sub">–</td><td class="is-sub">5-5</td><td class="st-streak is-l">L1</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#E81828"><a class="st-team" href="teams.html#PHI" aria-label="費城費城人，外卡" title="費城費城人"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/143.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/143.svg" width="18" height="18" alt="" loading="lazy"></picture><span>PHI</span><sup class="st-clinch" title="外卡" aria-hidden="true">w</sup></a></th><td>88</td><td>74</td><td class="is-pct">.543</td><td class="is-sub">6.0</td><td class="is-sub">4-6</td><td class="st-streak is-w">W1</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#00A3E0"><a class="st-team" href="teams.html#MIA" aria-label="邁阿密馬林魚" title="邁阿密馬林魚"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/146.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/146.svg" width="18" height="18" alt="" loading="lazy"></picture><span>MIA</span></a></th><td>80</td><td>82</td><td class="is-pct">.494</td><td class="is-sub">14.0</td><td class="is-sub">5-5</td><td class="st-streak is-w">W1</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#AB0003"><a class="st-team" href="teams.html#WSH" aria-label="華盛頓國民" title="華盛頓國民"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/120.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/120.svg" width="18" height="18" alt="" loading="lazy"></picture><span>WSH</span></a></th><td>77</td><td>85</td><td class="is-pct">.475</td><td class="is-sub">17.0</td><td class="is-sub">6-4</td><td class="st-streak is-w">W1</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#FF5910"><a class="st-team" href="teams.html#NYM" aria-label="紐約大都會" title="紐約大都會"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/121.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" width="18" height="18" alt="" loading="lazy"></picture><span>NYM</span></a></th><td>74</td><td>88</td><td class="is-pct">.457</td><td class="is-sub">20.0</td><td class="is-sub">5-5</td><td class="st-streak is-l">L1</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <section class="st-div" aria-labelledby="st-d205">
+        <h3 id="st-d205">國聯中區</h3>
+        <table class="st-table">
+          <caption class="visually-hidden">國聯中區戰績</caption>
+          <colgroup><col><col class="c-w"><col class="c-l"><col class="c-pct"><col class="c-gb"><col class="c-l10"><col class="c-strk"></colgroup>
+          <thead><tr><th scope="col">隊</th><th scope="col">W</th><th scope="col">L</th><th scope="col">PCT</th><th scope="col">GB</th><th scope="col">L10</th><th scope="col">STRK</th></tr></thead>
+          <tbody>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#122853"><a class="st-team" href="teams.html#MIL" aria-label="密爾瓦基釀酒人，聯盟最佳戰績" title="密爾瓦基釀酒人"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/158.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/158.svg" width="18" height="18" alt="" loading="lazy"></picture><span>MIL</span><sup class="st-clinch" title="聯盟最佳戰績" aria-hidden="true">z</sup></a></th><td>103</td><td>59</td><td class="is-pct">.636</td><td class="is-sub">–</td><td class="is-sub">8-2</td><td class="st-streak is-w">W5</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#0E3386"><a class="st-team" href="teams.html#CHC" aria-label="芝加哥小熊，外卡" title="芝加哥小熊"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/112.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/112.svg" width="18" height="18" alt="" loading="lazy"></picture><span>CHC</span><sup class="st-clinch" title="外卡" aria-hidden="true">w</sup></a></th><td>89</td><td>73</td><td class="is-pct">.549</td><td class="is-sub">14.0</td><td class="is-sub">5-5</td><td class="st-streak is-w">W1</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#FDB827"><a class="st-team" href="teams.html#PIT" aria-label="匹茲堡海盜" title="匹茲堡海盜"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/134.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/134.svg" width="18" height="18" alt="" loading="lazy"></picture><span>PIT</span></a></th><td>82</td><td>80</td><td class="is-pct">.506</td><td class="is-sub">21.0</td><td class="is-sub">7-3</td><td class="st-streak is-w">W1</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#C41E3A"><a class="st-team" href="teams.html#STL" aria-label="聖路易紅雀" title="聖路易紅雀"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/138.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/138.svg" width="18" height="18" alt="" loading="lazy"></picture><span>STL</span></a></th><td>77</td><td>85</td><td class="is-pct">.475</td><td class="is-sub">26.0</td><td class="is-sub">2-8</td><td class="st-streak is-l">L4</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#C6011F"><a class="st-team" href="teams.html#CIN" aria-label="辛辛那提紅人" title="辛辛那提紅人"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/113.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/113.svg" width="18" height="18" alt="" loading="lazy"></picture><span>CIN</span></a></th><td>75</td><td>87</td><td class="is-pct">.463</td><td class="is-sub">28.0</td><td class="is-sub">4-6</td><td class="st-streak is-l">L1</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <section class="st-div" aria-labelledby="st-d203">
+        <h3 id="st-d203">國聯西區</h3>
+        <table class="st-table">
+          <caption class="visually-hidden">國聯西區戰績</caption>
+          <colgroup><col><col class="c-w"><col class="c-l"><col class="c-pct"><col class="c-gb"><col class="c-l10"><col class="c-strk"></colgroup>
+          <thead><tr><th scope="col">隊</th><th scope="col">W</th><th scope="col">L</th><th scope="col">PCT</th><th scope="col">GB</th><th scope="col">L10</th><th scope="col">STRK</th></tr></thead>
+          <tbody>
+            <tr class="st-row"><th scope="row" style="--team:#005A9C"><a class="st-team" href="teams.html#LAD" aria-label="洛杉磯道奇，分區冠軍" title="洛杉磯道奇"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/119.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" width="18" height="18" alt="" loading="lazy"></picture><span>LAD</span><sup class="st-clinch" title="分區冠軍" aria-hidden="true">y</sup></a></th><td>100</td><td>62</td><td class="is-pct">.617</td><td class="is-sub">–</td><td class="is-sub">8-2</td><td class="st-streak is-w">W3</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#2F241D"><a class="st-team" href="teams.html#SD" aria-label="聖地牙哥教士，外卡" title="聖地牙哥教士"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/135.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/135.svg" width="18" height="18" alt="" loading="lazy"></picture><span>SD</span><sup class="st-clinch" title="外卡" aria-hidden="true">w</sup></a></th><td>91</td><td>71</td><td class="is-pct">.562</td><td class="is-sub">9.0</td><td class="is-sub">8-2</td><td class="st-streak is-w">W2</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#A71930"><a class="st-team" href="teams.html#AZ" aria-label="亞利桑那響尾蛇" title="亞利桑那響尾蛇"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/109.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/109.svg" width="18" height="18" alt="" loading="lazy"></picture><span>AZ</span></a></th><td>86</td><td>76</td><td class="is-pct">.531</td><td class="is-sub">14.0</td><td class="is-sub">6-4</td><td class="st-streak is-l">L2</td></tr>
+            <tr class="st-row"><th scope="row" style="--team:#FD5A1E"><a class="st-team" href="teams.html#SF" aria-label="舊金山巨人" title="舊金山巨人"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/137.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/137.svg" width="18" height="18" alt="" loading="lazy"></picture><span>SF</span></a></th><td>65</td><td>97</td><td class="is-pct">.401</td><td class="is-sub">35.0</td><td class="is-sub">2-8</td><td class="st-streak is-l">L5</td></tr>
+            <tr class="st-row"><th scope="row" class="team-stripe--dark" style="--team:#333366"><a class="st-team" href="teams.html#COL" aria-label="科羅拉多洛磯" title="科羅拉多洛磯"><picture><source media="(prefers-color-scheme: light)" srcset="https://www.mlbstatic.com/team-logos/team-cap-on-light/115.svg"><img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/115.svg" width="18" height="18" alt="" loading="lazy"></picture><span>COL</span></a></th><td>58</td><td>104</td><td class="is-pct">.358</td><td class="is-sub">42.0</td><td class="is-sub">2-8</td><td class="st-streak is-l">L1</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <div class="st-legend">
+        <h3>標記說明</h3>
+        <dl>
+          <dt>z</dt><dd>取得聯盟最佳戰績（季後賽首輪輪空）</dd>
+          <dt>y</dt><dd>分區冠軍</dd>
+          <dt>x</dt><dd>取得季後賽資格</dd>
+          <dt>w</dt><dd>外卡</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</aside>
+</div>
+
+<!-- 平板／手機：右下角固定按鈕，叫出戰績抽屜（桌機隱藏） -->
+<button class="st-fab" type="button" data-st="open" aria-expanded="false" aria-controls="standings" aria-haspopup="dialog" aria-label="戰績" title="戰績"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
+<div class="st-backdrop" aria-hidden="true"></div>
+
+<footer class="wrap site-footer">
+  <span>資料來源：MLB Stats API</span>
+  <span><a href="https://github.com/haolun588/MLB-daily">GitHub 專案庫</a></span>
+</footer>
+
+</body>
+</html>
