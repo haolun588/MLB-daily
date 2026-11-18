@@ -155,7 +155,7 @@ class MlbTestBase(unittest.TestCase):
         ):
             p.start()
             self.addCleanup(p.stop)
-        discord = mock.patch.object(fetch_mlb, "send_discord_notification")
+        discord = mock.patch("mlb_daily.notify.send_discord_notification")
         self.discord = discord.start()
         self.addCleanup(discord.stop)
 
@@ -3376,7 +3376,7 @@ class SidebarFailureIsolationTests(SidebarBase):
 
     def test_build_index_extras_total_failure_still_writes_index(self):
         self.api.schedule = "schedule_normal"
-        with mock.patch.object(fetch_mlb, "build_index_extras", side_effect=RuntimeError("boom")):
+        with mock.patch("mlb_daily.index_page.build_index_extras", side_effect=RuntimeError("boom")):
             code = self.run_flags()
         self.assertIsNone(code)
         index = (self.tmp / "index.html").read_text(encoding="utf-8")
@@ -3396,7 +3396,7 @@ class SidebarFailureIsolationTests(SidebarBase):
         self.assertEqual(self.api.calls, [])
         with mock.patch("mlb_daily.rosters.fetch_rosters", return_value=1) as m, \
                 mock.patch.object(sys, "argv", ["fetch_mlb.py", "--rosters"]), \
-                mock.patch.object(fetch_mlb, "build_index_extras") as b:
+                mock.patch("mlb_daily.index_page.build_index_extras") as b:
             with self.assertRaises(SystemExit):
                 fetch_mlb.main()
         m.assert_called_once()
