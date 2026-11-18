@@ -2283,7 +2283,7 @@ class SummarySentenceTests(MlbTestBase):
         g1, g2 = self.games_of("schedule_normal")
         games = [g1, g2, g1, g2]  # 順序：NYY@BOS, LAD@SF, NYY@BOS, LAD@SF
         self.api.schedule = "schedule_normal"
-        with mock.patch.object(fetch_mlb, "top_focus_score", side_effect=[1.0, 2.0, 3.0, 4.0]),                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        with mock.patch("mlb_daily.games.top_focus_score", side_effect=[1.0, 2.0, 3.0, 4.0]),                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             meta = fetch_mlb.generate_report(DATE, games)
         matchups = re.findall(r"(\w+) @ (\w+)，比分", meta["summary"])
         # 前 3 場為 NYY, LAD, NYY；積分最高的 3 場（4、3、2）則為 LAD, NYY, LAD
@@ -3365,9 +3365,9 @@ class SidebarFailureIsolationTests(SidebarBase):
 
     def test_exceptions_inside_blocks_do_not_break_main(self):
         self.api.schedule = "schedule_normal"
-        with mock.patch.object(fetch_mlb, "fetch_standings", side_effect=RuntimeError("boom")), \
-                mock.patch.object(fetch_mlb, "fetch_countdown", side_effect=RuntimeError("boom")), \
-                mock.patch.object(fetch_mlb, "fetch_weekly_transactions", side_effect=ValueError("boom")), \
+        with mock.patch("mlb_daily.standings.fetch_standings", side_effect=RuntimeError("boom")), \
+                mock.patch("mlb_daily.previews.fetch_countdown", side_effect=RuntimeError("boom")), \
+                mock.patch("mlb_daily.transactions.fetch_weekly_transactions", side_effect=ValueError("boom")), \
                 mock.patch("mlb_daily.timeutil.get_taipei_now", return_value=OFFSEASON_NOW):
             code = self.run_flags()
         self.assertIsNone(code)
@@ -3394,7 +3394,7 @@ class SidebarFailureIsolationTests(SidebarBase):
         self.discord.reset_mock()
         self.run_flags("--notify-only")
         self.assertEqual(self.api.calls, [])
-        with mock.patch.object(fetch_mlb, "fetch_rosters", return_value=1) as m, \
+        with mock.patch("mlb_daily.rosters.fetch_rosters", return_value=1) as m, \
                 mock.patch.object(sys, "argv", ["fetch_mlb.py", "--rosters"]), \
                 mock.patch.object(fetch_mlb, "build_index_extras") as b:
             with self.assertRaises(SystemExit):

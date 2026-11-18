@@ -28,7 +28,7 @@ if hasattr(sys.stderr, 'reconfigure'):
         pass
 
 # 拆分後的 mlb_daily 套件；以下重新匯出原本 fetch_mlb 的所有名稱以維持相容
-from mlb_daily import config, htmlutil, net, storage, timeutil  # noqa: F401
+from mlb_daily import config, games as games_mod, htmlutil, net, news as news_mod, previews, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate  # noqa: F401
 from mlb_daily.config import (  # noqa: F401
     CANCELLED_REASONS,
     CLINCH_LABELS,
@@ -75,6 +75,34 @@ from mlb_daily.config import (  # noqa: F401
     WEEKLY_TX_TYPE_CODES,
     _UNSET,
 )
+from mlb_daily.games import (  # noqa: F401
+    _card_head,
+    _card_open,
+    _score_table,
+    _side_view,
+    _statline,
+    batter_tags,
+    build_base_view,
+    build_decisions,
+    build_game_view,
+    build_postponed_view,
+    build_summary_sentence,
+    check_all_games_finalized,
+    classify_game_status,
+    collect_candidates,
+    format_cumulative,
+    game_type_label,
+    get_team_info,
+    pick_summary_sentences,
+    render_batter,
+    render_decisions,
+    render_fallback_card,
+    render_game_card,
+    render_pitcher,
+    render_postponed_card,
+    select_performers,
+    top_focus_score,
+)
 from mlb_daily.htmlutil import (  # noqa: F401
     _int_id,
     _section_message,
@@ -99,6 +127,46 @@ from mlb_daily.net import (  # noqa: F401
     fetch_text,
     post_json,
 )
+from mlb_daily.news import (  # noqa: F401
+    _safe_mlb_url,
+    fetch_daily_news,
+    fetch_game_news,
+    render_news_box,
+    render_news_section,
+)
+from mlb_daily.previews import (  # noqa: F401
+    _is_called_off,
+    _render_preview_side,
+    _season_pitching_line,
+    fetch_countdown,
+    fetch_game_previews,
+    fetch_pitcher_stats,
+    preview_range_text,
+    render_countdown,
+    render_game_previews,
+)
+from mlb_daily.rosters import (  # noqa: F401
+    _find_stat,
+    _int_or_none,
+    _num,
+    _round,
+    build_hitting,
+    build_pitching,
+    build_player,
+    build_team_players,
+    fetch_rosters,
+    pitcher_group,
+    resolve_roster_context,
+    roster_url,
+)
+from mlb_daily.standings import (  # noqa: F401
+    STANDINGS_ICON,
+    fetch_standings,
+    render_standings_aside,
+    render_standings_division,
+    render_standings_fab,
+    render_standings_row,
+)
 from mlb_daily.storage import (  # noqa: F401
     _to_int,
     entry_type,
@@ -114,423 +182,35 @@ from mlb_daily.timeutil import (  # noqa: F401
     get_yesterday_str,
     report_href,
 )
-
-
-
-def check_all_games_finalized(date_str):
-    """回傳 (finalized, games)。
-
-    - API 失敗（fetch 回 None、回應結構不符）：拋出 ApiError。
-    - 回應成功且確實無賽事（totalGames == 0 或 dates 為空）：回傳 (True, [])。
-    - 有賽事：回傳 (是否全數完賽, games)。
-    """
-    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}&hydrate=linescore,decisions"
-    data = net.fetch_json(url)
-    if data is None:
-        raise net.ApiError(f"無法取得 {date_str} 的賽程（API 無回應）")
-    if not isinstance(data, dict) or not isinstance(data.get("dates"), list):
-        raise net.ApiError(f"{date_str} 的賽程回應缺少預期結構（dates）")
-
-    dates = data["dates"]
-    if not dates:
-        return True, []
-    if not isinstance(dates[0], dict):
-        raise net.ApiError(f"{date_str} 的賽程回應結構異常（dates[0]）")
-    games = dates[0].get("games")
-    if games is None:
-        if data.get("totalGames") == 0:
-            return True, []
-        raise net.ApiError(f"{date_str} 的賽程回應缺少預期結構（games）")
-    if not isinstance(games, list):
-        raise net.ApiError(f"{date_str} 的賽程回應結構異常（games）")
-    if not games:
-        return True, []
-
-    for game in games:
-        state = game.get("status", {}).get("abstractGameState")
-        detailed = game.get("status", {}).get("detailedState")
-        # Games are NOT finalized if they are Preview or Live (excluding Postponed/Cancelled,
-        # and Suspended games which will not resume on the same day)
-        if state in ["Preview", "Live"] and detailed not in ["Postponed", "Cancelled"] and not (detailed or "").startswith("Suspended"):
-            return False, games
-
-    return True, games
-
-def fetch_game_news(game_pk, away_abbr, home_abbr, away_r, home_r):
-    url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/content"
-    backup_headline = f"{away_abbr} @ {home_abbr} 賽事總結"
-    backup_blurb = f"終場比分 {away_abbr} {away_r} - {home_abbr} {home_r}。本場比賽目前無官方文字摘要。"
-    
-    data = net.fetch_json(url)
-    if not data:
-        return {"headline": backup_headline, "blurb": backup_blurb}
-        
-    try:
-        recap = data.get("editorial", {}).get("recap", {}).get("mlb", {})
-        headline = recap.get("headline")
-        blurb = recap.get("blurb")
-        if headline and blurb:
-            return {"headline": headline, "blurb": blurb, "translatable": True}
-    except Exception as e:
-        print(f"Warning: Error parsing news for game {game_pk} ({e})", file=sys.stderr)
-        
-    return {"headline": backup_headline, "blurb": backup_blurb}
-
-
-def _is_mlb_team(team_obj):
-    """toTeam／fromTeam 物件的 id 是否為 30 支大聯盟球隊之一。"""
-    if not isinstance(team_obj, dict):
-        return False
-    return htmlutil._int_id(team_obj.get("id")) in TEAM_META
-
-
-def filter_major_league_transactions(transactions):
-    """對 transactions API 的 transactions 陣列套用大聯盟層級過濾，回傳整理後的 list（保持 API 順序）。description 為
-    API 原文（未 escape），輸出 HTML 前一律經 render_tx_description() 處理。
-
-    過濾：排除 minor league 關鍵字；signed 類需有大聯盟特徵詞；toTeam／fromTeam 至少一方為 30 隊之一
-    （排除冬季聯盟指派、小聯盟球隊之間的異動）；描述去重。"""
-    tx_list = []
-    seen_descriptions = {}  # description -> 已收錄的 tx dict（重複描述的球員併入其 persons）
-
-    def _add_person(entry, person):
-        pid, name = (person or {}).get("id"), (person or {}).get("fullName")
-        if pid is None or not name:
-            return
-        if all(p["id"] != pid for p in entry["persons"]):
-            entry["persons"].append({"id": pid, "name": name})
-
-    for tx in transactions or []:
-        desc = tx.get("description")
-        if not desc:
-            continue
-        if desc in seen_descriptions:
-            _add_person(seen_descriptions[desc], tx.get("person"))
-            continue
-        desc_lower = desc.lower()
-        if re.search(r"\bminor league", desc_lower):
-            continue
-        if re.search(r"\bsigned\b", desc_lower):  # 單字比對，避免 assigned 命中
-            indicators = ["free agent", "major league", "extension", "arbitration", "-year"]
-            if not any(ind in desc_lower for ind in indicators):
-                continue
-        if not (_is_mlb_team(tx.get("toTeam")) or _is_mlb_team(tx.get("fromTeam"))):
-            continue
-        person_info = tx.get("person") or {}
-        entry = {
-            "to_team_id": (tx.get("toTeam") or {}).get("id"),
-            "from_team_id": (tx.get("fromTeam") or {}).get("id"),
-            "person_id": person_info.get("id"),
-            "person_name": person_info.get("fullName"),
-            "persons": [],
-            "description": desc,
-            "date": tx.get("date"),
-            "type_code": tx.get("typeCode"),
-        }
-        _add_person(entry, person_info)
-        seen_descriptions[desc] = entry
-        tx_list.append(entry)
-
-    return tx_list
-
-
-def fetch_daily_transactions(date_str):
-    """抓取當日大聯盟層級人事異動（過濾規則見 filter_major_league_transactions）。"""
-    url = f"https://statsapi.mlb.com/api/v1/transactions?date={date_str}&sportId=1"
-    data = net.fetch_json(url)
-    if not data or not data.get("transactions"):
-        return []
-    return filter_major_league_transactions(data["transactions"])
-
-
-def _safe_mlb_url(url):
-    """只接受 https 且主機為 www.mlb.com 或 *.mlbstatic.com 的網址；否則回傳 None。"""
-    if not isinstance(url, str):
-        return None
-    url = url.strip()
-    if not url or any(ch.isspace() or ord(ch) < 32 for ch in url):
-        return None
-    try:
-        parsed = urllib.parse.urlparse(url)
-        host = (parsed.hostname or "").lower()
-        port = parsed.port
-    except ValueError:
-        return None
-    if parsed.scheme != "https" or parsed.username or parsed.password or port not in (None, 443):
-        return None
-    if host == "www.mlb.com" or host == "mlbstatic.com" or host.endswith(".mlbstatic.com"):
-        return url
-    return None
-
-
-def fetch_daily_news(date_str, limit=12):
-    """抓取 MLB 官方 RSS，回傳 date_str 當天（台北時間 00:00–24:00）發布的新聞，新到舊、最多 limit 則。
-
-    每則為 {"title", "link", "published"（台北時間 datetime）, "image"（網址或 None）}。
-    link 不安全的新聞整則捨棄；image 不安全則設為 None。
-    抓取或解析失敗回傳 None（與「成功但 0 則」的 [] 區分）。"""
-    text = net.fetch_text(NEWS_RSS_URL)
-    if not text:
-        return None
-    try:
-        day_start = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=TAIPEI_TZ)
-        day_end = day_start + timedelta(days=1)
-        root = ET.fromstring(text)
-        if root.tag != "rss":
-            raise ValueError(f"unexpected root element: {root.tag}")
-        found = []
-        for item in root.iter("item"):
-            title = (item.findtext("title") or "").strip()
-            link = _safe_mlb_url(item.findtext("link"))
-            pub = (item.findtext("pubDate") or "").strip()
-            if not title or not link or not pub:
-                continue
-            try:
-                published = parsedate_to_datetime(pub)
-            except (TypeError, ValueError):
-                continue
-            if published.tzinfo is None:
-                published = published.replace(tzinfo=timezone.utc)
-            published = published.astimezone(TAIPEI_TZ)
-            if not (day_start <= published < day_end):
-                continue
-            image_el = item.find("image")
-            image = _safe_mlb_url(image_el.get("href")) if image_el is not None else None
-            found.append({"title": title, "link": link, "published": published, "image": image})
-    except Exception as e:
-        print(f"Warning: Could not parse news RSS ({e}). Skipping news section.", file=sys.stderr)
-        return None
-    found.sort(key=lambda n: n["published"], reverse=True)
-    return found[:limit]
-
-
-def _interaction_text(resp):
-    """取出 Interactions 回應中最後一個 model_output step 的文字（串接其 text 區塊）；找不到回傳 None。"""
-    steps = resp.get("steps") if isinstance(resp, dict) else None
-    if not isinstance(steps, list):
-        return None
-    for step in reversed(steps):
-        if isinstance(step, dict) and step.get("type") == "model_output":
-            parts = [
-                b.get("text") for b in (step.get("content") or [])
-                if isinstance(b, dict) and b.get("type") == "text" and isinstance(b.get("text"), str)
-            ]
-            return "".join(parts) if parts else None
-    return None
-
-
-def build_team_glossary(extra_names=()):
-    """英文隊名 -> 中文譯名對照（TEAM_META 中文名＋暱稱簡稱＋當日比賽資料中的英文隊名）。"""
-    lines = []
-    for tid, (full_en, nick_en, short_zh) in TEAM_NAMES_EN.items():
-        lines.append(f"{full_en} -> {TEAM_META[tid]['name']}")
-        if nick_en != full_en:
-            lines.append(f"{nick_en} -> {short_zh}")
-    for tid, aliases in TEAM_SLANG_ALIASES.items():
-        short_zh = TEAM_NAMES_EN[tid][2]
-        for alias in aliases:
-            lines.append(f"{alias} -> {short_zh}")
-    seen = {ln.split(" -> ")[0] for ln in lines}
-    for tid, name_en in extra_names:
-        if tid in TEAM_META and name_en and name_en not in seen:
-            seen.add(name_en)
-            lines.append(f"{name_en} -> {TEAM_META[tid]['name']}")
-    return lines
-
-
-TRANSLATE_SYSTEM = (
-    "你是專業的美國職棒大聯盟（MLB）新聞編譯。請把使用者提供的英文文字翻成繁體中文（台灣用語、體育新聞語氣）。"
-    "規則：每則的 keep 清單內的字串必須逐字保留英文原樣出現在譯文中；球員姓名一律保留英文原名；"
-    "數據與縮寫（如 HR、RBI、IP、ERA、MVP）保留；球隊名稱必須依下列對照表翻譯；"
-    "標題中以逗號或頓號列舉的球隊名稱與簡稱也必須依對照表翻成中文；球員姓名仍保留英文。"
-    "不要加入原文沒有的內容，也不要附上英文原文。只輸出 JSON。\n"
-    "球隊名稱對照（英文 -> 中文）：\n"
+from mlb_daily.transactions import (  # noqa: F401
+    _is_mlb_team,
+    _tx_display_text,
+    _tx_persons,
+    fetch_daily_transactions,
+    fetch_weekly_transactions,
+    filter_major_league_transactions,
+    render_card_transactions,
+    render_transactions_section,
+    render_tx_description,
+    render_tx_items,
+    render_weekly_transactions,
+    select_weekly_highlights,
+    split_game_transactions,
+)
+from mlb_daily.translate import (  # noqa: F401
+    LAST_TRANSLATION,
+    TRANSLATE_SYSTEM,
+    TX_TRANSLATION_CACHE,
+    _fallback_model,
+    _interaction_text,
+    _keep_in,
+    _translate_chunk,
+    apply_translations,
+    build_team_glossary,
+    translate_texts,
+    translate_weekly_transactions,
 )
 
-
-def _translate_chunk(chunk, glossary, api_key, model):
-    """翻譯一批；回傳與 chunk 等長的 list（單則驗證失敗者為原文），整批失敗回傳 None。"""
-    request_items = [{"id": i, "text": it["text"], "keep": list(it.get("keep") or [])} for i, it in enumerate(chunk)]
-    payload = {
-        "model": model,
-        "system_instruction": TRANSLATE_SYSTEM + "\n".join(glossary),
-        "input": (
-            f"請翻譯以下 {len(request_items)} 則文字。回傳 JSON：{{\"translations\": [字串, ...]}}，"
-            "長度與順序必須與輸入完全相同。輸入：\n" + json.dumps(request_items, ensure_ascii=False)
-        ),
-        "store": False,
-        "response_format": {
-            "type": "text",
-            "mime_type": "application/json",
-            "schema": {
-                "type": "object",
-                "properties": {"translations": {"type": "array", "items": {"type": "string"}}},
-                "required": ["translations"],
-            },
-        },
-    }
-    headers = {"x-goog-api-key": api_key, "Api-Revision": GEMINI_API_REVISION}
-    net.LAST_POST["retryable"] = False
-    resp = net.post_json(GEMINI_ENDPOINT, payload, headers)
-    if resp is None:
-        return None  # post_json 已印出失敗原因；LAST_POST["retryable"] 記錄是否為可重試類型
-    text = _interaction_text(resp)
-    if not text:
-        steps = resp.get("steps")
-        step_types = [st.get("type") if isinstance(st, dict) else type(st).__name__ for st in steps] if isinstance(steps, list) else steps
-        print(f"Warning: translation response has no model_output text; top-level keys={sorted(resp.keys())}, "
-              f"step types={step_types}", file=sys.stderr)
-        return None
-    try:
-        translations = json.loads(text).get("translations")
-    except (ValueError, AttributeError):
-        print("Warning: translation response text is not valid JSON with a translations field", file=sys.stderr)
-        return None
-    if not isinstance(translations, list) or len(translations) != len(chunk):
-        actual = len(translations) if isinstance(translations, list) else type(translations).__name__
-        print(f"Warning: translation length mismatch: expected {len(chunk)}, got {actual}", file=sys.stderr)
-        return None
-    out = []
-    for it, tr in zip(chunk, translations):
-        ok = isinstance(tr, str) and tr.strip() and all(k in tr for k in (it.get("keep") or []))
-        out.append(tr if ok else it["text"])
-    return out
-
-
-def _fallback_model(primary):
-    """備用模型名稱；環境變數 GEMINI_FALLBACK_MODEL 設為空字串則停用；與主模型相同視為無備用。"""
-    fb = os.environ.get("GEMINI_FALLBACK_MODEL")
-    fb = GEMINI_FALLBACK_MODEL if fb is None else fb.strip()
-    return fb if fb and fb != primary else None
-
-
-# 最近一次 translate_texts 實際用過備用模型的批次數與使用的模型（供 apply_translations 顯示）
-LAST_TRANSLATION = {"primary": None, "fallback": None, "fallback_ok": False}
-
-
-# 本次執行已翻譯成功的人事異動：{英文 description: 中文}（供首頁本週人事異動沿用）
-TX_TRANSLATION_CACHE = {}
-
-
-def translate_texts(items, extra_team_names=()):
-    """批次翻譯。items: [{"text": 原文, "keep": [逐字保留的英文詞]}]。
-    無金鑰、items 為空、或所有批次皆失敗 -> None（呼叫端用原文）；
-    否則回傳等長 list，單則驗證失敗者為原文。"""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key or not items:
-        return None
-    model = os.environ.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
-    fallback = _fallback_model(model)
-    LAST_TRANSLATION.update(primary=model, fallback=fallback, fallback_ok=False)
-    glossary = build_team_glossary(extra_team_names)
-    results = []
-    any_ok = False
-    for start in range(0, len(items), TRANSLATE_BATCH_SIZE):
-        chunk = items[start:start + TRANSLATE_BATCH_SIZE]
-        out = _translate_chunk(chunk, glossary, api_key, model)
-        if out is None and fallback and net.LAST_POST["retryable"]:
-            print(f"Warning: 主模型 {model} 持續失敗，改用備用模型 {fallback}", file=sys.stderr)
-            out = _translate_chunk(chunk, glossary, api_key, fallback)
-            if out is not None:
-                LAST_TRANSLATION["fallback_ok"] = True
-        if out is None:
-            out = [it["text"] for it in chunk]
-        else:
-            any_ok = True
-        results.extend(out)
-    return results if any_ok else None
-
-
-def _keep_in(text, names):
-    return [n for n in dict.fromkeys(names) if n and n in text]
-
-
-def apply_translations(news, views, tx_items, extra_team_names=()):
-    """收集整頁需翻譯的文字，只呼叫一次 translate_texts，譯文寫入 *_zh 欄位。回傳是否成功套用。"""
-    targets = []  # (物件, 目標鍵, 原文, keep)
-    for n in news or []:
-        targets.append((n, "title_zh", n["title"], []))
-    for view in views:
-        box = view.get("news")
-        if not box or not box.get("translatable"):
-            continue
-        names = [p["name"] for p in view.get("batters", []) + view.get("pitchers", [])]
-        for src, dst in (("headline", "headline_zh"), ("blurb", "blurb_zh")):
-            targets.append((box, dst, box[src], _keep_in(box[src], names)))
-    for tx in tx_items:
-        targets.append((tx, "description_zh", tx["description"], _keep_in(tx["description"], [p.get("name") for p in _tx_persons(tx)] or [tx.get("person_name")])))
-    items = [{"text": text, "keep": keep} for _, _, text, keep in targets]
-    results = translate_texts(items, extra_team_names)
-    if results is None:
-        if not os.environ.get("GEMINI_API_KEY"):
-            print("Translation: 未啟用（無金鑰）")
-        elif not items:
-            print("Translation: 無需翻譯的內容")
-        else:
-            print("Translation: 失敗，使用原文")
-        return False
-    done = 0
-    for (obj, dst, text, _), tr in zip(targets, results):
-        if tr != text:
-            obj[dst] = tr
-            done += 1
-            if dst == "description_zh":
-                TX_TRANSLATION_CACHE[text] = tr  # 首頁本週人事異動可沿用同一則的戰報譯文
-    model = os.environ.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
-    if LAST_TRANSLATION["fallback_ok"]:
-        print(f"Translation: 成功 {done}/{len(items)} 則（模型 {LAST_TRANSLATION['fallback']}，主模型 {model} 失敗後改用）")
-    else:
-        print(f"Translation: 成功 {done}/{len(items)} 則（模型 {model}）")
-    return True
-
-
-def _tx_persons(tx):
-    """tx 的球員清單 [{"id", "name"}]；舊資料（無 persons）退回 person_id/person_name 單元素。"""
-    persons = tx.get("persons")
-    if persons:
-        return persons
-    if tx.get("person_name") and htmlutil._int_id(tx.get("person_id")) is not None:
-        return [{"id": tx["person_id"], "name": tx["person_name"]}]
-    return []
-
-
-def render_tx_description(description, person_id=None, person_name=None, persons=None):
-    """對原文以球員名切分，各段分別 escape，再以 Savant 連結串接（避免名字命中 &amp; 等實體）。
-    persons 為 [{"id","name"}]；未給時以 person_id/person_name 組成單元素。"""
-    if persons is None:
-        persons = [{"id": person_id, "name": person_name}] if person_name else []
-    by_name = {}
-    for p in persons:
-        name = p.get("name")
-        if name and htmlutil._int_id(p.get("id")) is not None and name in description:
-            by_name.setdefault(name, p["id"])
-    if not by_name:
-        return htmlutil.esc(description)
-    names = sorted(by_name, key=len, reverse=True)
-    pattern = "(" + "|".join(re.escape(n) for n in names) + ")"
-    out = []
-    for i, part in enumerate(re.split(pattern, description)):
-        if i % 2 == 1:
-            out.append(htmlutil.player_link(by_name[part], part))
-        elif part:
-            out.append(htmlutil.esc(part))
-    return "".join(out)
-
-
-def _tx_display_text(tx):
-    """優先用譯文；譯文遺失任一人名（理論上已被驗證擋下）時退回原文。"""
-    zh = tx.get("description_zh")
-    names = [p.get("name") for p in _tx_persons(tx)] + [tx.get("person_name")]
-    if zh and all(n in zh for n in names if n and n in tx["description"]):
-        return zh
-    return tx["description"]
-
-
-def render_tx_items(tx_list):
-    return "".join(
-        f"<li>{render_tx_description(_tx_display_text(tx), persons=_tx_persons(tx))}</li>"
-        for tx in tx_list
-    )
 
 
 # ---------------------------------------------------------------- 渲染：總覽與區塊
@@ -571,545 +251,6 @@ def render_games_section(cards_html):
     )
 
 
-def render_news_section(news, page_type):
-    """每日新聞區塊。news 為 None（抓取失敗）時不輸出；[] 時顯示空狀態。
-    休賽季版首則為頭條樣式（有圖片才顯示圖片）。所有文字與網址皆 escape。"""
-    if news is None:
-        return ""
-    head = f'<div class="section-head"><h2 id="news-h">今日新聞</h2><span class="count">{len(news)} 則</span></div>'
-    if not news:
-        body = '<p class="section-empty">當日無新聞。</p>'
-    else:
-        rest = list(news)
-        lead = ""
-        if page_type == "offseason":
-            top = rest.pop(0)
-            image = ""
-            if top.get("image"):
-                image = f'<img class="lead-img" src="{htmlutil.esc(top["image"])}" alt="{htmlutil.esc(top.get("title_zh") or top["title"])}" loading="lazy">'
-            lead = (
-                f'<article class="lead-story">{image}'
-                f'<p class="kicker">頭條 · {htmlutil.esc(top["published"].strftime("%m/%d %H:%M"))}</p>'
-                f'<h3><a href="{htmlutil.esc(top["link"])}" target="_blank" rel="noopener">{htmlutil.esc(top.get("title_zh") or top["title"])}</a></h3>'
-                f'<p class="src">{htmlutil.esc(NEWS_SOURCE)}</p></article>'
-            )
-        items = "".join(
-            f'<li><time datetime="{htmlutil.esc(n["published"].strftime("%Y-%m-%dT%H:%M"))}">{htmlutil.esc(n["published"].strftime("%H:%M"))}</time>'
-            f'<div><a class="title" href="{htmlutil.esc(n["link"])}" target="_blank" rel="noopener">{htmlutil.esc(n.get("title_zh") or n["title"])}</a>'
-            f'<span class="src">{htmlutil.esc(NEWS_SOURCE)} · {htmlutil.esc(n["published"].strftime("%m/%d %H:%M"))}</span></div></li>'
-            for n in rest
-        )
-        cls = "news is-two-col" if page_type == "offseason" else "news"
-        body = lead + (f'<ol class="{cls}">{items}</ol>' if items else "")
-    return f'<section class="section wrap" aria-labelledby="news-h">{head}{body}</section>'
-
-
-def render_transactions_section(tx_list, heading="其他球隊人事異動", empty_text="本日無其他球隊人事異動。"):
-    """依球隊分組顯示人事異動（to_team 優先，其次 from_team，皆非 30 隊者歸入「其他異動」）。"""
-    grouped = {}
-    for tx in tx_list:
-        if tx["to_team_id"] in TEAM_META:
-            key = tx["to_team_id"]
-        elif tx["from_team_id"] in TEAM_META:
-            key = tx["from_team_id"]
-        else:
-            key = "Other"
-        grouped.setdefault(key, []).append(tx)
-
-    head = (
-        f'<div class="section-head"><h2 id="tx-h">{htmlutil.esc(heading)}</h2>'
-        f'<span class="count">{len(tx_list)} 筆</span></div>'
-    )
-    if not tx_list:
-        body = f'<p class="section-empty">{htmlutil.esc(empty_text)}</p>'
-    else:
-        keys = sorted(k for k in grouped if k != "Other")
-        if "Other" in grouped:
-            keys.append("Other")
-        groups = []
-        for key in keys:
-            items = render_tx_items(grouped[key])
-            if key == "Other":
-                groups.append(
-                    f'<div class="tx-group"><h3>其他異動</h3><ul class="tx-list">{items}</ul></div>'
-                )
-            else:
-                meta = TEAM_META[key]
-                groups.append(
-                    f'<div class="tx-group{htmlutil.stripe_class(meta["color"])}" style="--team:{htmlutil.safe_color(meta["color"])}">'
-                    f'<h3>{htmlutil.logo_picture(key, meta["abbr"], 22)}{htmlutil.esc(meta["name"])}</h3>'
-                    f'<ul class="tx-list">{items}</ul></div>'
-                )
-        body = '<div class="tx-grid">' + "".join(groups) + "</div>"
-    return f'<section class="section wrap" aria-labelledby="tx-h">{head}{body}</section>'
-
-
-# ---------------------------------------------------------------- 比賽狀態與分類
-def game_type_label(game):
-    """依 gameType 回傳卡片標題用的賽事類型文字。"""
-    return GAME_TYPE_LABELS.get(game.get("gameType"), "比賽")
-
-
-def classify_game_status(game, linescore=None):
-    """判斷比賽狀態，回傳 (badge_text, badge_class, is_final)。
-
-    badge_class 對應 CSS 徽章：final / extra（延長賽）/ early（提前結束）/ suspended。
-    - 完賽：Final（9 局或與預定局數相同）、Final/N（延長賽，extra）、Final/N（提前結束，early）。
-    - Suspended：暫停比賽；其餘仍為 Preview/Live（等待達上限）：未完賽。兩者 is_final 皆為 False。
-    """
-    if linescore is None:
-        linescore = game.get("linescore", {})
-    status = game.get("status", {})
-    abstract = status.get("abstractGameState")
-    detailed = status.get("detailedState") or ""
-
-    if detailed.startswith("Suspended"):
-        return "暫停比賽", "suspended", False
-    if abstract != "Final" or detailed in ("Postponed", "Cancelled"):
-        return "未完賽", "suspended", False
-
-    scheduled = linescore.get("scheduledInnings") or 9
-    played = len(linescore.get("innings", [])) or linescore.get("currentInning") or 0
-    if played == 0 or played == scheduled:
-        return "Final", "final", True
-    if played > scheduled:
-        return f"Final/{played}", "extra", True
-    return f"Final/{played}（提前結束）", "early", True
-
-
-# ---------------------------------------------------------------- 資料抽取（boxscore -> 焦點球員）
-def format_cumulative(count, season_total):
-    """單場次數與賽季累計：1(9) / 2(10)(11)。賽季累計缺漏或小於單場次數（資料異常）時只輸出次數。"""
-    if count <= 0:
-        return ""
-    if not isinstance(season_total, int) or season_total < count:
-        return str(count)
-    if count == 1:
-        return f"1({season_total})"
-    return f"{count}" + "".join(f"({season_total - count + 1 + i})" for i in range(count))
-
-
-def get_team_info(team_id, english_name):
-    if team_id in TEAM_META:
-        return TEAM_META[team_id]
-    return {"name": english_name, "abbr": english_name[:3].upper(), "color": "#6b7280"}
-
-
-def collect_candidates(boxscore, away_abbr, home_abbr):
-    """從 boxscore 取出打者／投手候選人並評分（分數由高到低）。"""
-    teams = boxscore.get("teams", {})
-    starters = {
-        side: (teams.get(side, {}).get("pitchers") or [None])[0] for side in ("away", "home")
-    }
-    candidates = []
-
-    for side, team_abbr in (("away", away_abbr), ("home", home_abbr)):
-        for _, p_info in (teams.get(side, {}).get("players") or {}).items():
-            person = p_info.get("person", {})
-            p_id = person.get("id")
-            p_name = person.get("fullName", "")
-            pos = p_info.get("position", {}).get("abbreviation", "")
-            if p_id is None:
-                continue
-
-            # 打者：有打數，或雖無打數但有盜壘／得分（代跑者，L4）
-            bat = p_info.get("stats", {}).get("batting", {})
-            if bat:
-                ab = bat.get("atBats", 0)
-                r = bat.get("runs", 0)
-                h = bat.get("hits", 0)
-                d = bat.get("doubles", 0)
-                t = bat.get("triples", 0)
-                hr = bat.get("homeRuns", 0)
-                rbi = bat.get("rbi", 0)
-                bb = bat.get("baseOnBalls", 0)
-                so = bat.get("strikeOuts", 0)
-                sb = bat.get("stolenBases", 0)
-                if ab > 0 or sb > 0 or r > 0:
-                    # Score = H*1 + 2B*2 + 3B*3 + HR*4 + RBI*1.5 + R*1 + SB*1 + BB*1
-                    score = h * 1.0 + d * 2.0 + t * 3.0 + hr * 4.0 + rbi * 1.5 + r * 1.0 + sb * 1.0 + bb * 1.0
-                    season = p_info.get("seasonStats", {}).get("batting", {})
-                    candidates.append({
-                        "type": "batter", "id": p_id, "name": p_name, "team": team_abbr,
-                        "pos": pos, "score": score,
-                        "stats": {
-                            "ab": ab, "r": r, "h": h, "rbi": rbi, "bb": bb, "so": so,
-                            "d": d, "t": t, "hr": hr, "sb": sb,
-                            "season_d": season.get("doubles", 0),
-                            "season_t": season.get("triples", 0),
-                            "season_hr": season.get("homeRuns", 0),
-                            "season_sb": season.get("stolenBases", 0),
-                        },
-                    })
-
-            # 投手
-            pit = p_info.get("stats", {}).get("pitching", {})
-            ip_str = pit.get("inningsPitched") if pit else None
-            if ip_str and ip_str != "0.0":
-                h = pit.get("hits", 0)
-                r = pit.get("runs", 0)
-                er = pit.get("earnedRuns", 0)
-                bb = pit.get("baseOnBalls", 0)
-                so = pit.get("strikeOuts", 0)
-                parts = ip_str.split(".")
-                ip_outs = int(parts[0]) * 3 + (int(parts[1]) if len(parts) > 1 else 0)
-                is_win = pit.get("wins", 0) > 0
-                is_save = pit.get("saves", 0) > 0
-                is_loss = pit.get("losses", 0) > 0
-                # Score = IP_outs + K*1 - ER*2 - H*1 - BB*1 + (Win ? 5 : 0) + (Save ? 4 : 0)
-                score = ip_outs + so * 1.0 - er * 2.0 - h * 1.0 - bb * 1.0 + (5.0 if is_win else 0.0) + (4.0 if is_save else 0.0)
-                decision = "W" if is_win else ("S" if is_save else ("L" if is_loss else ""))
-                candidates.append({
-                    "type": "pitcher", "id": p_id, "name": p_name, "team": team_abbr,
-                    "pos": pos, "score": score, "is_starter": p_id == starters[side],
-                    "decision": decision,
-                    "stats": {
-                        "ip": ip_str, "h": h, "r": r, "er": er, "bb": bb, "so": so,
-                        "pitches": pit.get("numberOfPitches", 0), "strikes": pit.get("strikes", 0),
-                    },
-                })
-
-    candidates.sort(key=lambda x: x["score"], reverse=True)
-    return candidates
-
-
-def select_performers(candidates):
-    """雙門檻：前 3 名保證入選；其餘打者 >= 7、先發 >= 15、後援 >= 8。回傳 (打者, 投手, 全部入選)。"""
-    selected = []
-    for idx, cand in enumerate(candidates):
-        if idx < 3:
-            selected.append(cand)
-        elif cand["type"] == "batter":
-            if cand["score"] >= 7.0:
-                selected.append(cand)
-        else:
-            if cand["score"] >= (15.0 if cand["is_starter"] else 8.0):
-                selected.append(cand)
-    return (
-        [c for c in selected if c["type"] == "batter"],
-        [c for c in selected if c["type"] == "pitcher"],
-        selected,
-    )
-
-
-def build_decisions(dec_obj, players_away, players_home):
-    """投球決定：{'w'|'l'|'s': {'id','name','record'} 或 None}。"""
-    def lookup(pid):
-        obj = players_away.get(f"ID{pid}") or players_home.get(f"ID{pid}")
-        if obj:
-            return obj["person"]["fullName"], obj.get("seasonStats", {}).get("pitching", {})
-        return None, None
-
-    out = {"w": None, "l": None, "s": None}
-    for key, field in (("w", "winner"), ("l", "loser"), ("s", "save")):
-        entry = dec_obj.get(field)
-        if not entry:
-            continue
-        pid = entry["id"]
-        name, stats = lookup(pid)
-        if name:
-            if key == "s":
-                record = f"({stats.get('saves', 0)})"
-            else:
-                record = f"({stats.get('wins', 0)}-{stats.get('losses', 0)})"
-        else:
-            name, record = entry.get("fullName", ""), None
-        out[key] = {"id": pid, "name": name, "record": record}
-    return out
-
-
-def split_game_transactions(tx_list, away, home):
-    """把與本場兩隊相關的異動分出來。away/home 為 {'id','abbr','name','color'}。
-    回傳 (本場球隊分組, 其餘異動)。"""
-    groups = []
-    matched = set()
-    for side in (away, home):
-        items = [tx for tx in tx_list if side["id"] in (tx["to_team_id"], tx["from_team_id"])]
-        if items:
-            groups.append({"team": side, "items": items})
-            matched.update(tx["description"] for tx in items)
-    remaining = [tx for tx in tx_list if tx["description"] not in matched]
-    return groups, remaining
-
-
-# ---------------------------------------------------------------- 渲染：比賽卡片
-def batter_tags(stats):
-    """長打與速度標籤：[(css_class, 文字)]，順序 2B、3B、HR、SB。"""
-    tags = []
-    for label, key, season_key, css in (
-        ("2B", "d", "season_d", "tag"),
-        ("3B", "t", "season_t", "tag"),
-        ("HR", "hr", "season_hr", "tag hr"),
-        ("SB", "sb", "season_sb", "tag sb"),
-    ):
-        if stats[key] > 0:
-            tags.append((css, f"{label}: {format_cumulative(stats[key], stats[season_key])}"))
-    return tags
-
-
-def _statline(pairs, extra_class=""):
-    cells = "".join(f"<div><dt>{htmlutil.esc(k)}</dt><dd>{htmlutil.esc(v)}</dd></div>" for k, v in pairs)
-    return f'<dl class="statline{extra_class}">{cells}</dl>'
-
-
-def render_batter(b):
-    s = b["stats"]
-    tags = "".join(f'<span class="{css}">{htmlutil.esc(text)}</span>' for css, text in batter_tags(s))
-    tags_html = f'<span class="tags">{tags}</span>' if tags else ""
-    statline = _statline([("AB", s["ab"]), ("R", s["r"]), ("H", s["h"]), ("RBI", s["rbi"]), ("BB", s["bb"]), ("SO", s["so"])])
-    return (
-        f'<li><div class="p-head"><span class="p-name">{htmlutil.player_link(b["id"], b["name"])}</span>'
-        f'<span class="p-meta">{htmlutil.esc(b["team"])} · {htmlutil.esc(b["pos"])}</span>{tags_html}</div>{statline}</li>'
-    )
-
-
-def render_pitcher(p):
-    s = p["stats"]
-    tags_html = f'<span class="tags"><span class="tag dec">{htmlutil.esc(p["decision"])}</span></span>' if p.get("decision") else ""
-    statline = _statline(
-        [("IP", s["ip"]), ("H", s["h"]), ("R", s["r"]), ("ER", s["er"]), ("BB", s["bb"]), ("SO", s["so"]),
-         ("P-S", f"{s['pitches']}-{s['strikes']}")],
-        " is-pitch",
-    )
-    return (
-        f'<li><div class="p-head"><span class="p-name">{htmlutil.player_link(p["id"], p["name"])}</span>'
-        f'<span class="p-meta">{htmlutil.esc(p["team"])} · {htmlutil.esc(p["pos"])}</span>{tags_html}</div>{statline}</li>'
-    )
-
-
-def render_decisions(decisions, is_final, status_text=""):
-    """投球決定：只有完賽（is_final）才列出勝／敗／救援，否則顯示說明文字。"""
-    if not is_final:
-        note = "本場暫停，尚未產生勝敗，無投球決定。" if status_text == "暫停比賽" else "本場尚未完賽，無投球決定。"
-        return f'<section><h4 class="sub">投球決定</h4><p class="empty-note">{note}</p></section>'
-
-    def row(label, entry, win=False):
-        dt = f'<dt class="is-w">{label}</dt>' if win else f"<dt>{label}</dt>"
-        if not entry:
-            return f"{dt}<dd>無</dd>"
-        rec = f' <span class="rec">{htmlutil.esc(entry["record"])}</span>' if entry.get("record") else ""
-        return f'{dt}<dd>{htmlutil.player_link(entry["id"], entry["name"])}{rec}</dd>'
-
-    d = decisions or {}
-    return (
-        '<section><h4 class="sub">投球決定</h4><dl class="decisions">'
-        + row("勝", d.get("w"), True) + row("敗", d.get("l")) + row("救援", d.get("s"))
-        + "</dl></section>"
-    )
-
-
-def render_news_box(news):
-    if not news:
-        return ""
-    return (
-        '<section><h4 class="sub">賽後新聞</h4><article class="mini-news">'
-        f'<h5>{htmlutil.esc(news.get("headline_zh") or news["headline"])}</h5><p>{htmlutil.esc(news.get("blurb_zh") or news["blurb"])}</p></article></section>'
-    )
-
-
-def render_card_transactions(groups):
-    if not groups:
-        return ""
-    parts = []
-    for g in groups:
-        team = g["team"]
-        parts.append(
-            f'<div class="tx-group{htmlutil.stripe_class(team["color"])}" style="--team:{htmlutil.safe_color(team["color"])}">'
-            f'<h5>{htmlutil.logo_picture(team["id"], team["abbr"], 18)}{htmlutil.esc(team["name"])}</h5>'
-            f'<ul class="tx-list">{render_tx_items(g["items"])}</ul></div>'
-        )
-    return '<section><h4 class="sub">本場相關人事異動</h4>' + "".join(parts) + "</section>"
-
-
-def _card_open(view):
-    away, home = view["away"], view["home"]
-    tokens = []
-    for side in (away, home):
-        tokens += [side["abbr"], side["name"], side.get("name_en", "")]
-        if side["abbr"] in LEGACY_ABBR_ALIASES:
-            tokens.append(LEGACY_ABBR_ALIASES[side["abbr"]])
-    teams = "|".join(str(t).replace("|", " ") for t in tokens)
-    label = f'{away["name"]}對{home["name"]}'
-    return f'<article class="game" data-teams="{htmlutil.esc(teams)}" aria-label="{htmlutil.esc(label)}">'
-
-
-def _card_head(view):
-    return (
-        f'<div class="game-head"><h3 class="game-title">{htmlutil.esc(view["type_label"])} '
-        f'<span class="num">#{htmlutil.esc(view["game_pk"])}</span></h3>'
-        f'<span class="badge is-{htmlutil.esc(view["status_class"])}">{htmlutil.esc(view["status_text"])}</span></div>'
-    )
-
-
-def _score_table(view):
-    rows = []
-    for side in (view["away"], view["home"]):
-        tr = '<tr class="is-win">' if side.get("winner") else "<tr>"
-        rows.append(
-            f'{tr}<td class="team{htmlutil.stripe_class(side["color"])}" style="--team:{htmlutil.safe_color(side["color"])}">'
-            f'<div class="team-inner">{htmlutil.logo_picture(side["id"], side["abbr"], 24)}'
-            f'<span class="tname"><span class="name">{htmlutil.esc(side["name"])}</span>'
-            f'<span class="record">{htmlutil.esc(side["record"])}</span></span></div></td>'
-            f'<td class="n runs">{htmlutil.esc(side["r"])}</td><td class="n">{htmlutil.esc(side["h"])}</td>'
-            f'<td class="n">{htmlutil.esc(side["e"])}</td></tr>'
-        )
-    caption = f'{view["away"]["name"]}對{view["home"]["name"]}'
-    return (
-        f'<table class="score"><caption class="visually-hidden">{htmlutil.esc(caption)}</caption>'
-        '<thead><tr><th scope="col">隊伍</th><th scope="col" class="col-r">R</th>'
-        '<th scope="col" class="col-h">H</th><th scope="col" class="col-e">E</th></tr></thead>'
-        "<tbody>" + "".join(rows) + "</tbody></table>"
-    )
-
-
-def render_game_card(view):
-    """完整比賽卡片（有 boxscore）。view 為 build_game_view() 的輸出加上 news、tx_groups。"""
-    batters = "".join(render_batter(b) for b in view["batters"])
-    pitchers = "".join(render_pitcher(p) for p in view["pitchers"])
-    batters_html = f'<ul class="perf">{batters}</ul>' if batters else '<p class="empty-note">本場無突出打擊表現。</p>'
-    pitchers_html = f'<ul class="perf">{pitchers}</ul>' if pitchers else '<p class="empty-note">本場無突出投手表現。</p>'
-    decisions = render_decisions(view["decisions"], view["is_final"], view["status_text"])
-    return (
-        f"{_card_open(view)}\n  {_card_head(view)}\n  {_score_table(view)}\n"
-        '  <div class="game-body">\n    <div class="col-left">\n      '
-        f'{decisions}{render_news_box(view.get("news"))}{render_card_transactions(view.get("tx_groups"))}\n    </div>\n'
-        '    <div class="col-right">\n'
-        f'<div class="perf-group"><h4 class="sub">打擊焦點</h4>{batters_html}</div>\n'
-        f'<div class="perf-group"><h4 class="sub">投球焦點</h4>{pitchers_html}</div>\n'
-        "    </div>\n  </div>\n</article>"
-    )
-
-
-def render_fallback_card(view):
-    """boxscore 抓取失敗時，僅用 schedule 資料的簡化卡片（H／E 無資料以 — 表示）。"""
-    return (
-        f"{_card_open(view)}\n  {_card_head(view)}\n  {_score_table(view)}\n"
-        '  <div class="note-strip"><strong>詳細數據暫缺</strong>：本場 boxscore 暫時無法取得，僅顯示比分。</div>\n'
-        "</article>"
-    )
-
-
-def render_postponed_card(view):
-    """延賽／取消卡。view 需含 note_title、notice、icon。"""
-    def side(s):
-        return f'<span class="side">{htmlutil.logo_picture(s["id"], s["abbr"], 24)}{htmlutil.esc(s["name"])}</span>'
-    return (
-        f"{_card_open(view)}\n  {_card_head(view)}\n"
-        f'  <div class="game-note">\n    <div class="icon" aria-hidden="true">{view["icon"]}</div>\n'
-        f'    <h3>{htmlutil.esc(view["note_title"])}</h3>\n'
-        f'    <div class="matchup">{side(view["away"])}<span class="at">@</span>{side(view["home"])}</div>\n'
-        f'    <p>{htmlutil.esc(view["notice"])}</p>\n  </div>\n</article>'
-    )
-
-
-# ---------------------------------------------------------------- 組裝：schedule / boxscore -> view
-def _side_view(game, side, info):
-    team_obj = game["teams"][side]["team"]
-    rec = game["teams"][side].get("leagueRecord", {})
-    return {
-        "id": team_obj["id"],
-        "abbr": info["abbr"],
-        "name": info["name"],
-        "name_en": team_obj.get("name", ""),
-        "color": info["color"],
-        "record": f"({rec.get('wins', 0)}-{rec.get('losses', 0)})",
-        "r": 0, "h": "—", "e": "—", "winner": False,
-    }
-
-
-def build_base_view(game, away_info, home_info):
-    """狀態、隊伍與比分（來源為 schedule 的 linescore，缺漏時 R 退回 teams.score；H／E 缺漏為 —）。"""
-    linescore = game.get("linescore", {})
-    ls_teams = linescore.get("teams", {})
-    status_text, status_class, is_final = classify_game_status(game, linescore)
-    view = {
-        "game_pk": game["gamePk"],
-        "type_label": game_type_label(game),
-        "status_text": status_text,
-        "status_class": status_class,
-        "is_final": is_final,
-        "away": _side_view(game, "away", away_info),
-        "home": _side_view(game, "home", home_info),
-    }
-    for side in ("away", "home"):
-        ls = ls_teams.get(side, {})
-        view[side]["r"] = ls.get("runs", game["teams"][side].get("score", 0))
-        view[side]["h"] = ls.get("hits", "—")
-        view[side]["e"] = ls.get("errors", "—")
-    away_r, home_r = view["away"]["r"], view["home"]["r"]
-    view["away"]["winner"] = bool(is_final and away_r > home_r)
-    view["home"]["winner"] = bool(is_final and home_r > away_r)
-    return view
-
-
-def build_postponed_view(game, away_info, home_info):
-    view = build_base_view(game, away_info, home_info)
-    status = game.get("status", {})
-    type_label = game_type_label(game)
-    if status.get("detailedState") == "Cancelled":
-        reason_raw = status.get("reason")
-        reason_eng = f"Cancelled - {reason_raw}" if reason_raw else "Cancelled"
-        if reason_raw in CANCELLED_REASONS:
-            reason_chi = CANCELLED_REASONS[reason_raw]
-        elif reason_raw:
-            reason_chi = f"賽事取消（原因：{reason_raw}）"
-        else:
-            reason_chi = "賽事取消"
-        view.update(
-            status_text="Cancelled", status_class="cancelled", icon="🚫",
-            note_title="賽事取消",
-            notice=f"原定於當日舉行的{type_label}賽事，{reason_chi} ({reason_eng})。",
-        )
-    else:
-        reason_eng = status.get("reason", "Postponed")
-        reason_chi = POSTPONED_REASONS.get(reason_eng, "賽事延期")
-        view.update(
-            status_text="Postponed", status_class="postponed", icon="🌧️",
-            note_title=reason_chi,
-            notice=f"原定於當日舉行的{type_label}賽事，{reason_chi} (Postponed - {reason_eng})。補賽日期將另行公布。",
-        )
-    return view
-
-
-def build_game_view(game, boxscore, away_info, home_info):
-    """有 boxscore 的完整卡片資料。回傳 (view, 入選焦點球員清單)。"""
-    view = build_base_view(game, away_info, home_info)
-    teams = boxscore.get("teams", {})
-    players_away = teams.get("away", {}).get("players", {})
-    players_home = teams.get("home", {}).get("players", {})
-    view["decisions"] = build_decisions(game.get("decisions", {}), players_away, players_home)
-
-    candidates = collect_candidates(boxscore, away_info["abbr"], home_info["abbr"])
-    print(f"  Game {game['gamePk']} ({away_info['abbr']} @ {home_info['abbr']}) candidates score log:")
-    for cand in candidates[:5]:
-        print(f"    - {cand['name']} ({cand['team']} - {cand['type']}): score={cand['score']:.1f}")
-    batters, pitchers, selected = select_performers(candidates)
-    view["batters"], view["pitchers"] = batters, pitchers
-    return view, selected
-
-
-def top_focus_score(selected):
-    """該場焦點球員的最高積分（selected 已依積分由高到低）；無焦點球員為 0。"""
-    return max((c["score"] for c in selected), default=0.0)
-
-
-def pick_summary_sentences(entries, limit=3):
-    """entries 為 [(焦點最高積分, 摘要句)]；取積分最高的 limit 場（同分維持原賽程順序）。"""
-    ranked = sorted(entries, key=lambda e: -e[0])
-    return [sentence for _, sentence in ranked[:limit]]
-
-
-def build_summary_sentence(view, selected):
-    sentence = f"{view['away']['abbr']} @ {view['home']['abbr']}，比分 {view['away']['r']}:{view['home']['r']}"
-    if selected:
-        top = selected[0]
-        if top["type"] == "batter" and top["stats"]["hr"] > 0:
-            sentence += f"，{top['name']} 擊出全壘打"
-        elif top["type"] == "pitcher" and top["stats"]["so"] >= 5:
-            sentence += f"，{top['name']} 投出 {top['stats']['so']} 次三振"
-    return sentence
-
-
 # ---------------------------------------------------------------- 組裝：整頁
 def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news=None):
     """賽季戰報與休賽季快報共用：組出所有插槽後交給 render_page。"""
@@ -1120,19 +261,19 @@ def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list
         summary = render_summary(
             "offseason", news_count=None if news is None else len(news), transactions_count=len(tx_list))
         games = ""
-        transactions = render_transactions_section(tx_list, "大聯盟人事異動", "本日無大聯盟人事異動。")
+        transactions = transactions_mod.render_transactions_section(tx_list, "大聯盟人事異動", "本日無大聯盟人事異動。")
     else:
         subtitle, title_suffix = "賽事結果", ""
         summary = render_summary("season", total_games=len(cards_html), postponed=postponed_count)
         games = render_games_section(cards_html)
-        transactions = render_transactions_section(tx_list)
+        transactions = transactions_mod.render_transactions_section(tx_list)
     return htmlutil.render_page({
         "TITLE": htmlutil.esc(f"MLB 每日戰報 - {date_str}{title_suffix}"),
         "DATE_LONG": htmlutil.esc(timeutil.fmt_date_long(date_str)),
         "SUBTITLE": htmlutil.esc(subtitle),
         "SUMMARY": summary,
         "SEARCH": render_search() if cards_html else "",
-        "NEWS": render_news_section(news, page_type),
+        "NEWS": news_mod.render_news_section(news, page_type),
         "GAMES": games,
         "TRANSACTIONS": transactions,
         "GENERATED_AT": htmlutil.esc(timeutil.get_taipei_now().strftime("%Y-%m-%d %H:%M")),
@@ -1147,45 +288,45 @@ def generate_report(date_str, games):
     game_views = []
     key_matchups_summary = []
 
-    tx_list = fetch_daily_transactions(date_str)
+    tx_list = transactions_mod.fetch_daily_transactions(date_str)
     transactions_count = len(tx_list)
-    news = fetch_daily_news(date_str)
+    news = news_mod.fetch_daily_news(date_str)
 
     for game in games:
         game_pk = game["gamePk"]
         away_team_obj = game["teams"]["away"]["team"]
         home_team_obj = game["teams"]["home"]["team"]
-        away_info = get_team_info(away_team_obj["id"], away_team_obj["name"])
-        home_info = get_team_info(home_team_obj["id"], home_team_obj["name"])
+        away_info = games_mod.get_team_info(away_team_obj["id"], away_team_obj["name"])
+        home_info = games_mod.get_team_info(home_team_obj["id"], home_team_obj["name"])
 
         # 1. 延賽／取消
         if game.get("status", {}).get("detailedState") in ("Postponed", "Cancelled"):
             postponed_count += 1
-            cards.append(render_postponed_card(build_postponed_view(game, away_info, home_info)))
+            cards.append(games_mod.render_postponed_card(games_mod.build_postponed_view(game, away_info, home_info)))
             continue
 
         # 2. 已進行的比賽：先取 boxscore，失敗則簡化卡
         boxscore = net.fetch_json(f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore")
         if not boxscore:
             print(f"Warning: Could not fetch boxscore for game {game_pk}. Using fallback card.", file=sys.stderr)
-            view = build_base_view(game, away_info, home_info)
-            cards.append(render_fallback_card(view))
-            key_matchups_summary.append((0.0, build_summary_sentence(view, [])))
+            view = games_mod.build_base_view(game, away_info, home_info)
+            cards.append(games_mod.render_fallback_card(view))
+            key_matchups_summary.append((0.0, games_mod.build_summary_sentence(view, [])))
             continue
 
-        view, selected = build_game_view(game, boxscore, away_info, home_info)
-        key_matchups_summary.append((top_focus_score(selected), build_summary_sentence(view, selected)))
-        view["news"] = fetch_game_news(
+        view, selected = games_mod.build_game_view(game, boxscore, away_info, home_info)
+        key_matchups_summary.append((games_mod.top_focus_score(selected), games_mod.build_summary_sentence(view, selected)))
+        view["news"] = news_mod.fetch_game_news(
             game_pk, away_info["abbr"], home_info["abbr"], view["away"]["r"], view["home"]["r"]
         )
-        view["tx_groups"], tx_list = split_game_transactions(tx_list, view["away"], view["home"])
+        view["tx_groups"], tx_list = transactions_mod.split_game_transactions(tx_list, view["away"], view["home"])
         cards.append(view)
         game_views.append(view)
 
     tx_items = [tx for v in game_views for g in v["tx_groups"] for tx in g["items"]] + list(tx_list)
     team_names = [(v[side]["id"], v[side]["name_en"]) for v in game_views for side in ("away", "home")]
-    translated = apply_translations(news, game_views, tx_items, team_names)
-    cards_html = [c if isinstance(c, str) else render_game_card(c) for c in cards]
+    translated = translate.apply_translations(news, game_views, tx_items, team_names)
+    cards_html = [c if isinstance(c, str) else games_mod.render_game_card(c) for c in cards]
 
     storage.write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list, news))
 
@@ -1193,7 +334,7 @@ def generate_report(date_str, games):
     if postponed_count > 0:
         summary_sentence += f"其中有 {postponed_count} 場賽事延期。"
     if key_matchups_summary:
-        summary_sentence += " " + "；".join(pick_summary_sentences(key_matchups_summary)) + "。"
+        summary_sentence += " " + "；".join(games_mod.pick_summary_sentences(key_matchups_summary)) + "。"
 
     meta = {
         "date": date_str,
@@ -1222,9 +363,9 @@ def build_offseason_summary(news, transactions_count):
 
 def generate_offseason_report(date_str):
     """無賽事日：產出「休賽季快報」頁面（新聞＋大聯盟人事異動），回傳 metadata。"""
-    tx_list = fetch_daily_transactions(date_str)
-    news = fetch_daily_news(date_str)
-    translated = apply_translations(news, [], tx_list)
+    tx_list = transactions_mod.fetch_daily_transactions(date_str)
+    news = news_mod.fetch_daily_news(date_str)
+    translated = translate.apply_translations(news, [], tx_list)
     storage.write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list, news=news))
     meta = {
         "date": date_str,
@@ -1238,430 +379,6 @@ def generate_offseason_report(date_str):
     if news is not None:  # 抓取失敗時不寫 news_count
         meta["news_count"] = len(news)
     return meta
-
-
-def fetch_standings(season):
-    """抓取例行賽戰績。失敗（無回應、結構不符、解析不到任何球隊）回傳 None。
-
-    成功回傳 {"season", "divisions": [{"id", "name", "teams": [...]}], "records": {team_id: (W, L)}}。
-    分區以 API 的 division id 分組並照 DIVISION_LAYOUT 排序；每區依 divisionRank 排序；隊伍以 team id 對 TEAM_META。"""
-    season = htmlutil._int_id(season)
-    if season is None:
-        return None
-    data = net.fetch_json(STANDINGS_URL.format(season=season))
-    if not isinstance(data, dict) or not isinstance(data.get("records"), list):
-        return None
-    by_div = {}
-    records = {}
-    for rec in data["records"]:
-        if not isinstance(rec, dict):
-            continue
-        div_id = htmlutil._int_id((rec.get("division") or {}).get("id"))
-        for tr in rec.get("teamRecords") or []:
-            if not isinstance(tr, dict):
-                continue
-            tid = htmlutil._int_id((tr.get("team") or {}).get("id"))
-            if div_id is None or tid not in TEAM_META:
-                continue
-            wins, losses = storage._to_int(tr.get("wins")), storage._to_int(tr.get("losses"))
-            pct = tr.get("winningPercentage")
-            if not pct:
-                pct = f"{wins / (wins + losses):.3f}".lstrip("0") if wins + losses else ".000"
-            last_ten = "–"
-            for split in (tr.get("records") or {}).get("splitRecords") or []:
-                if isinstance(split, dict) and split.get("type") == "lastTen":
-                    last_ten = f"{storage._to_int(split.get('wins'))}-{storage._to_int(split.get('losses'))}"
-                    break
-            gb = tr.get("gamesBack")
-            clinch = tr.get("clinchIndicator")
-            by_div.setdefault(div_id, []).append({
-                "id": tid,
-                "wins": wins,
-                "losses": losses,
-                "pct": str(pct),
-                "gb": "–" if gb in (None, "", "-") else str(gb),
-                "last_ten": last_ten,
-                "streak": str((tr.get("streak") or {}).get("streakCode") or "–"),
-                "clinch": str(clinch) if clinch else "",
-                "rank": storage._to_int(tr.get("divisionRank"), 99),
-            })
-            records[tid] = (wins, losses)
-    divisions = []
-    for div_id, name in DIVISION_LAYOUT:
-        teams = sorted(by_div.get(div_id, []), key=lambda t: t["rank"])
-        if teams:
-            divisions.append({"id": div_id, "name": name, "teams": teams})
-    if not divisions:
-        return None
-    return {"season": season, "divisions": divisions, "records": records}
-
-
-def render_standings_row(t):
-    meta = TEAM_META[t["id"]]
-    stripe = htmlutil.stripe_class(meta["color"]).strip()
-    clinch = t["clinch"]
-    label = htmlutil.esc(meta["name"])
-    sup = ""
-    if clinch:
-        title = CLINCH_LABELS.get(clinch)
-        if title:
-            label = f"{label}，{htmlutil.esc(title)}"
-            sup = f'<sup class="st-clinch" title="{htmlutil.esc(title)}" aria-hidden="true">{htmlutil.esc(clinch)}</sup>'
-        else:
-            label = f"{label}，標記 {htmlutil.esc(clinch)}"
-            sup = f'<sup class="st-clinch" aria-hidden="true">{htmlutil.esc(clinch)}</sup>'
-    streak = t["streak"]
-    streak_cls = " is-w" if re.fullmatch(r"W\d+", streak) else (" is-l" if re.fullmatch(r"L\d+", streak) else "")
-    cls = f' class="{stripe}"' if stripe else ""
-    return (
-        f'<tr class="st-row"><th scope="row"{cls} style="--team:{htmlutil.safe_color(meta["color"])}">'
-        f'<a class="st-team" href="teams.html#{htmlutil.esc(meta["abbr"])}" aria-label="{label}" title="{htmlutil.esc(meta["name"])}">'
-        f'{htmlutil.logo_picture(t["id"], meta["abbr"], 18, alt="")}<span>{htmlutil.esc(meta["abbr"])}</span>{sup}</a></th>'
-        f'<td>{t["wins"]}</td><td>{t["losses"]}</td><td class="is-pct">{htmlutil.esc(t["pct"])}</td>'
-        f'<td class="is-sub">{htmlutil.esc(t["gb"])}</td><td class="is-sub">{htmlutil.esc(t["last_ten"])}</td>'
-        f'<td class="st-streak{streak_cls}">{htmlutil.esc(streak)}</td></tr>'
-    )
-
-
-def render_standings_division(div, league_start):
-    div_id = int(div["id"])
-    extra = " st-div--league-start" if league_start else ""
-    rows = "\n            ".join(render_standings_row(t) for t in div["teams"])
-    name = htmlutil.esc(div["name"])
-    return f"""      <section class="st-div{extra}" aria-labelledby="st-d{div_id}">
-        <h3 id="st-d{div_id}">{name}</h3>
-        <table class="st-table">
-          <caption class="visually-hidden">{name}戰績</caption>
-          <colgroup><col><col class="c-w"><col class="c-l"><col class="c-pct"><col class="c-gb"><col class="c-l10"><col class="c-strk"></colgroup>
-          <thead><tr><th scope="col">隊</th><th scope="col">W</th><th scope="col">L</th><th scope="col">PCT</th><th scope="col">GB</th><th scope="col">L10</th><th scope="col">STRK</th></tr></thead>
-          <tbody>
-            {rows}
-          </tbody>
-        </table>
-      </section>"""
-
-
-STANDINGS_ICON = ('<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" '
-                  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
-                  '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>')
-
-
-def render_standings_aside(standings, season, in_season, now):
-    """戰績側邊欄 <aside>。standings 為 None（抓取失敗）時輸出「戰績暫時無法取得」版本。"""
-    season_int = htmlutil._int_id(season)
-    title = f"{season_int} 例行賽戰績" if in_season else f"{season_int} 例行賽最終戰績"
-    if standings:
-        meta_line = (f'\n        <p class="st-meta">資料來源 MLB Stats API · 更新於 '
-                     f'<span class="num">{now.month}/{now.day} {now:%H:%M}</span></p>')
-        divisions = standings["divisions"]
-        parts = []
-        for i, div in enumerate(divisions):
-            league_start = div["id"] in NL_DIVISION_IDS and i > 0 and divisions[i - 1]["id"] not in NL_DIVISION_IDS
-            parts.append(render_standings_division(div, league_start))
-        # 圖例只列出當前資料中實際出現的標記
-        present = {t["clinch"] for div in divisions for t in div["teams"]}
-        legend_items = "".join(f"<dt>{htmlutil.esc(k)}</dt><dd>{htmlutil.esc(v)}</dd>" for k, v in CLINCH_LEGEND if k in present)
-        legend = (f'\n      <div class="st-legend">\n        <h3>標記說明</h3>\n        <dl>{legend_items}</dl>\n      </div>'
-                  if legend_items else "")
-        body = '    <div class="st-body st-data">\n' + "\n".join(parts) + legend + '\n    </div>'
-        aside_cls = "standings"
-    else:
-        meta_line = ""
-        body = ('    <div class="st-error" role="status">\n'
-                '      <strong>戰績暫時無法取得</strong>\n'
-                '      <p>資料來源暫時沒有回應，不影響每日戰報。將於下次更新時重新取得。</p>\n'
-                '    </div>')
-        aside_cls = "standings is-error"
-    return f"""<aside class="{aside_cls}" id="standings" aria-labelledby="standings-title">
-  <button class="st-rail" type="button" data-st="expand" aria-expanded="false" aria-controls="standings-panel" aria-label="展開戰績側邊欄" title="戰績">
-    {STANDINGS_ICON}
-  </button>
-  <div class="st-panel" id="standings-panel">
-    <div class="st-head">
-      <div>
-        <h2 class="st-title" id="standings-title">{htmlutil.esc(title)}</h2>{meta_line}
-      </div>
-      <div class="st-actions">
-        <button class="st-btn" type="button" data-st="collapse" aria-expanded="true" aria-controls="standings-panel">收合 <span aria-hidden="true">›</span></button>
-        <button class="st-btn st-close" type="button" aria-label="關閉戰績">✕</button>
-      </div>
-    </div>
-{body}
-  </div>
-</aside>"""
-
-
-def render_standings_fab():
-    return (f'<button class="st-fab" type="button" data-st="open" aria-expanded="false" aria-controls="standings" '
-            f'aria-haspopup="dialog" aria-label="戰績" title="戰績">{STANDINGS_ICON}</button>\n'
-            f'<div class="st-backdrop" aria-hidden="true"></div>')
-
-
-# ---------------------------------------------------------------- 今日賽事預告
-def _is_called_off(game):
-    detailed = str((game.get("status") or {}).get("detailedState") or "")
-    return detailed.startswith(("Postponed", "Cancelled"))
-
-
-def _season_pitching_line(person):
-    """people API 的球員 -> (勝, 敗, ERA 字串)；找不到本季投手數據回傳 None。"""
-    for block in person.get("stats") or []:
-        if not isinstance(block, dict):
-            continue
-        if (block.get("group") or {}).get("displayName") != "pitching":
-            continue
-        if (block.get("type") or {}).get("displayName") != "season":
-            continue
-        splits = block.get("splits") or []
-        if splits and isinstance(splits[0], dict) and isinstance(splits[0].get("stat"), dict):
-            stat = splits[0]["stat"]
-            return storage._to_int(stat.get("wins")), storage._to_int(stat.get("losses")), str(stat.get("era") or "-.--")
-    return None
-
-
-def fetch_pitcher_stats(person_ids, season):
-    """批次查先發投手本季 W-L、ERA：{person_id: (W, L, ERA)}。失敗回傳空 dict（預告改為只顯示姓名）。"""
-    ids = sorted({i for i in (htmlutil._int_id(x) for x in person_ids) if i is not None})
-    if not ids:
-        return {}
-    data = net.fetch_json(PEOPLE_STATS_URL.format(ids=",".join(str(i) for i in ids), season=int(season)))
-    result = {}
-    if not isinstance(data, dict):
-        return result
-    for person in data.get("people") or []:
-        if not isinstance(person, dict):
-            continue
-        pid = htmlutil._int_id(person.get("id"))
-        line = _season_pitching_line(person)
-        if pid is not None and line:
-            result[pid] = line
-    return result
-
-
-def fetch_game_previews(date_str, season, records=None):
-    """今日賽事預告資料；schedule 抓取失敗（無回應或結構不符）回傳 None，無比賽回傳 []。
-
-    records：fetch_standings 的 records（team_id -> (W, L)）；取不到的球隊退回 schedule 內的 leagueRecord，仍無則省略。
-    開賽時間轉台北時間；排除延賽／取消；兩隊任一不在 TEAM_META（如明星賽）者略過；依開賽時間排序。"""
-    data = net.fetch_json(SCHEDULE_PREVIEW_URL.format(date=date_str))
-    if not isinstance(data, dict) or not isinstance(data.get("dates"), list):
-        return None
-    raw_games = []
-    for d in data["dates"]:
-        if isinstance(d, dict):
-            raw_games.extend(g for g in (d.get("games") or []) if isinstance(g, dict))
-    records = records or {}
-    games = []
-    for g in raw_games:
-        if _is_called_off(g):
-            continue
-        teams = g.get("teams") or {}
-        sides = {}
-        for key in ("away", "home"):
-            side = teams.get(key) or {}
-            tid = htmlutil._int_id((side.get("team") or {}).get("id"))
-            if tid not in TEAM_META:
-                break
-            pitcher = side.get("probablePitcher") or {}
-            rec = records.get(tid)
-            if rec is None:
-                lr = side.get("leagueRecord") or {}
-                if "wins" in lr and "losses" in lr:
-                    rec = (storage._to_int(lr.get("wins")), storage._to_int(lr.get("losses")))
-            sides[key] = {
-                "team_id": tid,
-                "record": rec,
-                "pitcher_id": htmlutil._int_id(pitcher.get("id")),
-                "pitcher_name": pitcher.get("fullName") or None,
-            }
-        if len(sides) != 2:
-            continue
-        try:
-            start = datetime.fromisoformat(str(g.get("gameDate")).replace("Z", "+00:00"))
-        except ValueError:
-            continue
-        if start.tzinfo is None:  # 無時區資訊視為 UTC
-            start = start.replace(tzinfo=timezone.utc)
-        start = start.astimezone(TAIPEI_TZ)
-        dh = g.get("doubleHeader")
-        number = storage._to_int(g.get("gameNumber"))
-        if dh in ("Y", "S"):
-            note = f"雙重賽 {number}/2" if number in (1, 2) else "雙重賽"
-        else:
-            note = ""
-        games.append({
-            "start": start,
-            "tbd": bool((g.get("status") or {}).get("startTimeTBD")),
-            "pk": storage._to_int(g.get("gamePk")),
-            "note": note,
-            "away": sides["away"],
-            "home": sides["home"],
-        })
-    games.sort(key=lambda x: (x["tbd"], x["start"], x["pk"]))
-    stats = fetch_pitcher_stats(
-        [s["pitcher_id"] for g in games for s in (g["away"], g["home"]) if s["pitcher_id"] is not None], season)
-    for g in games:
-        for s in (g["away"], g["home"]):
-            s["stat"] = stats.get(s["pitcher_id"])
-    return games
-
-
-def preview_range_text(games):
-    """副標：台北時間首場日期；首場在凌晨（< 06:00）寫「凌晨起」，否則寫首場時刻。"""
-    first = games[0]["start"]
-    if games[0]["tbd"]:  # 依排序，首場待定代表全部待定，時間不可信，副標省略日期與時刻
-        return f"開賽時間待定 · {len(games)} 場"
-    day = f"{first.month}/{first.day}（{WEEKDAYS_ZH[first.weekday()]}）"
-    if first.hour < EARLY_MORNING_HOUR:
-        return f"台北時間 {day}凌晨起 · {len(games)} 場"
-    return f"台北時間 {day} {first:%H:%M} 起 · {len(games)} 場"
-
-
-def _render_preview_side(side, label):
-    meta = TEAM_META[side["team_id"]]
-    cls = f"gp-side{htmlutil.stripe_class(meta['color'])}"
-    rec = f'<span class="gp-rec">{side["record"][0]}-{side["record"][1]}</span>' if side["record"] else ""
-    name = side["pitcher_name"]
-    if not name:
-        pitch = '<span class="gp-tbd">未定</span>'
-    else:
-        pitch = htmlutil.player_link(side["pitcher_id"], name)
-        stat = side.get("stat")
-        if stat:
-            pitch += f' <span class="gp-stat">({stat[0]}-{stat[1]}, {htmlutil.esc(stat[2])})</span>'
-    return (
-        f'<span class="visually-hidden">{label}</span><div class="{cls}" style="--team:{htmlutil.safe_color(meta["color"])}">'
-        f'<span class="gp-team">{htmlutil.logo_picture(side["team_id"], meta["abbr"], 20, alt="")}'
-        f'<span class="gp-name">{htmlutil.esc(meta["name"])}</span>{rec}</span>'
-        f'<span class="gp-pitch">{pitch}</span></div>'
-    )
-
-
-def render_game_previews(games):
-    """今日賽事預告區塊。games 為 None -> 錯誤文字；[] -> 今日無比賽。"""
-    if games is None:
-        return htmlutil._section_message("gp-h", "今日賽事預告", "賽程暫時無法取得", True)
-    if not games:
-        return htmlutil._section_message("gp-h", "今日賽事預告", "今日無比賽")
-    items = []
-    for g in games:
-        if g["tbd"]:
-            time_html = '<span class="gp-time">待定</span>'
-        else:
-            t = f"{g['start']:%H:%M}"
-            time_html = f'<time class="gp-time" datetime="{t}">{t}</time>'
-        note = f'<span class="gp-note">{htmlutil.esc(g["note"])}</span>' if g["note"] else ""
-        items.append(
-            f'      <li class="gp-game"><div class="gp-when">{time_html}{note}</div>'
-            f'<div class="gp-teams">{_render_preview_side(g["away"], "客隊")}{_render_preview_side(g["home"], "主隊")}</div></li>'
-        )
-    count = f'<span class="count">{htmlutil.esc(preview_range_text(games))}</span>'
-    return ('  <section class="section" aria-labelledby="gp-h">\n'
-            f'    <div class="section-head"><h2 id="gp-h">今日賽事預告</h2>{count}</div>\n'
-            '    <ol class="gp-list">\n' + "\n".join(items) + '\n    </ol>\n  </section>')
-
-
-# ---------------------------------------------------------------- 休賽季：開季倒數、本週人事異動
-def fetch_countdown(today, season_data=_UNSET):
-    """下一個球季的春訓／開幕日倒數；任何失敗回傳 None（區塊隱藏）。
-
-    今天已過當年 postSeasonEndDate 取 year+1，否則取當年。
-    season_data：呼叫端已取得的 /seasons/{today.year} 回應（避免重複請求）；省略時自行請求。"""
-    try:
-        cur = net.fetch_json(SEASON_URL.format(year=today.year)) if season_data is _UNSET else season_data
-        info = cur["seasons"][0]
-        end = timeutil._parse_iso_date(info.get("postSeasonEndDate")) or timeutil._parse_iso_date(info.get("seasonEndDate"))
-        if end is None:
-            return None
-        year = today.year + 1 if today > end else today.year
-        nxt = cur if year == today.year else net.fetch_json(SEASON_URL.format(year=year))
-        info = nxt["seasons"][0]
-        spring = timeutil._parse_iso_date(info.get("springStartDate"))
-        opening = timeutil._parse_iso_date(info.get("regularSeasonStartDate"))
-    except (TypeError, KeyError, IndexError, AttributeError):
-        return None
-    if spring is None or opening is None:
-        return None
-    return {
-        "year": year,
-        "spring": spring,
-        "opening": opening,
-        "spring_days": (spring - today).days,
-        "opening_days": (opening - today).days,
-        "spring_started": today >= spring,
-    }
-
-
-def render_countdown(cd):
-    if not cd:
-        return ""
-
-    def cell(label, value_html, date_obj):
-        iso = date_obj.isoformat()
-        return (f'<div><dt>{label}</dt><dd>{value_html}</dd>'
-                f'<dd class="cd-date"><time datetime="{iso}">{iso}</time></dd></div>')
-
-    if cd["spring_started"]:
-        spring = cell("春訓", "春訓進行中", cd["spring"])
-    else:
-        spring = cell("距離春訓", f'<span class="num">{max(cd["spring_days"], 0)}</span> 天', cd["spring"])
-    opening = cell("距離開幕戰", f'<span class="num">{max(cd["opening_days"], 0)}</span> 天', cd["opening"])
-    return ('  <section class="section" aria-labelledby="cd-h">\n'
-            f'    <div class="section-head"><h2 id="cd-h">開季倒數</h2><span class="count">{int(cd["year"])} 球季</span></div>\n'
-            f'    <dl class="countdown">\n      {spring}\n      {opening}\n    </dl>\n  </section>')
-
-
-def select_weekly_highlights(tx_list, limit=WEEKLY_TX_LIMIT):
-    """已過大聯盟過濾的異動中，保留交易（TR）、自由球員簽約（SFA）與描述含延長合約字樣者；
-    日期新到舊（同日維持 API 順序），最多 limit 筆。"""
-    picked = [
-        tx for tx in tx_list
-        if tx.get("type_code") in WEEKLY_TX_TYPE_CODES or WEEKLY_TX_EXTENSION_RE.search(tx["description"].lower())
-    ]
-    picked.sort(key=lambda tx: str(tx.get("date") or ""), reverse=True)  # sort 穩定：同日保留原順序
-    return picked[:limit]
-
-
-def fetch_weekly_transactions(today):
-    """近 7 天（today-7 至 today-1，台北日期）大聯盟層級異動精選；抓取失敗回傳 None。"""
-    start = (today - timedelta(days=WEEKLY_TX_DAYS)).isoformat()
-    end = (today - timedelta(days=1)).isoformat()
-    data = net.fetch_json(TRANSACTIONS_RANGE_URL.format(start=start, end=end))
-    if not isinstance(data, dict):
-        return None
-    transactions = data.get("transactions")
-    if not isinstance(transactions, list):  # 缺欄位視為抓取失敗；真的沒有異動時 API 回傳空陣列
-        return None
-    return select_weekly_highlights(filter_major_league_transactions(transactions))
-
-
-def render_weekly_transactions(tx_list):
-    if tx_list is None:
-        return htmlutil._section_message("wk-h", "本週人事異動精選", "人事異動暫時無法取得", True)
-    if not tx_list:
-        return htmlutil._section_message("wk-h", "本週人事異動精選", "本週無重大人事異動")
-    items = []
-    for tx in tx_list:
-        team_id = next((t for t in (htmlutil._int_id(tx.get("to_team_id")), htmlutil._int_id(tx.get("from_team_id")))
-                        if t in TEAM_META), None)
-        style = cls = team_html = ""
-        if team_id is not None:
-            meta = TEAM_META[team_id]
-            cls = htmlutil.stripe_class(meta["color"])
-            style = f' style="--team:{htmlutil.safe_color(meta["color"])}"'
-            team_html = f'{htmlutil.logo_picture(team_id, meta["abbr"], 18, alt="")}<span class="wk-team">{htmlutil.esc(meta["name"])}</span>'
-        date_str = str(tx.get("date") or "")
-        d = timeutil._parse_iso_date(date_str) if DATE_KEY_RE.match(date_str) else None
-        date_html = f'<time class="num" datetime="{d.isoformat()}">{d.month}/{d.day}</time>' if d else ""
-        text = render_tx_description(_tx_display_text(tx), persons=_tx_persons(tx))
-        items.append(
-            f'      <li class="wk-tx{cls}"{style}><span class="wk-meta">{date_html}{team_html}</span>'
-            f'<span class="wk-txt">{text}</span></li>'
-        )
-    count = f'<span class="count">近 {WEEKLY_TX_DAYS} 天 · {len(tx_list)} 筆</span>'
-    return ('  <section class="section" aria-labelledby="wk-h">\n'
-            f'    <div class="section-head"><h2 id="wk-h">本週人事異動精選</h2>{count}</div>\n'
-            '    <ul class="wk-list">\n' + "\n".join(items) + '\n    </ul>\n  </section>')
 
 
 def _safe_call(label, fn, *args):
@@ -1678,31 +395,14 @@ def _fallback_roster_context(today):
     return {"rosterType": "active" if 4 <= today.month <= 10 else "40Man", "season": today.year}
 
 
-def translate_weekly_transactions(weekly):
-    """首頁「本週人事異動精選」翻譯。與當日戰報相同的 description 直接沿用戰報譯文；
-    同一次執行中戰報翻譯已因可重試錯誤（429/5xx/逾時）耗盡重試而失敗時，不再呼叫 Gemini（避免重複等待）。"""
-    for tx in weekly:
-        zh = TX_TRANSLATION_CACHE.get(tx["description"])
-        if zh:
-            tx["description_zh"] = zh
-    pending = [tx for tx in weekly if "description_zh" not in tx]
-    if not pending:
-        print("Translation: 本週人事異動沿用戰報譯文")
-        return
-    if net.LAST_POST["retryable"]:
-        print("Translation: 戰報翻譯已因暫時性錯誤失敗，本週人事異動直接使用原文（不再重試）")
-        return
-    apply_translations(None, [], pending)
-
-
 def fallback_index_extras(now=None):
     """build_index_extras 整體失敗時的最低限度輸出：戰績錯誤版側欄與手機按鈕（避免桌機右側空欄）。"""
     now = now or timeutil.get_taipei_now()
     ctx = _fallback_roster_context(now.date())
     return {
         "UPCOMING": "",
-        "STANDINGS": render_standings_aside(None, ctx["season"], ctx["rosterType"] == "active", now),
-        "STANDINGS_UI": render_standings_fab(),
+        "STANDINGS": standings_mod.render_standings_aside(None, ctx["season"], ctx["rosterType"] == "active", now),
+        "STANDINGS_UI": standings_mod.render_standings_fab(),
     }
 
 
@@ -1713,30 +413,30 @@ def build_index_extras(now=None):
     today = now.date()
     # 當年 seasons 回應只請求一次，賽季判斷與開季倒數共用
     season_data = _safe_call("賽季日期", net.fetch_json, SEASON_URL.format(year=today.year))
-    ctx = _safe_call("賽季判斷", resolve_roster_context, today, season_data)
+    ctx = _safe_call("賽季判斷", rosters.resolve_roster_context, today, season_data)
     if not ctx:
         ctx = _fallback_roster_context(today)
     in_season = ctx.get("rosterType") == "active"
     season = ctx.get("season", today.year)
 
-    standings = _safe_call("戰績", fetch_standings, season)
+    standings = _safe_call("戰績", standings_mod.fetch_standings, season)
     if in_season:
-        games = _safe_call("賽事預告", fetch_game_previews, today.isoformat(), season,
+        games = _safe_call("賽事預告", previews.fetch_game_previews, today.isoformat(), season,
                            (standings or {}).get("records"))
-        upcoming = _safe_call("賽事預告渲染", render_game_previews, games) or ""
+        upcoming = _safe_call("賽事預告渲染", previews.render_game_previews, games) or ""
     else:
-        countdown = _safe_call("開季倒數", fetch_countdown, today, season_data)
-        weekly = _safe_call("本週人事異動", fetch_weekly_transactions, today)
+        countdown = _safe_call("開季倒數", previews.fetch_countdown, today, season_data)
+        weekly = _safe_call("本週人事異動", transactions_mod.fetch_weekly_transactions, today)
         if weekly:
-            _safe_call("人事異動翻譯", translate_weekly_transactions, weekly)
+            _safe_call("人事異動翻譯", translate.translate_weekly_transactions, weekly)
         upcoming = "\n\n".join(p for p in (
-            _safe_call("開季倒數渲染", render_countdown, countdown) or "",
-            _safe_call("人事異動渲染", render_weekly_transactions, weekly) or "",
+            _safe_call("開季倒數渲染", previews.render_countdown, countdown) or "",
+            _safe_call("人事異動渲染", transactions_mod.render_weekly_transactions, weekly) or "",
         ) if p)
-    aside = _safe_call("戰績渲染", render_standings_aside, standings, season, in_season, now)
+    aside = _safe_call("戰績渲染", standings_mod.render_standings_aside, standings, season, in_season, now)
     if not aside:
-        aside = render_standings_aside(None, season, in_season, now)
-    return {"UPCOMING": upcoming, "STANDINGS": aside, "STANDINGS_UI": render_standings_fab()}
+        aside = standings_mod.render_standings_aside(None, season, in_season, now)
+    return {"UPCOMING": upcoming, "STANDINGS": aside, "STANDINGS_UI": standings_mod.render_standings_fab()}
 
 
 def _offseason_counts(entry):
@@ -1930,213 +630,6 @@ def send_discord_notification(new_meta):
         print(f"Error sending Discord notification: {e}", file=sys.stderr)
 
 
-def resolve_roster_context(today, season_data=_UNSET):
-    """依台北日期 today（date）判斷名單類型與數據賽季。
-
-    回傳 dict：rosterType（active／40Man）、season（數據賽季 statsSeason）、rosterSeason（名單 season 參數）。
-    賽季 API 失敗或缺日期時退回以月份推估並印 warning。
-    season_data：呼叫端已取得的 /seasons/{today.year} 回應（可為 None 代表已失敗）；省略時自行請求。
-    """
-    year = today.year
-    start = end = None
-    data = net.fetch_json(f"https://statsapi.mlb.com/api/v1/seasons/{year}?sportId=1") if season_data is _UNSET else season_data
-    try:
-        info = data["seasons"][0]
-        start = timeutil._parse_iso_date(info.get("regularSeasonStartDate"))
-        end = timeutil._parse_iso_date(info.get("postSeasonEndDate")) or timeutil._parse_iso_date(info.get("seasonEndDate"))
-    except (TypeError, KeyError, IndexError, AttributeError):
-        pass
-    if start is None or end is None:
-        print(f"Warning: 無法取得 {year} 賽季日期，改以月份推估賽季。", file=sys.stderr)
-        if 4 <= today.month <= 10:
-            return {"rosterType": "active", "season": year, "rosterSeason": year}
-        if today.month >= 11:
-            return {"rosterType": "40Man", "season": year, "rosterSeason": year}
-        return {"rosterType": "40Man", "season": year - 1, "rosterSeason": year}
-    if today < start:
-        return {"rosterType": "40Man", "season": year - 1, "rosterSeason": year}
-    if today > end:
-        return {"rosterType": "40Man", "season": year, "rosterSeason": year}
-    return {"rosterType": "active", "season": year, "rosterSeason": year}
-
-
-def roster_url(team_id, roster_type, roster_season, stats_season):
-    hydrate = (f"person(stats(type=%5Bseason,sabermetrics%5D,group=%5Bhitting,pitching%5D,"
-               f"season={stats_season}))")
-    return (f"https://statsapi.mlb.com/api/v1/teams/{team_id}/roster?rosterType={roster_type}"
-            f"&season={roster_season}&hydrate={hydrate}")
-
-
-def _num(value):
-    """API 數值（含字串如 ".285"）轉 float；"-.--"、".---"、"*.**"、空值或缺漏回傳 None。"""
-    if value is None or isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    try:
-        return float(str(value).strip())
-    except ValueError:
-        return None
-
-
-def _round(value, digits):
-    n = _num(value)
-    return None if n is None else round(n, digits)
-
-
-def _int_or_none(value):
-    n = _num(value)
-    return None if n is None else int(round(n))
-
-
-def _find_stat(person, stat_type, group):
-    """取 person.stats 中指定 type／group 的 stat dict；多筆 split（交易球員）取全季合計（無 team 的那筆）。"""
-    for st in person.get("stats") or []:
-        if (st.get("type") or {}).get("displayName") != stat_type:
-            continue
-        if (st.get("group") or {}).get("displayName") != group:
-            continue
-        splits = st.get("splits") or []
-        if not splits:
-            return None
-        chosen = next((sp for sp in splits if "team" not in sp), splits[0])
-        return chosen.get("stat") or None
-    return None
-
-
-def build_hitting(person):
-    season = _find_stat(person, "season", "hitting")
-    if not season:
-        return None
-    saber = _find_stat(person, "sabermetrics", "hitting") or {}
-    pa = _num(season.get("plateAppearances"))
-    bb, so = _num(season.get("baseOnBalls")), _num(season.get("strikeOuts"))
-    bb_pct = round(bb / pa * 100, 1) if pa and bb is not None else None
-    k_pct = round(so / pa * 100, 1) if pa and so is not None else None
-    return {
-        "g": _int_or_none(season.get("gamesPlayed")),
-        "pa": _int_or_none(pa),
-        "avg": _num(season.get("avg")),
-        "obp": _num(season.get("obp")),
-        "slg": _num(season.get("slg")),
-        "hr": _int_or_none(season.get("homeRuns")),
-        "sb": _int_or_none(season.get("stolenBases")),
-        "bbPct": bb_pct,
-        "kPct": k_pct,
-        "wrcPlus": _int_or_none(saber.get("wRcPlus")),
-        "war": _round(saber.get("war"), 1),
-    }
-
-
-def build_pitching(person):
-    season = _find_stat(person, "season", "pitching")
-    if not season:
-        return None
-    saber = _find_stat(person, "sabermetrics", "pitching") or {}
-    g = season.get("gamesPitched")
-    if g is None:
-        g = season.get("gamesPlayed")
-    ip = season.get("inningsPitched")
-    return {
-        "g": _int_or_none(g),
-        "gs": _int_or_none(season.get("gamesStarted")),
-        "ip": None if ip in (None, "") else str(ip),
-        "w": _int_or_none(season.get("wins")),
-        "l": _int_or_none(season.get("losses")),
-        "sv": _int_or_none(season.get("saves")),
-        "hld": _int_or_none(season.get("holds")),
-        "era": _num(season.get("era")),
-        "whip": _num(season.get("whip")),
-        "so": _int_or_none(season.get("strikeOuts")),
-        "k9": _num(season.get("strikeoutsPer9Inn")),
-        "fip": _round(saber.get("fip"), 2),
-        "war": _round(saber.get("war"), 1),
-    }
-
-
-def pitcher_group(pitching):
-    """GS／G >= 0.5 為 SP，其餘（含無數據）為 RP。"""
-    if pitching and pitching.get("g") and (pitching.get("gs") or 0) / pitching["g"] >= 0.5:
-        return "SP"
-    return "RP"
-
-
-def build_player(entry):
-    """roster 單筆 -> 精簡球員 dict；缺 person.id 回傳 None。"""
-    person = entry.get("person") or {}
-    pid = person.get("id")
-    if pid is None:
-        return None
-    pos = (entry.get("position") or {}).get("abbreviation") or ""
-    player = {
-        "id": pid,
-        "name": person.get("fullName") or "",
-        "number": str(entry.get("jerseyNumber") or ""),
-        "pos": pos,
-    }
-    if pos == "P":
-        pitching = build_pitching(person)
-        player.update({"group": pitcher_group(pitching), "hitting": None, "pitching": pitching})
-    elif pos == "TWP":
-        pitching = build_pitching(person)
-        player["group"] = "POS"
-        if pitching:
-            player["pitchingGroup"] = pitcher_group(pitching)
-        player["hitting"] = build_hitting(person)
-        player["pitching"] = pitching
-    else:
-        player.update({"group": "POS", "hitting": build_hitting(person), "pitching": None})
-    return player
-
-
-def build_team_players(roster_data):
-    """roster API 回應 -> 球員清單；回應結構不符回傳 None。"""
-    if not isinstance(roster_data, dict) or not isinstance(roster_data.get("roster"), list):
-        return None
-    players = [build_player(e) for e in roster_data["roster"] if isinstance(e, dict)]
-    return [p for p in players if p]
-
-
-def fetch_rosters(today):
-    """抓 30 隊名單與數據，寫 data/teams/{id}.json 與 index.json。回傳成功隊數。"""
-    ctx = resolve_roster_context(today)
-    roster_type, season, roster_season = ctx["rosterType"], ctx["season"], ctx["rosterSeason"]
-    print(f"Roster context: rosterType={roster_type}, season={season}, rosterSeason={roster_season}")
-    now_iso = timeutil.get_taipei_now().isoformat(timespec="seconds")
-    teams_index = []
-    ok_count = 0
-    for i, (tid, meta) in enumerate(sorted(TEAM_META.items(), key=lambda kv: kv[1]["abbr"])):
-        if i:
-            time.sleep(ROSTER_FETCH_INTERVAL)
-        entry = {"id": tid, "abbr": meta["abbr"], "name": meta["name"], "color": meta["color"],
-                 "league": meta["league"], "division": meta["division"], "ok": False}
-        players = None
-        try:
-            players = build_team_players(net.fetch_json(roster_url(tid, roster_type, roster_season, season)))
-        except Exception as e:
-            print(f"Warning: {meta['abbr']} 名單處理失敗：{e}", file=sys.stderr)
-        if players is None:
-            print(f"Warning: {meta['abbr']} 名單抓取失敗，保留舊檔（若有）。", file=sys.stderr)
-        else:
-            try:
-                storage.write_json_atomic(os.path.join(ROSTER_DIR, f"{tid}.json"), {
-                    "meta": {"id": tid, "abbr": meta["abbr"], "name": meta["name"], "rosterType": roster_type,
-                             "season": season, "updatedAt": now_iso},
-                    "players": players,
-                })
-                entry["ok"] = True
-                entry["updatedAt"] = now_iso
-                ok_count += 1
-            except OSError as e:
-                print(f"Warning: {meta['abbr']} 寫檔失敗：{e}", file=sys.stderr)
-        teams_index.append(entry)
-    storage.write_json_atomic(os.path.join(ROSTER_DIR, "index.json"), {
-        "updatedAt": now_iso, "rosterType": roster_type, "season": season, "teams": teams_index,
-    })
-    print(f"Rosters done: {ok_count}/{len(TEAM_META)} teams updated.")
-    return ok_count
-
-
 def main():
     parser = argparse.ArgumentParser(description="MLB Daily Report Generator Script")
     parser.add_argument("--date", type=str, help="Target report date in YYYY-MM-DD format (defaults to yesterday in Taipei Time)")
@@ -2168,7 +661,7 @@ def main():
                 sys.exit(1)
         else:
             today = timeutil.get_taipei_now().date()
-        sys.exit(0 if fetch_rosters(today) > 0 else 1)
+        sys.exit(0 if rosters.fetch_rosters(today) > 0 else 1)
 
     # 1. Resolve date
     if args.date:
@@ -2205,7 +698,7 @@ def main():
         finalized = False
         for attempt in range(1, max_checks + 1):
             try:
-                finalized, fetched_games = check_all_games_finalized(date_str)
+                finalized, fetched_games = games_mod.check_all_games_finalized(date_str)
                 games = fetched_games
                 have_games = True
             except net.ApiError as e:
@@ -2224,7 +717,7 @@ def main():
             print(f"Warning: 已達等待上限（{max_checks} 次檢查），仍有未完成場次，將照常產出戰報，未完成場次標示為「未完賽」。", file=sys.stderr)
     else:
         try:
-            finalized, games = check_all_games_finalized(date_str)
+            finalized, games = games_mod.check_all_games_finalized(date_str)
         except net.ApiError as e:
             print(f"Error: {e}. Aborting without generating any output.", file=sys.stderr)
             sys.exit(1)
