@@ -145,12 +145,12 @@ class MlbTestBase(unittest.TestCase):
         # 網路 / 睡眠 / Discord 一律攔截
         self.api = FakeApi()
         for p in (
-            mock.patch.object(fetch_mlb, "fetch_json", side_effect=self.api.fetch),
-            mock.patch.object(fetch_mlb, "fetch_text", side_effect=self.api.fetch_text),
+            mock.patch("mlb_daily.net.fetch_json", side_effect=self.api.fetch),
+            mock.patch("mlb_daily.net.fetch_text", side_effect=self.api.fetch_text),
             mock.patch("urllib.request.urlopen", side_effect=AssertionError("測試不得連網")),
             mock.patch.object(fetch_mlb.time, "sleep"),
             # 時鐘固定在休賽季（2026-11-18 12:17 台北），測試結果不得隨真實日期改變；需要賽季中情境的測試自行覆蓋
-            mock.patch.object(fetch_mlb, "get_taipei_now",
+            mock.patch("mlb_daily.timeutil.get_taipei_now",
                               return_value=datetime(2026, 11, 18, 12, 17, tzinfo=timezone(timedelta(hours=8)))),
         ):
             p.start()
@@ -686,7 +686,7 @@ class FailureHandlingTests(MlbTestBase):
         self.discord.assert_not_called()
 
     def test_malformed_schedule_response_is_api_failure(self):
-        with mock.patch.object(fetch_mlb, "fetch_json", return_value={"unexpected": True}):
+        with mock.patch("mlb_daily.net.fetch_json", return_value={"unexpected": True}):
             with self.assertRaises(fetch_mlb.ApiError):
                 fetch_mlb.check_all_games_finalized(DATE)
 
@@ -797,7 +797,7 @@ class NotifyFlagTests(MlbTestBase):
         code = self.run_flags("--notify-only")
         self.assertIsNone(code)
         self.discord.assert_called_once_with(entry)
-        self.assertEqual(fetch_mlb.fetch_json.call_count, 0)
+        self.assertEqual(fetch_mlb.net.fetch_json.call_count, 0)
         self.assertEqual(self.snapshot(), before)
 
     def test_notify_only_missing_entry_exits_1(self):
@@ -810,7 +810,7 @@ class NotifyFlagTests(MlbTestBase):
         code = self.run_flags("--notify-only", "--check-wait")
         self.assertEqual(code, 1)
         self.discord.assert_not_called()
-        self.assertEqual(fetch_mlb.fetch_json.call_count, 0)
+        self.assertEqual(fetch_mlb.net.fetch_json.call_count, 0)
 
     def test_notify_only_conflicts_with_no_notify(self):
         code = self.run_flags("--notify-only", "--no-notify")
@@ -1314,7 +1314,7 @@ class FooterTests(MlbTestBase):
                 return fixed.astimezone(tz) if tz else fixed
 
         # setUp 已固定 get_taipei_now；這裡要驗證「真正的」台北時間換算，改成由假的 datetime.now 推算
-        with mock.patch.object(fetch_mlb, "datetime", FakeDatetime),                 mock.patch.object(fetch_mlb, "get_taipei_now",
+        with mock.patch("mlb_daily.timeutil.datetime", FakeDatetime),                 mock.patch("mlb_daily.timeutil.get_taipei_now",
                                   side_effect=lambda: FakeDatetime.now(fetch_mlb.timezone.utc).astimezone(fetch_mlb.TAIPEI_TZ)):
             _, html = self.generate("schedule_normal")
         self.assertIn("產生時間：2026-11-17 12:17（台北時間）", html)
@@ -1404,7 +1404,7 @@ class RobustnessTests(MlbTestBase):
             "person": {"id": 4242, "fullName": "A<B Smith"},
             "toTeam": {"id": 139}, "fromTeam": {}}]}
         self.api.transactions = None
-        with mock.patch.object(fetch_mlb, "fetch_json", side_effect=lambda url, **k:
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=lambda url, **k:
                                tx if "/transactions" in url else self.api.fetch(url)):
             self.api.schedule = "schedule_normal"
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
@@ -1669,7 +1669,7 @@ class NewsPageTests(MlbTestBase):
 class MajorLeagueTransactionTests(MlbTestBase):
     def txs(self, payload):
         self.api.transactions = None
-        with mock.patch.object(fetch_mlb, "fetch_json", side_effect=lambda url, **k:
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=lambda url, **k:
                                payload if "/transactions" in url else self.api.fetch(url)):
             return fetch_mlb.fetch_daily_transactions(DATE)
 
@@ -2021,42 +2021,42 @@ class TranslateTextsTests(MlbTestBase):
         return [{"text": f"Text {i} Aaron Judge", "keep": ["Aaron Judge"]} for i in range(n)]
 
     def test_success(self):
-        with mock.patch.object(fetch_mlb, "post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)):
+        with mock.patch("mlb_daily.net.post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)):
             self.assertEqual(fetch_mlb.translate_texts(self.items()), ["中文0 Aaron Judge", "中文1 Aaron Judge"])
 
     def test_no_key_does_not_call(self):
         os.environ.pop("GEMINI_API_KEY")
-        with mock.patch.object(fetch_mlb, "post_json") as m:
+        with mock.patch("mlb_daily.net.post_json") as m:
             self.assertIsNone(fetch_mlb.translate_texts(self.items()))
         m.assert_not_called()
 
     def test_empty_items_does_not_call(self):
-        with mock.patch.object(fetch_mlb, "post_json") as m:
+        with mock.patch("mlb_daily.net.post_json") as m:
             self.assertIsNone(fetch_mlb.translate_texts([]))
         m.assert_not_called()
 
     def test_length_mismatch_returns_none(self):
-        with mock.patch.object(fetch_mlb, "post_json", return_value=gemini_response(["只有一則 Aaron Judge"])):
+        with mock.patch("mlb_daily.net.post_json", return_value=gemini_response(["只有一則 Aaron Judge"])):
             self.assertIsNone(fetch_mlb.translate_texts(self.items()))
 
     def test_non_json_text_returns_none(self):
         resp = {"steps": [{"type": "model_output", "content": [{"type": "text", "text": "not json"}]}]}
-        with mock.patch.object(fetch_mlb, "post_json", return_value=resp):
+        with mock.patch("mlb_daily.net.post_json", return_value=resp):
             self.assertIsNone(fetch_mlb.translate_texts(self.items()))
 
     def test_post_failure_returns_none(self):
-        with mock.patch.object(fetch_mlb, "post_json", return_value=None):
+        with mock.patch("mlb_daily.net.post_json", return_value=None):
             self.assertIsNone(fetch_mlb.translate_texts(self.items()))
 
     def test_missing_keep_uses_original_for_that_item_only(self):
         resp = gemini_response(["好 Aaron Judge", "遺失姓名", ""])
         items = self.items(3)
-        with mock.patch.object(fetch_mlb, "post_json", return_value=resp):
+        with mock.patch("mlb_daily.net.post_json", return_value=resp):
             out = fetch_mlb.translate_texts(items)
         self.assertEqual(out, ["好 Aaron Judge", items[1]["text"], items[2]["text"]])
 
     def test_batching_over_60(self):
-        with mock.patch.object(fetch_mlb, "post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)) as m:
+        with mock.patch("mlb_daily.net.post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)) as m:
             out = fetch_mlb.translate_texts(self.items(130))
         self.assertEqual(m.call_count, 3)
         self.assertEqual([len(request_items(c.args[1])) for c in m.call_args_list], [60, 60, 10])
@@ -2069,13 +2069,13 @@ class TranslateTextsTests(MlbTestBase):
             calls.append(1)
             return None if len(calls) == 1 else zh_echo(p)
         items = self.items(70)
-        with mock.patch.object(fetch_mlb, "post_json", side_effect=fake):
+        with mock.patch("mlb_daily.net.post_json", side_effect=fake):
             out = fetch_mlb.translate_texts(items)
         self.assertEqual(out[:60], [it["text"] for it in items[:60]])
         self.assertTrue(out[60].startswith("中文0"))
 
     def test_request_shape_key_in_header_only_no_sampling_params(self):
-        with mock.patch.object(fetch_mlb, "post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)) as m:
+        with mock.patch("mlb_daily.net.post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)) as m:
             fetch_mlb.translate_texts(self.items(), [(147, "New York Yankees")])
         url, payload, headers = m.call_args.args[:3]
         self.assertEqual(url, "https://generativelanguage.googleapis.com/v1beta/interactions")
@@ -2092,7 +2092,7 @@ class TranslateTextsTests(MlbTestBase):
 
     def test_model_env_override(self):
         os.environ["GEMINI_MODEL"] = "gemini-x"
-        with mock.patch.object(fetch_mlb, "post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)) as m:
+        with mock.patch("mlb_daily.net.post_json", side_effect=lambda u, p, h, timeout=30: zh_echo(p)) as m:
             fetch_mlb.translate_texts(self.items())
         self.assertEqual(m.call_args.args[1]["model"], "gemini-x")
 
@@ -2117,7 +2117,7 @@ class TranslatedPageTests(MlbTestBase):
                 tr = (mapping or {}).get(it["text"])
                 outs.append(tr if tr is not None else f"中文譯文{it['id']} " + " ".join(it["keep"]))
             return gemini_response(outs)
-        return mock.patch.object(fetch_mlb, "post_json", side_effect=fake)
+        return mock.patch("mlb_daily.net.post_json", side_effect=fake)
 
     def test_season_page_translated(self):
         with self.fake_post() as m:
@@ -2157,7 +2157,7 @@ class TranslatedPageTests(MlbTestBase):
         self.assertNotIn("Yankees top Red Sox", html)
 
     def test_translation_failure_shows_english_and_flag_false(self):
-        with mock.patch.object(fetch_mlb, "post_json", return_value=None):
+        with mock.patch("mlb_daily.net.post_json", return_value=None):
             meta, html = self.generate("schedule_normal", transactions="transactions_default")
         self.assertFalse(meta["translated"])
         self.assertIn("Hall of Fame announces 2027 ballot", html)
@@ -2166,7 +2166,7 @@ class TranslatedPageTests(MlbTestBase):
 
     def test_no_key_metadata_false_and_no_call(self):
         os.environ.pop("GEMINI_API_KEY")
-        with mock.patch.object(fetch_mlb, "post_json") as m:
+        with mock.patch("mlb_daily.net.post_json") as m:
             self.run_main("schedule_empty")
         m.assert_not_called()
         self.assertFalse(self.read_metadata()[DATE]["translated"])
@@ -2210,7 +2210,7 @@ class TranslationDiagnosticsTests(MlbTestBase):
 
     def run_translate(self, resp):
         err = io.StringIO()
-        with mock.patch.object(fetch_mlb, "post_json", return_value=resp), contextlib.redirect_stderr(err):
+        with mock.patch("mlb_daily.net.post_json", return_value=resp), contextlib.redirect_stderr(err):
             out = fetch_mlb.translate_texts([{"text": "A", "keep": []}])
         return out, err.getvalue()
 
@@ -2234,7 +2234,7 @@ class TranslationDiagnosticsTests(MlbTestBase):
             os.environ.pop("GEMINI_API_KEY")
         out = io.StringIO()
         news = [{"title": t} for t in news]
-        with mock.patch.object(fetch_mlb, "post_json", side_effect=post or (lambda u, p, h, timeout=30: zh_echo(p))), \
+        with mock.patch("mlb_daily.net.post_json", side_effect=post or (lambda u, p, h, timeout=30: zh_echo(p))), \
                 contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
             fetch_mlb.apply_translations(news, [], [])
         return out.getvalue()
@@ -2691,7 +2691,7 @@ class RosterFlowTests(MlbTestBase):
         self.assertEqual(code, 1)
 
     def test_default_today_uses_taipei_date(self):
-        with mock.patch.object(fetch_mlb, "get_taipei_now",
+        with mock.patch("mlb_daily.timeutil.get_taipei_now",
                                return_value=datetime(2026, 7, 1, 12, 0, tzinfo=timezone(timedelta(hours=8)))):
             code, _, _ = self.run_rosters(date_arg=None)
         self.assertEqual(code, 0)
@@ -2864,7 +2864,7 @@ class SidebarBase(MlbTestBase):
     def build(self, now, **api):
         for k, v in api.items():
             setattr(self.api, k, v)
-        with mock.patch.object(fetch_mlb, "get_taipei_now", return_value=now), \
+        with mock.patch("mlb_daily.timeutil.get_taipei_now", return_value=now), \
                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             return fetch_mlb.build_index_extras(now)
 
@@ -2896,9 +2896,9 @@ class StandingsTests(SidebarBase):
     def test_fetch_standings_failure_returns_none(self):
         self.api.standings = None
         self.assertIsNone(fetch_mlb.fetch_standings(2026))
-        with mock.patch.object(fetch_mlb, "fetch_json", return_value={"records": []}):
+        with mock.patch("mlb_daily.net.fetch_json", return_value={"records": []}):
             self.assertIsNone(fetch_mlb.fetch_standings(2026))
-        with mock.patch.object(fetch_mlb, "fetch_json", return_value={"unexpected": 1}):
+        with mock.patch("mlb_daily.net.fetch_json", return_value={"unexpected": 1}):
             self.assertIsNone(fetch_mlb.fetch_standings(2026))
 
     def test_render_six_divisions_five_rows_and_markers(self):
@@ -2967,7 +2967,7 @@ class StandingsTests(SidebarBase):
         tr["streak"]["streakCode"] = "<script>alert(1)</script>"
         tr["clinchIndicator"] = "<b>"
         tr["gamesBack"] = "<i>"
-        with mock.patch.object(fetch_mlb, "fetch_json", return_value=data):
+        with mock.patch("mlb_daily.net.fetch_json", return_value=data):
             st = fetch_mlb.fetch_standings(2026)
         html = fetch_mlb.render_standings_aside(st, 2026, False, OFFSEASON_NOW)
         self.assertNotIn("<script>alert(1)</script>", html)
@@ -3032,7 +3032,7 @@ class GamePreviewTests(SidebarBase):
         for g in data["dates"][0]["games"]:
             for side in g["teams"].values():
                 side.pop("leagueRecord", None)
-        with mock.patch.object(fetch_mlb, "fetch_json", side_effect=lambda u, *a, **k: data if "/schedule" in u else None):
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=lambda u, *a, **k: data if "/schedule" in u else None):
             html = fetch_mlb.render_game_previews(fetch_mlb.fetch_game_previews("2026-07-30", 2026, {}))
         self.assertNotIn("gp-rec", html)
 
@@ -3170,14 +3170,14 @@ class OffseasonBlocksTests(SidebarBase):
             seen.extend(items)
             return gemini_response([f"譯文{it['id']} " + " ".join(it["keep"]) for it in items])
 
-        with mock.patch.object(fetch_mlb, "post_json", side_effect=fake) as m:
+        with mock.patch("mlb_daily.net.post_json", side_effect=fake) as m:
             out = self.page(OFFSEASON_NOW, standings="standings_2026", transactions="transactions_weekly")
         self.assertEqual(m.call_count, 1)  # 首頁需翻譯內容一次批次
         self.assertEqual(len(seen), 8)
         self.assertIn("譯文", out)
         self.assertIn(">Pete Alonso</a>", out)  # 保留英文人名與連結
         fetch_mlb.TX_TRANSLATION_CACHE.clear()  # 前一段已寫入譯文快取，這裡模擬沒有戰報譯文可沿用
-        with mock.patch.object(fetch_mlb, "post_json", return_value=None):
+        with mock.patch("mlb_daily.net.post_json", return_value=None):
             out = self.page(OFFSEASON_NOW, standings="standings_2026", transactions="transactions_weekly")
         self.assertIn("signed free agent 1B", out)  # 失敗退回英文原文
         self.assertNotIn("譯文", out)
@@ -3222,9 +3222,9 @@ class ReviewFixTests(SidebarBase):
 
     def test_weekly_missing_transactions_field_is_failure(self):
         for body in ({"copyright": "x"}, {"transactions": None}, {"transactions": "oops"}):
-            with mock.patch.object(fetch_mlb, "fetch_json", return_value=body):
+            with mock.patch("mlb_daily.net.fetch_json", return_value=body):
                 self.assertIsNone(fetch_mlb.fetch_weekly_transactions(date(2026, 11, 18)), body)
-        with mock.patch.object(fetch_mlb, "fetch_json", return_value={"transactions": []}):
+        with mock.patch("mlb_daily.net.fetch_json", return_value={"transactions": []}):
             self.assertEqual(fetch_mlb.fetch_weekly_transactions(date(2026, 11, 18)), [])
         html = fetch_mlb.render_weekly_transactions(None)
         self.assertIn("暫時無法取得", html)
@@ -3234,7 +3234,7 @@ class ReviewFixTests(SidebarBase):
         os.environ["GEMINI_API_KEY"] = "SECRETKEY"
         fetch_mlb.LAST_POST["retryable"] = True  # 戰報翻譯已因 429/5xx/逾時耗盡重試
         weekly = [{"description": "New York Mets signed free agent 1B Pete Alonso.", "person_name": "Pete Alonso"}]
-        with mock.patch.object(fetch_mlb, "post_json") as m, contextlib.redirect_stdout(io.StringIO()) as out:
+        with mock.patch("mlb_daily.net.post_json") as m, contextlib.redirect_stdout(io.StringIO()) as out:
             fetch_mlb.translate_weekly_transactions(weekly)
         m.assert_not_called()
         self.assertNotIn("description_zh", weekly[0])  # 使用原文
@@ -3245,7 +3245,7 @@ class ReviewFixTests(SidebarBase):
         desc = "New York Mets signed free agent 1B Pete Alonso."
         fetch_mlb.TX_TRANSLATION_CACHE[desc] = "紐約大都會簽下自由球員 1B Pete Alonso。"
         weekly = [{"description": desc, "person_name": "Pete Alonso", "person_id": 624413}]
-        with mock.patch.object(fetch_mlb, "post_json") as m, contextlib.redirect_stdout(io.StringIO()):
+        with mock.patch("mlb_daily.net.post_json") as m, contextlib.redirect_stdout(io.StringIO()):
             fetch_mlb.translate_weekly_transactions(weekly)
         m.assert_not_called()  # 全部沿用戰報譯文，不呼叫 Gemini
         self.assertEqual(weekly[0]["description_zh"], "紐約大都會簽下自由球員 1B Pete Alonso。")
@@ -3253,7 +3253,7 @@ class ReviewFixTests(SidebarBase):
     def test_apply_translations_fills_cache(self):
         os.environ["GEMINI_API_KEY"] = "SECRETKEY"
         tx = [{"description": "Atlanta Braves signed free agent RHP Big Name.", "person_name": "Big Name"}]
-        with mock.patch.object(fetch_mlb, "post_json",
+        with mock.patch("mlb_daily.net.post_json",
                                return_value=gemini_response(["勇士簽下自由球員 RHP Big Name。"])), \
                 contextlib.redirect_stdout(io.StringIO()):
             fetch_mlb.apply_translations(None, [], tx)
@@ -3276,7 +3276,7 @@ class ReviewFixTests(SidebarBase):
                 tr.pop("clinchIndicator", None)
         data["records"][0]["teamRecords"][0]["clinchIndicator"] = "x"
         data["records"][0]["teamRecords"][1]["clinchIndicator"] = "q"
-        with mock.patch.object(fetch_mlb, "fetch_json", return_value=data):
+        with mock.patch("mlb_daily.net.fetch_json", return_value=data):
             st = fetch_mlb.fetch_standings(2026)
         html = fetch_mlb.render_standings_aside(st, 2026, False, OFFSEASON_NOW)
         legend = html[html.index('class="st-legend"'):]
@@ -3292,13 +3292,13 @@ class ReviewFixTests(SidebarBase):
         for rec in data["records"]:
             for tr in rec["teamRecords"]:
                 tr.pop("clinchIndicator", None)
-        with mock.patch.object(fetch_mlb, "fetch_json", return_value=data):
+        with mock.patch("mlb_daily.net.fetch_json", return_value=data):
             st = fetch_mlb.fetch_standings(2026)
         self.assertNotIn("st-legend", fetch_mlb.render_standings_aside(st, 2026, True, SEASON_NOW))
 
     def _preview_with(self, games):
         data = {"dates": [{"date": "2026-07-30", "games": games}]}
-        with mock.patch.object(fetch_mlb, "fetch_json", side_effect=lambda u, *a, **k: data if "/schedule" in u else None):
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=lambda u, *a, **k: data if "/schedule" in u else None):
             return fetch_mlb.fetch_game_previews("2026-07-30", 2026, {})
 
     @staticmethod
@@ -3354,7 +3354,7 @@ class SidebarFailureIsolationTests(SidebarBase):
         self.api.standings = None
         self.api.seasons = None
         self.api.transactions = None
-        with mock.patch.object(fetch_mlb, "get_taipei_now", return_value=OFFSEASON_NOW):
+        with mock.patch("mlb_daily.timeutil.get_taipei_now", return_value=OFFSEASON_NOW):
             code = self.run_flags()
         self.assertIsNone(code)
         self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
@@ -3368,7 +3368,7 @@ class SidebarFailureIsolationTests(SidebarBase):
         with mock.patch.object(fetch_mlb, "fetch_standings", side_effect=RuntimeError("boom")), \
                 mock.patch.object(fetch_mlb, "fetch_countdown", side_effect=RuntimeError("boom")), \
                 mock.patch.object(fetch_mlb, "fetch_weekly_transactions", side_effect=ValueError("boom")), \
-                mock.patch.object(fetch_mlb, "get_taipei_now", return_value=OFFSEASON_NOW):
+                mock.patch("mlb_daily.timeutil.get_taipei_now", return_value=OFFSEASON_NOW):
             code = self.run_flags()
         self.assertIsNone(code)
         self.assertTrue((self.tmp / "reports" / "metadata.json").exists())

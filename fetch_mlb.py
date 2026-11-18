@@ -27,189 +27,94 @@ if hasattr(sys.stderr, 'reconfigure'):
     except Exception:
         pass
 
-# MLB Team Metadata: Chinese Name, Abbreviation, Official Color Hex, League (AL/NL), Division (E/C/W)
-TEAM_META = {
-    108: {"name": "洛杉磯天使", "abbr": "LAA", "color": "#BA0021", "league": "AL", "division": "W"},
-    109: {"name": "亞利桑那響尾蛇", "abbr": "AZ", "color": "#A71930", "league": "NL", "division": "W"},
-    110: {"name": "巴爾的摩金鶯", "abbr": "BAL", "color": "#DF4601", "league": "AL", "division": "E"},
-    111: {"name": "波士頓紅襪", "abbr": "BOS", "color": "#BD3039", "league": "AL", "division": "E"},
-    112: {"name": "芝加哥小熊", "abbr": "CHC", "color": "#0E3386", "league": "NL", "division": "C"},
-    113: {"name": "辛辛那提紅人", "abbr": "CIN", "color": "#C6011F", "league": "NL", "division": "C"},
-    114: {"name": "克里夫蘭守護者", "abbr": "CLE", "color": "#0C2340", "league": "AL", "division": "C"},
-    115: {"name": "科羅拉多洛磯", "abbr": "COL", "color": "#333366", "league": "NL", "division": "W"},
-    116: {"name": "底特律老虎", "abbr": "DET", "color": "#0C2340", "league": "AL", "division": "C"},
-    117: {"name": "休士頓太空人", "abbr": "HOU", "color": "#EB6E1F", "league": "AL", "division": "W"},
-    118: {"name": "堪薩斯皇家", "abbr": "KC", "color": "#004687", "league": "AL", "division": "C"},
-    119: {"name": "洛杉磯道奇", "abbr": "LAD", "color": "#005A9C", "league": "NL", "division": "W"},
-    120: {"name": "華盛頓國民", "abbr": "WSH", "color": "#AB0003", "league": "NL", "division": "E"},
-    121: {"name": "紐約大都會", "abbr": "NYM", "color": "#FF5910", "league": "NL", "division": "E"},
-    133: {"name": "運動家", "abbr": "ATH", "color": "#003831", "league": "AL", "division": "W"},
-    134: {"name": "匹茲堡海盜", "abbr": "PIT", "color": "#FDB827", "league": "NL", "division": "C"},
-    135: {"name": "聖地牙哥教士", "abbr": "SD", "color": "#2F241D", "league": "NL", "division": "W"},
-    136: {"name": "西雅圖水手", "abbr": "SEA", "color": "#0C2C56", "league": "AL", "division": "W"},
-    137: {"name": "舊金山巨人", "abbr": "SF", "color": "#FD5A1E", "league": "NL", "division": "W"},
-    138: {"name": "聖路易紅雀", "abbr": "STL", "color": "#C41E3A", "league": "NL", "division": "C"},
-    139: {"name": "坦帕灣光芒", "abbr": "TB", "color": "#092C5C", "league": "AL", "division": "E"},
-    140: {"name": "德州遊騎兵", "abbr": "TEX", "color": "#003278", "league": "AL", "division": "W"},
-    141: {"name": "多倫多藍鳥", "abbr": "TOR", "color": "#134A8E", "league": "AL", "division": "E"},
-    142: {"name": "明尼蘇達雙城", "abbr": "MIN", "color": "#002B5C", "league": "AL", "division": "C"},
-    143: {"name": "費城費城人", "abbr": "PHI", "color": "#E81828", "league": "NL", "division": "E"},
-    144: {"name": "亞特蘭大勇士", "abbr": "ATL", "color": "#CE1141", "league": "NL", "division": "E"},
-    145: {"name": "芝加哥白襪", "abbr": "CWS", "color": "#27251F", "league": "AL", "division": "C"},
-    146: {"name": "邁阿密馬林魚", "abbr": "MIA", "color": "#00A3E0", "league": "NL", "division": "E"},
-    147: {"name": "紐約洋基", "abbr": "NYY", "color": "#0C2340", "league": "AL", "division": "E"},
-    158: {"name": "密爾瓦基釀酒人", "abbr": "MIL", "color": "#122853", "league": "NL", "division": "C"}
-}
+# 拆分後的 mlb_daily 套件；以下重新匯出原本 fetch_mlb 的所有名稱以維持相容
+from mlb_daily import config, htmlutil, net, storage, timeutil  # noqa: F401
+from mlb_daily.config import (  # noqa: F401
+    CANCELLED_REASONS,
+    CLINCH_LABELS,
+    CLINCH_LEGEND,
+    DARK_LUMINANCE_THRESHOLD,
+    DATE_KEY_RE,
+    DIVISION_LAYOUT,
+    EARLY_MORNING_HOUR,
+    GAME_TYPE_LABELS,
+    GEMINI_API_REVISION,
+    GEMINI_DEFAULT_MODEL,
+    GEMINI_ENDPOINT,
+    GEMINI_FALLBACK_MODEL,
+    GEMINI_RETRYABLE_HTTP,
+    GEMINI_RETRY_AFTER_CAP,
+    GEMINI_RETRY_DELAYS,
+    LEGACY_ABBR_ALIASES,
+    LOGO_URL,
+    MAX_WAIT_CHECKS,
+    NEWS_RSS_URL,
+    NEWS_SOURCE,
+    NL_DIVISION_IDS,
+    PEOPLE_STATS_URL,
+    POSTPONED_REASONS,
+    ROSTER_DIR,
+    ROSTER_FETCH_INTERVAL,
+    SAVANT_URL,
+    SCHEDULE_PREVIEW_URL,
+    SEASON_URL,
+    SLOT_RE,
+    STANDINGS_URL,
+    TAIPEI_TZ,
+    TEAM_META,
+    TEAM_NAMES_EN,
+    TEAM_SLANG_ALIASES,
+    TEMPLATE_DIR,
+    TRANSACTIONS_RANGE_URL,
+    TRANSLATE_BATCH_SIZE,
+    WAIT_SLEEP_SECONDS,
+    WEEKDAYS_ZH,
+    WEEKLY_TX_DAYS,
+    WEEKLY_TX_EXTENSION_RE,
+    WEEKLY_TX_LIMIT,
+    WEEKLY_TX_TYPE_CODES,
+    _UNSET,
+)
+from mlb_daily.htmlutil import (  # noqa: F401
+    _int_id,
+    _section_message,
+    esc,
+    fill_slots,
+    is_dark_color,
+    load_template,
+    logo_picture,
+    player_link,
+    relative_luminance,
+    render_page,
+    safe_color,
+    stripe_class,
+)
+from mlb_daily.net import (  # noqa: F401
+    ApiError,
+    LAST_POST,
+    _http_error_detail,
+    _redact,
+    _retry_after_seconds,
+    fetch_json,
+    fetch_text,
+    post_json,
+)
+from mlb_daily.storage import (  # noqa: F401
+    _to_int,
+    entry_type,
+    load_metadata,
+    save_metadata,
+    write_json_atomic,
+    write_report,
+)
+from mlb_daily.timeutil import (  # noqa: F401
+    _parse_iso_date,
+    fmt_date_long,
+    get_taipei_now,
+    get_yesterday_str,
+    report_href,
+)
 
-# 舊縮寫別名（搜尋時舊縮寫仍可命中；縮寫已統一為 MLB 官方 API）
-LEGACY_ABBR_ALIASES = {"AZ": "ARI", "KC": "KCR", "ATH": "OAK"}
-
-POSTPONED_REASONS = {
-    "Rain": "因雨延期",
-    "Wet Grounds": "場地濕滑延期",
-    "Cold": "低溫延期",
-    "Inclement Weather": "惡劣天氣延期",
-    "Snow": "因雪延期",
-    "Postponed": "賽事延期"
-}
-
-# 取消（Cancelled）原因對照；不沿用延期文案以免語句不通順
-CANCELLED_REASONS = {
-    "Rain": "因雨取消",
-    "Wet Grounds": "因場地濕滑取消",
-    "Cold": "因低溫取消",
-    "Inclement Weather": "因惡劣天氣取消",
-    "Snow": "因雪取消",
-}
-
-# 等待迴圈：每次檢查未完成時睡 30 分鐘，最多檢查 MAX_WAIT_CHECKS 次
-MAX_WAIT_CHECKS = 8
-WAIT_SLEEP_SECONDS = 1800
-
-GAME_TYPE_LABELS = {
-    "R": "例行賽",
-    "F": "外卡賽",
-    "D": "分區系列賽",
-    "L": "聯盟冠軍賽",
-    "W": "世界大賽",
-    "S": "春訓",
-    "E": "熱身賽",
-    "A": "明星賽",
-}
-
-# 渲染用常數
-TEMPLATE_DIR = "templates"
-SAVANT_URL = "https://baseballsavant.mlb.com/savant-player/{}"
-LOGO_URL = "https://www.mlbstatic.com/team-logos/team-cap-on-{}/{}.svg"
-WEEKDAYS_ZH = "一二三四五六日"
-DARK_LUMINANCE_THRESHOLD = 0.08  # 隊色相對亮度低於此值，色條加淺色外框
-SLOT_RE = re.compile(r"<!--SLOT:([A-Z_]+)-->")
-
-# 每日新聞（MLB 官方 RSS）
-NEWS_RSS_URL = "https://www.mlb.com/feeds/news/rss.xml"
-NEWS_SOURCE = "MLB.com"
-TAIPEI_TZ = timezone(timedelta(hours=8))
-_UNSET = object()  # 「未提供參數」的哨兵值（None 代表呼叫端已取得但失敗）
-
-# Gemini 翻譯（Interactions API，只用標準函式庫；金鑰只從環境變數讀取、只放 header）
-GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions"
-GEMINI_DEFAULT_MODEL = "gemini-3.5-flash-lite"
-GEMINI_API_REVISION = "2026-05-20"
-TRANSLATE_BATCH_SIZE = 60
-
-# 球隊英文全名／暱稱／中文簡稱（供翻譯對照表；中文全名取自 TEAM_META）
-TEAM_NAMES_EN = {
-    108: ("Los Angeles Angels", "Angels", "天使"),
-    109: ("Arizona Diamondbacks", "Diamondbacks", "響尾蛇"),
-    110: ("Baltimore Orioles", "Orioles", "金鶯"),
-    111: ("Boston Red Sox", "Red Sox", "紅襪"),
-    112: ("Chicago Cubs", "Cubs", "小熊"),
-    113: ("Cincinnati Reds", "Reds", "紅人"),
-    114: ("Cleveland Guardians", "Guardians", "守護者"),
-    115: ("Colorado Rockies", "Rockies", "洛磯"),
-    116: ("Detroit Tigers", "Tigers", "老虎"),
-    117: ("Houston Astros", "Astros", "太空人"),
-    118: ("Kansas City Royals", "Royals", "皇家"),
-    119: ("Los Angeles Dodgers", "Dodgers", "道奇"),
-    120: ("Washington Nationals", "Nationals", "國民"),
-    121: ("New York Mets", "Mets", "大都會"),
-    133: ("Athletics", "Athletics", "運動家"),
-    134: ("Pittsburgh Pirates", "Pirates", "海盜"),
-    135: ("San Diego Padres", "Padres", "教士"),
-    136: ("Seattle Mariners", "Mariners", "水手"),
-    137: ("San Francisco Giants", "Giants", "巨人"),
-    138: ("St. Louis Cardinals", "Cardinals", "紅雀"),
-    139: ("Tampa Bay Rays", "Rays", "光芒"),
-    140: ("Texas Rangers", "Rangers", "遊騎兵"),
-    141: ("Toronto Blue Jays", "Blue Jays", "藍鳥"),
-    142: ("Minnesota Twins", "Twins", "雙城"),
-    143: ("Philadelphia Phillies", "Phillies", "費城人"),
-    144: ("Atlanta Braves", "Braves", "勇士"),
-    145: ("Chicago White Sox", "White Sox", "白襪"),
-    146: ("Miami Marlins", "Marlins", "馬林魚"),
-    147: ("New York Yankees", "Yankees", "洋基"),
-    158: ("Milwaukee Brewers", "Brewers", "釀酒人"),
-}
-
-# 球隊口語簡稱（team id -> 英文簡稱）；中文沿用 TEAM_NAMES_EN 的中文簡稱。
-# 刻意不收 "Sox"（紅襪／白襪有歧義）。
-TEAM_SLANG_ALIASES = {
-    108: ["Halos"],
-    109: ["D-backs", "Dbacks"],
-    110: ["O's"],
-    115: ["Rox"],
-    120: ["Nats"],
-    133: ["A's"],
-    134: ["Bucs"],
-    135: ["Friars"],
-    136: ["M's"],
-    138: ["Cards"],
-    141: ["Jays"],
-    143: ["Phils"],
-    147: ["Yanks"],
-    158: ["Brew Crew"],
-}
-
-def get_taipei_now():
-    tz_taipei = timezone(timedelta(hours=8))
-    return datetime.now(timezone.utc).astimezone(tz_taipei)
-
-def get_yesterday_str():
-    now = get_taipei_now()
-    yesterday = now - timedelta(days=1)
-    return yesterday.strftime("%Y-%m-%d")
-
-def fetch_json(url, retries=3, delay=5):
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    req = urllib.request.Request(url, headers=headers)
-    for attempt in range(retries):
-        try:
-            with urllib.request.urlopen(req, timeout=15) as response:
-                return json.loads(response.read().decode('utf-8'))
-        except Exception as e:
-            print(f"Error fetching {url} (attempt {attempt + 1}/{retries}): {e}", file=sys.stderr)
-            if attempt < retries - 1:
-                time.sleep(delay)
-    return None
-
-
-def fetch_text(url, retries=3, delay=5):
-    """與 fetch_json 相同的重試與 User-Agent，回傳回應文字（str）；全部失敗回傳 None。"""
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    req = urllib.request.Request(url, headers=headers)
-    for attempt in range(retries):
-        try:
-            with urllib.request.urlopen(req, timeout=15) as response:
-                return response.read().decode('utf-8')
-        except Exception as e:
-            print(f"Error fetching {url} (attempt {attempt + 1}/{retries}): {e}", file=sys.stderr)
-            if attempt < retries - 1:
-                time.sleep(delay)
-    return None
-
-
-class ApiError(Exception):
-    """API 抓取失敗，或回應缺少預期結構（與「確實無賽事」不同）。"""
 
 
 def check_all_games_finalized(date_str):
@@ -220,24 +125,24 @@ def check_all_games_finalized(date_str):
     - 有賽事：回傳 (是否全數完賽, games)。
     """
     url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}&hydrate=linescore,decisions"
-    data = fetch_json(url)
+    data = net.fetch_json(url)
     if data is None:
-        raise ApiError(f"無法取得 {date_str} 的賽程（API 無回應）")
+        raise net.ApiError(f"無法取得 {date_str} 的賽程（API 無回應）")
     if not isinstance(data, dict) or not isinstance(data.get("dates"), list):
-        raise ApiError(f"{date_str} 的賽程回應缺少預期結構（dates）")
+        raise net.ApiError(f"{date_str} 的賽程回應缺少預期結構（dates）")
 
     dates = data["dates"]
     if not dates:
         return True, []
     if not isinstance(dates[0], dict):
-        raise ApiError(f"{date_str} 的賽程回應結構異常（dates[0]）")
+        raise net.ApiError(f"{date_str} 的賽程回應結構異常（dates[0]）")
     games = dates[0].get("games")
     if games is None:
         if data.get("totalGames") == 0:
             return True, []
-        raise ApiError(f"{date_str} 的賽程回應缺少預期結構（games）")
+        raise net.ApiError(f"{date_str} 的賽程回應缺少預期結構（games）")
     if not isinstance(games, list):
-        raise ApiError(f"{date_str} 的賽程回應結構異常（games）")
+        raise net.ApiError(f"{date_str} 的賽程回應結構異常（games）")
     if not games:
         return True, []
 
@@ -256,7 +161,7 @@ def fetch_game_news(game_pk, away_abbr, home_abbr, away_r, home_r):
     backup_headline = f"{away_abbr} @ {home_abbr} 賽事總結"
     backup_blurb = f"終場比分 {away_abbr} {away_r} - {home_abbr} {home_r}。本場比賽目前無官方文字摘要。"
     
-    data = fetch_json(url)
+    data = net.fetch_json(url)
     if not data:
         return {"headline": backup_headline, "blurb": backup_blurb}
         
@@ -276,7 +181,7 @@ def _is_mlb_team(team_obj):
     """toTeam／fromTeam 物件的 id 是否為 30 支大聯盟球隊之一。"""
     if not isinstance(team_obj, dict):
         return False
-    return _int_id(team_obj.get("id")) in TEAM_META
+    return htmlutil._int_id(team_obj.get("id")) in TEAM_META
 
 
 def filter_major_league_transactions(transactions):
@@ -332,7 +237,7 @@ def filter_major_league_transactions(transactions):
 def fetch_daily_transactions(date_str):
     """抓取當日大聯盟層級人事異動（過濾規則見 filter_major_league_transactions）。"""
     url = f"https://statsapi.mlb.com/api/v1/transactions?date={date_str}&sportId=1"
-    data = fetch_json(url)
+    data = net.fetch_json(url)
     if not data or not data.get("transactions"):
         return []
     return filter_major_league_transactions(data["transactions"])
@@ -364,7 +269,7 @@ def fetch_daily_news(date_str, limit=12):
     每則為 {"title", "link", "published"（台北時間 datetime）, "image"（網址或 None）}。
     link 不安全的新聞整則捨棄；image 不安全則設為 None。
     抓取或解析失敗回傳 None（與「成功但 0 則」的 [] 區分）。"""
-    text = fetch_text(NEWS_RSS_URL)
+    text = net.fetch_text(NEWS_RSS_URL)
     if not text:
         return None
     try:
@@ -397,88 +302,6 @@ def fetch_daily_news(date_str, limit=12):
         return None
     found.sort(key=lambda n: n["published"], reverse=True)
     return found[:limit]
-
-
-# ---------------------------------------------------------------- Gemini 翻譯
-def _redact(text, secrets):
-    for sec in secrets:
-        text = text.replace(sec, "***")
-    return text
-
-
-def _http_error_detail(err, secrets):
-    """讀取 HTTPError body，若為 Google 錯誤 JSON 回傳 ' status=... message=...'（遮蔽金鑰、message 前 200 字），否則空字串。"""
-    try:
-        body = json.loads(err.read().decode("utf-8", errors="replace"))
-        info = body.get("error") if isinstance(body, dict) else None
-        if not isinstance(info, dict):
-            return ""
-        status = _redact(str(info.get("status", "")), secrets)[:100]
-        message = _redact(str(info.get("message", "")), secrets)[:200]
-        return f" status={status} message={message}"
-    except Exception:
-        return ""
-
-
-GEMINI_RETRY_DELAYS = (5, 15, 45)  # 首次失敗後各次重試前的等待秒數（共最多 4 次嘗試）
-GEMINI_RETRY_AFTER_CAP = 120
-GEMINI_RETRYABLE_HTTP = (429, 500, 502, 503, 504)
-GEMINI_FALLBACK_MODEL = "gemini-3.6-flash"
-
-# 最後一次 post_json 的結果狀態：retryable=True 表示失敗屬於可重試類型（429/5xx/逾時/連線錯誤）且重試已耗盡；
-# 不可重試（其他 4xx、解析失敗）或成功時為 False。呼叫端據此決定是否改用備用模型。
-LAST_POST = {"retryable": False}
-
-
-def _retry_after_seconds(err):
-    try:
-        value = err.headers.get("Retry-After") if err.headers else None
-        return float(value) if value is not None and str(value).strip().replace(".", "", 1).isdigit() else None
-    except Exception:
-        return None
-
-
-def post_json(url, payload, headers, timeout=30):
-    """以標準函式庫 POST JSON，回傳解析後的 dict；失敗回傳 None。
-    可重試錯誤（HTTP 429/500/502/503/504、逾時、連線錯誤）最多共嘗試 4 次，間隔 GEMINI_RETRY_DELAYS，
-    並尊重數字型 Retry-After（取較大者，上限 120 秒）；其他錯誤不重試。
-    結束時將 LAST_POST["retryable"] 設為「是否因可重試錯誤耗盡而失敗」。
-    錯誤訊息只印 HTTP 狀態碼、例外類型，以及 Google 錯誤 JSON 的 error.status／error.message（前 200 字，
-    且先把金鑰字串遮成 ***）；不印網址與 header。"""
-    secrets = [v for k, v in (headers or {}).items() if "key" in k.lower() and isinstance(v, str) and v]
-    data = json.dumps(payload).encode("utf-8")
-    hdrs = {"Content-Type": "application/json"}
-    hdrs.update(headers or {})
-    total = len(GEMINI_RETRY_DELAYS) + 1
-    LAST_POST["retryable"] = False
-    for attempt in range(total):
-        retry_after = None
-        try:
-            req = urllib.request.Request(url, data=data, headers=hdrs, method="POST")
-            with urllib.request.urlopen(req, timeout=timeout) as response:
-                result = json.loads(response.read().decode("utf-8"))
-            LAST_POST["retryable"] = False
-            return result if isinstance(result, dict) else None
-        except urllib.error.HTTPError as e:
-            detail = _http_error_detail(e, secrets)
-            print(f"Warning: translation request failed (attempt {attempt + 1}/{total}): HTTP {e.code}{detail}", file=sys.stderr)
-            if e.code not in GEMINI_RETRYABLE_HTTP:
-                LAST_POST["retryable"] = False
-                return None
-            retry_after = _retry_after_seconds(e)
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:  # socket.timeout 為 TimeoutError 別名
-            print(f"Warning: translation request failed (attempt {attempt + 1}/{total}): {type(e).__name__}", file=sys.stderr)
-        except Exception as e:
-            print(f"Warning: translation request failed (attempt {attempt + 1}/{total}): {type(e).__name__}", file=sys.stderr)
-            LAST_POST["retryable"] = False
-            return None
-        LAST_POST["retryable"] = True
-        if attempt < total - 1:
-            delay = GEMINI_RETRY_DELAYS[attempt]
-            if retry_after is not None:
-                delay = min(max(delay, retry_after), GEMINI_RETRY_AFTER_CAP)
-            time.sleep(delay)
-    return None
 
 
 def _interaction_text(resp):
@@ -547,8 +370,8 @@ def _translate_chunk(chunk, glossary, api_key, model):
         },
     }
     headers = {"x-goog-api-key": api_key, "Api-Revision": GEMINI_API_REVISION}
-    LAST_POST["retryable"] = False
-    resp = post_json(GEMINI_ENDPOINT, payload, headers)
+    net.LAST_POST["retryable"] = False
+    resp = net.post_json(GEMINI_ENDPOINT, payload, headers)
     if resp is None:
         return None  # post_json 已印出失敗原因；LAST_POST["retryable"] 記錄是否為可重試類型
     text = _interaction_text(resp)
@@ -605,7 +428,7 @@ def translate_texts(items, extra_team_names=()):
     for start in range(0, len(items), TRANSLATE_BATCH_SIZE):
         chunk = items[start:start + TRANSLATE_BATCH_SIZE]
         out = _translate_chunk(chunk, glossary, api_key, model)
-        if out is None and fallback and LAST_POST["retryable"]:
+        if out is None and fallback and net.LAST_POST["retryable"]:
             print(f"Warning: 主模型 {model} 持續失敗，改用備用模型 {fallback}", file=sys.stderr)
             out = _translate_chunk(chunk, glossary, api_key, fallback)
             if out is not None:
@@ -661,91 +484,12 @@ def apply_translations(news, views, tx_items, extra_team_names=()):
     return True
 
 
-# ---------------------------------------------------------------- 渲染：共用工具
-def esc(s):
-    """所有來自 API 的字串輸出到 HTML（含屬性值）前一律經過此函式。"""
-    return html_lib.escape(str(s), quote=True)
-
-
-def fmt_date_long(date_str):
-    """'2026-07-30' -> '2026 年 07 月 30 日（四）'；格式不符時原樣回傳。"""
-    try:
-        dt = datetime.strptime(date_str, "%Y-%m-%d")
-    except (ValueError, TypeError):
-        return str(date_str)
-    return f"{dt.year} 年 {dt.month:02d} 月 {dt.day:02d} 日（{WEEKDAYS_ZH[dt.weekday()]}）"
-
-
-def report_href(date_str):
-    """自網站根目錄起算的戰報路徑：reports/YYYY/MM/YYYY-MM-DD.html。"""
-    y, m, _ = date_str.split("-")
-    return f"reports/{y}/{m}/{date_str}.html"
-
-
-def safe_color(color):
-    return color if re.fullmatch(r"#[0-9A-Fa-f]{6}", str(color)) else "#6b7280"
-
-
-def relative_luminance(color):
-    """WCAG 相對亮度（0 = 黑、1 = 白）。"""
-    color = safe_color(color)
-    channels = []
-    for i in (1, 3, 5):
-        c = int(color[i:i + 2], 16) / 255
-        channels.append(c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4)
-    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
-
-
-def is_dark_color(color):
-    """隊色相對深色背景過暗（色條會消失）時為 True。"""
-    return relative_luminance(color) < DARK_LUMINANCE_THRESHOLD
-
-
-def stripe_class(color):
-    """隊色過暗時回傳需追加的 class（含前導空白），否則空字串。"""
-    return " team-stripe--dark" if is_dark_color(color) else ""
-
-
-def _int_id(value):
-    """id 必須是整數（或純數字字串），否則回傳 None。"""
-    if isinstance(value, bool):
-        return None
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def logo_picture(team_id, abbr, size, alt=None):
-    """隊徽；id 不是整數時不輸出圖片（回傳空字串）。alt 預設為 abbr；旁邊已有文字名稱時可傳 "" 當裝飾圖。"""
-    tid = _int_id(team_id)
-    if tid is None:
-        return ""
-    if alt is None:
-        alt = abbr
-    return (
-        f'<picture><source media="(prefers-color-scheme: light)" srcset="{LOGO_URL.format("light", tid)}">'
-        f'<img src="{LOGO_URL.format("dark", tid)}" width="{size}" height="{size}" alt="{esc(alt)}" loading="lazy"></picture>'
-    )
-
-
-def player_link(player_id, name):
-    """球員 Savant 連結；id 不是整數時退回只輸出 escape 後的名字。"""
-    pid = _int_id(player_id)
-    if pid is None:
-        return esc(name)
-    return (
-        f'<a class="plink" href="{SAVANT_URL.format(pid)}" '
-        f'target="_blank" rel="noopener">{esc(name)}</a>'
-    )
-
-
 def _tx_persons(tx):
     """tx 的球員清單 [{"id", "name"}]；舊資料（無 persons）退回 person_id/person_name 單元素。"""
     persons = tx.get("persons")
     if persons:
         return persons
-    if tx.get("person_name") and _int_id(tx.get("person_id")) is not None:
+    if tx.get("person_name") and htmlutil._int_id(tx.get("person_id")) is not None:
         return [{"id": tx["person_id"], "name": tx["person_name"]}]
     return []
 
@@ -758,18 +502,18 @@ def render_tx_description(description, person_id=None, person_name=None, persons
     by_name = {}
     for p in persons:
         name = p.get("name")
-        if name and _int_id(p.get("id")) is not None and name in description:
+        if name and htmlutil._int_id(p.get("id")) is not None and name in description:
             by_name.setdefault(name, p["id"])
     if not by_name:
-        return esc(description)
+        return htmlutil.esc(description)
     names = sorted(by_name, key=len, reverse=True)
     pattern = "(" + "|".join(re.escape(n) for n in names) + ")"
     out = []
     for i, part in enumerate(re.split(pattern, description)):
         if i % 2 == 1:
-            out.append(player_link(by_name[part], part))
+            out.append(htmlutil.player_link(by_name[part], part))
         elif part:
-            out.append(esc(part))
+            out.append(htmlutil.esc(part))
     return "".join(out)
 
 
@@ -787,25 +531,6 @@ def render_tx_items(tx_list):
         f"<li>{render_tx_description(_tx_display_text(tx), persons=_tx_persons(tx))}</li>"
         for tx in tx_list
     )
-
-
-def load_template(name):
-    path = os.path.join(TEMPLATE_DIR, name)
-    if not os.path.exists(path):
-        print(f"Error: Template file {path} not found.", file=sys.stderr)
-        sys.exit(1)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
-
-
-def fill_slots(template, slots):
-    """以 <!--SLOT:NAME--> 為插槽，一次性替換（插槽內容不會被再次替換）；未提供的插槽輸出空字串。"""
-    return SLOT_RE.sub(lambda m: str(slots.get(m.group(1), "")), template)
-
-
-def render_page(slots):
-    """戰報與休賽季快報共用的頁面殼（templates/report.html）。slots 的值須為已處理好的 HTML。"""
-    return fill_slots(load_template("report.html"), slots)
 
 
 # ---------------------------------------------------------------- 渲染：總覽與區塊
@@ -861,17 +586,17 @@ def render_news_section(news, page_type):
             top = rest.pop(0)
             image = ""
             if top.get("image"):
-                image = f'<img class="lead-img" src="{esc(top["image"])}" alt="{esc(top.get("title_zh") or top["title"])}" loading="lazy">'
+                image = f'<img class="lead-img" src="{htmlutil.esc(top["image"])}" alt="{htmlutil.esc(top.get("title_zh") or top["title"])}" loading="lazy">'
             lead = (
                 f'<article class="lead-story">{image}'
-                f'<p class="kicker">頭條 · {esc(top["published"].strftime("%m/%d %H:%M"))}</p>'
-                f'<h3><a href="{esc(top["link"])}" target="_blank" rel="noopener">{esc(top.get("title_zh") or top["title"])}</a></h3>'
-                f'<p class="src">{esc(NEWS_SOURCE)}</p></article>'
+                f'<p class="kicker">頭條 · {htmlutil.esc(top["published"].strftime("%m/%d %H:%M"))}</p>'
+                f'<h3><a href="{htmlutil.esc(top["link"])}" target="_blank" rel="noopener">{htmlutil.esc(top.get("title_zh") or top["title"])}</a></h3>'
+                f'<p class="src">{htmlutil.esc(NEWS_SOURCE)}</p></article>'
             )
         items = "".join(
-            f'<li><time datetime="{esc(n["published"].strftime("%Y-%m-%dT%H:%M"))}">{esc(n["published"].strftime("%H:%M"))}</time>'
-            f'<div><a class="title" href="{esc(n["link"])}" target="_blank" rel="noopener">{esc(n.get("title_zh") or n["title"])}</a>'
-            f'<span class="src">{esc(NEWS_SOURCE)} · {esc(n["published"].strftime("%m/%d %H:%M"))}</span></div></li>'
+            f'<li><time datetime="{htmlutil.esc(n["published"].strftime("%Y-%m-%dT%H:%M"))}">{htmlutil.esc(n["published"].strftime("%H:%M"))}</time>'
+            f'<div><a class="title" href="{htmlutil.esc(n["link"])}" target="_blank" rel="noopener">{htmlutil.esc(n.get("title_zh") or n["title"])}</a>'
+            f'<span class="src">{htmlutil.esc(NEWS_SOURCE)} · {htmlutil.esc(n["published"].strftime("%m/%d %H:%M"))}</span></div></li>'
             for n in rest
         )
         cls = "news is-two-col" if page_type == "offseason" else "news"
@@ -892,11 +617,11 @@ def render_transactions_section(tx_list, heading="其他球隊人事異動", emp
         grouped.setdefault(key, []).append(tx)
 
     head = (
-        f'<div class="section-head"><h2 id="tx-h">{esc(heading)}</h2>'
+        f'<div class="section-head"><h2 id="tx-h">{htmlutil.esc(heading)}</h2>'
         f'<span class="count">{len(tx_list)} 筆</span></div>'
     )
     if not tx_list:
-        body = f'<p class="section-empty">{esc(empty_text)}</p>'
+        body = f'<p class="section-empty">{htmlutil.esc(empty_text)}</p>'
     else:
         keys = sorted(k for k in grouped if k != "Other")
         if "Other" in grouped:
@@ -911,8 +636,8 @@ def render_transactions_section(tx_list, heading="其他球隊人事異動", emp
             else:
                 meta = TEAM_META[key]
                 groups.append(
-                    f'<div class="tx-group{stripe_class(meta["color"])}" style="--team:{safe_color(meta["color"])}">'
-                    f'<h3>{logo_picture(key, meta["abbr"], 22)}{esc(meta["name"])}</h3>'
+                    f'<div class="tx-group{htmlutil.stripe_class(meta["color"])}" style="--team:{htmlutil.safe_color(meta["color"])}">'
+                    f'<h3>{htmlutil.logo_picture(key, meta["abbr"], 22)}{htmlutil.esc(meta["name"])}</h3>'
                     f'<ul class="tx-list">{items}</ul></div>'
                 )
         body = '<div class="tx-grid">' + "".join(groups) + "</div>"
@@ -1123,32 +848,32 @@ def batter_tags(stats):
 
 
 def _statline(pairs, extra_class=""):
-    cells = "".join(f"<div><dt>{esc(k)}</dt><dd>{esc(v)}</dd></div>" for k, v in pairs)
+    cells = "".join(f"<div><dt>{htmlutil.esc(k)}</dt><dd>{htmlutil.esc(v)}</dd></div>" for k, v in pairs)
     return f'<dl class="statline{extra_class}">{cells}</dl>'
 
 
 def render_batter(b):
     s = b["stats"]
-    tags = "".join(f'<span class="{css}">{esc(text)}</span>' for css, text in batter_tags(s))
+    tags = "".join(f'<span class="{css}">{htmlutil.esc(text)}</span>' for css, text in batter_tags(s))
     tags_html = f'<span class="tags">{tags}</span>' if tags else ""
     statline = _statline([("AB", s["ab"]), ("R", s["r"]), ("H", s["h"]), ("RBI", s["rbi"]), ("BB", s["bb"]), ("SO", s["so"])])
     return (
-        f'<li><div class="p-head"><span class="p-name">{player_link(b["id"], b["name"])}</span>'
-        f'<span class="p-meta">{esc(b["team"])} · {esc(b["pos"])}</span>{tags_html}</div>{statline}</li>'
+        f'<li><div class="p-head"><span class="p-name">{htmlutil.player_link(b["id"], b["name"])}</span>'
+        f'<span class="p-meta">{htmlutil.esc(b["team"])} · {htmlutil.esc(b["pos"])}</span>{tags_html}</div>{statline}</li>'
     )
 
 
 def render_pitcher(p):
     s = p["stats"]
-    tags_html = f'<span class="tags"><span class="tag dec">{esc(p["decision"])}</span></span>' if p.get("decision") else ""
+    tags_html = f'<span class="tags"><span class="tag dec">{htmlutil.esc(p["decision"])}</span></span>' if p.get("decision") else ""
     statline = _statline(
         [("IP", s["ip"]), ("H", s["h"]), ("R", s["r"]), ("ER", s["er"]), ("BB", s["bb"]), ("SO", s["so"]),
          ("P-S", f"{s['pitches']}-{s['strikes']}")],
         " is-pitch",
     )
     return (
-        f'<li><div class="p-head"><span class="p-name">{player_link(p["id"], p["name"])}</span>'
-        f'<span class="p-meta">{esc(p["team"])} · {esc(p["pos"])}</span>{tags_html}</div>{statline}</li>'
+        f'<li><div class="p-head"><span class="p-name">{htmlutil.player_link(p["id"], p["name"])}</span>'
+        f'<span class="p-meta">{htmlutil.esc(p["team"])} · {htmlutil.esc(p["pos"])}</span>{tags_html}</div>{statline}</li>'
     )
 
 
@@ -1162,8 +887,8 @@ def render_decisions(decisions, is_final, status_text=""):
         dt = f'<dt class="is-w">{label}</dt>' if win else f"<dt>{label}</dt>"
         if not entry:
             return f"{dt}<dd>無</dd>"
-        rec = f' <span class="rec">{esc(entry["record"])}</span>' if entry.get("record") else ""
-        return f'{dt}<dd>{player_link(entry["id"], entry["name"])}{rec}</dd>'
+        rec = f' <span class="rec">{htmlutil.esc(entry["record"])}</span>' if entry.get("record") else ""
+        return f'{dt}<dd>{htmlutil.player_link(entry["id"], entry["name"])}{rec}</dd>'
 
     d = decisions or {}
     return (
@@ -1178,7 +903,7 @@ def render_news_box(news):
         return ""
     return (
         '<section><h4 class="sub">賽後新聞</h4><article class="mini-news">'
-        f'<h5>{esc(news.get("headline_zh") or news["headline"])}</h5><p>{esc(news.get("blurb_zh") or news["blurb"])}</p></article></section>'
+        f'<h5>{htmlutil.esc(news.get("headline_zh") or news["headline"])}</h5><p>{htmlutil.esc(news.get("blurb_zh") or news["blurb"])}</p></article></section>'
     )
 
 
@@ -1189,8 +914,8 @@ def render_card_transactions(groups):
     for g in groups:
         team = g["team"]
         parts.append(
-            f'<div class="tx-group{stripe_class(team["color"])}" style="--team:{safe_color(team["color"])}">'
-            f'<h5>{logo_picture(team["id"], team["abbr"], 18)}{esc(team["name"])}</h5>'
+            f'<div class="tx-group{htmlutil.stripe_class(team["color"])}" style="--team:{htmlutil.safe_color(team["color"])}">'
+            f'<h5>{htmlutil.logo_picture(team["id"], team["abbr"], 18)}{htmlutil.esc(team["name"])}</h5>'
             f'<ul class="tx-list">{render_tx_items(g["items"])}</ul></div>'
         )
     return '<section><h4 class="sub">本場相關人事異動</h4>' + "".join(parts) + "</section>"
@@ -1205,14 +930,14 @@ def _card_open(view):
             tokens.append(LEGACY_ABBR_ALIASES[side["abbr"]])
     teams = "|".join(str(t).replace("|", " ") for t in tokens)
     label = f'{away["name"]}對{home["name"]}'
-    return f'<article class="game" data-teams="{esc(teams)}" aria-label="{esc(label)}">'
+    return f'<article class="game" data-teams="{htmlutil.esc(teams)}" aria-label="{htmlutil.esc(label)}">'
 
 
 def _card_head(view):
     return (
-        f'<div class="game-head"><h3 class="game-title">{esc(view["type_label"])} '
-        f'<span class="num">#{esc(view["game_pk"])}</span></h3>'
-        f'<span class="badge is-{esc(view["status_class"])}">{esc(view["status_text"])}</span></div>'
+        f'<div class="game-head"><h3 class="game-title">{htmlutil.esc(view["type_label"])} '
+        f'<span class="num">#{htmlutil.esc(view["game_pk"])}</span></h3>'
+        f'<span class="badge is-{htmlutil.esc(view["status_class"])}">{htmlutil.esc(view["status_text"])}</span></div>'
     )
 
 
@@ -1221,16 +946,16 @@ def _score_table(view):
     for side in (view["away"], view["home"]):
         tr = '<tr class="is-win">' if side.get("winner") else "<tr>"
         rows.append(
-            f'{tr}<td class="team{stripe_class(side["color"])}" style="--team:{safe_color(side["color"])}">'
-            f'<div class="team-inner">{logo_picture(side["id"], side["abbr"], 24)}'
-            f'<span class="tname"><span class="name">{esc(side["name"])}</span>'
-            f'<span class="record">{esc(side["record"])}</span></span></div></td>'
-            f'<td class="n runs">{esc(side["r"])}</td><td class="n">{esc(side["h"])}</td>'
-            f'<td class="n">{esc(side["e"])}</td></tr>'
+            f'{tr}<td class="team{htmlutil.stripe_class(side["color"])}" style="--team:{htmlutil.safe_color(side["color"])}">'
+            f'<div class="team-inner">{htmlutil.logo_picture(side["id"], side["abbr"], 24)}'
+            f'<span class="tname"><span class="name">{htmlutil.esc(side["name"])}</span>'
+            f'<span class="record">{htmlutil.esc(side["record"])}</span></span></div></td>'
+            f'<td class="n runs">{htmlutil.esc(side["r"])}</td><td class="n">{htmlutil.esc(side["h"])}</td>'
+            f'<td class="n">{htmlutil.esc(side["e"])}</td></tr>'
         )
     caption = f'{view["away"]["name"]}對{view["home"]["name"]}'
     return (
-        f'<table class="score"><caption class="visually-hidden">{esc(caption)}</caption>'
+        f'<table class="score"><caption class="visually-hidden">{htmlutil.esc(caption)}</caption>'
         '<thead><tr><th scope="col">隊伍</th><th scope="col" class="col-r">R</th>'
         '<th scope="col" class="col-h">H</th><th scope="col" class="col-e">E</th></tr></thead>'
         "<tbody>" + "".join(rows) + "</tbody></table>"
@@ -1267,13 +992,13 @@ def render_fallback_card(view):
 def render_postponed_card(view):
     """延賽／取消卡。view 需含 note_title、notice、icon。"""
     def side(s):
-        return f'<span class="side">{logo_picture(s["id"], s["abbr"], 24)}{esc(s["name"])}</span>'
+        return f'<span class="side">{htmlutil.logo_picture(s["id"], s["abbr"], 24)}{htmlutil.esc(s["name"])}</span>'
     return (
         f"{_card_open(view)}\n  {_card_head(view)}\n"
         f'  <div class="game-note">\n    <div class="icon" aria-hidden="true">{view["icon"]}</div>\n'
-        f'    <h3>{esc(view["note_title"])}</h3>\n'
+        f'    <h3>{htmlutil.esc(view["note_title"])}</h3>\n'
         f'    <div class="matchup">{side(view["away"])}<span class="at">@</span>{side(view["home"])}</div>\n'
-        f'    <p>{esc(view["notice"])}</p>\n  </div>\n</article>'
+        f'    <p>{htmlutil.esc(view["notice"])}</p>\n  </div>\n</article>'
     )
 
 
@@ -1401,28 +1126,17 @@ def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list
         summary = render_summary("season", total_games=len(cards_html), postponed=postponed_count)
         games = render_games_section(cards_html)
         transactions = render_transactions_section(tx_list)
-    return render_page({
-        "TITLE": esc(f"MLB 每日戰報 - {date_str}{title_suffix}"),
-        "DATE_LONG": esc(fmt_date_long(date_str)),
-        "SUBTITLE": esc(subtitle),
+    return htmlutil.render_page({
+        "TITLE": htmlutil.esc(f"MLB 每日戰報 - {date_str}{title_suffix}"),
+        "DATE_LONG": htmlutil.esc(timeutil.fmt_date_long(date_str)),
+        "SUBTITLE": htmlutil.esc(subtitle),
         "SUMMARY": summary,
         "SEARCH": render_search() if cards_html else "",
         "NEWS": render_news_section(news, page_type),
         "GAMES": games,
         "TRANSACTIONS": transactions,
-        "GENERATED_AT": esc(get_taipei_now().strftime("%Y-%m-%d %H:%M")),
+        "GENERATED_AT": htmlutil.esc(timeutil.get_taipei_now().strftime("%Y-%m-%d %H:%M")),
     })
-
-
-def write_report(date_str, html_content):
-    year, month, _ = date_str.split("-")
-    output_dir = os.path.join("reports", year, month)
-    os.makedirs(output_dir, exist_ok=True)
-    path = os.path.join(output_dir, f"{date_str}.html")
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(html_content)
-    print(f"Successfully generated report: {path}")
-    return path
 
 
 def generate_report(date_str, games):
@@ -1451,7 +1165,7 @@ def generate_report(date_str, games):
             continue
 
         # 2. 已進行的比賽：先取 boxscore，失敗則簡化卡
-        boxscore = fetch_json(f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore")
+        boxscore = net.fetch_json(f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore")
         if not boxscore:
             print(f"Warning: Could not fetch boxscore for game {game_pk}. Using fallback card.", file=sys.stderr)
             view = build_base_view(game, away_info, home_info)
@@ -1473,7 +1187,7 @@ def generate_report(date_str, games):
     translated = apply_translations(news, game_views, tx_items, team_names)
     cards_html = [c if isinstance(c, str) else render_game_card(c) for c in cards]
 
-    write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list, news))
+    storage.write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list, news))
 
     summary_sentence = f"昨日共進行了 {total_games} 場賽事。"
     if postponed_count > 0:
@@ -1511,7 +1225,7 @@ def generate_offseason_report(date_str):
     tx_list = fetch_daily_transactions(date_str)
     news = fetch_daily_news(date_str)
     translated = apply_translations(news, [], tx_list)
-    write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list, news=news))
+    storage.write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list, news=news))
     meta = {
         "date": date_str,
         "total_games": 0,
@@ -1525,79 +1239,16 @@ def generate_offseason_report(date_str):
         meta["news_count"] = len(news)
     return meta
 
-def load_metadata(metadata_path):
-    """讀取 metadata。不存在 -> 空 dict；讀取/解析失敗 -> 結束程式，不覆寫原檔。"""
-    if not os.path.exists(metadata_path):
-        return {}
-    try:
-        with open(metadata_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, ValueError) as e:
-        print(f"Error: Could not read metadata.json ({e}). Aborting without overwriting.", file=sys.stderr)
-        sys.exit(1)
-    if not isinstance(data, dict):
-        print("Error: metadata.json is not a JSON object. Aborting without overwriting.", file=sys.stderr)
-        sys.exit(1)
-    return data
-
-def save_metadata(metadata_path, metadata_db):
-    """先寫到同目錄暫存檔再 os.replace；失敗則結束程式。"""
-    tmp_path = metadata_path + ".tmp"
-    try:
-        with open(tmp_path, "w", encoding="utf-8") as f:
-            json.dump(metadata_db, f, indent=2, ensure_ascii=False)
-        os.replace(tmp_path, metadata_path)
-    except Exception as e:
-        print(f"Error saving metadata.json: {e}", file=sys.stderr)
-        try:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-        except OSError:
-            pass
-        sys.exit(1)
-
-
-# ---------------------------------------------------------------- 首頁側欄與左欄補充區塊（模組 S2）
-STANDINGS_URL = ("https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season={season}"
-                 "&standingsTypes=regularSeason")
-SCHEDULE_PREVIEW_URL = "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date}&hydrate=probablePitcher,team"
-PEOPLE_STATS_URL = ("https://statsapi.mlb.com/api/v1/people?personIds={ids}"
-                    "&hydrate=stats(group=[pitching],type=[season],season={season})")
-SEASON_URL = "https://statsapi.mlb.com/api/v1/seasons/{year}?sportId=1"
-TRANSACTIONS_RANGE_URL = ("https://statsapi.mlb.com/api/v1/transactions?startDate={start}&endDate={end}"
-                          "&sportId=1")
-
-# 版面順序：美聯東中西、國聯東中西（MLB API 的 division id）
-DIVISION_LAYOUT = (
-    (201, "美聯東區"), (202, "美聯中區"), (200, "美聯西區"),
-    (204, "國聯東區"), (205, "國聯中區"), (203, "國聯西區"),
-)
-NL_DIVISION_IDS = (204, 205, 203)
-# clinchIndicator：w、y、z 取自 MLB 官方戰績頁（mlb.com/standings）Glossary；x 官方頁面未定義，
-# 依通用慣例（取得季後賽資格）對照，API 實際會使用。未知字母只顯示字母，不入圖例。
-CLINCH_LABELS = {"z": "分區冠軍＋聯盟最佳戰績", "y": "分區冠軍", "x": "取得季後賽資格", "w": "外卡"}
-CLINCH_LEGEND = (
-    ("z", "分區冠軍，且取得聯盟最佳戰績"),
-    ("y", "分區冠軍"),
-    ("x", "取得季後賽資格"),
-    ("w", "外卡"),
-)
-WEEKLY_TX_DAYS = 7
-WEEKLY_TX_LIMIT = 8
-WEEKLY_TX_TYPE_CODES = ("TR", "SFA")  # 交易、自由球員簽約
-WEEKLY_TX_EXTENSION_RE = re.compile(r"\bextension\b")  # 只認 extension（含 contract extension），避免 extended spring training 誤入選
-EARLY_MORNING_HOUR = 6  # 台北時間早於此時視為「凌晨」
-
 
 def fetch_standings(season):
     """抓取例行賽戰績。失敗（無回應、結構不符、解析不到任何球隊）回傳 None。
 
     成功回傳 {"season", "divisions": [{"id", "name", "teams": [...]}], "records": {team_id: (W, L)}}。
     分區以 API 的 division id 分組並照 DIVISION_LAYOUT 排序；每區依 divisionRank 排序；隊伍以 team id 對 TEAM_META。"""
-    season = _int_id(season)
+    season = htmlutil._int_id(season)
     if season is None:
         return None
-    data = fetch_json(STANDINGS_URL.format(season=season))
+    data = net.fetch_json(STANDINGS_URL.format(season=season))
     if not isinstance(data, dict) or not isinstance(data.get("records"), list):
         return None
     by_div = {}
@@ -1605,21 +1256,21 @@ def fetch_standings(season):
     for rec in data["records"]:
         if not isinstance(rec, dict):
             continue
-        div_id = _int_id((rec.get("division") or {}).get("id"))
+        div_id = htmlutil._int_id((rec.get("division") or {}).get("id"))
         for tr in rec.get("teamRecords") or []:
             if not isinstance(tr, dict):
                 continue
-            tid = _int_id((tr.get("team") or {}).get("id"))
+            tid = htmlutil._int_id((tr.get("team") or {}).get("id"))
             if div_id is None or tid not in TEAM_META:
                 continue
-            wins, losses = _to_int(tr.get("wins")), _to_int(tr.get("losses"))
+            wins, losses = storage._to_int(tr.get("wins")), storage._to_int(tr.get("losses"))
             pct = tr.get("winningPercentage")
             if not pct:
                 pct = f"{wins / (wins + losses):.3f}".lstrip("0") if wins + losses else ".000"
             last_ten = "–"
             for split in (tr.get("records") or {}).get("splitRecords") or []:
                 if isinstance(split, dict) and split.get("type") == "lastTen":
-                    last_ten = f"{_to_int(split.get('wins'))}-{_to_int(split.get('losses'))}"
+                    last_ten = f"{storage._to_int(split.get('wins'))}-{storage._to_int(split.get('losses'))}"
                     break
             gb = tr.get("gamesBack")
             clinch = tr.get("clinchIndicator")
@@ -1632,7 +1283,7 @@ def fetch_standings(season):
                 "last_ten": last_ten,
                 "streak": str((tr.get("streak") or {}).get("streakCode") or "–"),
                 "clinch": str(clinch) if clinch else "",
-                "rank": _to_int(tr.get("divisionRank"), 99),
+                "rank": storage._to_int(tr.get("divisionRank"), 99),
             })
             records[tid] = (wins, losses)
     divisions = []
@@ -1647,28 +1298,28 @@ def fetch_standings(season):
 
 def render_standings_row(t):
     meta = TEAM_META[t["id"]]
-    stripe = stripe_class(meta["color"]).strip()
+    stripe = htmlutil.stripe_class(meta["color"]).strip()
     clinch = t["clinch"]
-    label = esc(meta["name"])
+    label = htmlutil.esc(meta["name"])
     sup = ""
     if clinch:
         title = CLINCH_LABELS.get(clinch)
         if title:
-            label = f"{label}，{esc(title)}"
-            sup = f'<sup class="st-clinch" title="{esc(title)}" aria-hidden="true">{esc(clinch)}</sup>'
+            label = f"{label}，{htmlutil.esc(title)}"
+            sup = f'<sup class="st-clinch" title="{htmlutil.esc(title)}" aria-hidden="true">{htmlutil.esc(clinch)}</sup>'
         else:
-            label = f"{label}，標記 {esc(clinch)}"
-            sup = f'<sup class="st-clinch" aria-hidden="true">{esc(clinch)}</sup>'
+            label = f"{label}，標記 {htmlutil.esc(clinch)}"
+            sup = f'<sup class="st-clinch" aria-hidden="true">{htmlutil.esc(clinch)}</sup>'
     streak = t["streak"]
     streak_cls = " is-w" if re.fullmatch(r"W\d+", streak) else (" is-l" if re.fullmatch(r"L\d+", streak) else "")
     cls = f' class="{stripe}"' if stripe else ""
     return (
-        f'<tr class="st-row"><th scope="row"{cls} style="--team:{safe_color(meta["color"])}">'
-        f'<a class="st-team" href="teams.html#{esc(meta["abbr"])}" aria-label="{label}" title="{esc(meta["name"])}">'
-        f'{logo_picture(t["id"], meta["abbr"], 18, alt="")}<span>{esc(meta["abbr"])}</span>{sup}</a></th>'
-        f'<td>{t["wins"]}</td><td>{t["losses"]}</td><td class="is-pct">{esc(t["pct"])}</td>'
-        f'<td class="is-sub">{esc(t["gb"])}</td><td class="is-sub">{esc(t["last_ten"])}</td>'
-        f'<td class="st-streak{streak_cls}">{esc(streak)}</td></tr>'
+        f'<tr class="st-row"><th scope="row"{cls} style="--team:{htmlutil.safe_color(meta["color"])}">'
+        f'<a class="st-team" href="teams.html#{htmlutil.esc(meta["abbr"])}" aria-label="{label}" title="{htmlutil.esc(meta["name"])}">'
+        f'{htmlutil.logo_picture(t["id"], meta["abbr"], 18, alt="")}<span>{htmlutil.esc(meta["abbr"])}</span>{sup}</a></th>'
+        f'<td>{t["wins"]}</td><td>{t["losses"]}</td><td class="is-pct">{htmlutil.esc(t["pct"])}</td>'
+        f'<td class="is-sub">{htmlutil.esc(t["gb"])}</td><td class="is-sub">{htmlutil.esc(t["last_ten"])}</td>'
+        f'<td class="st-streak{streak_cls}">{htmlutil.esc(streak)}</td></tr>'
     )
 
 
@@ -1676,7 +1327,7 @@ def render_standings_division(div, league_start):
     div_id = int(div["id"])
     extra = " st-div--league-start" if league_start else ""
     rows = "\n            ".join(render_standings_row(t) for t in div["teams"])
-    name = esc(div["name"])
+    name = htmlutil.esc(div["name"])
     return f"""      <section class="st-div{extra}" aria-labelledby="st-d{div_id}">
         <h3 id="st-d{div_id}">{name}</h3>
         <table class="st-table">
@@ -1697,7 +1348,7 @@ STANDINGS_ICON = ('<svg viewBox="0 0 24 24" width="22" height="22" fill="none" s
 
 def render_standings_aside(standings, season, in_season, now):
     """戰績側邊欄 <aside>。standings 為 None（抓取失敗）時輸出「戰績暫時無法取得」版本。"""
-    season_int = _int_id(season)
+    season_int = htmlutil._int_id(season)
     title = f"{season_int} 例行賽戰績" if in_season else f"{season_int} 例行賽最終戰績"
     if standings:
         meta_line = (f'\n        <p class="st-meta">資料來源 MLB Stats API · 更新於 '
@@ -1709,7 +1360,7 @@ def render_standings_aside(standings, season, in_season, now):
             parts.append(render_standings_division(div, league_start))
         # 圖例只列出當前資料中實際出現的標記
         present = {t["clinch"] for div in divisions for t in div["teams"]}
-        legend_items = "".join(f"<dt>{esc(k)}</dt><dd>{esc(v)}</dd>" for k, v in CLINCH_LEGEND if k in present)
+        legend_items = "".join(f"<dt>{htmlutil.esc(k)}</dt><dd>{htmlutil.esc(v)}</dd>" for k, v in CLINCH_LEGEND if k in present)
         legend = (f'\n      <div class="st-legend">\n        <h3>標記說明</h3>\n        <dl>{legend_items}</dl>\n      </div>'
                   if legend_items else "")
         body = '    <div class="st-body st-data">\n' + "\n".join(parts) + legend + '\n    </div>'
@@ -1728,7 +1379,7 @@ def render_standings_aside(standings, season, in_season, now):
   <div class="st-panel" id="standings-panel">
     <div class="st-head">
       <div>
-        <h2 class="st-title" id="standings-title">{esc(title)}</h2>{meta_line}
+        <h2 class="st-title" id="standings-title">{htmlutil.esc(title)}</h2>{meta_line}
       </div>
       <div class="st-actions">
         <button class="st-btn" type="button" data-st="collapse" aria-expanded="true" aria-controls="standings-panel">收合 <span aria-hidden="true">›</span></button>
@@ -1764,23 +1415,23 @@ def _season_pitching_line(person):
         splits = block.get("splits") or []
         if splits and isinstance(splits[0], dict) and isinstance(splits[0].get("stat"), dict):
             stat = splits[0]["stat"]
-            return _to_int(stat.get("wins")), _to_int(stat.get("losses")), str(stat.get("era") or "-.--")
+            return storage._to_int(stat.get("wins")), storage._to_int(stat.get("losses")), str(stat.get("era") or "-.--")
     return None
 
 
 def fetch_pitcher_stats(person_ids, season):
     """批次查先發投手本季 W-L、ERA：{person_id: (W, L, ERA)}。失敗回傳空 dict（預告改為只顯示姓名）。"""
-    ids = sorted({i for i in (_int_id(x) for x in person_ids) if i is not None})
+    ids = sorted({i for i in (htmlutil._int_id(x) for x in person_ids) if i is not None})
     if not ids:
         return {}
-    data = fetch_json(PEOPLE_STATS_URL.format(ids=",".join(str(i) for i in ids), season=int(season)))
+    data = net.fetch_json(PEOPLE_STATS_URL.format(ids=",".join(str(i) for i in ids), season=int(season)))
     result = {}
     if not isinstance(data, dict):
         return result
     for person in data.get("people") or []:
         if not isinstance(person, dict):
             continue
-        pid = _int_id(person.get("id"))
+        pid = htmlutil._int_id(person.get("id"))
         line = _season_pitching_line(person)
         if pid is not None and line:
             result[pid] = line
@@ -1792,7 +1443,7 @@ def fetch_game_previews(date_str, season, records=None):
 
     records：fetch_standings 的 records（team_id -> (W, L)）；取不到的球隊退回 schedule 內的 leagueRecord，仍無則省略。
     開賽時間轉台北時間；排除延賽／取消；兩隊任一不在 TEAM_META（如明星賽）者略過；依開賽時間排序。"""
-    data = fetch_json(SCHEDULE_PREVIEW_URL.format(date=date_str))
+    data = net.fetch_json(SCHEDULE_PREVIEW_URL.format(date=date_str))
     if not isinstance(data, dict) or not isinstance(data.get("dates"), list):
         return None
     raw_games = []
@@ -1808,7 +1459,7 @@ def fetch_game_previews(date_str, season, records=None):
         sides = {}
         for key in ("away", "home"):
             side = teams.get(key) or {}
-            tid = _int_id((side.get("team") or {}).get("id"))
+            tid = htmlutil._int_id((side.get("team") or {}).get("id"))
             if tid not in TEAM_META:
                 break
             pitcher = side.get("probablePitcher") or {}
@@ -1816,11 +1467,11 @@ def fetch_game_previews(date_str, season, records=None):
             if rec is None:
                 lr = side.get("leagueRecord") or {}
                 if "wins" in lr and "losses" in lr:
-                    rec = (_to_int(lr.get("wins")), _to_int(lr.get("losses")))
+                    rec = (storage._to_int(lr.get("wins")), storage._to_int(lr.get("losses")))
             sides[key] = {
                 "team_id": tid,
                 "record": rec,
-                "pitcher_id": _int_id(pitcher.get("id")),
+                "pitcher_id": htmlutil._int_id(pitcher.get("id")),
                 "pitcher_name": pitcher.get("fullName") or None,
             }
         if len(sides) != 2:
@@ -1833,7 +1484,7 @@ def fetch_game_previews(date_str, season, records=None):
             start = start.replace(tzinfo=timezone.utc)
         start = start.astimezone(TAIPEI_TZ)
         dh = g.get("doubleHeader")
-        number = _to_int(g.get("gameNumber"))
+        number = storage._to_int(g.get("gameNumber"))
         if dh in ("Y", "S"):
             note = f"雙重賽 {number}/2" if number in (1, 2) else "雙重賽"
         else:
@@ -1841,7 +1492,7 @@ def fetch_game_previews(date_str, season, records=None):
         games.append({
             "start": start,
             "tbd": bool((g.get("status") or {}).get("startTimeTBD")),
-            "pk": _to_int(g.get("gamePk")),
+            "pk": storage._to_int(g.get("gamePk")),
             "note": note,
             "away": sides["away"],
             "home": sides["home"],
@@ -1868,37 +1519,30 @@ def preview_range_text(games):
 
 def _render_preview_side(side, label):
     meta = TEAM_META[side["team_id"]]
-    cls = f"gp-side{stripe_class(meta['color'])}"
+    cls = f"gp-side{htmlutil.stripe_class(meta['color'])}"
     rec = f'<span class="gp-rec">{side["record"][0]}-{side["record"][1]}</span>' if side["record"] else ""
     name = side["pitcher_name"]
     if not name:
         pitch = '<span class="gp-tbd">未定</span>'
     else:
-        pitch = player_link(side["pitcher_id"], name)
+        pitch = htmlutil.player_link(side["pitcher_id"], name)
         stat = side.get("stat")
         if stat:
-            pitch += f' <span class="gp-stat">({stat[0]}-{stat[1]}, {esc(stat[2])})</span>'
+            pitch += f' <span class="gp-stat">({stat[0]}-{stat[1]}, {htmlutil.esc(stat[2])})</span>'
     return (
-        f'<span class="visually-hidden">{label}</span><div class="{cls}" style="--team:{safe_color(meta["color"])}">'
-        f'<span class="gp-team">{logo_picture(side["team_id"], meta["abbr"], 20, alt="")}'
-        f'<span class="gp-name">{esc(meta["name"])}</span>{rec}</span>'
+        f'<span class="visually-hidden">{label}</span><div class="{cls}" style="--team:{htmlutil.safe_color(meta["color"])}">'
+        f'<span class="gp-team">{htmlutil.logo_picture(side["team_id"], meta["abbr"], 20, alt="")}'
+        f'<span class="gp-name">{htmlutil.esc(meta["name"])}</span>{rec}</span>'
         f'<span class="gp-pitch">{pitch}</span></div>'
     )
-
-
-def _section_message(heading_id, heading, message, status=False):
-    role = ' role="status"' if status else ""
-    return (f'  <section class="section" aria-labelledby="{heading_id}">\n'
-            f'    <div class="section-head"><h2 id="{heading_id}">{heading}</h2></div>\n'
-            f'    <p class="section-empty"{role}>{message}</p>\n  </section>')
 
 
 def render_game_previews(games):
     """今日賽事預告區塊。games 為 None -> 錯誤文字；[] -> 今日無比賽。"""
     if games is None:
-        return _section_message("gp-h", "今日賽事預告", "賽程暫時無法取得", True)
+        return htmlutil._section_message("gp-h", "今日賽事預告", "賽程暫時無法取得", True)
     if not games:
-        return _section_message("gp-h", "今日賽事預告", "今日無比賽")
+        return htmlutil._section_message("gp-h", "今日賽事預告", "今日無比賽")
     items = []
     for g in games:
         if g["tbd"]:
@@ -1906,12 +1550,12 @@ def render_game_previews(games):
         else:
             t = f"{g['start']:%H:%M}"
             time_html = f'<time class="gp-time" datetime="{t}">{t}</time>'
-        note = f'<span class="gp-note">{esc(g["note"])}</span>' if g["note"] else ""
+        note = f'<span class="gp-note">{htmlutil.esc(g["note"])}</span>' if g["note"] else ""
         items.append(
             f'      <li class="gp-game"><div class="gp-when">{time_html}{note}</div>'
             f'<div class="gp-teams">{_render_preview_side(g["away"], "客隊")}{_render_preview_side(g["home"], "主隊")}</div></li>'
         )
-    count = f'<span class="count">{esc(preview_range_text(games))}</span>'
+    count = f'<span class="count">{htmlutil.esc(preview_range_text(games))}</span>'
     return ('  <section class="section" aria-labelledby="gp-h">\n'
             f'    <div class="section-head"><h2 id="gp-h">今日賽事預告</h2>{count}</div>\n'
             '    <ol class="gp-list">\n' + "\n".join(items) + '\n    </ol>\n  </section>')
@@ -1924,16 +1568,16 @@ def fetch_countdown(today, season_data=_UNSET):
     今天已過當年 postSeasonEndDate 取 year+1，否則取當年。
     season_data：呼叫端已取得的 /seasons/{today.year} 回應（避免重複請求）；省略時自行請求。"""
     try:
-        cur = fetch_json(SEASON_URL.format(year=today.year)) if season_data is _UNSET else season_data
+        cur = net.fetch_json(SEASON_URL.format(year=today.year)) if season_data is _UNSET else season_data
         info = cur["seasons"][0]
-        end = _parse_iso_date(info.get("postSeasonEndDate")) or _parse_iso_date(info.get("seasonEndDate"))
+        end = timeutil._parse_iso_date(info.get("postSeasonEndDate")) or timeutil._parse_iso_date(info.get("seasonEndDate"))
         if end is None:
             return None
         year = today.year + 1 if today > end else today.year
-        nxt = cur if year == today.year else fetch_json(SEASON_URL.format(year=year))
+        nxt = cur if year == today.year else net.fetch_json(SEASON_URL.format(year=year))
         info = nxt["seasons"][0]
-        spring = _parse_iso_date(info.get("springStartDate"))
-        opening = _parse_iso_date(info.get("regularSeasonStartDate"))
+        spring = timeutil._parse_iso_date(info.get("springStartDate"))
+        opening = timeutil._parse_iso_date(info.get("regularSeasonStartDate"))
     except (TypeError, KeyError, IndexError, AttributeError):
         return None
     if spring is None or opening is None:
@@ -1982,7 +1626,7 @@ def fetch_weekly_transactions(today):
     """近 7 天（today-7 至 today-1，台北日期）大聯盟層級異動精選；抓取失敗回傳 None。"""
     start = (today - timedelta(days=WEEKLY_TX_DAYS)).isoformat()
     end = (today - timedelta(days=1)).isoformat()
-    data = fetch_json(TRANSACTIONS_RANGE_URL.format(start=start, end=end))
+    data = net.fetch_json(TRANSACTIONS_RANGE_URL.format(start=start, end=end))
     if not isinstance(data, dict):
         return None
     transactions = data.get("transactions")
@@ -1993,21 +1637,21 @@ def fetch_weekly_transactions(today):
 
 def render_weekly_transactions(tx_list):
     if tx_list is None:
-        return _section_message("wk-h", "本週人事異動精選", "人事異動暫時無法取得", True)
+        return htmlutil._section_message("wk-h", "本週人事異動精選", "人事異動暫時無法取得", True)
     if not tx_list:
-        return _section_message("wk-h", "本週人事異動精選", "本週無重大人事異動")
+        return htmlutil._section_message("wk-h", "本週人事異動精選", "本週無重大人事異動")
     items = []
     for tx in tx_list:
-        team_id = next((t for t in (_int_id(tx.get("to_team_id")), _int_id(tx.get("from_team_id")))
+        team_id = next((t for t in (htmlutil._int_id(tx.get("to_team_id")), htmlutil._int_id(tx.get("from_team_id")))
                         if t in TEAM_META), None)
         style = cls = team_html = ""
         if team_id is not None:
             meta = TEAM_META[team_id]
-            cls = stripe_class(meta["color"])
-            style = f' style="--team:{safe_color(meta["color"])}"'
-            team_html = f'{logo_picture(team_id, meta["abbr"], 18, alt="")}<span class="wk-team">{esc(meta["name"])}</span>'
+            cls = htmlutil.stripe_class(meta["color"])
+            style = f' style="--team:{htmlutil.safe_color(meta["color"])}"'
+            team_html = f'{htmlutil.logo_picture(team_id, meta["abbr"], 18, alt="")}<span class="wk-team">{htmlutil.esc(meta["name"])}</span>'
         date_str = str(tx.get("date") or "")
-        d = _parse_iso_date(date_str) if DATE_KEY_RE.match(date_str) else None
+        d = timeutil._parse_iso_date(date_str) if DATE_KEY_RE.match(date_str) else None
         date_html = f'<time class="num" datetime="{d.isoformat()}">{d.month}/{d.day}</time>' if d else ""
         text = render_tx_description(_tx_display_text(tx), persons=_tx_persons(tx))
         items.append(
@@ -2045,7 +1689,7 @@ def translate_weekly_transactions(weekly):
     if not pending:
         print("Translation: 本週人事異動沿用戰報譯文")
         return
-    if LAST_POST["retryable"]:
+    if net.LAST_POST["retryable"]:
         print("Translation: 戰報翻譯已因暫時性錯誤失敗，本週人事異動直接使用原文（不再重試）")
         return
     apply_translations(None, [], pending)
@@ -2053,7 +1697,7 @@ def translate_weekly_transactions(weekly):
 
 def fallback_index_extras(now=None):
     """build_index_extras 整體失敗時的最低限度輸出：戰績錯誤版側欄與手機按鈕（避免桌機右側空欄）。"""
-    now = now or get_taipei_now()
+    now = now or timeutil.get_taipei_now()
     ctx = _fallback_roster_context(now.date())
     return {
         "UPCOMING": "",
@@ -2065,10 +1709,10 @@ def fallback_index_extras(now=None):
 def build_index_extras(now=None):
     """抓取並渲染首頁的戰績側邊欄、今日預告／休賽季區塊，回傳 render_index 用的 slots dict。
     各資料來源各自失敗隔離。賽季判斷沿用 resolve_roster_context（rosterType == "active" 視為賽季中）。"""
-    now = now or get_taipei_now()
+    now = now or timeutil.get_taipei_now()
     today = now.date()
     # 當年 seasons 回應只請求一次，賽季判斷與開季倒數共用
-    season_data = _safe_call("賽季日期", fetch_json, SEASON_URL.format(year=today.year))
+    season_data = _safe_call("賽季日期", net.fetch_json, SEASON_URL.format(year=today.year))
     ctx = _safe_call("賽季判斷", resolve_roster_context, today, season_data)
     if not ctx:
         ctx = _fallback_roster_context(today)
@@ -2095,67 +1739,48 @@ def build_index_extras(now=None):
     return {"UPCOMING": upcoming, "STANDINGS": aside, "STANDINGS_UI": render_standings_fab()}
 
 
-# ---------------------------------------------------------------- 首頁
-DATE_KEY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-
-
-def _to_int(value, default=0):
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return default
-
-
-def entry_type(entry):
-    """metadata 項目的頁面類型；舊資料缺 type 時以 total_games 推斷。"""
-    t = entry.get("type")
-    if t in ("season", "offseason"):
-        return t
-    return "season" if _to_int(entry.get("total_games")) > 0 else "offseason"
-
-
 def _offseason_counts(entry):
     """休賽季項目的 [(標籤, 文字)]；缺欄位則省略該數字。"""
     out = []
     if "news_count" in entry:
-        out.append(("新聞", f"{_to_int(entry['news_count'])} 則"))
+        out.append(("新聞", f"{storage._to_int(entry['news_count'])} 則"))
     if "transactions_count" in entry:
-        out.append(("人事異動", f"{_to_int(entry['transactions_count'])} 筆"))
+        out.append(("人事異動", f"{storage._to_int(entry['transactions_count'])} 筆"))
     return out
 
 
 def render_latest_card(date_str, entry):
-    kind = entry_type(entry)
-    date_main, _, weekday = fmt_date_long(date_str).partition("（")
+    kind = storage.entry_type(entry)
+    date_main, _, weekday = timeutil.fmt_date_long(date_str).partition("（")
     wk = f"（{weekday}" if weekday else ""
     if kind == "offseason":
         eyebrow = "休賽季快報"
         stats = [("", label, text) for label, text in _offseason_counts(entry)]
     else:
         eyebrow = "戰報"
-        postponed = _to_int(entry.get("postponed"))
+        postponed = storage._to_int(entry.get("postponed"))
         stats = [
-            ("", "總場數", str(_to_int(entry.get("total_games")))),
+            ("", "總場數", str(storage._to_int(entry.get("total_games")))),
             (' class="is-alert"' if postponed else "", "延賽", str(postponed)),
         ]
     stat_html = ""
     if stats:
         stat_html = '\n      <dl class="stat-row">' + "".join(
-            f"<div{cls}><dt>{esc(label)}</dt><dd>{esc(text)}</dd></div>" for cls, label, text in stats
+            f"<div{cls}><dt>{htmlutil.esc(label)}</dt><dd>{htmlutil.esc(text)}</dd></div>" for cls, label, text in stats
         ) + "</dl>"
     return f"""  <article class="latest" aria-labelledby="latest-h">
     <div>
       <p class="eyebrow">最新一期<span class="sep" aria-hidden="true">/</span>{eyebrow}</p>
-      <h2 id="latest-h"><time datetime="{esc(date_str)}">{esc(date_main)}</time><span class="wk">{esc(wk)}</span></h2>
-      <p class="summary">{esc(entry.get("summary", ""))}</p>{stat_html}
+      <h2 id="latest-h"><time datetime="{htmlutil.esc(date_str)}">{htmlutil.esc(date_main)}</time><span class="wk">{htmlutil.esc(wk)}</span></h2>
+      <p class="summary">{htmlutil.esc(entry.get("summary", ""))}</p>{stat_html}
     </div>
-    <a class="btn" href="{esc(report_href(date_str))}">閱讀完整戰報 →</a>
+    <a class="btn" href="{htmlutil.esc(timeutil.report_href(date_str))}">閱讀完整戰報 →</a>
   </article>"""
 
 
 def render_recent_item(date_str, entry):
-    kind = entry_type(entry)
-    date_main, _, weekday = fmt_date_long(date_str).partition("（")
+    kind = storage.entry_type(entry)
+    date_main, _, weekday = timeutil.fmt_date_long(date_str).partition("（")
     wk = f"（{weekday}" if weekday else ""
     summary = str(entry.get("summary", ""))
     if kind == "offseason":
@@ -2164,11 +1789,11 @@ def render_recent_item(date_str, entry):
         if counts:
             summary = f"{summary}（{counts}）" if summary else counts
     else:
-        label, label_cls = f"{_to_int(entry.get('total_games'))} 場", "k"
+        label, label_cls = f"{storage._to_int(entry.get('total_games'))} 場", "k"
     return (
-        f'      <li><a class="issue" href="{esc(report_href(date_str))}">'
-        f'<span class="d">{esc(date_str)}<span class="wk">{esc(wk)}</span></span>'
-        f'<span class="{label_cls}">{esc(label)}</span><span class="s">{esc(summary)}</span></a></li>'
+        f'      <li><a class="issue" href="{htmlutil.esc(timeutil.report_href(date_str))}">'
+        f'<span class="d">{htmlutil.esc(date_str)}<span class="wk">{htmlutil.esc(wk)}</span></span>'
+        f'<span class="{label_cls}">{htmlutil.esc(label)}</span><span class="s">{htmlutil.esc(summary)}</span></a></li>'
     )
 
 
@@ -2193,7 +1818,7 @@ def render_index(metadata, extras=None):
         reverse=True,
     )
     if not dates:
-        return fill_slots(load_template("index.html"), {
+        return htmlutil.fill_slots(htmlutil.load_template("index.html"), {
             **side_slots,
             "LATEST": '  <p class="section-empty">尚無戰報。</p>',
             "RECENT": "",
@@ -2211,14 +1836,14 @@ def render_index(metadata, extras=None):
     <div class="section-head"><h2 id="recent-h">近期</h2><span class="count">{count}</span></div>{ol}
     <p class="more"><a class="btn is-quiet" href="archive.html">查看全部歷史 →</a></p>
   </section>"""
-    return fill_slots(load_template("index.html"), {**side_slots, "LATEST": latest, "RECENT": recent})
+    return htmlutil.fill_slots(htmlutil.load_template("index.html"), {**side_slots, "LATEST": latest, "RECENT": recent})
 
 
 def update_index_page(new_metadata):
     metadata_path = "reports/metadata.json"
-    metadata_db = load_metadata(metadata_path)
+    metadata_db = storage.load_metadata(metadata_path)
     metadata_db[new_metadata["date"]] = new_metadata
-    save_metadata(metadata_path, metadata_db)
+    storage.save_metadata(metadata_path, metadata_db)
 
     # 戰績側欄、今日預告／休賽季區塊：任何失敗都不得影響戰報與 metadata（各區塊已各自隔離，這裡再兜底）
     extras = _safe_call("首頁補充區塊", build_index_extras) or _safe_call("首頁側欄錯誤版", fallback_index_extras)
@@ -2230,8 +1855,8 @@ def update_index_page(new_metadata):
 
 def should_notify(entry):
     """休賽季快報在新聞與人事異動皆為 0（缺欄位視為 0）時不發通知；其餘照常。"""
-    if entry_type(entry) == "offseason":
-        return _to_int(entry.get("news_count")) > 0 or _to_int(entry.get("transactions_count")) > 0
+    if storage.entry_type(entry) == "offseason":
+        return storage._to_int(entry.get("news_count")) > 0 or storage._to_int(entry.get("transactions_count")) > 0
     return True
 
 
@@ -2251,18 +1876,18 @@ def send_discord_notification(new_meta):
     parts = date_str.split('-')
     report_url = f"https://haolun588.github.io/MLB-daily/reports/{parts[0]}/{parts[1]}/{date_str}.html"
     
-    if entry_type(new_meta) == "offseason":
+    if storage.entry_type(new_meta) == "offseason":
         parts_text = []
         if "news_count" in new_meta:
-            parts_text.append(f"新聞 {_to_int(new_meta['news_count'])} 則")
+            parts_text.append(f"新聞 {storage._to_int(new_meta['news_count'])} 則")
         if "transactions_count" in new_meta:
-            parts_text.append(f"人事異動 {_to_int(new_meta['transactions_count'])} 筆")
+            parts_text.append(f"人事異動 {storage._to_int(new_meta['transactions_count'])} 筆")
         description = "休賽季快報：" + "、".join(parts_text) if parts_text else "休賽季快報已生成。"
         fields = []
     else:
         description = "昨日焦點戰報與最新賽況已生成，點擊下方連結即可瀏覽完整內容！"
         if "news_count" in new_meta:
-            description += f"\n新聞 {_to_int(new_meta['news_count'])} 則"
+            description += f"\n新聞 {storage._to_int(new_meta['news_count'])} 則"
         fields = [
             {
                 "name": "📊 賽事統計",
@@ -2305,18 +1930,6 @@ def send_discord_notification(new_meta):
         print(f"Error sending Discord notification: {e}", file=sys.stderr)
 
 
-# ---------------------------------------------------------------- 球隊名單（--rosters）
-ROSTER_DIR = os.path.join("data", "teams")
-ROSTER_FETCH_INTERVAL = 0.5
-
-
-def _parse_iso_date(value):
-    try:
-        return datetime.strptime(str(value)[:10], "%Y-%m-%d").date()
-    except (ValueError, TypeError):
-        return None
-
-
 def resolve_roster_context(today, season_data=_UNSET):
     """依台北日期 today（date）判斷名單類型與數據賽季。
 
@@ -2326,11 +1939,11 @@ def resolve_roster_context(today, season_data=_UNSET):
     """
     year = today.year
     start = end = None
-    data = fetch_json(f"https://statsapi.mlb.com/api/v1/seasons/{year}?sportId=1") if season_data is _UNSET else season_data
+    data = net.fetch_json(f"https://statsapi.mlb.com/api/v1/seasons/{year}?sportId=1") if season_data is _UNSET else season_data
     try:
         info = data["seasons"][0]
-        start = _parse_iso_date(info.get("regularSeasonStartDate"))
-        end = _parse_iso_date(info.get("postSeasonEndDate")) or _parse_iso_date(info.get("seasonEndDate"))
+        start = timeutil._parse_iso_date(info.get("regularSeasonStartDate"))
+        end = timeutil._parse_iso_date(info.get("postSeasonEndDate")) or timeutil._parse_iso_date(info.get("seasonEndDate"))
     except (TypeError, KeyError, IndexError, AttributeError):
         pass
     if start is None or end is None:
@@ -2484,28 +2097,12 @@ def build_team_players(roster_data):
     return [p for p in players if p]
 
 
-def write_json_atomic(path, data):
-    """先寫暫存檔再 os.replace。"""
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    tmp_path = path + ".tmp"
-    try:
-        with open(tmp_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
-        os.replace(tmp_path, path)
-    finally:
-        if os.path.exists(tmp_path):
-            try:
-                os.remove(tmp_path)
-            except OSError:
-                pass
-
-
 def fetch_rosters(today):
     """抓 30 隊名單與數據，寫 data/teams/{id}.json 與 index.json。回傳成功隊數。"""
     ctx = resolve_roster_context(today)
     roster_type, season, roster_season = ctx["rosterType"], ctx["season"], ctx["rosterSeason"]
     print(f"Roster context: rosterType={roster_type}, season={season}, rosterSeason={roster_season}")
-    now_iso = get_taipei_now().isoformat(timespec="seconds")
+    now_iso = timeutil.get_taipei_now().isoformat(timespec="seconds")
     teams_index = []
     ok_count = 0
     for i, (tid, meta) in enumerate(sorted(TEAM_META.items(), key=lambda kv: kv[1]["abbr"])):
@@ -2515,14 +2112,14 @@ def fetch_rosters(today):
                  "league": meta["league"], "division": meta["division"], "ok": False}
         players = None
         try:
-            players = build_team_players(fetch_json(roster_url(tid, roster_type, roster_season, season)))
+            players = build_team_players(net.fetch_json(roster_url(tid, roster_type, roster_season, season)))
         except Exception as e:
             print(f"Warning: {meta['abbr']} 名單處理失敗：{e}", file=sys.stderr)
         if players is None:
             print(f"Warning: {meta['abbr']} 名單抓取失敗，保留舊檔（若有）。", file=sys.stderr)
         else:
             try:
-                write_json_atomic(os.path.join(ROSTER_DIR, f"{tid}.json"), {
+                storage.write_json_atomic(os.path.join(ROSTER_DIR, f"{tid}.json"), {
                     "meta": {"id": tid, "abbr": meta["abbr"], "name": meta["name"], "rosterType": roster_type,
                              "season": season, "updatedAt": now_iso},
                     "players": players,
@@ -2533,7 +2130,7 @@ def fetch_rosters(today):
             except OSError as e:
                 print(f"Warning: {meta['abbr']} 寫檔失敗：{e}", file=sys.stderr)
         teams_index.append(entry)
-    write_json_atomic(os.path.join(ROSTER_DIR, "index.json"), {
+    storage.write_json_atomic(os.path.join(ROSTER_DIR, "index.json"), {
         "updatedAt": now_iso, "rosterType": roster_type, "season": season, "teams": teams_index,
     })
     print(f"Rosters done: {ok_count}/{len(TEAM_META)} teams updated.")
@@ -2570,7 +2167,7 @@ def main():
                 print("Error: Date format must be YYYY-MM-DD", file=sys.stderr)
                 sys.exit(1)
         else:
-            today = get_taipei_now().date()
+            today = timeutil.get_taipei_now().date()
         sys.exit(0 if fetch_rosters(today) > 0 else 1)
 
     # 1. Resolve date
@@ -2583,13 +2180,13 @@ def main():
             print("Error: Date format must be YYYY-MM-DD", file=sys.stderr)
             sys.exit(1)
     else:
-        date_str = get_yesterday_str()
+        date_str = timeutil.get_yesterday_str()
         
     print(f"Target Date: {date_str}")
 
     # --notify-only: 僅依既有 metadata 發送通知，不呼叫 API、不寫檔
     if args.notify_only:
-        entry = load_metadata("reports/metadata.json").get(date_str)
+        entry = storage.load_metadata("reports/metadata.json").get(date_str)
         if not entry:
             print(f"Error: reports/metadata.json 中找不到 {date_str} 的資料，無法發送通知。", file=sys.stderr)
             sys.exit(1)
@@ -2611,7 +2208,7 @@ def main():
                 finalized, fetched_games = check_all_games_finalized(date_str)
                 games = fetched_games
                 have_games = True
-            except ApiError as e:
+            except net.ApiError as e:
                 print(f"Warning: {e}. Treating as not finalized.", file=sys.stderr)
                 finalized = False
             if finalized:
@@ -2628,7 +2225,7 @@ def main():
     else:
         try:
             finalized, games = check_all_games_finalized(date_str)
-        except ApiError as e:
+        except net.ApiError as e:
             print(f"Error: {e}. Aborting without generating any output.", file=sys.stderr)
             sys.exit(1)
         if not finalized:
