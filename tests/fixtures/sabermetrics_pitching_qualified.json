@@ -1,0 +1,283 @@
+{
+ "stats": [
+  {
+   "type": {
+    "displayName": "sabermetrics"
+   },
+   "splits": [
+    {
+     "stat": {
+      "fip": null
+     },
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "player": {
+      "id": 999003,
+      "fullName": "Null Fip"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "fip": "-.--"
+     },
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "player": {
+      "id": 999002,
+      "fullName": "Bad Fip"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "war": 1.0
+     },
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "player": {
+      "id": 999001,
+      "fullName": "No Fip"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 3.33211
+     },
+     "team": {
+      "id": 119,
+      "name": "Los Angeles Dodgers"
+     },
+     "player": {
+      "id": 808967,
+      "fullName": "Yoshinobu Yamamoto"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 3.32912
+     },
+     "team": {
+      "id": 134,
+      "name": "Pittsburgh Pirates"
+     },
+     "player": {
+      "id": 694973,
+      "fullName": "Paul Skenes"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 3.25292
+     },
+     "team": {
+      "id": 120,
+      "name": "Washington Nationals"
+     },
+     "player": {
+      "id": 676917,
+      "fullName": "Cade Cavalli"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 3.11197
+     },
+     "team": {
+      "id": 136,
+      "name": "Seattle Mariners"
+     },
+     "player": {
+      "id": 693433,
+      "fullName": "Bryan Woo"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 3.11197
+     },
+     "team": {
+      "id": 140,
+      "name": "Texas Rangers"
+     },
+     "player": {
+      "id": 594798,
+      "fullName": "Jacob deGrom"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 3.06748
+     },
+     "team": {
+      "id": 114,
+      "name": "Cleveland Guardians"
+     },
+     "player": {
+      "id": 800048,
+      "fullName": "Parker Messick"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 3.01319
+     },
+     "team": {
+      "id": 108,
+      "name": "Los Angeles Angels"
+     },
+     "player": {
+      "id": 672282,
+      "fullName": "Reid Detmers"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 2.81479
+     },
+     "team": {
+      "id": 139,
+      "name": "Tampa Bay Rays"
+     },
+     "player": {
+      "id": 656876,
+      "fullName": "Drew Rasmussen"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 2.80016
+     },
+     "team": {
+      "id": 143,
+      "name": "Philadelphia Phillies"
+     },
+     "player": {
+      "id": 650911,
+      "fullName": "Cristopher Sánchez"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 2.77686
+     },
+     "team": {
+      "id": 143,
+      "name": "Philadelphia Phillies"
+     },
+     "player": {
+      "id": 666200,
+      "fullName": "Jesús Luzardo"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 2.55751
+     },
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "player": {
+      "id": 693645,
+      "fullName": "Cam Schlittler"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 2.5553
+     },
+     "team": {
+      "id": 141,
+      "name": "Toronto Blue Jays"
+     },
+     "player": {
+      "id": 656302,
+      "fullName": "Dylan Cease"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 2.2882
+     },
+     "team": {
+      "id": 144,
+      "name": "Atlanta Braves"
+     },
+     "player": {
+      "id": 519242,
+      "fullName": "Chris Sale"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "fip": 2.16647
+     },
+     "team": {
+      "id": 158,
+      "name": "Milwaukee Brewers"
+     },
+     "player": {
+      "id": 694819,
+      "fullName": "Jacob Misiorowski"
+     },
+     "league": {
+      "name": "National League"
+     }
+    }
+   ]
+  }
+ ]
+}

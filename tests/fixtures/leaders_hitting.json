@@ -1,0 +1,948 @@
+{
+ "leagueLeaders": [
+  {
+   "leaderCategory": "stolenBases",
+   "season": "2026",
+   "gameType": {
+    "id": "R",
+    "description": "Regular Season"
+   },
+   "leaders": [
+    {
+     "rank": 1,
+     "value": "49",
+     "team": {
+      "id": 120,
+      "name": "Washington Nationals"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 683083,
+      "fullName": "Nasim Nuñez"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 2,
+     "value": "46",
+     "team": {
+      "id": 139,
+      "name": "Tampa Bay Rays"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 802415,
+      "fullName": "Chandler Simpson"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 3,
+     "value": "45",
+     "team": {
+      "id": 118,
+      "name": "Kansas City Royals"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 677951,
+      "fullName": "Bobby Witt Jr."
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 4,
+     "value": "41",
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 665862,
+      "fullName": "Jazz Chisholm Jr."
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 4,
+     "value": "41",
+     "team": {
+      "id": 112,
+      "name": "Chicago Cubs"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 691718,
+      "fullName": "Pete Crow-Armstrong"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 6,
+     "value": "38",
+     "team": {
+      "id": 135,
+      "name": "San Diego Padres"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 665487,
+      "fullName": "Fernando Tatis Jr."
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 7,
+     "value": "37",
+     "team": {
+      "id": 114,
+      "name": "Cleveland Guardians"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 608070,
+      "fullName": "José Ramírez"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 8,
+     "value": "34",
+     "team": {
+      "id": 120,
+      "name": "Washington Nationals"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 682928,
+      "fullName": "CJ Abrams"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 8,
+     "value": "34",
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 676609,
+      "fullName": "José Caballero"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 8,
+     "value": "34",
+     "team": {
+      "id": 146,
+      "name": "Miami Marlins"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 672640,
+      "fullName": "Otto Lopez"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 8,
+     "value": "34",
+     "team": {
+      "id": 146,
+      "name": "Miami Marlins"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 665923,
+      "fullName": "Esteury Ruiz"
+     },
+     "season": "2026"
+    }
+   ],
+   "statGroup": "hitting",
+   "totalSplits": 449
+  },
+  {
+   "leaderCategory": "homeRuns",
+   "season": "2026",
+   "gameType": {
+    "id": "R",
+    "description": "Regular Season"
+   },
+   "leaders": [
+    {
+     "rank": 1,
+     "value": "45",
+     "team": {
+      "id": 112,
+      "name": "Chicago Cubs"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 691718,
+      "fullName": "Pete Crow-Armstrong"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 1,
+     "value": "45",
+     "team": {
+      "id": 143,
+      "name": "Philadelphia Phillies"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 656941,
+      "fullName": "Kyle Schwarber"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 3,
+     "value": "43",
+     "team": {
+      "id": 110,
+      "name": "Baltimore Orioles"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 624413,
+      "fullName": "Pete Alonso"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 4,
+     "value": "42",
+     "team": {
+      "id": 117,
+      "name": "Houston Astros"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 670541,
+      "fullName": "Yordan Alvarez"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 4,
+     "value": "42",
+     "team": {
+      "id": 139,
+      "name": "Tampa Bay Rays"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 691406,
+      "fullName": "Junior Caminero"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 6,
+     "value": "41",
+     "team": {
+      "id": 115,
+      "name": "Colorado Rockies"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 696100,
+      "fullName": "Hunter Goodman"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 6,
+     "value": "41",
+     "team": {
+      "id": 144,
+      "name": "Atlanta Braves"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 621566,
+      "fullName": "Matt Olson"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 6,
+     "value": "41",
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 700250,
+      "fullName": "Ben Rice"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 9,
+     "value": "37",
+     "team": {
+      "id": 137,
+      "name": "San Francisco Giants"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 646240,
+      "fullName": "Rafael Devers"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 10,
+     "value": "35",
+     "team": {
+      "id": 134,
+      "name": "Pittsburgh Pirates"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 664040,
+      "fullName": "Brandon Lowe"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 10,
+     "value": "35",
+     "team": {
+      "id": 145,
+      "name": "Chicago White Sox"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 808959,
+      "fullName": "Munetaka Murakami"
+     },
+     "season": "2026"
+    }
+   ],
+   "statGroup": "hitting",
+   "totalSplits": 538
+  },
+  {
+   "leaderCategory": "battingAverage",
+   "season": "2026",
+   "gameType": {
+    "id": "R",
+    "description": "Regular Season"
+   },
+   "leaders": [
+    {
+     "rank": 1,
+     "value": ".316",
+     "team": {
+      "id": 117,
+      "name": "Houston Astros"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 670541,
+      "fullName": "Yordan Alvarez"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 2,
+     "value": ".311",
+     "team": {
+      "id": 109,
+      "name": "Arizona Diamondbacks"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 672515,
+      "fullName": "Gabriel Moreno"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 3,
+     "value": ".310",
+     "team": {
+      "id": 143,
+      "name": "Philadelphia Phillies"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 650333,
+      "fullName": "Luis Arraez"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 4,
+     "value": ".306",
+     "team": {
+      "id": 139,
+      "name": "Tampa Bay Rays"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 802415,
+      "fullName": "Chandler Simpson"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 5,
+     "value": ".305",
+     "team": {
+      "id": 146,
+      "name": "Miami Marlins"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 672640,
+      "fullName": "Otto Lopez"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 6,
+     "value": ".303",
+     "team": {
+      "id": 134,
+      "name": "Pittsburgh Pirates"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 693304,
+      "fullName": "Nick Gonzales"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 7,
+     "value": ".300",
+     "team": {
+      "id": 115,
+      "name": "Colorado Rockies"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 681198,
+      "fullName": "TJ Rumfield"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 8,
+     "value": ".294",
+     "team": {
+      "id": 144,
+      "name": "Atlanta Braves"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 671739,
+      "fullName": "Michael Harris II"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 9,
+     "value": ".293",
+     "team": {
+      "id": 139,
+      "name": "Tampa Bay Rays"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 650490,
+      "fullName": "Yandy Díaz"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 10,
+     "value": ".291",
+     "team": {
+      "id": 158,
+      "name": "Milwaukee Brewers"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 694192,
+      "fullName": "Jackson Chourio"
+     },
+     "season": "2026"
+    }
+   ],
+   "statGroup": "hitting",
+   "totalSplits": 135
+  },
+  {
+   "leaderCategory": "onBasePercentage",
+   "season": "2026",
+   "gameType": {
+    "id": "R",
+    "description": "Regular Season"
+   },
+   "leaders": [
+    {
+     "rank": 1,
+     "value": ".432",
+     "team": {
+      "id": 117,
+      "name": "Houston Astros"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 670541,
+      "fullName": "Yordan Alvarez"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 2,
+     "value": ".390",
+     "team": {
+      "id": 115,
+      "name": "Colorado Rockies"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 681198,
+      "fullName": "TJ Rumfield"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 3,
+     "value": ".389",
+     "team": {
+      "id": 158,
+      "name": "Milwaukee Brewers"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 641343,
+      "fullName": "Jake Bauers"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 4,
+     "value": ".388",
+     "team": {
+      "id": 120,
+      "name": "Washington Nationals"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 695578,
+      "fullName": "James Wood"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 5,
+     "value": ".388",
+     "team": {
+      "id": 109,
+      "name": "Arizona Diamondbacks"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 672515,
+      "fullName": "Gabriel Moreno"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 6,
+     "value": ".386",
+     "team": {
+      "id": 111,
+      "name": "Boston Red Sox"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 575929,
+      "fullName": "Willson Contreras"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 7,
+     "value": ".382",
+     "team": {
+      "id": 108,
+      "name": "Los Angeles Angels"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 545361,
+      "fullName": "Mike Trout"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 8,
+     "value": ".382",
+     "team": {
+      "id": 114,
+      "name": "Cleveland Guardians"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 680757,
+      "fullName": "Steven Kwan"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 9,
+     "value": ".381",
+     "team": {
+      "id": 136,
+      "name": "Seattle Mariners"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 668227,
+      "fullName": "Randy Arozarena"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 10,
+     "value": ".380",
+     "team": {
+      "id": 143,
+      "name": "Philadelphia Phillies"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 547180,
+      "fullName": "Bryce Harper"
+     },
+     "season": "2026"
+    }
+   ],
+   "statGroup": "hitting",
+   "totalSplits": 135
+  },
+  {
+   "leaderCategory": "onBasePlusSlugging",
+   "season": "2026",
+   "gameType": {
+    "id": "R",
+    "description": "Regular Season"
+   },
+   "leaders": [
+    {
+     "rank": 1,
+     "value": "1.033",
+     "team": {
+      "id": 117,
+      "name": "Houston Astros"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 670541,
+      "fullName": "Yordan Alvarez"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 2,
+     "value": ".942",
+     "team": {
+      "id": 112,
+      "name": "Chicago Cubs"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 691718,
+      "fullName": "Pete Crow-Armstrong"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 3,
+     "value": ".902",
+     "team": {
+      "id": 111,
+      "name": "Boston Red Sox"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 575929,
+      "fullName": "Willson Contreras"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 4,
+     "value": ".897",
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 700250,
+      "fullName": "Ben Rice"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 5,
+     "value": ".891",
+     "team": {
+      "id": 120,
+      "name": "Washington Nationals"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 695578,
+      "fullName": "James Wood"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 6,
+     "value": ".889",
+     "team": {
+      "id": 119,
+      "name": "Los Angeles Dodgers"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 660271,
+      "fullName": "Shohei Ohtani"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 7,
+     "value": ".885",
+     "team": {
+      "id": 110,
+      "name": "Baltimore Orioles"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 624413,
+      "fullName": "Pete Alonso"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 8,
+     "value": ".884",
+     "team": {
+      "id": 139,
+      "name": "Tampa Bay Rays"
+     },
+     "league": {
+      "id": 103,
+      "name": "AL"
+     },
+     "person": {
+      "id": 691406,
+      "fullName": "Junior Caminero"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 9,
+     "value": ".880",
+     "team": {
+      "id": 113,
+      "name": "Cincinnati Reds"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 682829,
+      "fullName": "Elly De La Cruz"
+     },
+     "season": "2026"
+    },
+    {
+     "rank": 10,
+     "value": ".874",
+     "team": {
+      "id": 109,
+      "name": "Arizona Diamondbacks"
+     },
+     "league": {
+      "id": 104,
+      "name": "NL"
+     },
+     "person": {
+      "id": 672515,
+      "fullName": "Gabriel Moreno"
+     },
+     "season": "2026"
+    }
+   ],
+   "statGroup": "hitting",
+   "totalSplits": 135
+  }
+ ]
+}

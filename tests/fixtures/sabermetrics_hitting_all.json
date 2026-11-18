@@ -1,0 +1,267 @@
+{
+ "stats": [
+  {
+   "type": {
+    "displayName": "sabermetrics"
+   },
+   "splits": [
+    {
+     "stat": {
+      "war": "n/a"
+     },
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "player": {
+      "id": 999005,
+      "fullName": "Bad War"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "woba": 0.3
+     },
+     "team": {
+      "id": 147,
+      "name": "New York Yankees"
+     },
+     "player": {
+      "id": 999004,
+      "fullName": "No War"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.02421
+     },
+     "team": {
+      "id": 110,
+      "name": "Baltimore Orioles"
+     },
+     "player": {
+      "id": 624413,
+      "fullName": "Pete Alonso"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.28702
+     },
+     "team": {
+      "id": 139,
+      "name": "Tampa Bay Rays"
+     },
+     "player": {
+      "id": 691406,
+      "fullName": "Junior Caminero"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.28729
+     },
+     "team": {
+      "id": 145,
+      "name": "Chicago White Sox"
+     },
+     "player": {
+      "id": 678246,
+      "fullName": "Miguel Vargas"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.39369
+     },
+     "team": {
+      "id": 109,
+      "name": "Arizona Diamondbacks"
+     },
+     "player": {
+      "id": 672515,
+      "fullName": "Gabriel Moreno"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.39369
+     },
+     "team": {
+      "id": 116,
+      "name": "Detroit Tigers"
+     },
+     "player": {
+      "id": 805808,
+      "fullName": "Kevin McGonigle"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.44842
+     },
+     "team": {
+      "id": 135,
+      "name": "San Diego Padres"
+     },
+     "player": {
+      "id": 665487,
+      "fullName": "Fernando Tatis Jr."
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.52947
+     },
+     "team": {
+      "id": 136,
+      "name": "Seattle Mariners"
+     },
+     "player": {
+      "id": 668227,
+      "fullName": "Randy Arozarena"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.53802
+     },
+     "team": {
+      "id": 112,
+      "name": "Chicago Cubs"
+     },
+     "player": {
+      "id": 608324,
+      "fullName": "Alex Bregman"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.85555
+     },
+     "team": {
+      "id": 146,
+      "name": "Miami Marlins"
+     },
+     "player": {
+      "id": 672640,
+      "fullName": "Otto Lopez"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "war": 5.90445
+     },
+     "team": {
+      "id": 158,
+      "name": "Milwaukee Brewers"
+     },
+     "player": {
+      "id": 668930,
+      "fullName": "Brice Turang"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "war": 6.44553
+     },
+     "team": {
+      "id": 113,
+      "name": "Cincinnati Reds"
+     },
+     "player": {
+      "id": 682829,
+      "fullName": "Elly De La Cruz"
+     },
+     "league": {
+      "name": "National League"
+     }
+    },
+    {
+     "stat": {
+      "war": 6.7949
+     },
+     "team": {
+      "id": 117,
+      "name": "Houston Astros"
+     },
+     "player": {
+      "id": 670541,
+      "fullName": "Yordan Alvarez"
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "war": 6.95539
+     },
+     "team": {
+      "id": 118,
+      "name": "Kansas City Royals"
+     },
+     "player": {
+      "id": 677951,
+      "fullName": "Bobby Witt Jr."
+     },
+     "league": {
+      "name": "American League"
+     }
+    },
+    {
+     "stat": {
+      "war": 6.95539
+     },
+     "team": {
+      "id": 112,
+      "name": "Chicago Cubs"
+     },
+     "player": {
+      "id": 691718,
+      "fullName": "Pete Crow-Armstrong"
+     },
+     "league": {
+      "name": "National League"
+     }
+    }
+   ]
+  }
+ ]
+}

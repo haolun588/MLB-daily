@@ -1597,3 +1597,148 @@ img { max-width: 100%; height: auto; }
 
 /* 存檔頁：每週總整理清單 */
 .weeks { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 8px; margin-top: 12px; list-style: none; }
+
+/* ==========================================================================
+   數據排行（leaders.html 與首頁側欄小卡）
+   ========================================================================== */
+
+/* 導覽列三個連結在窄螢幕縮小間距，避免 375px 寬度擠出水平捲軸 */
+@media (max-width: 480px) {
+  .nav-row { gap: 8px; }
+  .nav-links a { padding: 0 9px; }
+  .nav-links a:last-child { padding-right: 0; }
+}
+
+/* ---------- 排行頁：卡片網格（手機一欄、平板兩欄、桌機三欄） ---------- */
+.ld-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+@media (min-width: 640px) {
+  .ld-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .ld-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.ld-card {
+  min-width: 0;
+  padding: 12px 14px 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--text);
+  border-radius: var(--radius);
+}
+
+.ld-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ld-head h3 { font: 700 1.0625rem/1.4 var(--font-serif); letter-spacing: 0.04em; }
+.ld-note { font-size: 0.75rem; color: var(--text-2); }
+
+.ld-list { list-style: none; }
+
+.ld-row {
+  display: grid;
+  grid-template-columns: 1.5rem 20px minmax(0, 1fr) 2.5rem auto;
+  align-items: center;
+  column-gap: 8px;
+  min-height: 36px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9375rem;
+}
+
+.ld-list > .ld-row:last-child { border-bottom: 0; }
+
+.ld-rk { font: 500 0.8125rem var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); text-align: right; }
+.ld-tm picture, .ld-tm img { display: block; width: 20px; height: 20px; }
+.ld-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-ab { font: 500 0.75rem var(--font-mono); color: var(--text-2); }
+.ld-val { font: 700 0.9375rem var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+
+.ld-more { margin-top: 2px; border-top: 1px solid var(--line); }
+
+.ld-more summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.8125rem;
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+
+.ld-more summary:focus-visible { outline-offset: 2px; }
+
+.ld-empty { padding: 20px 0 14px; text-align: center; font-size: 0.875rem; color: var(--text-2); }
+
+.ld-footnote {
+  margin-top: 24px;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+/* ---------- 首頁側欄小卡（放在戰績表下方，同一個 .st-panel 內） ---------- */
+.ld-card-mini {
+  margin: 14px 8px 0;
+  padding: 12px 6px 0;
+  border-top: 1px solid var(--text);
+}
+
+.ld-mini-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; }
+.ld-mini-head h3 { font: 700 1rem/1.35 var(--font-serif); letter-spacing: 0.04em; }
+.ld-mini-sub { font-size: 0.6875rem; color: var(--text-2); }
+
+.ld-card-mini h4 {
+  margin-top: 10px;
+  padding-bottom: 3px;
+  font: 700 0.75rem/1.4 var(--font-sans);
+  letter-spacing: 0.14em;
+  color: var(--text-2);
+}
+
+.ld-mini { list-style: none; }
+
+.ld-mini li {
+  display: grid;
+  grid-template-columns: 5.2em minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.ld-mini li:last-child { border-bottom: 0; }
+.ld-mk { color: var(--text-2); }
+.ld-mw { min-width: 0; overflow-wrap: anywhere; }
+.ld-mt { font: 500 0.6875rem var(--font-mono); color: var(--text-2); }
+.ld-mv { font: 700 0.8125rem var(--font-mono); font-variant-numeric: tabular-nums; }
+.ld-mini li.is-empty .ld-mw,
+.ld-mini li.is-empty .ld-mv { color: var(--text-3); }
+
+.ld-mini-more {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 44px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+.ld-mini-more:hover { text-decoration: underline; text-underline-offset: 3px; }

@@ -8,7 +8,7 @@
 
 ```
 fetch_mlb.py              薄入口（重新匯出 mlb_daily 內所有名稱，CLI 不變）
-mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、previews、rosters、report、weekly、index_page、notify、cli）
+mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、leaders、previews、rosters、report、weekly、index_page、notify、cli）
 settings/watchlist.json   台日韓球員追蹤名單（納入版控）
 settings/offseason_calendar.json   休賽季重要日程（手動維護，週報頁尾「下週日程」用；納入版控，目前為空檔）
 templates/report.html     戰報與休賽季快報頁面骨架
@@ -41,7 +41,8 @@ tests/fixtures/           API 假資料（schedule、boxscore、content、transa
 graph TD
     A[排程 04:17 UTC / 手動觸發] --> T[單元測試]
     T -->|失敗| X[中止]
-    T --> B[產生：--check-wait --no-notify]
+    T --> L[Update Stat Leaders：--leaders，失敗不中止]
+    L --> B[產生：--check-wait --no-notify]
     B --> C{全數完賽?}
     C -->|否，未達 8 次| D[睡 30 分鐘後重查]
     D --> C
@@ -61,6 +62,7 @@ graph TD
 7. **等待 Pages**：每 15 秒檢查當日戰報網址，最多 20 次（約 5 分鐘），逾時只警告、仍繼續下一步。
 8. **通知**：`python fetch_mlb.py --notify-only --date <日期>`，僅排程觸發或手動勾選 `notify` 時執行。
 9. **每週總整理**（休賽季，見「休賽季每週總整理」一節）：Restore 步驟額外還原 `data/daily/` 與 `reports/weekly/index.json`；`Generate Weekly Report`（`continue-on-error: true`）緊接在 Generate Daily Report 之後；部署後若本次有產生週報，另有「等待週報網址 200」與「`--notify-weekly`」兩個步驟（條件同每日通知）。`workflow_dispatch` 新增 `week` 輸入（手動補產指定週）。
+10. **數據排行榜**（見「數據排行榜」一節）：Restore 步驟額外還原 `data/leaders.json`（取不到只警告）；`Update Stat Leaders`（`python fetch_mlb.py --leaders`，`continue-on-error: true`）在 Generate Daily Report 之前執行。
 
 ---
 
@@ -68,7 +70,7 @@ graph TD
 
 `fetch_mlb.py` 是薄入口：UTF-8 reconfigure、重新匯出原本所有名稱、呼叫 `main`。實際程式在 `mlb_daily/`，由下而上相依（下層不得 import 上層）：
 
-`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news`／`watchlist` → `translate`／`games`／`standings`／`previews`／`rosters` → `report`／`weekly`／`index_page`／`notify` → `cli`
+`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news`／`watchlist` → `translate`／`games`／`standings`／`leaders`／`previews`／`rosters` → `report`／`weekly`／`index_page`／`notify` → `cli`
 
 `weekly` 與 `report` 同層：可用 `transactions`、`news`、`watchlist`、`rosters`、`htmlutil`、`storage`、`timeutil`、`config`，**不得** import `report`／`index_page`／`notify`／`cli`。首頁與通知需要週報資料時，由 `index_page`／`notify`／`cli` 透過 `storage.load_weekly_index`／`latest_weekly_entry` 讀 `reports/weekly/index.json`，不 import `weekly`。
 
@@ -84,7 +86,8 @@ graph TD
 | `watchlist` | 台日韓球員專區：讀名單、比對異動／新聞／boxscore、組成 `spotlight` 資料與渲染（只依賴 `config`、`htmlutil`） |
 | `translate` | Gemini 翻譯、`apply_translations`、`LAST_TRANSLATION`、`TX_TRANSLATION_CACHE`、`translate_weekly_transactions` |
 | `games` | `check_all_games_finalized`（API 失敗拋 `ApiError`，只有 `totalGames == 0` 才視為無賽事）、`classify_game_status`、焦點球員評分、決定、比賽卡片與 view、摘要句 |
-| `standings` | 戰績側欄 |
+| `standings` | 戰績側欄（`render_standings_aside` 的 `extra_html` 可接首頁小卡 HTML，不 import `leaders`） |
+| `leaders` | 數據排行榜（與 `standings` 同層，賽季與是否賽季中由 `cli` 傳入）：`fetch_leaders`（5 個請求）、`generate_leaders`（寫 `data/leaders.json` 與根目錄 `leaders.html`，12 項全失敗不覆寫）、`render_leaders_page`（`templates/leaders.html`）、`render_leaders_card`（首頁側欄小卡，`index_page` 讀 `storage.load_leaders` 後渲染） |
 | `previews` | 賽事預告、先發投手、開季倒數 |
 | `rosters` | 球隊名單（`--rosters`） |
 | `report` | `render_report`（賽季戰報與休賽季快報共用）、`generate_report`、`generate_offseason_report`；兩條流程結束時各寫一份每日快照（`build_daily_snapshot`） |
@@ -306,6 +309,14 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 `{"weeks": [{"week", "start", "end", "days", "tx_count", "trade_count", "signing_count", "path", "generated_at"}]}`，不放進 `reports/metadata.json`。
 
 ---
+
+## 數據排行榜
+
+- CLI：`python fetch_mlb.py --leaders [--date]`，不可與其他模式併用；抓資料、寫 `data/leaders.json` 與 `leaders.html`，`reports/metadata.json` 存在時再重產首頁（失敗只警告）。12 項全部失敗時不覆寫舊檔並以非 0 結束。
+- 資料：`/stats/leaders`（打擊 5 項、投手 4 項，必須以 `statGroup` 過濾，並列時名次相同、可能超過 10 筆）加 `stats=sabermetrics`（FIP 用 `playerPool=qualified` 升冪、打者與投手 WAR 用 `playerPool=all` 降冪，自行計算標準競賽名次）。WAR／FIP 取自 MLB 官方，頁尾註明與 fWAR／bWAR 不同。
+- 賽季：沿用 `rosters.resolve_roster_context`（賽季中標題「YYYY 賽季・截至 M/D」，其餘「YYYY 賽季最終」）。
+- `data/leaders.json`：`schema`、`season`、`in_season`、`as_of`、`generated_at`、`categories`（12 個 key → 名次項目陣列 `{rank,id,name,team_id,value}`，失敗為 `null`）。
+- 首頁側欄戰績表下方的小卡只讀 `data/leaders.json`（無檔不顯示）；`leaders.html` 與 `data/leaders.json` 只存在 gh-pages。workflow 在每日產生前執行 `--leaders`（`continue-on-error`），並從 gh-pages 還原舊的 `data/leaders.json`。
 
 ## 搜尋
 

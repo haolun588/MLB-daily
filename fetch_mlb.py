@@ -30,7 +30,7 @@ if hasattr(sys.stderr, 'reconfigure'):
 # 拆分後的 mlb_daily 套件；以下重新匯出原本 fetch_mlb 的所有名稱以維持相容。
 # 注意：重新匯出的是原物件，patch `fetch_mlb.X` 不會影響 mlb_daily 內部；
 # 測試請 patch 定義該名稱的模組（例如 `mlb_daily.net.fetch_json`）。
-from mlb_daily import cli, config, games as games_mod, htmlutil, index_page, net, news as news_mod, notify, previews, report, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist, weekly  # noqa: F401
+from mlb_daily import cli, config, games as games_mod, htmlutil, index_page, leaders, net, news as news_mod, notify, previews, report, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist, weekly  # noqa: F401
 from mlb_daily.cli import (  # noqa: F401
     main,
 )
@@ -52,6 +52,14 @@ from mlb_daily.config import (  # noqa: F401
     GEMINI_RETRYABLE_HTTP,
     GEMINI_RETRY_AFTER_CAP,
     GEMINI_RETRY_DELAYS,
+    LEADERS_CATEGORIES,
+    LEADERS_HITTING_URL,
+    LEADERS_LIMIT,
+    LEADERS_PAGE_PATH,
+    LEADERS_PATH,
+    LEADERS_PITCHING_URL,
+    LEADERS_SCHEMA,
+    LEADERS_TOP_VISIBLE,
     LEGACY_ABBR_ALIASES,
     LOGO_URL,
     MAX_WAIT_CHECKS,
@@ -63,6 +71,7 @@ from mlb_daily.config import (  # noqa: F401
     POSTPONED_REASONS,
     ROSTER_DIR,
     ROSTER_FETCH_INTERVAL,
+    SABERMETRICS_URL,
     SAVANT_URL,
     SCHEDULE_PREVIEW_URL,
     SEASON_URL,
@@ -151,6 +160,16 @@ from mlb_daily.index_page import (  # noqa: F401
     render_recent_item,
     update_index_page,
 )
+from mlb_daily.leaders import (  # noqa: F401
+    build_leaders_data,
+    fetch_leaders,
+    generate_leaders,
+    leaders_title,
+    parse_leaders,
+    parse_sabermetrics,
+    render_leaders_card,
+    render_leaders_page,
+)
 from mlb_daily.net import (  # noqa: F401
     ApiError,
     LAST_POST,
@@ -221,6 +240,7 @@ from mlb_daily.storage import (  # noqa: F401
     _to_int,
     entry_type,
     latest_weekly_entry,
+    load_leaders,
     load_metadata,
     load_weekly_index,
     save_metadata,

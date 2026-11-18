@@ -2,7 +2,7 @@
 
 import sys
 
-from . import htmlutil, net, previews, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
+from . import htmlutil, leaders as leaders_mod, net, previews, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
 from .config import DATE_KEY_RE, SEASON_URL, WEEK_KEY_RE
 
 
@@ -20,13 +20,19 @@ def _fallback_roster_context(today):
     return {"rosterType": "active" if 4 <= today.month <= 10 else "40Man", "season": today.year}
 
 
+def _leaders_card_html():
+    """讀 data/leaders.json（不連網）渲染側欄小卡；沒有檔案或任何失敗都回傳空字串。"""
+    data = _safe_call("數據排行讀取", storage.load_leaders)
+    return (_safe_call("數據排行小卡", leaders_mod.render_leaders_card, data) or "") if data else ""
+
+
 def fallback_index_extras(now=None):
     """build_index_extras 整體失敗時的最低限度輸出：戰績錯誤版側欄與手機按鈕（避免桌機右側空欄）。"""
     now = now or timeutil.get_taipei_now()
     ctx = _fallback_roster_context(now.date())
     return {
         "UPCOMING": "",
-        "STANDINGS": standings_mod.render_standings_aside(None, ctx["season"], ctx["rosterType"] == "active", now),
+        "STANDINGS": standings_mod.render_standings_aside(None, ctx["season"], ctx["rosterType"] == "active", now, _leaders_card_html()),
         "STANDINGS_UI": standings_mod.render_standings_fab(),
     }
 
@@ -59,9 +65,10 @@ def build_index_extras(now=None):
             _safe_call("最新週報", render_latest_weekly_link, None, today) or "",
             _safe_call("人事異動渲染", transactions_mod.render_weekly_transactions, weekly) or "",
         ) if p)
-    aside = _safe_call("戰績渲染", standings_mod.render_standings_aside, standings, season, in_season, now)
+    leaders_card = _leaders_card_html()
+    aside = _safe_call("戰績渲染", standings_mod.render_standings_aside, standings, season, in_season, now, leaders_card)
     if not aside:
-        aside = standings_mod.render_standings_aside(None, season, in_season, now)
+        aside = standings_mod.render_standings_aside(None, season, in_season, now, leaders_card)
     return {"UPCOMING": upcoming, "STANDINGS": aside, "STANDINGS_UI": standings_mod.render_standings_fab()}
 
 

@@ -126,3 +126,10 @@
 - [ ] 待辦：上線後第一個週一（2026-11-23）整理 W47，快照只有 11/18 起，預期涵蓋不足 7 天
 - [x] 已決定：移除週報「小聯盟合約」分類（快照為大聯盟過濾後資料，該分類永遠為空；使用者同意）
 - [ ] 待辦：`settings/offseason_calendar.json` 的日程由使用者手動補（例：冬季會議）
+
+### 📊 階段十九：數據排行榜（2026-11-18）
+依 `docs/plans/20261118_數據排行榜設計.md`（使用者已核准：台日韓球員不標註、首頁小卡放側欄戰績表下方、WAR 用 `playerPool=all`）。
+
+- [x] 已完成（已審查，瀏覽器實測排行頁與首頁小卡、375px 抽屜皆已完成）：`mlb_daily/leaders.py`、`templates/leaders.html`、`--leaders`；`data/leaders.json` 與根目錄 `leaders.html`；首頁側欄小卡；全站導覽列「數據排行」；名次一律以顯示值判斷並列；workflow 還原 `data/leaders.json` 並於每日產生前執行 `--leaders`（`continue-on-error`）；測試 `tests/test_leaders.py`（共 533 個測試全過）
+- [ ] 待辦：GitHub 實測（手動觸發 workflow，確認 `leaders.html`、`data/leaders.json` 隨部署出現、首頁小卡與導覽列連結）
+- [ ] 待辦：2027 賽季中確認「截至 M/D」標題與季後賽期間行為（目前只用 fixture 測試）

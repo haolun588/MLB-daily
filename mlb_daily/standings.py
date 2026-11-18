@@ -119,8 +119,9 @@ STANDINGS_ICON = ('<svg viewBox="0 0 24 24" width="22" height="22" fill="none" s
                   '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>')
 
 
-def render_standings_aside(standings, season, in_season, now):
-    """戰績側邊欄 <aside>。standings 為 None（抓取失敗）時輸出「戰績暫時無法取得」版本。"""
+def render_standings_aside(standings, season, in_season, now, extra_html=""):
+    """戰績側邊欄 <aside>。standings 為 None（抓取失敗）時輸出「戰績暫時無法取得」版本。
+    extra_html：放在戰績表下方（面板內）的已渲染 HTML（首頁的數據排行小卡），預設為空。"""
     season_int = htmlutil._int_id(season)
     title = f"{season_int} 例行賽戰績" if in_season else f"{season_int} 例行賽最終戰績"
     if standings:
@@ -145,6 +146,7 @@ def render_standings_aside(standings, season, in_season, now):
                 '      <p>資料來源暫時沒有回應，不影響每日戰報。將於下次更新時重新取得。</p>\n'
                 '    </div>')
         aside_cls = "standings is-error"
+    extra = "\n" + extra_html if extra_html else ""
     return f"""<aside class="{aside_cls}" id="standings" aria-labelledby="standings-title">
   <button class="st-rail" type="button" data-st="expand" aria-expanded="false" aria-controls="standings-panel" aria-label="展開戰績側邊欄" title="戰績">
     {STANDINGS_ICON}
@@ -159,7 +161,7 @@ def render_standings_aside(standings, season, in_season, now):
         <button class="st-btn st-close" type="button" aria-label="關閉戰績">✕</button>
       </div>
     </div>
-{body}
+{body}{extra}
   </div>
 </aside>"""
 

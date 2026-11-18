@@ -4,9 +4,9 @@ import argparse
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from . import games as games_mod, index_page, net, notify, report, rosters, storage, timeutil, weekly
+from . import games as games_mod, index_page, leaders, net, notify, report, rosters, storage, timeutil, weekly
 from .config import MAX_WAIT_CHECKS, SITE_BASE_URL, WAIT_SLEEP_SECONDS
 
 
@@ -52,6 +52,27 @@ def _run_weekly(args):
             print(f"Warning: 週報產生後重新產生首頁失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
 
 
+def _run_leaders(args):
+    """--leaders：抓取數據排行榜，寫 data/leaders.json 與 leaders.html，再重新產生首頁；全部抓取失敗回傳非 0。"""
+    today = _taipei_today(args.date)
+    ctx = rosters.resolve_roster_context(today)
+    as_of = today - timedelta(days=1)  # 資料截至「昨日」，與每日戰報預設日期一致
+    try:
+        ok = leaders.generate_leaders(ctx["season"], ctx["rosterType"] == "active", as_of)
+    except OSError as e:
+        print(f"Error: 寫入數據排行榜失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+        sys.exit(1)
+    if not ok:
+        sys.exit(1)
+    if os.path.exists("reports/metadata.json"):  # 讓首頁小卡立即更新；失敗不影響排行榜
+        try:
+            index_page.refresh_index_page()
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - metadata 損壞會 sys.exit；排行榜已產生，不應以非 0 結束
+            print(f"Warning: 排行榜產生後重新產生首頁失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+    else:
+        print("Note: 找不到 reports/metadata.json，未重新產生首頁（首頁將於下次每日產生時帶入小卡）。")
+
+
 def main():
     parser = argparse.ArgumentParser(description="MLB Daily Report Generator Script")
     parser.add_argument("--date", type=str, help="Target report date in YYYY-MM-DD format (defaults to yesterday in Taipei Time)")
@@ -66,6 +87,8 @@ def main():
     parser.add_argument("--week", type=str, help="ISO week YYYY-Www for --weekly (manual backfill) or --notify-weekly")
     parser.add_argument("--force", action="store_true", help="With --weekly: skip the Monday and offseason checks")
     parser.add_argument("--notify-weekly", action="store_true", help="Send the weekly summary Discord message from reports/weekly/index.json (latest week, or --week)")
+
+    parser.add_argument("--leaders", action="store_true", help="Fetch the stat leaderboards and write data/leaders.json and leaders.html, then refresh the homepage (no report, no notification)")
 
     args = parser.parse_args()
     if args.notify_only and (args.check_wait or args.no_notify):
@@ -87,10 +110,18 @@ def main():
     if args.force and not args.weekly:
         print("Error: --force requires --weekly", file=sys.stderr)
         sys.exit(1)
+    if args.leaders and (args.rosters or args.notify_only or args.check_wait or args.no_notify or weekly_mode or args.week or args.force):
+        print("Error: --leaders cannot be combined with other modes or options (only --date is allowed)", file=sys.stderr)
+        sys.exit(1)
     if args.max_wait_checks < 1:
         print("Error: --max-wait-checks must be >= 1", file=sys.stderr)
         sys.exit(1)
     
+    # --leaders：數據排行榜（不碰每日戰報流程與 metadata）
+    if args.leaders:
+        _run_leaders(args)
+        return
+
     # --weekly / --notify-weekly：休賽季每週總整理（不碰每日戰報流程與 metadata）
     if weekly_mode:
         _run_weekly(args)

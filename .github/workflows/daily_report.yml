@@ -79,6 +79,16 @@ jobs:
           if ! git show origin/gh-pages:reports/weekly/index.json > reports/weekly/index.json 2>/dev/null; then
             rm -f reports/weekly/index.json
           fi
+          # 數據排行榜資料（首頁小卡來源）：取不到只警告，不中止
+          mkdir -p data
+          if ! git show origin/gh-pages:data/leaders.json > data/leaders.json 2>/dev/null; then
+            rm -f data/leaders.json
+            echo "::warning::gh-pages 尚無 data/leaders.json"
+          fi
+
+      - name: Update Stat Leaders
+        continue-on-error: true
+        run: python fetch_mlb.py --leaders
 
       - name: Generate Daily Report
         env:

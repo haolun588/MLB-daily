@@ -237,3 +237,34 @@ WEEKLY_TYPE_CATEGORY = {
 }
 # 「本週重點」收錄的分類
 WEEKLY_HIGHLIGHT_CATEGORIES = ("trade", "signing", "extension")
+
+
+# ---------------------------------------------------------------- 數據排行榜
+LEADERS_PATH = os.path.join("data", "leaders.json")
+LEADERS_PAGE_PATH = "leaders.html"
+LEADERS_SCHEMA = 1
+LEADERS_LIMIT = 10
+LEADERS_TOP_VISIBLE = 5  # 排行頁每張卡直接顯示的名次；其餘放進 <details>
+LEADERS_HITTING_URL = ("https://statsapi.mlb.com/api/v1/stats/leaders?leaderCategories="
+                       "battingAverage,onBasePercentage,homeRuns,onBasePlusSlugging,stolenBases"
+                       "&statGroup=hitting&season={season}&sportId=1&limit=10")
+LEADERS_PITCHING_URL = ("https://statsapi.mlb.com/api/v1/stats/leaders?leaderCategories="
+                        "earnedRunAverage,strikeouts,saves,strikeoutsPer9Inn"
+                        "&statGroup=pitching&season={season}&sportId=1&limit=10")
+SABERMETRICS_URL = ("https://statsapi.mlb.com/api/v1/stats?stats=sabermetrics&group={group}"
+                    "&season={season}&sportId=1&playerPool={pool}&limit={limit}")
+# 排行項目（顯示順序）：(key, 群組, 中文名稱, 門檻註記)。key 即 leaderCategory，或 fip／war_hitting／war_pitching
+LEADERS_CATEGORIES = (
+    ("battingAverage", "hitting", "打擊率", "規定打席"),
+    ("onBasePercentage", "hitting", "上壘率", "規定打席"),
+    ("homeRuns", "hitting", "全壘打", "不設門檻"),
+    ("onBasePlusSlugging", "hitting", "OPS", "規定打席"),
+    ("stolenBases", "hitting", "盜壘", "不設門檻"),
+    ("war_hitting", "hitting", "打者 WAR", "MLB 官方數據・不設門檻"),
+    ("earnedRunAverage", "pitching", "防禦率", "規定局數"),
+    ("strikeouts", "pitching", "三振", "不設門檻"),
+    ("saves", "pitching", "救援成功", "不設門檻"),
+    ("strikeoutsPer9Inn", "pitching", "K/9", "規定局數"),
+    ("fip", "pitching", "FIP", "規定局數・MLB 官方數據"),
+    ("war_pitching", "pitching", "投手 WAR", "MLB 官方數據・不設門檻"),
+)

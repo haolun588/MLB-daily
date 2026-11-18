@@ -4,7 +4,7 @@ import json
 import os
 import sys
 
-from .config import DAILY_SNAPSHOT_DIR, WEEKLY_DIR, WEEKLY_INDEX_PATH
+from .config import DAILY_SNAPSHOT_DIR, LEADERS_PATH, LEADERS_SCHEMA, WEEKLY_DIR, WEEKLY_INDEX_PATH
 
 
 def write_report(date_str, html_content):
@@ -135,3 +135,19 @@ def save_weekly_index(entry, path=None):
     index = {"weeks": weeks}
     write_json_atomic(path, index)
     return index
+
+
+# ---------------------------------------------------------------- 數據排行榜
+def load_leaders(path=None):
+    """讀取 data/leaders.json；不存在、損壞或 schema 不符一律回傳 None（首頁不顯示小卡）。"""
+    try:
+        with open(path or LEADERS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or data.get("schema") != LEADERS_SCHEMA or not isinstance(data.get("categories"), dict):
+        return None
+    season = data.get("season")
+    if isinstance(season, bool) or not isinstance(season, int):
+        return None
+    return data
