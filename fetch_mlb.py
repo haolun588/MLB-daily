@@ -286,11 +286,21 @@ def filter_major_league_transactions(transactions):
     過濾：排除 minor league 關鍵字；signed 類需有大聯盟特徵詞；toTeam／fromTeam 至少一方為 30 隊之一
     （排除冬季聯盟指派、小聯盟球隊之間的異動）；描述去重。"""
     tx_list = []
-    seen_descriptions = set()
+    seen_descriptions = {}  # description -> 已收錄的 tx dict（重複描述的球員併入其 persons）
+
+    def _add_person(entry, person):
+        pid, name = (person or {}).get("id"), (person or {}).get("fullName")
+        if pid is None or not name:
+            return
+        if all(p["id"] != pid for p in entry["persons"]):
+            entry["persons"].append({"id": pid, "name": name})
 
     for tx in transactions or []:
         desc = tx.get("description")
-        if not desc or desc in seen_descriptions:
+        if not desc:
+            continue
+        if desc in seen_descriptions:
+            _add_person(seen_descriptions[desc], tx.get("person"))
             continue
         desc_lower = desc.lower()
         if re.search(r"\bminor league", desc_lower):
@@ -301,18 +311,20 @@ def filter_major_league_transactions(transactions):
                 continue
         if not (_is_mlb_team(tx.get("toTeam")) or _is_mlb_team(tx.get("fromTeam"))):
             continue
-        seen_descriptions.add(desc)
-
         person_info = tx.get("person") or {}
-        tx_list.append({
+        entry = {
             "to_team_id": (tx.get("toTeam") or {}).get("id"),
             "from_team_id": (tx.get("fromTeam") or {}).get("id"),
             "person_id": person_info.get("id"),
             "person_name": person_info.get("fullName"),
+            "persons": [],
             "description": desc,
             "date": tx.get("date"),
             "type_code": tx.get("typeCode"),
-        })
+        }
+        _add_person(entry, person_info)
+        seen_descriptions[desc] = entry
+        tx_list.append(entry)
 
     return tx_list
 
@@ -623,7 +635,7 @@ def apply_translations(news, views, tx_items, extra_team_names=()):
         for src, dst in (("headline", "headline_zh"), ("blurb", "blurb_zh")):
             targets.append((box, dst, box[src], _keep_in(box[src], names)))
     for tx in tx_items:
-        targets.append((tx, "description_zh", tx["description"], _keep_in(tx["description"], [tx.get("person_name")])))
+        targets.append((tx, "description_zh", tx["description"], _keep_in(tx["description"], [p.get("name") for p in _tx_persons(tx)] or [tx.get("person_name")])))
     items = [{"text": text, "keep": keep} for _, _, text, keep in targets]
     results = translate_texts(items, extra_team_names)
     if results is None:
@@ -728,26 +740,51 @@ def player_link(player_id, name):
     )
 
 
-def render_tx_description(description, person_id=None, person_name=None):
-    """對原文以球員名切分，各段分別 escape，再以 Savant 連結串接（避免名字命中 &amp; 等實體）。"""
-    if person_name and _int_id(person_id) is not None and person_name in description:
-        link = player_link(person_id, person_name)
-        return link.join(esc(part) for part in description.split(person_name))
-    return esc(description)
+def _tx_persons(tx):
+    """tx 的球員清單 [{"id", "name"}]；舊資料（無 persons）退回 person_id/person_name 單元素。"""
+    persons = tx.get("persons")
+    if persons:
+        return persons
+    if tx.get("person_name") and _int_id(tx.get("person_id")) is not None:
+        return [{"id": tx["person_id"], "name": tx["person_name"]}]
+    return []
+
+
+def render_tx_description(description, person_id=None, person_name=None, persons=None):
+    """對原文以球員名切分，各段分別 escape，再以 Savant 連結串接（避免名字命中 &amp; 等實體）。
+    persons 為 [{"id","name"}]；未給時以 person_id/person_name 組成單元素。"""
+    if persons is None:
+        persons = [{"id": person_id, "name": person_name}] if person_name else []
+    by_name = {}
+    for p in persons:
+        name = p.get("name")
+        if name and _int_id(p.get("id")) is not None and name in description:
+            by_name.setdefault(name, p["id"])
+    if not by_name:
+        return esc(description)
+    names = sorted(by_name, key=len, reverse=True)
+    pattern = "(" + "|".join(re.escape(n) for n in names) + ")"
+    out = []
+    for i, part in enumerate(re.split(pattern, description)):
+        if i % 2 == 1:
+            out.append(player_link(by_name[part], part))
+        elif part:
+            out.append(esc(part))
+    return "".join(out)
 
 
 def _tx_display_text(tx):
-    """優先用譯文；譯文遺失人名（理論上已被驗證擋下）時退回原文。"""
+    """優先用譯文；譯文遺失任一人名（理論上已被驗證擋下）時退回原文。"""
     zh = tx.get("description_zh")
-    name = tx.get("person_name")
-    if zh and (not name or name not in tx["description"] or name in zh):
+    names = [p.get("name") for p in _tx_persons(tx)] + [tx.get("person_name")]
+    if zh and all(n in zh for n in names if n and n in tx["description"]):
         return zh
     return tx["description"]
 
 
 def render_tx_items(tx_list):
     return "".join(
-        f"<li>{render_tx_description(_tx_display_text(tx), tx.get('person_id'), tx.get('person_name'))}</li>"
+        f"<li>{render_tx_description(_tx_display_text(tx), persons=_tx_persons(tx))}</li>"
         for tx in tx_list
     )
 
@@ -1972,7 +2009,7 @@ def render_weekly_transactions(tx_list):
         date_str = str(tx.get("date") or "")
         d = _parse_iso_date(date_str) if DATE_KEY_RE.match(date_str) else None
         date_html = f'<time class="num" datetime="{d.isoformat()}">{d.month}/{d.day}</time>' if d else ""
-        text = render_tx_description(_tx_display_text(tx), tx.get("person_id"), tx.get("person_name"))
+        text = render_tx_description(_tx_display_text(tx), persons=_tx_persons(tx))
         items.append(
             f'      <li class="wk-tx{cls}"{style}><span class="wk-meta">{date_html}{team_html}</span>'
             f'<span class="wk-txt">{text}</span></li>'

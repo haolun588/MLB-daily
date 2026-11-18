@@ -304,6 +304,49 @@ class TransactionTests(MlbTestBase):
     def test_render_tx_description_without_person(self):
         self.assertEqual(fetch_mlb.render_tx_description("A & B"), "A &amp; B")
 
+    def _trade_raw(self):
+        desc = "Boston Red Sox traded RHP Angel Bastardo to Kansas City Royals for SS Jack Pineda."
+        team = {"id": 111}
+        royals = {"id": 118}
+        return [
+            {"description": desc, "toTeam": royals, "fromTeam": team, "person": {"id": 1, "fullName": "Angel Bastardo"}},
+            {"description": desc, "toTeam": team, "fromTeam": royals, "person": {"id": 2, "fullName": "Jack Pineda"}},
+            {"description": desc, "toTeam": team, "fromTeam": royals, "person": {"id": 2, "fullName": "Jack Pineda"}},
+        ]
+
+    def test_trade_duplicates_merge_persons(self):
+        txs = fetch_mlb.filter_major_league_transactions(self._trade_raw())
+        self.assertEqual(len(txs), 1)
+        self.assertEqual(txs[0]["persons"], [{"id": 1, "name": "Angel Bastardo"}, {"id": 2, "name": "Jack Pineda"}])
+        self.assertEqual(txs[0]["person_id"], 1)
+
+    def test_trade_renders_all_links(self):
+        tx = fetch_mlb.filter_major_league_transactions(self._trade_raw())[0]
+        out = fetch_mlb.render_tx_items([tx])
+        self.assertEqual(out.count('class="plink"'), 2)
+        self.assertIn('savant-player/1" target="_blank" rel="noopener">Angel Bastardo</a>', out)
+        self.assertIn('savant-player/2" target="_blank" rel="noopener">Jack Pineda</a>', out)
+
+    def test_render_substring_names(self):
+        persons = [{"id": 1, "name": "Luis Garcia"}, {"id": 2, "name": "Luis Garcia Jr."}]
+        out = fetch_mlb.render_tx_description("Traded Luis Garcia Jr. for Luis Garcia.", persons=persons)
+        self.assertIn('savant-player/2" target="_blank" rel="noopener">Luis Garcia Jr.</a>', out)
+        self.assertIn('savant-player/1" target="_blank" rel="noopener">Luis Garcia</a>', out)
+        self.assertEqual(out.count('class="plink"'), 2)
+
+    def test_display_text_falls_back_when_name_missing(self):
+        tx = {"description": "A traded Ann Lee for Bob Ray.", "description_zh": "A 交易 Ann Lee。",
+              "persons": [{"id": 1, "name": "Ann Lee"}, {"id": 2, "name": "Bob Ray"}]}
+        self.assertEqual(fetch_mlb._tx_display_text(tx), tx["description"])
+        tx["description_zh"] = "A 交易 Ann Lee 換 Bob Ray。"
+        self.assertEqual(fetch_mlb._tx_display_text(tx), tx["description_zh"])
+
+    def test_legacy_tx_without_persons(self):
+        tx = {"description": "Signed Bob Ray.", "person_id": 9, "person_name": "Bob Ray"}
+        self.assertEqual(fetch_mlb._tx_persons(tx), [{"id": 9, "name": "Bob Ray"}])
+        self.assertIn('savant-player/9"', fetch_mlb.render_tx_items([tx]))
+        self.assertEqual(fetch_mlb._tx_persons({"description": "x"}), [])
+
 
 # ---------------------------------------------------------------- 戰報產生
 class GenerateReportTests(MlbTestBase):
