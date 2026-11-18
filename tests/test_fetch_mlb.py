@@ -3438,5 +3438,34 @@ class SidebarAssetsTests(unittest.TestCase):
         self.assertIn('class="teams-entry"', out)
 
 
+class ImportRuleTests(unittest.TestCase):
+    """mlb_daily 匯入規則防護：只允許 from .config import ...，且不得 import fetch_mlb。不連網。"""
+
+    def test_mlb_daily_import_rules(self):
+        import ast
+        pkg = REPO_ROOT / "mlb_daily"
+        violations = []
+        for path in sorted(pkg.glob("*.py")):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if alias.name == "fetch_mlb" or alias.name.startswith("fetch_mlb."):
+                            violations.append(f"{path.name}:{node.lineno} import {alias.name}")
+                elif isinstance(node, ast.ImportFrom):
+                    mod = node.module or ""
+                    if mod == "fetch_mlb" or mod.startswith("fetch_mlb."):
+                        violations.append(f"{path.name}:{node.lineno} from {mod} import ...")
+                    elif node.level == 1 and mod:
+                        if mod != "config":
+                            violations.append(f"{path.name}:{node.lineno} from .{mod} import ...")
+                    elif node.level == 0 and mod.startswith("mlb_daily."):
+                        if mod != "mlb_daily.config":
+                            violations.append(f"{path.name}:{node.lineno} from {mod} import ...")
+                    elif node.level == 0 and mod == "mlb_daily":
+                        violations.append(f"{path.name}:{node.lineno} from mlb_daily import ...")
+        self.assertEqual(violations, [], "mlb_daily 內只允許 from .config import ...，其他請用模組前綴：" + "; ".join(violations))
+
+
 if __name__ == "__main__":
     unittest.main()

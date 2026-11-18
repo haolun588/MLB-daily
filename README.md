@@ -101,7 +101,24 @@ export GEMINI_API_KEY="你的Gemini金鑰"
 ## 目錄結構
 
 ```
-fetch_mlb.py              核心腳本：抓取 → 資料抽取 → view → 渲染，另含翻譯、通知
+fetch_mlb.py              薄入口（CLI 相容層，重新匯出 mlb_daily 內所有名稱）
+mlb_daily/                主程式套件（只用標準庫）
+  config.py               常數與設定
+  timeutil.py             台北時間與日期格式
+  net.py                  HTTP 抓取與 Discord 傳送（fetch_json、post_json）
+  htmlutil.py             esc、顏色、logo、模板與插槽填寫
+  storage.py              metadata 與檔案寫入
+  transactions.py         人事異動篩選與渲染、每週異動
+  news.py                 MLB.com RSS 與單場新聞
+  translate.py            Gemini 翻譯
+  games.py                完賽檢查、焦點球員、比賽卡片、摘要句
+  standings.py            戰績側欄
+  previews.py             賽事預告、先發投手、開季倒數
+  rosters.py              球隊名單
+  report.py               戰報與休賽季快報組裝
+  index_page.py           首頁
+  notify.py               Discord 通知
+  cli.py                  main（argparse）
 templates/
   report.html             戰報與休賽季快報的頁面骨架（含 <!--SLOT:...--> 插槽）
   index.html              首頁骨架

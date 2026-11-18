@@ -37,7 +37,7 @@
    - **通知時機**：必須在部署完成且 Pages 回應 200 之後才發送，連結才能直接開啟。休賽季快報若新聞與人事異動皆為 0，不發通知。
    - 部署時以 `exclude_assets` 排除程式、文件與 `.gitignore`；`.gitignore` 若被部署，會讓新戰報被忽略。
 7. **測試守則**：
-   - 修改程式（`fetch_mlb.py`、模板渲染邏輯）必須附對應的單元測試，並確認 `python -m unittest discover -s tests` 全部通過後才算完成。
+   - 修改程式（`fetch_mlb.py` 或 `mlb_daily/`、模板渲染邏輯）必須附對應的單元測試，並確認 `python -m unittest discover -s tests` 全部通過後才算完成。
    - 測試只用標準庫 `unittest`，以 `tests/fixtures/*.json` 假資料執行，不得連網、不得呼叫真實 Gemini 或 Discord。
    - workflow 會在產生戰報前先跑測試；測試失敗就不產生、不部署、不通知。
 

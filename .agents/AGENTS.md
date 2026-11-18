@@ -10,7 +10,7 @@ As the coding agent for the `MLB-daily` project, you must strictly follow these 
    - UI changes follow the UI-first principle: show a static mockup (see `docs/mockups/`) and get user approval before wiring it to data.
 
 3. **Tests Are Required**:
-   - Any change to `fetch_mlb.py` or rendering logic must come with unit tests in `tests/`, and `python -m unittest discover -s tests` must pass with all tests OK.
+   - Any change to `fetch_mlb.py` or `mlb_daily/` or rendering logic must come with unit tests in `tests/`, and `python -m unittest discover -s tests` must pass with all tests OK.
    - Tests use only the standard library (`unittest`) and fixtures under `tests/fixtures/`. They must not touch the network, the real Gemini API, or Discord.
 
 4. **No Secrets in the Repository**:

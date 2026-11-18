@@ -7,7 +7,8 @@
 ## 檔案結構
 
 ```
-fetch_mlb.py              唯一的主程式
+fetch_mlb.py              薄入口（重新匯出 mlb_daily 內所有名稱，CLI 不變）
+mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、translate、games、standings、previews、rosters、report、index_page、notify、cli）
 templates/report.html     戰報與休賽季快報頁面骨架
 templates/index.html      首頁骨架
 assets/style.css          共用樣式表
@@ -48,33 +49,38 @@ graph TD
 3. **產生**：`python fetch_mlb.py --check-wait --no-notify --date <日期>`，環境變數帶入 `GEMINI_API_KEY`。
 4. **更新名單**：`python fetch_mlb.py --rosters`（`continue-on-error: true`），見「球隊名單」一節。
 5. **歷史只在 gh-pages**：`index.html` 與 `reports/metadata.json` 不進 main；workflow 在產生報表前先從 gh-pages 取回 `metadata.json`（取不到或非 JSON 物件即失敗），產生後隨 gh-pages 部署。
-6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
+6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,mlb_daily,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
 7. **等待 Pages**：每 15 秒檢查當日戰報網址，最多 20 次（約 5 分鐘），逾時只警告、仍繼續下一步。
 8. **通知**：`python fetch_mlb.py --notify-only --date <日期>`，僅排程觸發或手動勾選 `notify` 時執行。
 
 ---
 
-## `fetch_mlb.py` 分層
+## `mlb_daily/` 模組與相依方向
 
-由上而下：
+`fetch_mlb.py` 是薄入口：UTF-8 reconfigure、重新匯出原本所有名稱、呼叫 `main`。實際程式在 `mlb_daily/`，由下而上相依（下層不得 import 上層）：
 
-1. **抓取**
-   - `fetch_json`／`fetch_text`：重試 3 次，失敗回傳 `None`。
-   - `check_all_games_finalized(date)`：回傳 `(是否全數完賽, games)`；API 失敗或結構異常拋出 `ApiError`，只有確認 `totalGames == 0` 才視為無賽事。
-   - `fetch_game_news`（單場 content）、`fetch_daily_transactions`（人事異動）、`fetch_daily_news`（MLB.com RSS）。
-2. **資料抽取**
-   - `classify_game_status`：Final／延長賽 `Final/N`／提前結束／Suspended／未完賽。延長賽以 `linescore.scheduledInnings` 判斷（7 局雙重賽不算延長賽）。
-   - `collect_candidates`、`select_performers`：焦點球員評分與篩選（見下）。
-   - `build_decisions`、`format_cumulative`、`split_game_transactions`。
-3. **view（純資料 dict）**
-   - `build_base_view`（狀態、隊伍、比分）、`build_game_view`（加決定與焦點球員）、`build_postponed_view`（延賽／取消）。
-   - `build_summary_sentence`、`pick_summary_sentences`、`build_offseason_summary`：metadata `summary`。
-4. **翻譯**（渲染前）：`apply_translations`，見下。
-5. **渲染**
-   - 共用工具：`esc()`（所有外部字串輸出到 HTML 前一律經過）、`fill_slots`、`render_page`。
-   - 區塊：`render_summary`、`render_search`、`render_news_section`、`render_transactions_section`、`render_game_card`／`render_fallback_card`／`render_postponed_card`。
-   - 整頁：`render_report(date, page_type, ...)` 為賽季戰報與休賽季快報共用；`render_index` 產生首頁。
-6. **輸出與通知**：`write_report`、`load_metadata`／`save_metadata`／`update_index_page`、`should_notify`、`send_discord_notification`、`main`。
+`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news` → `translate`／`games`／`standings`／`previews`／`rosters` → `report`／`index_page`／`notify` → `cli`
+
+| 模組 | 內容 |
+| --- | --- |
+| `config` | 常數、URL 模板、`_UNSET` |
+| `timeutil` | 台北時間與日期格式 |
+| `net` | `fetch_json`／`fetch_text`（重試 3 次，失敗回傳 `None`）、`post_json`、`ApiError`、`LAST_POST` |
+| `htmlutil` | `esc()`（所有外部字串輸出到 HTML 前一律經過）、顏色、`logo_picture`、`player_link`、模板與 `fill_slots`、`_section_message` |
+| `storage` | `load_metadata`／`save_metadata`、`write_report`、`write_json_atomic` |
+| `transactions` | 人事異動篩選與渲染、`split_game_transactions`、每週異動 |
+| `news` | `fetch_daily_news`（MLB.com RSS）、`fetch_game_news`（單場 content）與渲染 |
+| `translate` | Gemini 翻譯、`apply_translations`、`LAST_TRANSLATION`、`TX_TRANSLATION_CACHE`、`translate_weekly_transactions` |
+| `games` | `check_all_games_finalized`（API 失敗拋 `ApiError`，只有 `totalGames == 0` 才視為無賽事）、`classify_game_status`、焦點球員評分、決定、比賽卡片與 view、摘要句 |
+| `standings` | 戰績側欄 |
+| `previews` | 賽事預告、先發投手、開季倒數 |
+| `rosters` | 球隊名單（`--rosters`） |
+| `report` | `render_report`（賽季戰報與休賽季快報共用）、`generate_report`、`generate_offseason_report` |
+| `index_page` | 首頁附加資訊、`_safe_call`、`update_index_page` |
+| `notify` | `should_notify`、`send_discord_notification` |
+| `cli` | `main`（argparse 與流程控制） |
+
+資料流：抓取（`net`、`games`、`news`、`transactions`）→ 資料抽取與 view（`games`）→ 翻譯（`translate`，渲染前）→ 渲染（`report`、`index_page`）→ 輸出與通知（`storage`、`notify`）。
 
 ### 模板插槽
 
@@ -236,3 +242,10 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 ## 測試
 
 `tests/test_fetch_mlb.py` 使用標準庫 `unittest`，所有 HTTP 由 `FakeApi` 以 `tests/fixtures/*.json` 回應（也攔截 `urlopen`），輸出導向暫存目錄，Discord 與 `time.sleep` 皆被 patch，完全不連網。涵蓋 API 失敗、無賽事、7 局雙重賽、Suspended、延長賽、boxscore 失敗、XSS、翻譯成功與失敗等。workflow 在產生戰報前先執行，失敗即中止。
+
+### patch 定義模組與跨模組呼叫規則
+
+- `fetch_mlb.py` 重新匯出的是原物件，patch `fetch_mlb.X` 不會影響 `mlb_daily` 內部。測試要 patch 定義該名稱的模組，例如 `mock.patch("mlb_daily.net.fetch_json")`、`mlb_daily.timeutil.get_taipei_now`、`mlb_daily.notify.send_discord_notification`。
+- 直接呼叫函式與斷言內容仍可用 `fetch_mlb.X`（靠重新匯出）；`LAST_POST` 等狀態 dict 為同一物件，原地修改有效。
+- 跨模組呼叫一律用模組前綴（`net.fetch_json(...)`）；`games`、`news`、`standings`、`transactions` 因與區域變數同名，以 `games_mod` 等別名匯入。只允許 `from .config import ...` 直接匯入名稱。
+- 防護測試 `ImportRuleTests` 以 ast 掃描 `mlb_daily/*.py`，強制上述規則，且 `mlb_daily` 內不得 import `fetch_mlb`。
