@@ -198,3 +198,42 @@ ROSTER_FETCH_INTERVAL = 0.5
 
 # ---------------------------------------------------------------- 台日韓球員專區
 WATCHLIST_PATH = os.path.join("settings", "watchlist.json")
+
+
+# ---------------------------------------------------------------- 休賽季每週總整理
+SITE_BASE_URL = "https://haolun588.github.io/MLB-daily/"
+DAILY_SNAPSHOT_DIR = os.path.join("data", "daily")
+DAILY_SNAPSHOT_SCHEMA = 1
+WEEKLY_DIR = os.path.join("reports", "weekly")
+WEEKLY_INDEX_PATH = os.path.join(WEEKLY_DIR, "index.json")
+OFFSEASON_CALENDAR_PATH = os.path.join("settings", "offseason_calendar.json")
+WEEK_KEY_RE = re.compile(r"^(\d{4})-W(\d{2})$")
+WEEKLY_NEWS_LIMIT = 10
+WEEKLY_NEWS_WATCHLIST_BONUS = 2  # 提到台日韓追蹤球員
+WEEKLY_NEWS_HIGHLIGHT_BONUS = 1  # 提到本週重點異動球員
+WEEKLY_MINOR_CONTRACT_RE = re.compile(r"minor league contract")
+# 分類（顯示順序）：(key, 中文名稱)。「不列入」的異動不在此表，classify_weekly_transaction 回傳 None。
+WEEKLY_CATEGORIES = (
+    ("trade", "交易"),
+    ("signing", "自由球員簽約"),
+    ("extension", "延長合約"),
+    ("dfa", "DFA／釋出／讓渡"),
+    ("free_agent", "成為自由球員"),
+    ("roster40", "40 人名單異動"),
+)
+# typeCode -> 分類 key（延長合約依描述判斷，SFA 含 minor league contract 不列入，見 weekly.classify_weekly_transaction）。
+# 未列入此表的 typeCode（SC、ASG、RTN、OPT、NUM、RET 等）一律不列入週報。
+WEEKLY_TYPE_CATEGORY = {
+    "TR": "trade",
+    "SFA": "signing",
+    "DES": "dfa",    # designated for assignment（指定讓渡）
+    "REL": "dfa",    # released
+    "OUT": "dfa",    # outrighted
+    "DFA": "free_agent",  # API 的 DFA 是 Declared Free Agency（成為自由球員），不是指定讓渡
+    "SE": "roster40",     # selected（上 40 人名單）
+    "CLW": "roster40",    # claimed off waivers
+    "R5": "roster40",     # Rule 5
+    "R5M": "roster40",
+}
+# 「本週重點」收錄的分類
+WEEKLY_HIGHLIGHT_CATEGORIES = ("trade", "signing", "extension")

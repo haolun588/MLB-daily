@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "has_games": false,
+  "transactions": [
+    {
+      "type_code": "TR",
+      "date": "2026-11-20",
+      "description": "New York Yankees traded RHP Dup Lic to Tampa Bay Rays for 1B Other Guy.",
+      "description_zh": "紐約洋基將 RHP Dup Lic 交易到坦帕灣光芒，換取 1B Other Guy。",
+      "person_id": 900010,
+      "person_name": "Dup Lic",
+      "persons": [
+        {
+          "id": 900010,
+          "name": "Dup Lic"
+        },
+        {
+          "id": 900011,
+          "name": "Other Guy"
+        }
+      ],
+      "to_team_id": 139,
+      "from_team_id": 147
+    },
+    {
+      "type_code": "TR",
+      "date": "2026-11-20",
+      "description": "New York Yankees traded RHP Dup Lic to Tampa Bay Rays for 1B Other Guy.",
+      "description_zh": "紐約洋基將 RHP Dup Lic 交易到坦帕灣光芒，換取 1B Other Guy。",
+      "person_id": 900010,
+      "person_name": "Dup Lic",
+      "persons": [
+        {
+          "id": 900010,
+          "name": "Dup Lic"
+        },
+        {
+          "id": 900011,
+          "name": "Other Guy"
+        }
+      ],
+      "to_team_id": 139,
+      "from_team_id": 147
+    },
+    {
+      "type_code": "SFA",
+      "date": "2026-11-20",
+      "description": "Boston Red Sox signed free agent RHP <script>alert(1)</script> Evil to a 1-year contract.",
+      "description_zh": "波士頓紅襪與自由球員 RHP <script>alert(1)</script> Evil 簽下 1 年合約。<script>alert(2)</script>",
+      "person_id": 900012,
+      "person_name": "<script>alert(1)</script> Evil",
+      "persons": [
+        {
+          "id": 900012,
+          "name": "<script>alert(1)</script> Evil"
+        }
+      ],
+      "to_team_id": 111,
+      "from_team_id": null
+    },
+    {
+      "type_code": "ASG",
+      "date": "2026-11-20",
+      "description": "Texas Rangers assigned RHP Min Or to Frisco.",
+      "description_zh": "德州遊騎兵將 RHP Min Or 指派到 Frisco。",
+      "person_id": 900013,
+      "person_name": "Min Or",
+      "persons": [
+        {
+          "id": 900013,
+          "name": "Min Or"
+        }
+      ],
+      "to_team_id": 140,
+      "from_team_id": null
+    }
+  ],
+  "news": [
+    {
+      "title": "Filler story 1",
+      "title_zh": "補位新聞 1",
+      "link": "https://www.mlb.com/news/filler-1",
+      "published": "2026-11-20T11:01:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Filler story 2",
+      "title_zh": "補位新聞 2",
+      "link": "https://www.mlb.com/news/filler-2",
+      "published": "2026-11-20T12:02:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Filler story 3",
+      "title_zh": "補位新聞 3",
+      "link": "https://www.mlb.com/news/filler-3",
+      "published": "2026-11-20T13:03:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Filler story 4",
+      "title_zh": "補位新聞 4",
+      "link": "https://www.mlb.com/news/filler-4",
+      "published": "2026-11-20T14:04:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Filler story 5",
+      "title_zh": "補位新聞 5",
+      "link": "https://www.mlb.com/news/filler-5",
+      "published": "2026-11-20T15:05:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Filler story 6",
+      "title_zh": "補位新聞 6",
+      "link": "https://www.mlb.com/news/filler-6",
+      "published": "2026-11-20T16:06:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Filler story 7",
+      "title_zh": "補位新聞 7",
+      "link": "https://www.mlb.com/news/filler-7",
+      "published": "2026-11-20T17:07:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Filler story 8",
+      "title_zh": "補位新聞 8",
+      "link": "https://www.mlb.com/news/filler-8",
+      "published": "2026-11-20T18:08:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Filler story 9",
+      "title_zh": "補位新聞 9",
+      "link": "https://www.mlb.com/news/filler-9",
+      "published": "2026-11-20T19:09:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Filler story 10",
+      "title_zh": "補位新聞 10",
+      "link": "https://www.mlb.com/news/filler-10",
+      "published": "2026-11-20T10:10:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    },
+    {
+      "title": "Jung Hoo Lee ready for 2027",
+      "title_zh": "李政厚準備迎接 2027",
+      "link": "https://www.mlb.com/news/jung-hoo-lee-2027",
+      "published": "2026-11-20T07:00:00+08:00",
+      "image": null,
+      "summary": "The Giants outfielder is healthy."
+    },
+    {
+      "title": "<script>alert(3)</script> headline",
+      "title_zh": "<script>alert(4)</script> 標題",
+      "link": "https://www.mlb.com/news/x\"onmouseover=\"alert(5)",
+      "published": "2026-11-20T06:00:00+08:00",
+      "image": "https://img.mlbstatic.com/mlb-images/x.jpg",
+      "summary": "xss test with Shohei Ohtani"
+    }
+  ]
+}

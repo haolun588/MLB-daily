@@ -3,7 +3,7 @@
 import sys
 
 from . import htmlutil, net, previews, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
-from .config import DATE_KEY_RE, SEASON_URL
+from .config import DATE_KEY_RE, SEASON_URL, WEEK_KEY_RE
 
 
 def _safe_call(label, fn, *args):
@@ -56,6 +56,7 @@ def build_index_extras(now=None):
             _safe_call("人事異動翻譯", translate.translate_weekly_transactions, weekly)
         upcoming = "\n\n".join(p for p in (
             _safe_call("開季倒數渲染", previews.render_countdown, countdown) or "",
+            _safe_call("最新週報", render_latest_weekly_link, None, today) or "",
             _safe_call("人事異動渲染", transactions_mod.render_weekly_transactions, weekly) or "",
         ) if p)
     aside = _safe_call("戰績渲染", standings_mod.render_standings_aside, standings, season, in_season, now)
@@ -122,6 +123,38 @@ def render_recent_item(date_str, entry):
     )
 
 
+WEEKLY_LINK_MAX_AGE_DAYS = 14
+
+
+def render_latest_weekly_link(entry=None, today=None):
+    """首頁休賽季區塊的「最新週報」連結卡（讀 reports/weekly/index.json 最新一週）；沒有週報回傳空字串。
+    連結一律由週次組出（不信任索引內的 path），週次格式不符視為沒有；該週 end 距 today 超過 14 天不顯示（過舊）。"""
+    entry = entry if entry is not None else storage.latest_weekly_entry()
+    if not entry or not WEEK_KEY_RE.match(str(entry.get("week"))):
+        return ""
+    week = entry["week"]
+    start, end = timeutil._parse_iso_date(entry.get("start")), timeutil._parse_iso_date(entry.get("end"))
+    today = today or timeutil.get_taipei_now().date()
+    if end is not None and (today - end).days > WEEKLY_LINK_MAX_AGE_DAYS:
+        return ""
+    rng = f"（{start.month}/{start.day}～{end.month}/{end.day}）" if start and end else ""
+    sub = []
+    for key, label, unit in (("tx_count", "異動", "筆"), ("trade_count", "交易", "筆"), ("signing_count", "簽約", "筆")):
+        if key in entry:
+            sub.append(f"{label} {storage._to_int(entry[key])} {unit}")
+    if "days" in entry:
+        sub.append(f"涵蓋 {storage._to_int(entry['days'])}／7 天")
+    sub_txt = "、".join(sub) or "休賽季每週人事異動與新聞總整理"
+    return (
+        '  <section class="section" aria-labelledby="wkly-h">\n'
+        '    <div class="section-head"><h2 id="wkly-h">每週總整理</h2><span class="count">休賽季</span></div>\n'
+        f'    <a class="teams-entry" href="{htmlutil.esc(timeutil.weekly_href(week))}">\n'
+        f'      <span><strong>最新週報：{htmlutil.esc(week)}{htmlutil.esc(rng)}</strong>'
+        f'<span class="sub-txt">{htmlutil.esc(sub_txt)}</span></span>\n'
+        '      <span class="go" aria-hidden="true">閱讀週報 →</span>\n'
+        '    </a>\n  </section>')
+
+
 TEAMS_ENTRY_HTML = """  <a class="teams-entry" href="teams.html">
     <span><strong>球隊名單</strong><span class="sub-txt">30 隊球員名單與本季數據，依守備位置分組</span></span>
     <span class="go" aria-hidden="true">30 隊名單 →</span>
@@ -180,7 +213,15 @@ def update_index_page(new_metadata):
     metadata_db = storage.load_metadata(metadata_path)
     metadata_db[new_metadata["date"]] = new_metadata
     storage.save_metadata(metadata_path, metadata_db)
+    _write_index(metadata_db)
 
+
+def refresh_index_page():
+    """不新增 metadata，僅依既有 reports/metadata.json 重新產生首頁（週報產生後讓首頁立即出現週報連結）。"""
+    _write_index(storage.load_metadata("reports/metadata.json"))
+
+
+def _write_index(metadata_db):
     # 戰績側欄、今日預告／休賽季區塊：任何失敗都不得影響戰報與 metadata（各區塊已各自隔離，這裡再兜底）
     extras = _safe_call("首頁補充區塊", build_index_extras) or _safe_call("首頁側欄錯誤版", fallback_index_extras)
 

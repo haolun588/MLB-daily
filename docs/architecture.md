@@ -8,22 +8,28 @@
 
 ```
 fetch_mlb.py              薄入口（重新匯出 mlb_daily 內所有名稱，CLI 不變）
-mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、previews、rosters、report、index_page、notify、cli）
+mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、previews、rosters、report、weekly、index_page、notify、cli）
 settings/watchlist.json   台日韓球員追蹤名單（納入版控）
+settings/offseason_calendar.json   休賽季重要日程（手動維護，週報頁尾「下週日程」用；納入版控，目前為空檔）
 templates/report.html     戰報與休賽季快報頁面骨架
 templates/index.html      首頁骨架
+templates/weekly.html     休賽季每週總整理頁面骨架
 assets/style.css          共用樣式表
 assets/archive.js         歷史存檔頁腳本
 assets/teams.js           球隊名單頁腳本
 teams.html                球隊名單頁（執行時以 JS 讀取 data/teams/*.json）
 data/teams/               名單 JSON（僅存在於 gh-pages，main 以 .gitignore 忽略）
+data/daily/YYYY-MM-DD.json   每日資料快照（已翻譯的大聯盟異動與新聞，供週報使用；僅存在於 gh-pages）
+reports/weekly/YYYY-Www.html 休賽季每週總整理（僅存在於 gh-pages）
+reports/weekly/index.json    週報索引（僅存在於 gh-pages，workflow 先取回）
 index.html                首頁（腳本全量重新產生；僅存在於 gh-pages，main 忽略）
 archive.html              歷史存檔頁（靜態檔，執行時以 JS 讀取 metadata）
 reports/metadata.json     每日索引（僅存在於 gh-pages，workflow 先取回）
 reports/YYYY/MM/YYYY-MM-DD.html   戰報（僅存在於 gh-pages，main 忽略）
 tests/test_fetch_mlb.py   單元測試
 tests/test_watchlist.py   台日韓球員專區測試
-tests/fixtures/           API 假資料（schedule、boxscore、content、transactions、RSS）
+tests/test_weekly.py      休賽季每週總整理測試
+tests/fixtures/           API 假資料（schedule、boxscore、content、transactions、RSS）；daily_snapshots/ 為週報用的每日快照、offseason_calendar_test.json 為日程設定
 .github/workflows/daily_report.yml   排程、測試、部署、通知
 ```
 
@@ -54,6 +60,7 @@ graph TD
 6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,mlb_daily,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
 7. **等待 Pages**：每 15 秒檢查當日戰報網址，最多 20 次（約 5 分鐘），逾時只警告、仍繼續下一步。
 8. **通知**：`python fetch_mlb.py --notify-only --date <日期>`，僅排程觸發或手動勾選 `notify` 時執行。
+9. **每週總整理**（休賽季，見「休賽季每週總整理」一節）：Restore 步驟額外還原 `data/daily/` 與 `reports/weekly/index.json`；`Generate Weekly Report`（`continue-on-error: true`）緊接在 Generate Daily Report 之後；部署後若本次有產生週報，另有「等待週報網址 200」與「`--notify-weekly`」兩個步驟（條件同每日通知）。`workflow_dispatch` 新增 `week` 輸入（手動補產指定週）。
 
 ---
 
@@ -61,7 +68,9 @@ graph TD
 
 `fetch_mlb.py` 是薄入口：UTF-8 reconfigure、重新匯出原本所有名稱、呼叫 `main`。實際程式在 `mlb_daily/`，由下而上相依（下層不得 import 上層）：
 
-`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news`／`watchlist` → `translate`／`games`／`standings`／`previews`／`rosters` → `report`／`index_page`／`notify` → `cli`
+`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news`／`watchlist` → `translate`／`games`／`standings`／`previews`／`rosters` → `report`／`weekly`／`index_page`／`notify` → `cli`
+
+`weekly` 與 `report` 同層：可用 `transactions`、`news`、`watchlist`、`rosters`、`htmlutil`、`storage`、`timeutil`、`config`，**不得** import `report`／`index_page`／`notify`／`cli`。首頁與通知需要週報資料時，由 `index_page`／`notify`／`cli` 透過 `storage.load_weekly_index`／`latest_weekly_entry` 讀 `reports/weekly/index.json`，不 import `weekly`。
 
 | 模組 | 內容 |
 | --- | --- |
@@ -69,7 +78,7 @@ graph TD
 | `timeutil` | 台北時間與日期格式 |
 | `net` | `fetch_json`／`fetch_text`（重試 3 次，失敗回傳 `None`）、`post_json`、`ApiError`、`LAST_POST` |
 | `htmlutil` | `esc()`（所有外部字串輸出到 HTML 前一律經過）、顏色、`logo_picture`、`player_link`、模板與 `fill_slots`、`_section_message` |
-| `storage` | `load_metadata`／`save_metadata`、`write_report`、`write_json_atomic` |
+| `storage` | `load_metadata`／`save_metadata`、`write_report`、`write_json_atomic`；週報相關：`write_daily_snapshot`、`write_weekly_report`、`load_weekly_index`／`save_weekly_index`／`latest_weekly_entry` |
 | `transactions` | 人事異動篩選與渲染、`split_game_transactions`、每週異動 |
 | `news` | `fetch_daily_news`（MLB.com RSS）、`fetch_game_news`（單場 content）與渲染 |
 | `watchlist` | 台日韓球員專區：讀名單、比對異動／新聞／boxscore、組成 `spotlight` 資料與渲染（只依賴 `config`、`htmlutil`） |
@@ -78,20 +87,21 @@ graph TD
 | `standings` | 戰績側欄 |
 | `previews` | 賽事預告、先發投手、開季倒數 |
 | `rosters` | 球隊名單（`--rosters`） |
-| `report` | `render_report`（賽季戰報與休賽季快報共用）、`generate_report`、`generate_offseason_report` |
-| `index_page` | 首頁附加資訊、`_safe_call`、`update_index_page` |
-| `notify` | `should_notify`、`send_discord_notification` |
-| `cli` | `main`（argparse 與流程控制） |
+| `report` | `render_report`（賽季戰報與休賽季快報共用）、`generate_report`、`generate_offseason_report`；兩條流程結束時各寫一份每日快照（`build_daily_snapshot`） |
+| `weekly` | 休賽季每週總整理：週次計算、讀每日快照、分類、各隊動態、新聞精選、下週日程、渲染 `templates/weekly.html`、`generate_weekly_report` |
+| `index_page` | 首頁附加資訊、`_safe_call`、`update_index_page`、`refresh_index_page`（不新增 metadata 只重產首頁）、休賽季區塊的最新週報連結 |
+| `notify` | `should_notify`、`send_discord_notification`、`send_weekly_notification` |
+| `cli` | `main`（argparse 與流程控制）；`--weekly`／`--notify-weekly` 分支 |
 
-資料流：抓取（`net`、`games`、`news`、`transactions`）→ 資料抽取與 view（`games`）→ 翻譯（`translate`，渲染前）→ 渲染（`report`、`index_page`）→ 輸出與通知（`storage`、`notify`）。
+資料流：抓取（`net`、`games`、`news`、`transactions`）→ 資料抽取與 view（`games`）→ 翻譯（`translate`，渲染前）→ 渲染（`report`、`index_page`）→ 輸出與通知（`storage`、`notify`）。每日戰報輸出後另存 `data/daily/YYYY-MM-DD.json`；週報（`weekly`）只讀這些快照，不抓 API、不翻譯。
 
 ### 模板插槽
 
-`templates/report.html` 的插槽：`TITLE`、`DATE_LONG`、`SUBTITLE`、`SUMMARY`、`SEARCH`、`SPOTLIGHT`、`NEWS`、`GAMES`、`TRANSACTIONS`、`GENERATED_AT`。`templates/index.html` 的插槽：`LATEST`、`SPOTLIGHT`、`RECENT`（另有 `UPCOMING`、`TEAMS`、`STANDINGS`、`STANDINGS_UI`）。插槽格式為 `<!--SLOT:NAME-->`，`fill_slots` 單次掃描替換，插入的內容不會被當成插槽再次展開。
+`templates/report.html` 的插槽：`TITLE`、`DATE_LONG`、`SUBTITLE`、`SUMMARY`、`SEARCH`、`SPOTLIGHT`、`NEWS`、`GAMES`、`TRANSACTIONS`、`GENERATED_AT`。`templates/index.html` 的插槽：`LATEST`、`SPOTLIGHT`、`RECENT`（另有 `UPCOMING`、`TEAMS`、`STANDINGS`、`STANDINGS_UI`）。`templates/weekly.html` 的插槽：`TITLE`、`DATELINE`、`SUMMARY`、`HIGHLIGHTS`、`WATCH`、`CATEGORIES`、`TEAMS`、`NEWS`、`CALENDAR`、`GENERATED_AT`。插槽格式為 `<!--SLOT:NAME-->`，`fill_slots` 單次掃描替換，插入的內容不會被當成插槽再次展開。
 
 ### 共用資源與連結
 
-CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `reports/YYYY/MM/`，以 `../../../assets/style.css`、`../../../index.html`、`../../../archive.html` 相對連結回到網站根目錄；首頁使用 `assets/style.css`、`archive.html`。
+CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `reports/YYYY/MM/`，以 `../../../assets/style.css`、`../../../index.html`、`../../../archive.html` 相對連結回到網站根目錄；週報頁位於 `reports/weekly/`，用 `../../assets/style.css` 等兩層相對連結；首頁使用 `assets/style.css`、`archive.html`。
 
 ---
 
@@ -194,12 +204,15 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 
 `send_discord_notification` 由 `--notify-only` 呼叫，讀 `reports/metadata.json` 中該日資料，不呼叫 MLB API。賽季通知含總場數、延賽數、焦點摘要與新聞則數；休賽季通知含新聞與人事異動數。`should_notify`：休賽季快報在新聞與人事異動皆為 0 時不發。未設定 `DISCORD_WEBHOOK_URL` 時略過並印出警告。
 
+週報另有獨立訊息：`--notify-weekly`（可加 `--week YYYY-Www`，預設最新一週）讀 `reports/weekly/index.json`，`send_weekly_notification` 發一則 embed（標題、日期範圍、交易／簽約筆數、資料涵蓋天數、連結），網址基底 `SITE_BASE_URL`（`https://haolun588.github.io/MLB-daily/`，與每日戰報通知相同）。只有本次執行確實產生週報時才發（workflow 以 `Generate Weekly Report` 的 step output 控制）。
+
 ---
 
 ## 首頁與存檔
 
 - `index.html` 每次由 `templates/index.html` 與 metadata 全量產生：最新一期大卡＋近期 6 期（不含最新一期），休賽季項目顯示新聞與人事異動數量。
-- `archive.html`＋`assets/archive.js`：讀取 `reports/metadata.json` 依月份分組；讀取失敗顯示錯誤訊息；所有外部資料以 `textContent` 寫入，不拼接 HTML。
+- `archive.html`＋`assets/archive.js`：讀取 `reports/metadata.json` 依月份分組；讀取失敗顯示錯誤訊息；所有外部資料以 `textContent` 寫入，不拼接 HTML。另讀 `reports/weekly/index.json`，在頁面最上方加「每週總整理」清單（讀不到、格式不符或沒有週報就不顯示；週次須符合 `YYYY-Www` 才組連結）。
+- 首頁休賽季區塊（`UPCOMING` 插槽，賽季中不顯示）加「每週總整理：最新週報」連結卡，讀 `reports/weekly/index.json` 最新一週，連結由週次組出（不信任索引內的 path）；該週 `end` 距今超過 14 天不顯示。週報產生後 CLI 呼叫 `refresh_index_page()` 讓首頁立即更新（metadata 不存在時略過）。
 
 ---
 
@@ -257,6 +270,43 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 
 ---
 
+## 休賽季每週總整理
+
+設計見 `docs/plans/20261118_休賽季每週總整理設計.md`。休賽季每週一（台北時間）產出 `reports/weekly/YYYY-Www.html`，彙整上一個 ISO 週（週一至週日）的人事異動與新聞；資料全部來自每日快照，不重抓 API、不重新翻譯。
+
+### 每日資料快照 `data/daily/YYYY-MM-DD.json`
+
+`generate_report`（有賽事）與 `generate_offseason_report`（無賽事）在翻譯完成、寫出 HTML 後各寫一份（`storage.write_daily_snapshot`，暫存檔加 `os.replace`）。寫入或組裝失敗只印警告，不影響戰報。`schema: 1`：
+
+- `date`、`has_games`。
+- `transactions`：經大聯盟過濾、戰報實際顯示的異動（賽季日含各場卡片內的），每筆 `type_code`、`date`、`description`、`description_zh`（無譯文為 `null`）、`person_id`、`person_name`、`persons`（`[{id, name}]`）、`to_team_id`、`from_team_id`。
+- `news`：當天戰報實際顯示（最多 12 則）的新聞，每則 `title`、`title_zh`、`link`、`published`（ISO 字串）、`image`、`summary`（RSS 純文字，供名單比對）。新聞抓取失敗存空清單。
+- 不存台日韓比對結果；週報產生時用當下的 `settings/watchlist.json` 重新比對。
+
+`data/` 在 `.gitignore`、不在 `exclude_assets`，隨部署累積在 gh-pages；workflow 每次從 gh-pages 還原 `data/daily/`（`git archive origin/gh-pages data/daily | tar -x`，失敗只警告）。
+
+### 產生條件與 CLI
+
+- `--weekly`：預設只在台北今天為週一，且 `resolve_roster_context(今天)["rosterType"] != "active"`（休賽季）時產生，整理「上一個」ISO 週（`今天 - isoweekday` 所在週）。`--week YYYY-Www` 手動指定週次（略過週一判斷，休賽季判斷仍套用）；`--force` 兩項都略過（不呼叫賽季 API）。`--date` 在此模式當作「今天」覆寫。
+- 週次格式 `YYYY-Www`（`date.isocalendar()`、`date.fromisocalendar` 驗證；2026 年有 W53）。格式錯誤 `exit 1`。
+- 讀 7 天快照；缺檔略過、損壞或 schema／日期不符的檔案印警告略過。**有 ≥1 天就照產**，頁首標示「本週資料涵蓋 N／7 天」與有／缺資料的日期；0 天不產、不通知。
+- 產生後寫 `reports/weekly/index.json`（依週次去重、新的在前），CLI 印出 `weekly_week=…`、`weekly_url=…` 供 workflow 寫入 `$GITHUB_OUTPUT`，並重產首頁。
+- `--notify-weekly`：見「通知」。`--weekly` 不得與 `--notify-only`／`--check-wait`／`--no-notify`／`--rosters`／`--notify-weekly` 併用；`--week`、`--force` 須搭配 `--weekly`（`--week` 也可搭配 `--notify-weekly`，`--force` 只能搭配 `--weekly`）。
+
+### 分類（`config.WEEKLY_CATEGORIES`、`WEEKLY_TYPE_CATEGORY`）
+
+判斷順序：描述符合 `WEEKLY_TX_EXTENSION_RE` → 延長合約（優先於 SFA）；SFA 且含 `minor league contract` → 不列入（防禦判斷）；其餘依 `type_code` 對照：`TR` 交易、`SFA` 自由球員簽約、`DES`／`REL`／`OUT` DFA／釋出／讓渡、`DFA`（Declared Free Agency）成為自由球員、`SE`／`CLW`／`R5`／`R5M` 40 人名單異動。其他（`SC`、`ASG`、`RTN`、`OPT`、`NUM`、`RET` 等）不列入。「選擇權」分類不做（API 沒有資料）。「小聯盟合約」分類已移除（審查後使用者同意）：快照內是經大聯盟過濾的異動，描述含 `minor league` 者已被排除，該分類實務上永遠為空。各隊動態方向：交易、CLW、SFA 等依 toTeam＝加入、fromTeam＝離開；離開類（DES、DFA、REL、OUT）依 fromTeam、toTeam 順序取第一個屬於 30 隊的隊伍記為離開（真實 API 中 DES／DFA／REL 只有 toTeam，OUT 的 toTeam 是小聯盟）。「本週最忙」徽章只在最高筆數 ≥ 2 時標示（並列都標）。
+
+### 頁面內容
+
+頁首統計（異動＝列入分類的筆數、交易、簽約＝自由球員簽約＋延長合約、資料涵蓋天數）→ 本週重點（交易、大聯盟簽約、延長合約全列，新到舊）→ 台日韓動態（沒有就不顯示）→ 分類整理→ 各隊動態（每隊分加入／離開，交易雙方都記，排除不列入，筆數最多（至少 2 筆）者可並列標「本週最忙」）→ 本週新聞精選（依 `link` 去重，台日韓球員 +2、重點異動球員 +1，同分新到舊，最多 10 則）→ 下週日程（`settings/offseason_calendar.json` 內落在下一個週一至週日的事件；檔案缺漏或格式錯誤只印警告）。異動與新聞涉及名單球員時加地區徽章（台灣／日本／韓國＋中文名）。所有外部字串經 `esc()`，新聞連結與圖片只接受 https 的 `www.mlb.com`／`*.mlbstatic.com`。
+
+### 週報索引 `reports/weekly/index.json`
+
+`{"weeks": [{"week", "start", "end", "days", "tx_count", "trade_count", "signing_count", "path", "generated_at"}]}`，不放進 `reports/metadata.json`。
+
+---
+
 ## 搜尋
 
 賽季戰報的每張卡片帶 `data-teams`（以 `|` 分隔縮寫、中英文隊名）。搜尋框精確縮寫優先，輸入後 Enter 捲動並高亮第一筆，再按 Enter 跳到下一筆。
@@ -272,4 +322,6 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 - `fetch_mlb.py` 重新匯出的是原物件，patch `fetch_mlb.X` 不會影響 `mlb_daily` 內部。測試要 patch 定義該名稱的模組，例如 `mock.patch("mlb_daily.net.fetch_json")`、`mlb_daily.timeutil.get_taipei_now`、`mlb_daily.notify.send_discord_notification`。
 - 直接呼叫函式與斷言內容仍可用 `fetch_mlb.X`（靠重新匯出）；`LAST_POST` 等狀態 dict 為同一物件，原地修改有效。
 - 跨模組呼叫一律用模組前綴（`net.fetch_json(...)`）；`games`、`news`、`standings`、`transactions` 因與區域變數同名，以 `games_mod` 等別名匯入。只允許 `from .config import ...` 直接匯入名稱。
-- 防護測試 `ImportRuleTests` 以 ast 掃描 `mlb_daily/*.py`，強制上述規則，且 `mlb_daily` 內不得 import `fetch_mlb`。
+- 防護測試 `ImportRuleTests` 以 ast 掃描 `mlb_daily/*.py`（含 `weekly.py`），強制上述規則，且 `mlb_daily` 內不得 import `fetch_mlb`；`tests/test_weekly.py` 另驗證 `weekly` 不 import `report`／`cli`／`index_page`／`notify`。
+
+`tests/test_weekly.py` 涵蓋休賽季每週總整理：每日快照寫入、週次與 ISO 週跨年、產生條件（週一、休賽季、`--week`、`--force`）、資料不足與損壞檔、分類、各隊動態與並列最忙、新聞精選、台日韓標註、下週日程、跳脫、週報索引與首頁連結、Discord 週報訊息、workflow 內容。fixture：`tests/fixtures/daily_snapshots/`（2026-11-16～22，缺 11-17／21、11-19 為損壞檔）、`tests/fixtures/offseason_calendar_test.json`。

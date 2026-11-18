@@ -30,6 +30,11 @@ def report_href(date_str):
     return f"reports/{y}/{m}/{date_str}.html"
 
 
+def weekly_href(week_label):
+    """自網站根目錄起算的週報路徑：reports/weekly/YYYY-Www.html。"""
+    return f"reports/weekly/{week_label}.html"
+
+
 def _parse_iso_date(value):
     try:
         return datetime.strptime(str(value)[:10], "%Y-%m-%d").date()

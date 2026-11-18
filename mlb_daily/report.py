@@ -3,6 +3,7 @@
 import sys
 
 from . import games as games_mod, htmlutil, net, news as news_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
+from .config import DAILY_SNAPSHOT_SCHEMA
 
 
 # ---------------------------------------------------------------- 渲染：總覽與區塊
@@ -98,6 +99,46 @@ def _spotlight_build(date_str, wl, tx_matches, news_matches, boxscores=()):
         return [], ""
 
 
+# ---------------------------------------------------------------- 每日資料快照（供休賽季每週總整理）
+def _iso(value):
+    return value.isoformat() if hasattr(value, "isoformat") else (None if value is None else str(value))
+
+
+def build_daily_snapshot(date_str, has_games, tx_list, news):
+    """data/daily/YYYY-MM-DD.json 的內容（schema 1）：戰報實際顯示、已翻譯的大聯盟異動與新聞。
+    news 為 None（抓取失敗）時存空清單。"""
+    return {
+        "schema": DAILY_SNAPSHOT_SCHEMA,
+        "date": date_str,
+        "has_games": bool(has_games),
+        "transactions": [
+            {
+                "type_code": tx.get("type_code"), "date": tx.get("date"),
+                "description": tx.get("description"), "description_zh": tx.get("description_zh"),
+                "person_id": tx.get("person_id"), "person_name": tx.get("person_name"),
+                "persons": [{"id": p.get("id"), "name": p.get("name")} for p in transactions_mod._tx_persons(tx)],
+                "to_team_id": tx.get("to_team_id"), "from_team_id": tx.get("from_team_id"),
+            }
+            for tx in tx_list
+        ],
+        "news": [
+            {
+                "title": n.get("title"), "title_zh": n.get("title_zh"), "link": n.get("link"),
+                "published": _iso(n.get("published")), "image": n.get("image"), "summary": n.get("summary"),
+            }
+            for n in (news or [])
+        ],
+    }
+
+
+def _save_daily_snapshot(date_str, has_games, tx_list, news):
+    """寫入每日快照；任何失敗只印警告，不影響戰報。"""
+    try:
+        storage.write_daily_snapshot(date_str, build_daily_snapshot(date_str, has_games, tx_list, news))
+    except Exception as e:  # noqa: BLE001 - 快照失敗不得影響戰報
+        print(f"Warning: 每日資料快照產生失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+
+
 def generate_report(date_str, games):
     print(f"Generating report for {date_str} with {len(games)} games...")
     total_games = len(games)
@@ -108,6 +149,7 @@ def generate_report(date_str, games):
 
     raw_tx = transactions_mod.fetch_raw_transactions(date_str)
     tx_list = transactions_mod.filter_major_league_transactions(raw_tx)
+    snapshot_tx = list(tx_list)  # 之後 tx_list 會被拆給各場卡片；快照要存完整清單（同一批 dict，翻譯會寫入其中）
     transactions_count = len(tx_list)
     news_all = news_mod.fetch_all_daily_news(date_str)
     news = None if news_all is None else news_all[:12]
@@ -155,6 +197,7 @@ def generate_report(date_str, games):
 
     storage.write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list, news,
                                                  spotlight_html))
+    _save_daily_snapshot(date_str, True, snapshot_tx, news)
 
     summary_sentence = f"昨日共進行了 {total_games} 場賽事。"
     if postponed_count > 0:
@@ -201,6 +244,7 @@ def generate_offseason_report(date_str):
     spotlight, spotlight_html = _spotlight_build(date_str, wl, tx_matches, news_matches)
     storage.write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list, news=news,
                                                  spotlight_html=spotlight_html))
+    _save_daily_snapshot(date_str, False, tx_list, news)
     meta = {
         "date": date_str,
         "total_games": 0,

@@ -1,12 +1,55 @@
 """命令列入口與流程控制。"""
 
 import argparse
+import os
 import sys
 import time
 from datetime import datetime
 
-from . import games as games_mod, index_page, net, notify, report, rosters, storage, timeutil
-from .config import MAX_WAIT_CHECKS, WAIT_SLEEP_SECONDS
+from . import games as games_mod, index_page, net, notify, report, rosters, storage, timeutil, weekly
+from .config import MAX_WAIT_CHECKS, SITE_BASE_URL, WAIT_SLEEP_SECONDS
+
+
+def _taipei_today(date_arg):
+    """--date 當作「今天」覆寫（供手動與測試），否則為台北今天；格式錯誤結束程式。"""
+    if date_arg:
+        try:
+            return datetime.strptime(date_arg, "%Y-%m-%d").date()
+        except ValueError:
+            print("Error: Date format must be YYYY-MM-DD", file=sys.stderr)
+            sys.exit(1)
+    return timeutil.get_taipei_now().date()
+
+
+def _run_weekly(args):
+    """--weekly：產生週報、更新週報索引與首頁；成功時印出 weekly_week= 與 weekly_url= 供 workflow 讀取。
+    --notify-weekly：依週報索引發 Discord 訊息（--week 指定週次，預設最新一週）。"""
+    if args.notify_weekly:
+        index = storage.load_weekly_index()["weeks"]
+        if args.week:
+            entry = next((w for w in index if w["week"] == args.week), None)
+        else:
+            entry = max(index, key=lambda w: w["week"]) if index else None
+        if entry is None:
+            print(f"Error: reports/weekly/index.json 中找不到{' ' + args.week if args.week else '任何週報'}，無法發送通知。", file=sys.stderr)
+            sys.exit(1)
+        notify.send_weekly_notification(entry)
+        return
+    today = _taipei_today(args.date)
+    try:
+        entry = weekly.generate_weekly_report(today, week=args.week, force=args.force)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    if entry is None:
+        return
+    print(f"weekly_week={entry['week']}")
+    print(f"weekly_url={SITE_BASE_URL}{entry['path']}")
+    if os.path.exists("reports/metadata.json"):  # 讓首頁立即出現最新週報連結；失敗不影響週報
+        try:
+            index_page.refresh_index_page()
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - metadata 損壞會 sys.exit；週報已產生，不應以非 0 結束
+            print(f"Warning: 週報產生後重新產生首頁失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
 
 
 def main():
@@ -19,6 +62,11 @@ def main():
     parser.add_argument("--no-notify", action="store_true", help="Generate report and metadata but do not send Discord notification")
     parser.add_argument("--notify-only", action="store_true", help="Only send Discord notification from existing metadata (no API calls, no file writes)")
 
+    parser.add_argument("--weekly", action="store_true", help="Generate the offseason weekly summary (reports/weekly/YYYY-Www.html) from data/daily snapshots; only on Taipei Monday during the offseason unless --week/--force")
+    parser.add_argument("--week", type=str, help="ISO week YYYY-Www for --weekly (manual backfill) or --notify-weekly")
+    parser.add_argument("--force", action="store_true", help="With --weekly: skip the Monday and offseason checks")
+    parser.add_argument("--notify-weekly", action="store_true", help="Send the weekly summary Discord message from reports/weekly/index.json (latest week, or --week)")
+
     args = parser.parse_args()
     if args.notify_only and (args.check_wait or args.no_notify):
         print("Error: --notify-only cannot be combined with --check-wait or --no-notify", file=sys.stderr)
@@ -26,10 +74,28 @@ def main():
     if args.rosters and (args.notify_only or args.check_wait):
         print("Error: --rosters cannot be combined with --notify-only or --check-wait", file=sys.stderr)
         sys.exit(1)
+    weekly_mode = args.weekly or args.notify_weekly
+    if args.weekly and args.notify_weekly:
+        print("Error: --weekly and --notify-weekly cannot be combined", file=sys.stderr)
+        sys.exit(1)
+    if weekly_mode and (args.rosters or args.notify_only or args.check_wait or args.no_notify):
+        print("Error: --weekly/--notify-weekly cannot be combined with --rosters, --notify-only, --check-wait or --no-notify", file=sys.stderr)
+        sys.exit(1)
+    if (args.week or args.force) and not weekly_mode:
+        print("Error: --week and --force require --weekly (or --notify-weekly for --week)", file=sys.stderr)
+        sys.exit(1)
+    if args.force and not args.weekly:
+        print("Error: --force requires --weekly", file=sys.stderr)
+        sys.exit(1)
     if args.max_wait_checks < 1:
         print("Error: --max-wait-checks must be >= 1", file=sys.stderr)
         sys.exit(1)
     
+    # --weekly / --notify-weekly：休賽季每週總整理（不碰每日戰報流程與 metadata）
+    if weekly_mode:
+        _run_weekly(args)
+        return
+
     # --rosters: 只更新 data/teams，不產生戰報、不動 metadata、不發通知
     if args.rosters:
         if args.date:

@@ -6,7 +6,8 @@ import sys
 import urllib.request
 from datetime import datetime, timezone
 
-from . import storage
+from . import storage, timeutil
+from .config import SITE_BASE_URL
 
 
 def should_notify(entry):
@@ -84,3 +85,46 @@ def send_discord_notification(new_meta):
             print(f"Discord notification sent successfully. Response code: {response.getcode()}")
     except Exception as e:
         print(f"Error sending Discord notification: {e}", file=sys.stderr)
+
+
+def send_weekly_notification(entry):
+    """休賽季每週總整理的獨立 Discord 訊息（讀 reports/weekly/index.json 的項目，不呼叫 API）。
+    網址基底與每日戰報相同（SITE_BASE_URL）。未設定 DISCORD_WEBHOOK_URL 時略過並印出警告。"""
+    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
+    if not webhook_url:
+        print("Warning: DISCORD_WEBHOOK_URL env variable not set. Skipping Discord weekly notification.")
+        return
+    week = str(entry.get("week", ""))
+    start, end = timeutil._parse_iso_date(entry.get("start")), timeutil._parse_iso_date(entry.get("end"))
+    range_text = f"{start.month}/{start.day}～{end.month}/{end.day}" if start and end else ""
+    lines = [f"{range_text} 的人事異動與新聞總整理已生成。" if range_text else "本週人事異動與新聞總整理已生成。"]
+    stats = []
+    for key, label in (("trade_count", "交易"), ("signing_count", "簽約")):
+        if key in entry:
+            stats.append(f"{label} **{storage._to_int(entry[key])}** 筆")
+    if stats:
+        lines.append("、".join(stats))
+    if "days" in entry:
+        lines.append(f"資料涵蓋 {storage._to_int(entry['days'])}／7 天")
+    payload = {
+        "embeds": [
+            {
+                "title": f"⚾ MLB 休賽季每週總整理 - {week}",
+                "description": "\n".join(lines),
+                "url": SITE_BASE_URL + timeutil.weekly_href(week),
+                "color": 795456,
+                "footer": {"text": "MLB Daily 每日戰報系統"},
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        ]
+    }
+    req = urllib.request.Request(
+        webhook_url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            print(f"Discord weekly notification sent successfully. Response code: {response.getcode()}")
+    except Exception as e:
+        print(f"Error sending Discord weekly notification: {e}", file=sys.stderr)

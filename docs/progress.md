@@ -116,3 +116,13 @@
 - [ ] 待辦：2027 開季用真實 boxscore 驗證專區打擊／投球成績（目前只用 fixture 測試）
 - [x] 已完成：休賽季真實日期本機驗證（2026-10-29 實跑：鄭宗哲交易、鈴木誠也／今永昇太／金河成自由球員異動皆正確顯示；並修正反向交易紀錄造成的球隊方向錯誤）
 - [ ] 待辦：新聞比對尚未遇到真實 RSS 命中案例，待出現名單球員新聞時確認
+
+### 🗓️ 階段十八：休賽季每週總整理（2026-11-18）
+依 `docs/plans/20261118_休賽季每週總整理設計.md`（使用者已核准：資料不足照產並標示涵蓋天數、不做「選擇權」分類、日程設定檔先放空檔）。
+
+- [x] 已完成（待審查、尚未 commit）：每日戰報產出後另存 `data/daily/YYYY-MM-DD.json` 快照（有賽事與無賽事兩條流程）
+- [x] 已完成（待審查、尚未 commit）：`mlb_daily/weekly.py`、`templates/weekly.html`、`WEEKLY_CATEGORIES`（`config.py`）、`settings/offseason_calendar.json`（空檔）；`--weekly`／`--week`／`--force`／`--notify-weekly`；週報索引 `reports/weekly/index.json`；首頁休賽季區塊與存檔頁連結；workflow 還原快照與索引、產生週報、等待並發獨立 Discord 訊息；測試 `tests/test_weekly.py`（共 474 個測試全過）
+- [ ] 待辦：GitHub 實測（手動觸發 workflow 帶 `week` 補產，確認 `data/daily/` 隨部署累積、週報頁與首頁、存檔頁連結、Discord 訊息）
+- [ ] 待辦：上線後第一個週一（2026-11-23）整理 W47，快照只有 11/18 起，預期涵蓋不足 7 天
+- [x] 已決定：移除週報「小聯盟合約」分類（快照為大聯盟過濾後資料，該分類永遠為空；使用者同意）
+- [ ] 待辦：`settings/offseason_calendar.json` 的日程由使用者手動補（例：冬季會議）

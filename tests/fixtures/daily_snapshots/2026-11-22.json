@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "date": "2026-11-22",
+  "has_games": false,
+  "transactions": [
+    {
+      "type_code": "REL",
+      "date": "2026-11-22",
+      "description": "Minnesota Twins released RHP Some Guy.",
+      "description_zh": "明尼蘇達雙城釋出 RHP Some Guy。",
+      "person_id": 900014,
+      "person_name": "Some Guy",
+      "persons": [
+        {
+          "id": 900014,
+          "name": "Some Guy"
+        }
+      ],
+      "to_team_id": 142,
+      "from_team_id": null
+    },
+    {
+      "type_code": "OUT",
+      "date": "2026-11-22",
+      "description": "Texas Rangers sent RHP Mover outright to Round Rock Express.",
+      "description_zh": "德州遊騎兵將 RHP Mover 下放到 Round Rock Express。",
+      "person_id": 900015,
+      "person_name": "Mover",
+      "persons": [
+        {
+          "id": 900015,
+          "name": "Mover"
+        }
+      ],
+      "to_team_id": 2310,
+      "from_team_id": 140
+    }
+  ],
+  "news": [
+    {
+      "title": "Weekend roundup",
+      "title_zh": "週末回顧",
+      "link": "https://www.mlb.com/news/weekend",
+      "published": "2026-11-22T11:00:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant."
+    }
+  ]
+}

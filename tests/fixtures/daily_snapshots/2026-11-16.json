@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "date": "2026-11-16",
+  "has_games": false,
+  "transactions": [
+    {
+      "type_code": "TR",
+      "date": "2026-11-16",
+      "description": "San Francisco Giants traded 2B Nate Furman to Washington Nationals for LHP Tony Neubeck.",
+      "description_zh": "舊金山巨人將 2B Nate Furman 交易到華盛頓國民，換取 LHP Tony Neubeck。",
+      "person_id": 900001,
+      "person_name": "Nate Furman",
+      "persons": [
+        {
+          "id": 900001,
+          "name": "Nate Furman"
+        },
+        {
+          "id": 900002,
+          "name": "Tony Neubeck"
+        }
+      ],
+      "to_team_id": 120,
+      "from_team_id": 137
+    },
+    {
+      "type_code": "SFA",
+      "date": "2026-11-16",
+      "description": "Texas Rangers signed free agent RHP Enrique Pantoja to a minor league contract.",
+      "description_zh": "德州遊騎兵與自由球員 RHP Enrique Pantoja 簽下小聯盟合約。",
+      "person_id": 900003,
+      "person_name": "Enrique Pantoja",
+      "persons": [
+        {
+          "id": 900003,
+          "name": "Enrique Pantoja"
+        }
+      ],
+      "to_team_id": 140,
+      "from_team_id": null
+    },
+    {
+      "type_code": "DES",
+      "date": "2026-11-16",
+      "description": "Washington Nationals designated LHP Richard Lovelady for assignment.",
+      "description_zh": "華盛頓國民將 LHP Richard Lovelady 指定讓渡。",
+      "person_id": 900004,
+      "person_name": "Richard Lovelady",
+      "persons": [
+        {
+          "id": 900004,
+          "name": "Richard Lovelady"
+        }
+      ],
+      "to_team_id": 120,
+      "from_team_id": null
+    },
+    {
+      "type_code": "SC",
+      "date": "2026-11-16",
+      "description": "Boston Red Sox placed RHP Inj Ured on the 15-day injured list.",
+      "description_zh": "波士頓紅襪將 RHP Inj Ured 放入 15 天傷兵名單。",
+      "person_id": 900005,
+      "person_name": "Inj Ured",
+      "persons": [
+        {
+          "id": 900005,
+          "name": "Inj Ured"
+        }
+      ],
+      "to_team_id": 111,
+      "from_team_id": null
+    }
+  ],
+  "news": [
+    {
+      "title": "Giants acquire Furman from Nationals",
+      "title_zh": "巨人從國民取得 Furman",
+      "link": "https://www.mlb.com/news/furman-trade",
+      "published": "2026-11-16T09:30:00+08:00",
+      "image": "https://img.mlbstatic.com/mlb-images/furman.jpg",
+      "summary": "San Francisco and Washington swapped infielders. Nate Furman heads east."
+    },
+    {
+      "title": "Offseason notebook: filler A",
+      "title_zh": "休賽季筆記：補位 A",
+      "link": "https://www.mlb.com/news/filler-a",
+      "published": "2026-11-16T12:00:00+08:00",
+      "image": null,
+      "summary": "Nothing relevant here."
+    }
+  ]
+}

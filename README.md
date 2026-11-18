@@ -13,7 +13,8 @@
 - **歷史存檔**：[archive.html](archive.html) 以 JavaScript 讀取 `reports/metadata.json`，依月份分組；首頁顯示最新一期與近期清單。
 - **Gemini 翻譯**：新聞標題、單場賽後新聞（Headline／Blurb）與人事異動描述以 Gemini 翻成繁體中文；球員姓名維持英文原名，球隊名稱沿用程式內建譯名。沒有金鑰、額度用盡或回應格式錯誤時，自動改用英文原文，不會讓整次執行失敗。
 - **球隊名單頁**：[teams.html](teams.html) 點選隊徽顯示該隊名單（賽季中 26 人現役、休賽季 40 人），分 SP、RP、野手三張表並附本季數據，可排序，網址可帶球隊縮寫（如 `teams.html#NYY`）。名單資料由每日 workflow 更新。
-- **Discord 通知**：頁面部署且 Pages 可開啟後才發送；休賽季快報若無新聞與人事異動則不發。
+- **休賽季每週總整理**：休賽季每週一（台北時間）彙整上一個 ISO 週的人事異動與新聞，產出 `reports/weekly/YYYY-Www.html`：本週重點（交易、大聯盟簽約、延長合約）、分類整理、各隊動態（標出本週最忙球隊）、新聞精選 10 則、台日韓球員標註、下週日程（手動維護 `settings/offseason_calendar.json`）。資料來自每日戰報存下的 `data/daily/*.json`，不重抓 API、不重新翻譯；不足 7 天時照產並標示涵蓋天數。首頁休賽季區塊、歷史存檔頁與 Discord 都附連結。
+- **Discord 通知**：頁面部署且 Pages 可開啟後才發送；休賽季快報若無新聞與人事異動則不發。週報另發一則獨立訊息。
 
 ---
 
@@ -28,12 +29,14 @@ Workflow（`.github/workflows/daily_report.yml`）步驟順序：
 
 1. **Run Unit Tests**：`python -m unittest discover -s tests -v`，失敗即中止，不產生、不部署、不通知。
 2. **Resolve report date**：手動輸入的日期，或預設台北時間昨日。
-3. **Restore history from gh-pages**（位於產生報表之前）：從 `gh-pages` 取回 `reports/metadata.json`；取不到或不是合法 JSON 物件即失敗，避免以單筆 metadata 覆蓋歷史。
+3. **Restore history from gh-pages**（位於產生報表之前）：從 `gh-pages` 取回 `reports/metadata.json`；取不到或不是合法 JSON 物件即失敗，避免以單筆 metadata 覆蓋歷史。另還原 `data/daily/`（每日快照）與 `reports/weekly/index.json`（週報索引），取不到只警告。
 4. **Generate Daily Report**：`python fetch_mlb.py --check-wait --no-notify --date ...`。尚有未完賽場次時每 30 分鐘重新檢查，最多 8 次；達上限後照常產出並把未完成場次標示為「未完賽」。
-5. **Update Team Rosters**：`python fetch_mlb.py --rosters`，更新 `data/teams/`。`continue-on-error`，失敗不影響戰報與通知。
-6. **Deploy Site to gh-pages**：`peaceiris/actions-gh-pages`，並以 `exclude_assets` 排除程式與文件；`data/teams/` 隨之部署。
-7. **Wait for GitHub Pages**：輪詢當日戰報網址直到回應 200（最多約 5 分鐘）。
-8. **Send Discord Notification**：`python fetch_mlb.py --notify-only --date ...`，只讀既有 metadata，不呼叫 API。僅在排程觸發，或手動觸發且 `notify` 勾選時執行。
+5. **Generate Weekly Report**（`continue-on-error`）：`python fetch_mlb.py --weekly`，只在台北週一且休賽季時產生；手動觸發可填 `week` 補產指定週（`--weekly --week ...`）。有產生時輸出 `weekly_url` 供後續通知步驟使用。
+6. **Update Team Rosters**：`python fetch_mlb.py --rosters`，更新 `data/teams/`。`continue-on-error`，失敗不影響戰報與通知。
+7. **Deploy Site to gh-pages**：`peaceiris/actions-gh-pages`，並以 `exclude_assets` 排除程式與文件；`data/teams/`、`data/daily/`、`reports/weekly/` 隨之部署。
+8. **Wait for GitHub Pages**：輪詢當日戰報網址直到回應 200（最多約 5 分鐘）；本次有產生週報時另有「Wait for Weekly Report」步驟等週報網址。
+9. **Send Discord Notification**：`python fetch_mlb.py --notify-only --date ...`，只讀既有 metadata，不呼叫 API。僅在排程觸發，或手動觸發且 `notify` 勾選時執行。
+10. **Send Weekly Discord Notification**（`continue-on-error`）：本次有產生週報、且為排程或 `notify` 勾選時，`python fetch_mlb.py --notify-weekly --week ...` 發週報獨立訊息。
 
 排程：每日 04:17 UTC（約台北時間 12:17）。`concurrency` 群組 `daily-report` 避免重疊執行，job 逾時上限 330 分鐘。
 
@@ -71,6 +74,13 @@ python fetch_mlb.py --notify-only --date 2026-07-20
 # 抓取 30 隊名單與本季數據，寫入 data/teams/（不產生戰報、不發通知）
 python fetch_mlb.py --rosters
 
+# 休賽季每週總整理：週一且休賽季才產生上一週；--week 指定週次、--force 略過週一與休賽季判斷
+python fetch_mlb.py --weekly
+python fetch_mlb.py --weekly --week 2026-W47 --force
+
+# 依週報索引發送週報 Discord 訊息（預設最新一週，可加 --week）
+python fetch_mlb.py --notify-weekly
+
 # 執行單元測試（完全不連網）
 python -m unittest discover -s tests
 ```
@@ -95,6 +105,7 @@ export GEMINI_API_KEY="你的Gemini金鑰"
 
 - `date`：報表日期 `YYYY-MM-DD`，留空為台北時間昨日。
 - `notify`：是否發送 Discord 通知，預設不發送（可先驗證流程，確認無誤再勾選）。
+- `week`：選填，手動補產指定週的休賽季每週總整理（ISO 週，例 `2026-W47`）。
 
 ---
 
@@ -115,13 +126,15 @@ mlb_daily/                主程式套件（只用標準庫）
   standings.py            戰績側欄
   previews.py             賽事預告、先發投手、開季倒數
   rosters.py              球隊名單
-  report.py               戰報與休賽季快報組裝
+  report.py               戰報與休賽季快報組裝（並寫每日資料快照）
+  weekly.py               休賽季每週總整理
   index_page.py           首頁
   notify.py               Discord 通知
   cli.py                  main（argparse）
 templates/
   report.html             戰報與休賽季快報的頁面骨架（含 <!--SLOT:...--> 插槽）
   index.html              首頁骨架
+  weekly.html             休賽季每週總整理骨架
 assets/
   style.css               共用樣式表（部署到 gh-pages）
   archive.js              歷史存檔頁的動態腳本
@@ -130,10 +143,14 @@ index.html                首頁（由腳本依 metadata 全量重新產生）
 archive.html              歷史存檔頁（讀取 reports/metadata.json）
 teams.html                球隊名單頁（讀取 data/teams/*.json）
 data/teams/               名單 JSON（index.json、{teamId}.json；僅部署於 gh-pages，main 忽略）
+data/daily/               每日資料快照 YYYY-MM-DD.json（週報來源；僅部署於 gh-pages，main 忽略）
+settings/                 watchlist.json（台日韓追蹤名單）、offseason_calendar.json（休賽季日程，手動維護）
 reports/
   metadata.json           每日索引（僅存在 gh-pages；workflow 每次先取回）
+  weekly/                 週報 YYYY-Www.html 與 index.json（僅存在 gh-pages）
 tests/
   test_fetch_mlb.py       單元測試（unittest）
+  test_weekly.py          休賽季每週總整理測試
   fixtures/               測試用 API 假資料
 .github/workflows/
   daily_report.yml        排程與部署

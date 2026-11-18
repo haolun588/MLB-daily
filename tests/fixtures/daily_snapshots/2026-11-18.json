@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "date": "2026-11-18",
+  "has_games": false,
+  "transactions": [
+    {
+      "type_code": "SFA",
+      "date": "2026-11-18",
+      "description": "Boston Red Sox signed free agent RHP Jonny Big to a 2-year contract.",
+      "description_zh": "波士頓紅襪與自由球員 RHP Jonny Big 簽下 2 年合約。",
+      "person_id": 900006,
+      "person_name": "Jonny Big",
+      "persons": [
+        {
+          "id": 900006,
+          "name": "Jonny Big"
+        }
+      ],
+      "to_team_id": 111,
+      "from_team_id": null
+    },
+    {
+      "type_code": "DFA",
+      "date": "2026-11-18",
+      "description": "RHP Ryne Stanek elected free agency.",
+      "description_zh": "RHP Ryne Stanek 選擇成為自由球員。",
+      "person_id": 900007,
+      "person_name": "Ryne Stanek",
+      "persons": [
+        {
+          "id": 900007,
+          "name": "Ryne Stanek"
+        }
+      ],
+      "to_team_id": 112,
+      "from_team_id": null
+    },
+    {
+      "type_code": "CLW",
+      "date": "2026-11-18",
+      "description": "Chicago Cubs claimed RHP Eric Orze off waivers from Minnesota Twins.",
+      "description_zh": "芝加哥小熊從明尼蘇達雙城透過 waiver 取得 RHP Eric Orze。",
+      "person_id": 900008,
+      "person_name": "Eric Orze",
+      "persons": [
+        {
+          "id": 900008,
+          "name": "Eric Orze"
+        }
+      ],
+      "to_team_id": 112,
+      "from_team_id": 142
+    },
+    {
+      "type_code": "SFA",
+      "date": "2026-11-18",
+      "description": "Seattle Mariners signed 1B Test Slugger to a contract extension.",
+      "description_zh": "西雅圖水手與 1B Test Slugger 簽下合約延長約。",
+      "person_id": 900009,
+      "person_name": "Test Slugger",
+      "persons": [
+        {
+          "id": 900009,
+          "name": "Test Slugger"
+        }
+      ],
+      "to_team_id": 136,
+      "from_team_id": null
+    },
+    {
+      "type_code": "SFA",
+      "date": "2026-11-18",
+      "description": "Los Angeles Dodgers signed free agent DH Shohei Ohtani to a 2-year contract.",
+      "description_zh": "洛杉磯道奇與自由球員 DH Shohei Ohtani 簽下 2 年合約。",
+      "person_id": 660271,
+      "person_name": "Shohei Ohtani",
+      "persons": [
+        {
+          "id": 660271,
+          "name": "Shohei Ohtani"
+        }
+      ],
+      "to_team_id": 119,
+      "from_team_id": null
+    },
+    {
+      "type_code": "SE",
+      "date": "2026-11-18",
+      "description": "San Francisco Giants selected the contract of OF Jung Hoo Lee.",
+      "description_zh": "舊金山巨人將 OF Jung Hoo Lee 的合約升上 40 人名單。",
+      "person_id": 808982,
+      "person_name": "Jung Hoo Lee",
+      "persons": [
+        {
+          "id": 808982,
+          "name": "Jung Hoo Lee"
+        }
+      ],
+      "to_team_id": 137,
+      "from_team_id": null
+    }
+  ],
+  "news": [
+    {
+      "title": "Ohtani wins another MVP",
+      "title_zh": "大谷翔平再度獲選 MVP",
+      "link": "https://www.mlb.com/news/ohtani-mvp",
+      "published": "2026-11-18T08:00:00+08:00",
+      "image": null,
+      "summary": "Shohei Ohtani added to his trophy case."
+    },
+    {
+      "title": "Giants acquire Furman from Nationals",
+      "title_zh": "巨人從國民取得 Furman（重複）",
+      "link": "https://www.mlb.com/news/furman-trade",
+      "published": "2026-11-16T09:30:00+08:00",
+      "image": null,
+      "summary": "San Francisco and Washington swapped infielders. Nate Furman heads east."
+    }
+  ]
+}

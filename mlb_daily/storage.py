@@ -4,6 +4,8 @@ import json
 import os
 import sys
 
+from .config import DAILY_SNAPSHOT_DIR, WEEKLY_DIR, WEEKLY_INDEX_PATH
+
 
 def write_report(date_str, html_content):
     year, month, _ = date_str.split("-")
@@ -14,6 +16,16 @@ def write_report(date_str, html_content):
         f.write(html_content)
     print(f"Successfully generated report: {path}")
     return path
+
+def write_weekly_report(week_label, html_content):
+    """寫出 reports/weekly/YYYY-Www.html。"""
+    os.makedirs(WEEKLY_DIR, exist_ok=True)
+    path = os.path.join(WEEKLY_DIR, f"{week_label}.html")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print(f"Successfully generated weekly report: {path}")
+    return path
+
 
 def load_metadata(metadata_path):
     """讀取 metadata。不存在 -> 空 dict；讀取/解析失敗 -> 結束程式，不覆寫原檔。"""
@@ -76,3 +88,50 @@ def write_json_atomic(path, data):
                 os.remove(tmp_path)
             except OSError:
                 pass
+
+
+# ---------------------------------------------------------------- 每日資料快照與週報索引
+def write_daily_snapshot(date_str, payload, directory=None):
+    """寫出 data/daily/YYYY-MM-DD.json；失敗只印警告並回傳 None，不影響戰報。directory 預設 DAILY_SNAPSHOT_DIR。"""
+    path = os.path.join(directory or DAILY_SNAPSHOT_DIR, f"{date_str}.json")
+    try:
+        write_json_atomic(path, payload)
+    except (OSError, TypeError, ValueError) as e:
+        print(f"Warning: 無法寫入每日資料快照 {path}（{type(e).__name__}: {e}）。", file=sys.stderr)
+        return None
+    return path
+
+
+def load_weekly_index(path=None):
+    """讀取 reports/weekly/index.json，回傳 {"weeks": [...]}。不存在回傳空清單；
+    讀取失敗、格式不符只印警告並視為空（不中斷）。weeks 內非 dict 的項目略過。"""
+    path = path or WEEKLY_INDEX_PATH
+    if not os.path.exists(path):
+        return {"weeks": []}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        weeks = data["weeks"]
+        if not isinstance(weeks, list):
+            raise ValueError("weeks 不是陣列")
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        print(f"Warning: 無法讀取週報索引 {path}（{type(e).__name__}: {e}），視為空索引。", file=sys.stderr)
+        return {"weeks": []}
+    return {"weeks": [w for w in weeks if isinstance(w, dict) and isinstance(w.get("week"), str)]}
+
+
+def latest_weekly_entry(path=None):
+    """索引中最新一週（週次字串最大者）的項目；沒有回傳 None。"""
+    weeks = load_weekly_index(path)["weeks"]
+    return max(weeks, key=lambda w: w["week"]) if weeks else None
+
+
+def save_weekly_index(entry, path=None):
+    """把一週的項目寫進索引：依週次去重（同週覆蓋）、新的在前；回傳完整索引。"""
+    path = path or WEEKLY_INDEX_PATH
+    index = load_weekly_index(path)
+    weeks = [w for w in index["weeks"] if w["week"] != entry["week"]] + [entry]
+    weeks.sort(key=lambda w: w["week"], reverse=True)
+    index = {"weeks": weeks}
+    write_json_atomic(path, index)
+    return index

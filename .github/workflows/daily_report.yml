@@ -14,6 +14,10 @@ on:
         description: '是否發送 Discord 通知'
         type: boolean
         default: false
+      week:
+        description: '手動補產指定週的休賽季每週總整理（ISO 週 YYYY-Www，例 2026-W47）；留空則依排程規則（週一且休賽季才產生）'
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -61,7 +65,7 @@ jobs:
       - name: Restore history from gh-pages
         run: |
           git fetch --depth=1 origin gh-pages
-          mkdir -p reports
+          mkdir -p reports reports/weekly
           if ! git show origin/gh-pages:reports/metadata.json > reports/metadata.json; then
             echo "::error::無法從 gh-pages 取得 reports/metadata.json，中止以避免覆蓋歷史索引"
             exit 1
@@ -70,6 +74,11 @@ jobs:
             echo "::error::reports/metadata.json 不是合法 JSON 物件，中止以避免覆蓋歷史索引"
             exit 1
           fi
+          # 每日資料快照（週報來源）與週報索引：取不到只警告，不中止
+          git archive origin/gh-pages data/daily | tar -x || echo "::warning::gh-pages 尚無 data/daily"
+          if ! git show origin/gh-pages:reports/weekly/index.json > reports/weekly/index.json 2>/dev/null; then
+            rm -f reports/weekly/index.json
+          fi
 
       - name: Generate Daily Report
         env:
@@ -77,6 +86,25 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python fetch_mlb.py --check-wait --no-notify --date "$REPORT_DATE"
+
+      - name: Generate Weekly Report
+        id: weekly
+        continue-on-error: true
+        env:
+          WEEK: ${{ inputs.week }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}  # 週報產生後會重產首頁，需要翻譯首頁人事異動
+        run: |
+          LOG="$RUNNER_TEMP/weekly.log"  # 放在工作目錄之外，避免被部署
+          set +e
+          ARGS=(--weekly)
+          if [ -n "$WEEK" ]; then
+            ARGS+=(--week "$WEEK")  # 即 --weekly --week "$WEEK"
+          fi
+          python fetch_mlb.py "${ARGS[@]}" | tee "$LOG"
+          rc=${PIPESTATUS[0]}
+          # 週報有產生時才輸出 weekly_week／weekly_url，供後續通知步驟使用
+          grep -E '^weekly_(week|url)=' "$LOG" >> "$GITHUB_OUTPUT" || true
+          exit $rc
 
       - name: Update Team Rosters
         continue-on-error: true
@@ -106,6 +134,23 @@ jobs:
           echo "::warning::等待 GitHub Pages 逾時（約 5 分鐘），仍繼續後續步驟"
           exit 0
 
+      - name: Wait for Weekly Report on GitHub Pages
+        if: steps.weekly.outputs.weekly_url != '' && (github.event_name == 'schedule' || inputs.notify == true)
+        env:
+          WEEKLY_URL: ${{ steps.weekly.outputs.weekly_url }}
+        run: |
+          for i in $(seq 1 20); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' "$WEEKLY_URL" || true)"
+            if [ "$code" = "200" ]; then
+              echo "Pages 已上線：$WEEKLY_URL"
+              exit 0
+            fi
+            echo "第 $i/20 次檢查：HTTP $code，15 秒後重試"
+            sleep 15
+          done
+          echo "::warning::等待週報 GitHub Pages 逾時（約 5 分鐘），仍繼續後續步驟"
+          exit 0
+
       - name: Send Discord Notification
         if: github.event_name == 'schedule' || inputs.notify == true
         env:
@@ -113,3 +158,12 @@ jobs:
           REPORT_DATE: ${{ steps.date.outputs.date }}
         run: |
           python fetch_mlb.py --notify-only --date "$REPORT_DATE"
+
+      - name: Send Weekly Discord Notification
+        if: steps.weekly.outputs.weekly_url != '' && (github.event_name == 'schedule' || inputs.notify == true)
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          WEEKLY_WEEK: ${{ steps.weekly.outputs.weekly_week }}
+        run: |
+          python fetch_mlb.py --notify-weekly --week "$WEEKLY_WEEK"

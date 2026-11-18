@@ -30,7 +30,7 @@ if hasattr(sys.stderr, 'reconfigure'):
 # 拆分後的 mlb_daily 套件；以下重新匯出原本 fetch_mlb 的所有名稱以維持相容。
 # 注意：重新匯出的是原物件，patch `fetch_mlb.X` 不會影響 mlb_daily 內部；
 # 測試請 patch 定義該名稱的模組（例如 `mlb_daily.net.fetch_json`）。
-from mlb_daily import cli, config, games as games_mod, htmlutil, index_page, net, news as news_mod, notify, previews, report, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist  # noqa: F401
+from mlb_daily import cli, config, games as games_mod, htmlutil, index_page, net, news as news_mod, notify, previews, report, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist, weekly  # noqa: F401
 from mlb_daily.cli import (  # noqa: F401
     main,
 )
@@ -38,6 +38,8 @@ from mlb_daily.config import (  # noqa: F401
     CANCELLED_REASONS,
     CLINCH_LABELS,
     CLINCH_LEGEND,
+    DAILY_SNAPSHOT_DIR,
+    DAILY_SNAPSHOT_SCHEMA,
     DARK_LUMINANCE_THRESHOLD,
     DATE_KEY_RE,
     DIVISION_LAYOUT,
@@ -56,6 +58,7 @@ from mlb_daily.config import (  # noqa: F401
     NEWS_RSS_URL,
     NEWS_SOURCE,
     NL_DIVISION_IDS,
+    OFFSEASON_CALENDAR_PATH,
     PEOPLE_STATS_URL,
     POSTPONED_REASONS,
     ROSTER_DIR,
@@ -63,6 +66,7 @@ from mlb_daily.config import (  # noqa: F401
     SAVANT_URL,
     SCHEDULE_PREVIEW_URL,
     SEASON_URL,
+    SITE_BASE_URL,
     SLOT_RE,
     STANDINGS_URL,
     TAIPEI_TZ,
@@ -74,10 +78,20 @@ from mlb_daily.config import (  # noqa: F401
     TRANSLATE_BATCH_SIZE,
     WAIT_SLEEP_SECONDS,
     WEEKDAYS_ZH,
+    WEEK_KEY_RE,
+    WEEKLY_CATEGORIES,
+    WEEKLY_DIR,
+    WEEKLY_HIGHLIGHT_CATEGORIES,
+    WEEKLY_INDEX_PATH,
+    WEEKLY_MINOR_CONTRACT_RE,
+    WEEKLY_NEWS_HIGHLIGHT_BONUS,
+    WEEKLY_NEWS_LIMIT,
+    WEEKLY_NEWS_WATCHLIST_BONUS,
     WEEKLY_TX_DAYS,
     WEEKLY_TX_EXTENSION_RE,
     WEEKLY_TX_LIMIT,
     WEEKLY_TX_TYPE_CODES,
+    WEEKLY_TYPE_CATEGORY,
     _UNSET,
 )
 from mlb_daily.games import (  # noqa: F401
@@ -130,8 +144,10 @@ from mlb_daily.index_page import (  # noqa: F401
     build_index_extras,
     render_spotlight_slot,
     fallback_index_extras,
+    refresh_index_page,
     render_index,
     render_latest_card,
+    render_latest_weekly_link,
     render_recent_item,
     update_index_page,
 )
@@ -155,6 +171,7 @@ from mlb_daily.news import (  # noqa: F401
 )
 from mlb_daily.notify import (  # noqa: F401
     send_discord_notification,
+    send_weekly_notification,
     should_notify,
 )
 from mlb_daily.previews import (  # noqa: F401
@@ -169,6 +186,7 @@ from mlb_daily.previews import (  # noqa: F401
     render_game_previews,
 )
 from mlb_daily.report import (  # noqa: F401
+    build_daily_snapshot,
     build_offseason_summary,
     generate_offseason_report,
     generate_report,
@@ -202,10 +220,15 @@ from mlb_daily.standings import (  # noqa: F401
 from mlb_daily.storage import (  # noqa: F401
     _to_int,
     entry_type,
+    latest_weekly_entry,
     load_metadata,
+    load_weekly_index,
     save_metadata,
+    save_weekly_index,
+    write_daily_snapshot,
     write_json_atomic,
     write_report,
+    write_weekly_report,
 )
 from mlb_daily.timeutil import (  # noqa: F401
     _parse_iso_date,
@@ -213,6 +236,7 @@ from mlb_daily.timeutil import (  # noqa: F401
     get_taipei_now,
     get_yesterday_str,
     report_href,
+    weekly_href,
 )
 from mlb_daily.transactions import (  # noqa: F401
     _is_mlb_team,
@@ -242,6 +266,19 @@ from mlb_daily.translate import (  # noqa: F401
     build_team_glossary,
     translate_texts,
     translate_weekly_transactions,
+)
+from mlb_daily.weekly import (  # noqa: F401
+    build_week,
+    classify_weekly_transaction,
+    generate_weekly_report,
+    load_calendar,
+    load_week_snapshots,
+    parse_week,
+    previous_week_label,
+    render_weekly,
+    upcoming_events,
+    week_days,
+    week_label,
 )
 
 

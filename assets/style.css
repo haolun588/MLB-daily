@@ -1586,3 +1586,14 @@ img { max-width: 100%; height: auto; }
 .spot-meta { font-size: 0.8125rem; font-weight: 500; color: var(--text-2); }
 .spot-group .tx-list li { overflow-wrap: anywhere; }
 .spot-date { margin-right: 8px; font: 500 0.75rem var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); }
+
+/* ---------- 休賽季每週總整理（reports/weekly/） ---------- */
+.badge.is-region { color: var(--teal); margin-left: 4px; }
+.badge.is-busy { color: var(--amber); }
+.wk-sub { margin-top: 8px; font-size: 0.8125rem; font-weight: 700; color: var(--text-2); }
+.wk-watch li { overflow-wrap: anywhere; }
+.wk-thumb { display: block; margin-top: 8px; max-width: min(100%, 280px); height: auto; border-radius: var(--radius); }
+.wrap > .note-strip { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+
+/* 存檔頁：每週總整理清單 */
+.weeks { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 8px; margin-top: 12px; list-style: none; }
