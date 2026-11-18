@@ -1,0 +1,117 @@
+{
+  "transactions": [
+    {
+      "date": "2026-11-15",
+      "typeCode": "OPT",
+      "description": "Houston Astros optioned RHP Kai-Wei Teng to Sugar Land Space Cowboys.",
+      "person": {
+        "id": 678906,
+        "fullName": "Kai-Wei Teng"
+      },
+      "toTeam": {
+        "id": 5434
+      },
+      "fromTeam": {
+        "id": 117
+      }
+    },
+    {
+      "date": "2026-11-15",
+      "typeCode": "TR",
+      "description": "Detroit Tigers traded 2B Hao-Yu Lee and RHP Other Guy to Boston Red Sox.",
+      "person": {
+        "id": 777101,
+        "fullName": "Other Guy"
+      },
+      "toTeam": {
+        "id": 111
+      },
+      "fromTeam": {
+        "id": 116
+      }
+    },
+    {
+      "date": "2026-11-15",
+      "typeCode": "TR",
+      "description": "Detroit Tigers traded 2B Hao-Yu Lee and RHP Other Guy to Boston Red Sox.",
+      "person": {
+        "id": 701678,
+        "fullName": "Hao-Yu Lee"
+      },
+      "toTeam": {
+        "id": 111
+      },
+      "fromTeam": {
+        "id": 116
+      }
+    },
+    {
+      "date": "2026-11-15",
+      "typeCode": "OPT",
+      "description": "Houston Astros assigned LHP Kai-Wei Teng to the Minor League camp.",
+      "person": {
+        "id": 678906,
+        "fullName": "Kai-Wei Teng"
+      },
+      "toTeam": {
+        "id": 5434
+      },
+      "fromTeam": {
+        "id": 117
+      }
+    },
+    {
+      "date": "2026-11-15",
+      "typeCode": "OPT",
+      "description": "New York Yankees recalled RHP Jose Test from Triple-A Scranton/Wilkes-Barre.",
+      "person": {
+        "id": 777001,
+        "fullName": "Jose Test"
+      },
+      "toTeam": {
+        "id": 147
+      },
+      "fromTeam": {
+        "id": 531
+      }
+    },
+    {
+      "date": "2026-11-15",
+      "typeCode": "OPT",
+      "description": "Boston Red Sox signed free agent RHP Minor Guy to a minor league contract.",
+      "person": {
+        "id": 777002,
+        "fullName": "Minor Guy"
+      },
+      "toTeam": {
+        "id": 111
+      }
+    },
+    {
+      "date": "2026-11-15",
+      "typeCode": "TR",
+      "description": "Boston Red Sox traded 2B Tsung-Che Cheng to Detroit Tigers for cash.",
+      "toTeam": {
+        "id": 111
+      },
+      "fromTeam": {
+        "id": 116
+      }
+    },
+    {
+      "date": "2026-11-15",
+      "typeCode": "TR",
+      "description": "Boston Red Sox traded 2B Tsung-Che Cheng to Detroit Tigers for cash.",
+      "person": {
+        "id": 691907,
+        "fullName": "Tsung-Che Cheng"
+      },
+      "toTeam": {
+        "id": 116
+      },
+      "fromTeam": {
+        "id": 111
+      }
+    }
+  ]
+}

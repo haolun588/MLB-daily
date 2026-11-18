@@ -194,3 +194,7 @@ DATE_KEY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # ---------------------------------------------------------------- 球隊名單（--rosters）
 ROSTER_DIR = os.path.join("data", "teams")
 ROSTER_FETCH_INTERVAL = 0.5
+
+
+# ---------------------------------------------------------------- 台日韓球員專區
+WATCHLIST_PATH = os.path.join("settings", "watchlist.json")

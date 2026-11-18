@@ -86,7 +86,7 @@
 ### 4. 新聞、翻譯與人事異動規格
 - **每日新聞**：MLB.com 官方 RSS，取台北時間目標日當天發布者（最多 12 則）。賽季頁附在戰報上方；休賽季頁以新聞與人事異動為主體。
 - **人事異動**：僅限大聯盟層級——排除 `minor league`；`signed` 需帶大聯盟特徵詞；`toTeam`／`fromTeam` 至少一方須為 30 支大聯盟球隊；描述去重。
-- **翻譯（Gemini）**：翻譯範圍為新聞標題、單場賽後新聞的 Headline／Blurb、人事異動描述。球員姓名保留英文原名、數據縮寫（HR、RBI、IP 等）保留、球隊名稱用內建中文譯名；只顯示中文，不附英文原文。無金鑰、額度用盡或回應格式錯誤時改顯示英文原文，不得讓整次執行失敗。
-- **metadata 欄位**：`date,total_games,postponed,summary,type,news_count,transactions_count,translated`。
+- **翻譯（Gemini）**：翻譯範圍為新聞標題、單場賽後新聞的 Headline／Blurb、人事異動描述。球員姓名保留英文原名、數據縮寫（HR、RBI、IP 等）保留、球隊名稱用內建中文譯名；只顯示中文，不附英文原文（唯一例外：台日韓球員專區的分組標題用設定檔中文名）。無金鑰、額度用盡或回應格式錯誤時改顯示英文原文，不得讓整次執行失敗。
+- **metadata 欄位**：`date,total_games,postponed,summary,type,news_count,transactions_count,translated`，另有選填 `spotlight`（台日韓球員專區條目，只在當日有內容時寫入，格式見 `docs/architecture.md`）。
 - **休賽季摘要**：以當日新聞前 3 則標題組成；無新聞則為人事異動筆數；皆無為「休賽季，無重大消息」。
 - **賽季摘要**：總場數、延賽數，加上焦點積分最高的 3 場。

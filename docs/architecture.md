@@ -8,7 +8,8 @@
 
 ```
 fetch_mlb.py              薄入口（重新匯出 mlb_daily 內所有名稱，CLI 不變）
-mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、translate、games、standings、previews、rosters、report、index_page、notify、cli）
+mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、previews、rosters、report、index_page、notify、cli）
+settings/watchlist.json   台日韓球員追蹤名單（納入版控）
 templates/report.html     戰報與休賽季快報頁面骨架
 templates/index.html      首頁骨架
 assets/style.css          共用樣式表
@@ -21,6 +22,7 @@ archive.html              歷史存檔頁（靜態檔，執行時以 JS 讀取 m
 reports/metadata.json     每日索引（僅存在於 gh-pages，workflow 先取回）
 reports/YYYY/MM/YYYY-MM-DD.html   戰報（僅存在於 gh-pages，main 忽略）
 tests/test_fetch_mlb.py   單元測試
+tests/test_watchlist.py   台日韓球員專區測試
 tests/fixtures/           API 假資料（schedule、boxscore、content、transactions、RSS）
 .github/workflows/daily_report.yml   排程、測試、部署、通知
 ```
@@ -59,7 +61,7 @@ graph TD
 
 `fetch_mlb.py` 是薄入口：UTF-8 reconfigure、重新匯出原本所有名稱、呼叫 `main`。實際程式在 `mlb_daily/`，由下而上相依（下層不得 import 上層）：
 
-`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news` → `translate`／`games`／`standings`／`previews`／`rosters` → `report`／`index_page`／`notify` → `cli`
+`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news`／`watchlist` → `translate`／`games`／`standings`／`previews`／`rosters` → `report`／`index_page`／`notify` → `cli`
 
 | 模組 | 內容 |
 | --- | --- |
@@ -70,6 +72,7 @@ graph TD
 | `storage` | `load_metadata`／`save_metadata`、`write_report`、`write_json_atomic` |
 | `transactions` | 人事異動篩選與渲染、`split_game_transactions`、每週異動 |
 | `news` | `fetch_daily_news`（MLB.com RSS）、`fetch_game_news`（單場 content）與渲染 |
+| `watchlist` | 台日韓球員專區：讀名單、比對異動／新聞／boxscore、組成 `spotlight` 資料與渲染（只依賴 `config`、`htmlutil`） |
 | `translate` | Gemini 翻譯、`apply_translations`、`LAST_TRANSLATION`、`TX_TRANSLATION_CACHE`、`translate_weekly_transactions` |
 | `games` | `check_all_games_finalized`（API 失敗拋 `ApiError`，只有 `totalGames == 0` 才視為無賽事）、`classify_game_status`、焦點球員評分、決定、比賽卡片與 view、摘要句 |
 | `standings` | 戰績側欄 |
@@ -84,7 +87,7 @@ graph TD
 
 ### 模板插槽
 
-`templates/report.html` 的插槽：`TITLE`、`DATE_LONG`、`SUBTITLE`、`SUMMARY`、`SEARCH`、`NEWS`、`GAMES`、`TRANSACTIONS`、`GENERATED_AT`。`templates/index.html` 的插槽：`LATEST`、`RECENT`。插槽格式為 `<!--SLOT:NAME-->`，`fill_slots` 單次掃描替換，插入的內容不會被當成插槽再次展開。
+`templates/report.html` 的插槽：`TITLE`、`DATE_LONG`、`SUBTITLE`、`SUMMARY`、`SEARCH`、`SPOTLIGHT`、`NEWS`、`GAMES`、`TRANSACTIONS`、`GENERATED_AT`。`templates/index.html` 的插槽：`LATEST`、`SPOTLIGHT`、`RECENT`（另有 `UPCOMING`、`TEAMS`、`STANDINGS`、`STANDINGS_UI`）。插槽格式為 `<!--SLOT:NAME-->`，`fill_slots` 單次掃描替換，插入的內容不會被當成插槽再次展開。
 
 ### 共用資源與連結
 
@@ -106,6 +109,15 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 | `news_count` | 當日新聞則數；新聞抓取失敗時不寫入此欄 |
 | `transactions_count` | 該頁顯示的人事異動筆數 |
 | `translated` | 本頁是否成功套用翻譯 |
+| `spotlight` | 台日韓球員專區條目清單，只在當日有內容時寫入（格式見下） |
+
+`spotlight` 每筆皆為純文字（渲染時才 `esc()`），共通欄位 `player_id`、`kind`、`date`：
+
+- `transaction`：`text`（譯文或英文原文）、`persons`（`[{id, name}]`，供替英文名加 Savant 連結）、`to_team_id`、`from_team_id`（供休賽季推算球隊）、選填 `also_player_ids`。
+- `news`：`text`（標題）、`link`、選填 `also_player_ids`。
+- `game`：`batting`、`pitching`（文字或 null）、`team_id`（boxscore 所屬球隊）。
+
+一則異動或新聞涉及多位名單球員時只存一次，歸第一位球員，其餘球員放 `also_player_ids`，渲染時在其分組顯示「（同上則異動）」或「（同上則新聞）」。
 
 舊資料缺少 `type`／`news_count` 等欄位時，首頁與存檔頁會以 `total_games` 推斷類型，缺欄位則省略該數字。
 
@@ -230,6 +242,18 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 
 - 投手（`pos == P`）：本季 `gs / g >= 0.5` 為 `SP`，其餘（含無數據）為 `RP`。
 - 野手與二刀流：`group` 皆為 `POS`，在野手表顯示（守位欄）；`TWP` 另以 `pitchingGroup` 進入對應的 SP／RP 表。
+
+---
+
+## 台日韓球員專區
+
+- **名單**：`settings/watchlist.json`（納入版控；`data/` 被忽略故不放那裡，部署時 `exclude_assets` 排除 `settings`）。格式 `{"players": [{"id", "name_zh", "name_en", "region", "aliases"?}]}`：`id` 為 MLB person id，`region` 為 `TW`／`JP`／`KR`，`aliases` 為選填的新聞比對別名（姓氏常見如 Lee、Kim 者不要加姓氏）。讀檔失敗、JSON 錯誤或格式不符：印警告、視為空名單、專區不顯示，不中斷執行；個別格式錯誤的球員略過。
+- **新增球員**：在 `players` 加一筆（先用 `statsapi.mlb.com/api/v1/people/search` 查 id），不需改程式。
+- **比對**：異動用未經大聯盟過濾的原始資料（含小聯盟），比對 `person.id`；多人交易依相同描述合併。新聞用當日全部 RSS（不受顯示上限 12 則限制），比對標題與 `<description>` 純文字，整詞、不分大小寫，只比對 `name_en` 與 `aliases`。boxscore 用當日已抓資料，依 `ID{personId}` 取成績，不重抓。
+- **成績列**：打擊列需有打席（`plateAppearances` 或 `atBats` > 0）；投球列需有投球局數、`battersFaced` 或 `numberOfPitches` 任一大於 0（0 局失分也顯示）。0 的項目省略，打數與安打一定顯示。
+- **顯示**：戰報區塊「台日韓球員動態」依台灣、日本、韓國再依名單順序分組；沒有內容整區隱藏。首頁顯示最新戰報日期往回 7 天（含）的 metadata `spotlight` 彙整，無內容顯示「近 7 天無台日韓球員動態。」。分組標題的球隊：優先取 boxscore 球隊，沒有則由異動的 `to_team_id`、`from_team_id` 推算（只取 30 隊之一），都沒有只顯示地區。
+- **中文名例外**：分組標題用設定檔的中文名，這是「球員姓名保留英文」規則唯一的例外；異動與新聞內文仍保留英文姓名。
+- **翻譯**：名單異動描述與名單新聞標題（含不在前 12 則者）併入同一批次翻譯，相同字串不重送；無金鑰顯示英文原文。
 
 ---
 

@@ -112,4 +112,7 @@
 依 `docs/plans/20261118_拆分fetch_mlb計畫.md`。
 
 - [x] 已完成：`fetch_mlb.py` 拆成 `mlb_daily/` 套件（`e391363`、`8f174bd`、`4bda26f`），行為不變；文件同步並新增匯入規則防護測試 `ImportRuleTests`
-- [ ] 下一項：台灣與日韓球員專區（依 `docs/plans/20261118_新功能規劃.md`，先設計、經使用者核准後才實作）
+- [x] 已完成：台日韓球員專區（設計 `docs/plans/20261118_台日韓球員專區設計.md`）：`settings/watchlist.json` 名單、`mlb_daily/watchlist.py`、戰報與首頁區塊、metadata `spotlight`；測試 `tests/test_watchlist.py`
+- [ ] 待辦：2027 開季用真實 boxscore 驗證專區打擊／投球成績（目前只用 fixture 測試）
+- [x] 已完成：休賽季真實日期本機驗證（2026-10-29 實跑：鄭宗哲交易、鈴木誠也／今永昇太／金河成自由球員異動皆正確顯示；並修正反向交易紀錄造成的球隊方向錯誤）
+- [ ] 待辦：新聞比對尚未遇到真實 RSS 命中案例，待出現名單球員新聞時確認

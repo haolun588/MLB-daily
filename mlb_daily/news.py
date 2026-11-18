@@ -1,5 +1,7 @@
 """MLB.com 新聞的抓取與渲染。"""
 
+import html as html_lib
+import re
 import sys
 import urllib.parse
 import xml.etree.ElementTree as ET
@@ -51,10 +53,16 @@ def _safe_mlb_url(url):
     return None
 
 
-def fetch_daily_news(date_str, limit=12):
-    """抓取 MLB 官方 RSS，回傳 date_str 當天（台北時間 00:00–24:00）發布的新聞，新到舊、最多 limit 則。
+def _plain_text(raw):
+    """RSS description 去 HTML 標籤與實體後的純文字（只供名單比對，不顯示）。"""
+    text = re.sub(r"<[^>]*>", " ", raw or "")
+    return re.sub(r"\s+", " ", html_lib.unescape(text)).strip()
 
-    每則為 {"title", "link", "published"（台北時間 datetime）, "image"（網址或 None）}。
+
+def fetch_all_daily_news(date_str):
+    """抓取 MLB 官方 RSS，回傳 date_str 當天（台北時間 00:00–24:00）發布的「全部」新聞，新到舊（不設上限）。
+
+    每則為 {"title", "link", "published"（台北時間 datetime）, "image"（網址或 None）, "summary"（純文字，只供比對）}。
     link 不安全的新聞整則捨棄；image 不安全則設為 None。
     抓取或解析失敗回傳 None（與「成功但 0 則」的 [] 區分）。"""
     text = net.fetch_text(NEWS_RSS_URL)
@@ -84,12 +92,19 @@ def fetch_daily_news(date_str, limit=12):
                 continue
             image_el = item.find("image")
             image = _safe_mlb_url(image_el.get("href")) if image_el is not None else None
-            found.append({"title": title, "link": link, "published": published, "image": image})
+            summary = _plain_text(item.findtext("description"))
+            found.append({"title": title, "link": link, "published": published, "image": image, "summary": summary})
     except Exception as e:
         print(f"Warning: Could not parse news RSS ({e}). Skipping news section.", file=sys.stderr)
         return None
     found.sort(key=lambda n: n["published"], reverse=True)
-    return found[:limit]
+    return found
+
+
+def fetch_daily_news(date_str, limit=12):
+    """同 fetch_all_daily_news，但最多 limit 則（顯示用）；失敗回傳 None。"""
+    found = fetch_all_daily_news(date_str)
+    return None if found is None else found[:limit]
 
 
 def render_news_section(news, page_type):

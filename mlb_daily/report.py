@@ -2,7 +2,7 @@
 
 import sys
 
-from . import games as games_mod, htmlutil, net, news as news_mod, storage, timeutil, transactions as transactions_mod, translate
+from . import games as games_mod, htmlutil, net, news as news_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
 
 
 # ---------------------------------------------------------------- 渲染：總覽與區塊
@@ -44,7 +44,7 @@ def render_games_section(cards_html):
 
 
 # ---------------------------------------------------------------- 組裝：整頁
-def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news=None):
+def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news=None, spotlight_html=""):
     """賽季戰報與休賽季快報共用：組出所有插槽後交給 render_page。"""
     cards_html = list(cards_html)
     tx_list = list(tx_list)
@@ -65,11 +65,37 @@ def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list
         "SUBTITLE": htmlutil.esc(subtitle),
         "SUMMARY": summary,
         "SEARCH": render_search() if cards_html else "",
+        "SPOTLIGHT": spotlight_html,
         "NEWS": news_mod.render_news_section(news, page_type),
         "GAMES": games,
         "TRANSACTIONS": transactions,
         "GENERATED_AT": htmlutil.esc(timeutil.get_taipei_now().strftime("%Y-%m-%d %H:%M")),
     })
+
+
+# ---------------------------------------------------------------- 台日韓球員專區
+def _spotlight_matches(wl, raw_tx, news_all, news_shown):
+    """名單比對（用未過濾的異動與當日全部新聞）；任何例外只印警告，專區視為無內容。
+    回傳 (異動 matches, 新聞 matches, 不在顯示清單內的名單新聞)。"""
+    try:
+        tx_matches = watchlist.match_transactions(raw_tx, wl)
+        news_matches = watchlist.match_news(news_all, wl)
+        extra_news = [n for n, _ in news_matches if not any(n is s for s in news_shown or [])]
+        return tx_matches, news_matches, extra_news
+    except Exception as e:  # noqa: BLE001 - 專區失敗不得影響戰報
+        print(f"Warning: 台日韓球員專區比對失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+        return [], [], []
+
+
+def _spotlight_build(date_str, wl, tx_matches, news_matches, boxscores=()):
+    """翻譯完成後組成 metadata 用的 spotlight 清單與戰報區塊 HTML；失敗回傳 ([], "")。"""
+    try:
+        lines = watchlist.extract_game_lines(boxscores, wl)
+        entries = watchlist.build_spotlight(date_str, wl, tx_matches, news_matches, lines)
+        return entries, watchlist.render_spotlight_section(entries, wl)
+    except Exception as e:  # noqa: BLE001
+        print(f"Warning: 台日韓球員專區產生失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+        return [], ""
 
 
 def generate_report(date_str, games):
@@ -80,9 +106,14 @@ def generate_report(date_str, games):
     game_views = []
     key_matchups_summary = []
 
-    tx_list = transactions_mod.fetch_daily_transactions(date_str)
+    raw_tx = transactions_mod.fetch_raw_transactions(date_str)
+    tx_list = transactions_mod.filter_major_league_transactions(raw_tx)
     transactions_count = len(tx_list)
-    news = news_mod.fetch_daily_news(date_str)
+    news_all = news_mod.fetch_all_daily_news(date_str)
+    news = None if news_all is None else news_all[:12]
+    wl = watchlist.load_watchlist()
+    tx_matches, news_matches, extra_news = _spotlight_matches(wl, raw_tx, news_all, news)
+    boxscores = []
 
     for game in games:
         game_pk = game["gamePk"]
@@ -106,6 +137,7 @@ def generate_report(date_str, games):
             key_matchups_summary.append((0.0, games_mod.build_summary_sentence(view, [])))
             continue
 
+        boxscores.append(boxscore)
         view, selected = games_mod.build_game_view(game, boxscore, away_info, home_info)
         key_matchups_summary.append((games_mod.top_focus_score(selected), games_mod.build_summary_sentence(view, selected)))
         view["news"] = news_mod.fetch_game_news(
@@ -117,10 +149,12 @@ def generate_report(date_str, games):
 
     tx_items = [tx for v in game_views for g in v["tx_groups"] for tx in g["items"]] + list(tx_list)
     team_names = [(v[side]["id"], v[side]["name_en"]) for v in game_views for side in ("away", "home")]
-    translated = translate.apply_translations(news, game_views, tx_items, team_names)
+    translated = translate.apply_translations(news, game_views, tx_items + tx_matches, team_names, extra_news)
     cards_html = [c if isinstance(c, str) else games_mod.render_game_card(c) for c in cards]
+    spotlight, spotlight_html = _spotlight_build(date_str, wl, tx_matches, news_matches, boxscores)
 
-    storage.write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list, news))
+    storage.write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list, news,
+                                                 spotlight_html))
 
     summary_sentence = f"昨日共進行了 {total_games} 場賽事。"
     if postponed_count > 0:
@@ -139,6 +173,8 @@ def generate_report(date_str, games):
     }
     if news is not None:  # 抓取失敗時不寫 news_count
         meta["news_count"] = len(news)
+    if spotlight:  # 有內容才寫入
+        meta["spotlight"] = spotlight
     return meta
 
 
@@ -155,10 +191,16 @@ def build_offseason_summary(news, transactions_count):
 
 def generate_offseason_report(date_str):
     """無賽事日：產出「休賽季快報」頁面（新聞＋大聯盟人事異動），回傳 metadata。"""
-    tx_list = transactions_mod.fetch_daily_transactions(date_str)
-    news = news_mod.fetch_daily_news(date_str)
-    translated = translate.apply_translations(news, [], tx_list)
-    storage.write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list, news=news))
+    raw_tx = transactions_mod.fetch_raw_transactions(date_str)
+    tx_list = transactions_mod.filter_major_league_transactions(raw_tx)
+    news_all = news_mod.fetch_all_daily_news(date_str)
+    news = None if news_all is None else news_all[:12]
+    wl = watchlist.load_watchlist()
+    tx_matches, news_matches, extra_news = _spotlight_matches(wl, raw_tx, news_all, news)
+    translated = translate.apply_translations(news, [], tx_list + tx_matches, extra_news=extra_news)
+    spotlight, spotlight_html = _spotlight_build(date_str, wl, tx_matches, news_matches)
+    storage.write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list, news=news,
+                                                 spotlight_html=spotlight_html))
     meta = {
         "date": date_str,
         "total_games": 0,
@@ -170,4 +212,6 @@ def generate_offseason_report(date_str):
     }
     if news is not None:  # 抓取失敗時不寫 news_count
         meta["news_count"] = len(news)
+    if spotlight:  # 有內容才寫入
+        meta["spotlight"] = spotlight
     return meta

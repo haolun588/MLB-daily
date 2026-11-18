@@ -1,0 +1,427 @@
+"""台日韓球員專區：追蹤名單、比對（異動／新聞／boxscore）、組成資料與渲染。
+
+層級與 transactions／news 相同，只依賴 config 與 htmlutil；異動、新聞以 dict 形狀傳入，不 import 其他功能模組。"""
+
+import json
+import re
+import sys
+from datetime import date, timedelta
+
+from . import htmlutil
+from .config import DATE_KEY_RE, TEAM_META, TEAM_NAMES_EN, WATCHLIST_PATH
+
+REGION_NAMES = {"TW": "台灣", "JP": "日本", "KR": "韓國"}
+REGION_ORDER = {"TW": 0, "JP": 1, "KR": 2}
+HEADING = "台日韓球員動態"
+HOME_WINDOW_DAYS = 7
+HOME_EMPTY_TEXT = "近 7 天無台日韓球員動態。"
+
+
+# ---------------------------------------------------------------- 名單讀取
+def load_watchlist(path=None):
+    """讀取追蹤名單，回傳 {person id: 球員 dict}（依檔案順序）。path 預設為 WATCHLIST_PATH（呼叫時才取值）。
+    讀檔失敗、JSON 錯誤或格式不符：印警告並回傳空 dict（專區不顯示，不中斷執行）；個別格式錯誤的球員略過。"""
+    path = path or WATCHLIST_PATH
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        players = data["players"]
+        if not isinstance(players, list):
+            raise ValueError("players 不是陣列")
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        print(f"Warning: 無法讀取追蹤名單 {path}（{type(e).__name__}: {e}），台日韓球員專區不顯示。", file=sys.stderr)
+        return {}
+    wl = {}
+    for p in players:
+        if not isinstance(p, dict):
+            continue
+        pid = htmlutil._int_id(p.get("id"))
+        name_zh, name_en, region = p.get("name_zh"), p.get("name_en"), p.get("region")
+        if pid is None or not isinstance(name_zh, str) or not isinstance(name_en, str) \
+                or not name_zh.strip() or not name_en.strip() or region not in REGION_NAMES:
+            print(f"Warning: 追蹤名單中略過格式錯誤的項目：{str(p)[:80]}", file=sys.stderr)
+            continue
+        aliases = p.get("aliases") or []
+        aliases = [a.strip() for a in aliases if isinstance(a, str) and a.strip()] if isinstance(aliases, list) else []
+        wl.setdefault(pid, {
+            "id": pid, "name_zh": name_zh.strip(), "name_en": name_en.strip(), "region": region, "aliases": aliases,
+        })
+    return wl
+
+
+# ---------------------------------------------------------------- 比對（含週報介面）
+def players_in_transaction(tx, wl):
+    """該筆異動涉及的名單球員 id 清單（比對 person_id 與 persons，依出現順序、不重複）。"""
+    ids = []
+    for p in (tx.get("persons") or []):
+        ids.append(htmlutil._int_id((p or {}).get("id")))
+    ids.append(htmlutil._int_id(tx.get("person_id")))
+    return [i for i in dict.fromkeys(ids) if i is not None and i in wl]
+
+
+def _term_pattern(wl_player):
+    terms = [wl_player["name_en"]] + list(wl_player.get("aliases") or [])
+    alts = "|".join(re.escape(t) for t in sorted(set(terms), key=len, reverse=True))
+    return re.compile(r"(?<!\w)(?:" + alts + r")(?!\w)", re.IGNORECASE)
+
+
+def players_in_text(text, wl):
+    """文字中提到的名單球員 id（不分大小寫、整詞比對 name_en 與 aliases；順序同名單）。"""
+    text = str(text or "")
+    if not text:
+        return []
+    return [pid for pid, p in wl.items() if _term_pattern(p).search(text)]
+
+
+def match_transactions(raw_tx, wl):
+    """從未經大聯盟過濾的 transactions 陣列挑出名單球員的異動（含下放、指派小聯盟等）。
+
+    API 多人交易會各人一筆、描述相同：依描述合併，persons 為該描述所有球員，任一人在名單即入選。
+    回傳與 filter_major_league_transactions 相同形狀的 dict list（可沿用翻譯與 render_tx_description）。"""
+    if not wl:
+        return []
+    groups = {}
+    for tx in raw_tx or []:
+        if isinstance(tx, dict) and tx.get("description"):
+            groups.setdefault(tx["description"], []).append(tx)
+    out = []
+    for desc, txs in groups.items():
+        persons = []
+        for tx in txs:
+            person = tx.get("person") or {}
+            pid, name = person.get("id"), person.get("fullName")
+            if pid is not None and name and all(p["id"] != pid for p in persons):
+                persons.append({"id": pid, "name": name})
+        # 同一筆交易的各紀錄 to/from 可能方向相反（如現金那一方、無 person）：
+        # 優先取 person 為名單球員的紀錄，其次取有 person 的紀錄，最後才退回任一筆
+        def _has_person(t):
+            return isinstance(t.get("person"), dict) and t["person"].get("id") is not None
+
+        ordered = (
+            [t for t in txs if _has_person(t) and htmlutil._int_id(t["person"]["id"]) in wl]
+            + [t for t in txs if _has_person(t)]
+            + txs
+        )
+        entry = {
+            "to_team_id": next((t["toTeam"]["id"] for t in ordered if isinstance(t.get("toTeam"), dict) and "id" in t["toTeam"]), None),
+            "from_team_id": next((t["fromTeam"]["id"] for t in ordered if isinstance(t.get("fromTeam"), dict) and "id" in t["fromTeam"]), None),
+            "person_id": persons[0]["id"] if persons else None,
+            "person_name": persons[0]["name"] if persons else None,
+            "persons": persons,
+            "description": desc,
+            "date": txs[0].get("date"),
+            "type_code": txs[0].get("typeCode"),
+        }
+        if players_in_transaction(entry, wl):
+            out.append(entry)
+    return out
+
+
+def match_news(news, wl):
+    """比對新聞標題與 RSS 摘要（summary），回傳 [(新聞, [名單球員 id])]（保持新聞順序）。"""
+    out = []
+    if not wl:
+        return out
+    for n in news or []:
+        ids = players_in_text(f"{n.get('title', '')} {n.get('summary', '')}", wl)
+        if ids:
+            out.append((n, ids))
+    return out
+
+
+# ---------------------------------------------------------------- boxscore 成績列
+def _num(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _join(parts):
+    return "、".join(parts)
+
+
+def format_batting(b):
+    """打擊列文字；沒有打席（plateAppearances 與 atBats 皆 0）回傳 None。0 的項目省略（打數、安打一定顯示）。"""
+    if not isinstance(b, dict) or not (_num(b.get("plateAppearances")) > 0 or _num(b.get("atBats")) > 0):
+        return None
+    parts = [f"{_num(b.get('atBats'))} 打數 {_num(b.get('hits'))} 安打"]
+    for key, label in (("doubles", "二壘安打"), ("triples", "三壘安打"), ("homeRuns", "全壘打"),
+                       ("rbi", "打點"), ("stolenBases", "盜壘"), ("baseOnBalls", "保送")):
+        n = _num(b.get(key))
+        if n > 0:
+            parts.append(f"{n} {label}")
+    return _join(parts)
+
+
+def _has_innings(ip):
+    ip = str(ip or "").strip()
+    try:
+        return float(ip) > 0
+    except ValueError:
+        return False
+
+
+def format_pitching(p):
+    """投球列文字；沒有投球局數、面對打者數與投球數時回傳 None（0 局失分仍顯示）。0 的項目省略（局數一定顯示）。"""
+    if not isinstance(p, dict) or not (
+            _has_innings(p.get("inningsPitched")) or _num(p.get("battersFaced")) > 0 or _num(p.get("numberOfPitches")) > 0):
+        return None
+    ip = str(p.get("inningsPitched") or "").strip() or "0.0"
+    parts = [f"{ip} 局"]
+    for key, label in (("hits", "安打"), ("runs", "失分"), ("strikeOuts", "三振")):
+        n = _num(p.get(key))
+        if n > 0:
+            parts.append(f"{n} {label}")
+    return _join(parts)
+
+
+def extract_game_lines(boxscores, wl):
+    """依 ID{personId} 在當日各場 boxscore 找名單球員，回傳 [{"player_id", "team_id", "batting", "pitching"}]。
+    打擊列需有打席、投球列需有投球局數，兩者皆無（只守備或代跑）的球員不列。"""
+    lines = []
+    if not wl:
+        return lines
+    for box in boxscores or []:
+        teams = (box or {}).get("teams") if isinstance(box, dict) else None
+        if not isinstance(teams, dict):
+            continue
+        for side in ("away", "home"):
+            side_obj = teams.get(side)
+            if not isinstance(side_obj, dict):
+                continue
+            team_id = htmlutil._int_id((side_obj.get("team") or {}).get("id")) if isinstance(side_obj.get("team"), dict) else None
+            players = side_obj.get("players")
+            if not isinstance(players, dict):
+                continue
+            for pid in wl:
+                info = players.get(f"ID{pid}")
+                if not isinstance(info, dict):
+                    continue
+                stats = info.get("stats") if isinstance(info.get("stats"), dict) else {}
+                batting = format_batting(stats.get("batting"))
+                pitching = format_pitching(stats.get("pitching"))
+                if batting or pitching:
+                    lines.append({"player_id": pid, "team_id": team_id, "batting": batting, "pitching": pitching})
+    return lines
+
+
+# ---------------------------------------------------------------- 組成可序列化的資料
+def build_spotlight(date_str, wl, tx_matches=(), news_matches=(), game_lines=()):
+    """組成 metadata `spotlight` 清單（純文字，渲染時才 escape）。呼叫時機須在翻譯之後（優先取譯文）。
+
+    - transaction：{"player_id", "kind", "text", "date", "persons", "to_team_id", "from_team_id", "also_player_ids"?}，
+      每筆異動只存一次，歸第一位名單球員；其餘名單球員在 also_player_ids，渲染時顯示「（同上則異動）」。
+    - news：{"player_id", "kind", "text", "link", "date", "also_player_ids"?}，一則新聞只列一次，歸第一位名單球員。
+    - game：{"player_id", "kind", "batting", "pitching", "team_id", "date"}。"""
+    entries = []
+    for tx in tx_matches:
+        ids = players_in_transaction(tx, wl)
+        if not ids:
+            continue
+        entry = {
+            "player_id": ids[0], "kind": "transaction",
+            "text": tx.get("description_zh") or tx["description"],
+            "date": tx.get("date") or date_str,
+            "persons": [{"id": p["id"], "name": p["name"]} for p in tx.get("persons") or []],
+            "to_team_id": tx.get("to_team_id"), "from_team_id": tx.get("from_team_id"),
+        }
+        if len(ids) > 1:
+            entry["also_player_ids"] = list(ids[1:])
+        entries.append(entry)
+    for n, ids in news_matches:
+        entry = {"player_id": ids[0], "kind": "news", "text": n.get("title_zh") or n["title"],
+                 "link": n["link"], "date": date_str}
+        if len(ids) > 1:
+            entry["also_player_ids"] = list(ids[1:])
+        entries.append(entry)
+    for g in game_lines:
+        entries.append({"player_id": g["player_id"], "kind": "game", "batting": g.get("batting"),
+                        "pitching": g.get("pitching"), "team_id": g.get("team_id"), "date": date_str})
+    return entries
+
+
+# ---------------------------------------------------------------- 渲染
+_KIND_ORDER = {"transaction": 0, "tx_ref": 0, "news": 1, "news_ref": 1, "game": 2}
+
+
+def _group_by_player(entries, wl):
+    """依球員分組並排序（台灣 → 日本 → 韓國，再依名單順序）；回傳 [(球員 dict, [entry])]。名單外或格式錯誤者略過。"""
+    grouped = {}
+    for e in entries or []:
+        if not isinstance(e, dict):
+            continue
+        pid = htmlutil._int_id(e.get("player_id"))
+        if pid in wl:
+            grouped.setdefault(pid, []).append(e)
+        ref_kind = {"news": "news_ref", "transaction": "tx_ref"}.get(e.get("kind"))
+        if ref_kind and isinstance(e.get("also_player_ids"), list):
+            for other in e["also_player_ids"]:
+                oid = htmlutil._int_id(other)
+                if oid in wl and oid != pid:  # 其餘球員只放「同上」參照，不重複標題與連結
+                    grouped.setdefault(oid, []).append({
+                        "kind": ref_kind, "date": e.get("date"),
+                        "to_team_id": e.get("to_team_id"), "from_team_id": e.get("from_team_id")})
+    order = {pid: i for i, pid in enumerate(wl)}
+    pids = sorted(grouped, key=lambda pid: (REGION_ORDER[wl[pid]["region"]], order[pid]))
+    return [(wl[pid], grouped[pid]) for pid in pids]
+
+
+def _team_name(team_id):
+    tid = htmlutil._int_id(team_id)
+    if tid in TEAM_NAMES_EN:
+        return TEAM_NAMES_EN[tid][2]
+    if tid in TEAM_META:
+        return TEAM_META[tid]["name"]
+    return None
+
+
+def _player_team_id(entries):
+    """分組標題的球隊 id：先取最新一筆 boxscore 比賽紀錄的 team_id；沒有則由最新一筆異動推算
+    （優先 to_team_id，其次 from_team_id，只取 30 隊之一）；都沒有回傳 None（只顯示地區）。"""
+    best = None
+    for e in sorted((e for e in entries if e.get("kind") == "game"), key=lambda e: str(e.get("date") or "")):
+        if htmlutil._int_id(e.get("team_id")) in TEAM_META:
+            best = e["team_id"]
+    if best is not None:
+        return best
+    for e in sorted((e for e in entries if e.get("kind") in ("transaction", "tx_ref")),
+                    key=lambda e: str(e.get("date") or ""), reverse=True):
+        for key in ("to_team_id", "from_team_id"):
+            if htmlutil._int_id(e.get(key)) in TEAM_META:
+                return e[key]
+    return None
+
+
+def _render_item(e, show_date=False):
+    """單一項目 <li>；所有外部字串經 esc。show_date 時（首頁）前置 M/D。"""
+    kind = e.get("kind")
+    date_html = ""
+    if show_date:
+        d = str(e.get("date") or "")
+        if DATE_KEY_RE.match(d):
+            date_html = f'<time class="spot-date num" datetime="{htmlutil.esc(d)}">{int(d[5:7])}/{int(d[8:10])}</time>'
+    if kind == "transaction":
+        body = "人事異動：" + _tx_html(e)
+    elif kind == "news":
+        link = str(e.get("link") or "")
+        title = htmlutil.esc(e.get("text", ""))
+        if link.startswith("https://www.mlb.com/"):
+            body = f'新聞：<a href="{htmlutil.esc(link)}" target="_blank" rel="noopener">{title}</a>'
+        else:
+            body = f"新聞：{title}"
+    elif kind == "tx_ref":
+        body = "人事異動：（同上則異動）"
+    elif kind == "news_ref":
+        body = "新聞：（同上則新聞）"
+    elif kind == "game":
+        rows = []
+        if e.get("batting"):
+            rows.append("打擊 " + htmlutil.esc(e["batting"]))
+        if e.get("pitching"):
+            rows.append("投球 " + htmlutil.esc(e["pitching"]))
+        if not rows:
+            return ""
+        return "".join(f"<li>{date_html}{r}</li>" for r in rows)
+    else:
+        return ""
+    return f"<li>{date_html}{body}</li>"
+
+
+def _tx_html(e):
+    """異動描述：以球員名切分各段 escape，名單內有 id 的名字加 Savant 連結（與 transactions.render_tx_description 相同做法）。"""
+    text = str(e.get("text", ""))
+    by_name = {}
+    for p in e.get("persons") or []:
+        if isinstance(p, dict) and p.get("name") and htmlutil._int_id(p.get("id")) is not None and p["name"] in text:
+            by_name.setdefault(p["name"], p["id"])
+    if not by_name:
+        return htmlutil.esc(text)
+    pattern = "(" + "|".join(re.escape(n) for n in sorted(by_name, key=len, reverse=True)) + ")"
+    out = []
+    for i, part in enumerate(re.split(pattern, text)):
+        if i % 2 == 1:
+            out.append(htmlutil.player_link(by_name[part], part))
+        elif part:
+            out.append(htmlutil.esc(part))
+    return "".join(out)
+
+
+def _render_groups(entries, wl, show_date):
+    groups = []
+    for player, items in _group_by_player(entries, wl):
+        items = sorted(items, key=lambda e: (-_date_key(e) if show_date else 0, _KIND_ORDER.get(e.get("kind"), 9)))
+        lis = "".join(_render_item(e, show_date) for e in items)
+        if not lis:
+            continue
+        team = _team_name(_player_team_id(items))
+        meta = REGION_NAMES[player["region"]] + (f"・{team}" if team else "")
+        groups.append(
+            '<div class="spot-group">'
+            f'<h3>{htmlutil.player_link(player["id"], player["name_zh"])}　<span class="spot-meta">{htmlutil.esc(meta)}</span></h3>'
+            f'<ul class="tx-list">{lis}</ul></div>'
+        )
+    return groups
+
+
+def _date_key(e):
+    """日期排序鍵（YYYYMMDD 整數，越大越新）；格式錯誤為 0。"""
+    d = str(e.get("date") or "")
+    return int(d.replace("-", "")) if DATE_KEY_RE.match(d) else 0
+
+
+def render_spotlight_section(spotlight, wl):
+    """戰報區塊 HTML；名單為空或沒有可顯示內容時回傳空字串（整區隱藏）。"""
+    if not wl or not spotlight:
+        return ""
+    groups = _render_groups(spotlight, wl, show_date=False)
+    if not groups:
+        return ""
+    return (
+        '<section class="section wrap" aria-labelledby="spot-h">'
+        f'<div class="section-head"><h2 id="spot-h">{HEADING}</h2><span class="count">{len(groups)} 位球員</span></div>'
+        '<div class="spot-grid">' + "".join(groups) + "</div></section>"
+    )
+
+
+def home_window_entries(metadata, days=HOME_WINDOW_DAYS):
+    """從 metadata 取「最新戰報日期」往回共 days 天（含最新日）的 spotlight 條目，每筆附上該期日期（metadata 鍵）。
+    metadata 無有效日期回傳 None。"""
+    dates = sorted((d for d, v in (metadata or {}).items() if DATE_KEY_RE.match(str(d)) and isinstance(v, dict)),
+                   reverse=True)
+    if not dates:
+        return None
+    latest = _parse(dates[0])
+    start = latest - timedelta(days=days - 1)
+    entries = []
+    for d in dates:
+        dt = _parse(d)
+        if dt is None or dt < start or dt > latest:
+            continue
+        spot = metadata[d].get("spotlight")
+        if not isinstance(spot, list):
+            continue
+        entries.extend({**e, "date": d} for e in spot if isinstance(e, dict))
+    return entries
+
+
+def _parse(date_str):
+    try:
+        return date.fromisoformat(str(date_str))
+    except ValueError:
+        return None
+
+
+def render_spotlight_home(entries, wl):
+    """首頁區塊 HTML。entries 為 home_window_entries 的結果（None 代表沒有任何戰報，不顯示）。
+    名單為空不顯示；有名單但近 7 天無條目則顯示空狀態訊息。"""
+    if not wl or entries is None:
+        return ""
+    groups = _render_groups(entries, wl, show_date=True)
+    if not groups:
+        return htmlutil._section_message("spot-h", HEADING, HOME_EMPTY_TEXT)
+    return (
+        '  <section class="section" aria-labelledby="spot-h">\n'
+        f'    <div class="section-head"><h2 id="spot-h">{HEADING}</h2><span class="count">近 {HOME_WINDOW_DAYS} 天 · {len(groups)} 位球員</span></div>\n'
+        '    <div class="spot-grid">' + "".join(groups) + "</div>\n  </section>"
+    )

@@ -43,7 +43,14 @@ def filter_major_league_transactions(transactions):
         if not desc:
             continue
         if desc in seen_descriptions:
-            _add_person(seen_descriptions[desc], tx.get("person"))
+            kept = seen_descriptions[desc]
+            if kept["person_id"] is None and (tx.get("person") or {}).get("id") is not None:
+                # 先出現的是無 person 的反向紀錄時，改採有 person 的紀錄的球員與 to/from 方向
+                person = tx["person"]
+                kept.update(person_id=person.get("id"), person_name=person.get("fullName"),
+                            to_team_id=(tx.get("toTeam") or {}).get("id"),
+                            from_team_id=(tx.get("fromTeam") or {}).get("id"))
+            _add_person(kept, tx.get("person"))
             continue
         desc_lower = desc.lower()
         if re.search(r"\bminor league", desc_lower):
@@ -72,13 +79,18 @@ def filter_major_league_transactions(transactions):
     return tx_list
 
 
-def fetch_daily_transactions(date_str):
-    """抓取當日大聯盟層級人事異動（過濾規則見 filter_major_league_transactions）。"""
+def fetch_raw_transactions(date_str):
+    """抓取當日人事異動原始資料（API 的 transactions 陣列，不過濾）；抓取失敗或無資料回傳 []。"""
     url = f"https://statsapi.mlb.com/api/v1/transactions?date={date_str}&sportId=1"
     data = net.fetch_json(url)
     if not data or not data.get("transactions"):
         return []
-    return filter_major_league_transactions(data["transactions"])
+    return data["transactions"]
+
+
+def fetch_daily_transactions(date_str):
+    """抓取當日大聯盟層級人事異動（過濾規則見 filter_major_league_transactions）。"""
+    return filter_major_league_transactions(fetch_raw_transactions(date_str))
 
 
 def _tx_persons(tx):

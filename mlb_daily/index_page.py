@@ -2,7 +2,7 @@
 
 import sys
 
-from . import htmlutil, net, previews, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate
+from . import htmlutil, net, previews, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
 from .config import DATE_KEY_RE, SEASON_URL
 
 
@@ -128,6 +128,16 @@ TEAMS_ENTRY_HTML = """  <a class="teams-entry" href="teams.html">
   </a>"""
 
 
+def render_spotlight_slot(metadata):
+    """首頁「台日韓球員動態」：最新戰報日期往回 7 天（含最新日）的 metadata spotlight 彙整。
+    名單讀取失敗、無任何戰報或任何例外都回傳空字串（區塊不顯示）。"""
+    wl = watchlist.load_watchlist()
+    if not wl:
+        return ""
+    entries = _safe_call("台日韓球員專區", watchlist.home_window_entries, metadata)
+    return _safe_call("台日韓球員專區渲染", watchlist.render_spotlight_home, entries, wl) or ""
+
+
 def render_index(metadata, extras=None):
     """首頁：最新一期大卡 + 左欄補充區塊（extras）+ 球隊名單入口 + 近期 6 期（不含最新一期）+ 戰績側邊欄。
     每次由 templates/index.html 全量重新產生。extras 為 build_index_extras 的結果（None 時不輸出側欄與補充區塊）。"""
@@ -137,6 +147,7 @@ def render_index(metadata, extras=None):
         "STANDINGS": extras.get("STANDINGS", ""),
         "STANDINGS_UI": extras.get("STANDINGS_UI", ""),
         "TEAMS": TEAMS_ENTRY_HTML,
+        "SPOTLIGHT": render_spotlight_slot(metadata),
     }
     dates = sorted(
         (d for d, v in metadata.items() if DATE_KEY_RE.match(str(d)) and isinstance(v, dict)),

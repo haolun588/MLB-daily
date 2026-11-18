@@ -1578,3 +1578,11 @@ img { max-width: 100%; height: auto; }
   .countdown > div { padding: 12px 12px; }
   .countdown dd .num { font-size: 1.875rem; }
 }
+
+/* ---------- 台日韓球員動態 ---------- */
+.spot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 16px 24px; margin-top: 16px; }
+.spot-group { min-width: 0; padding-left: 12px; border-left: 3px solid var(--line); }
+.spot-group h3 { font-size: 0.9375rem; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.spot-meta { font-size: 0.8125rem; font-weight: 500; color: var(--text-2); }
+.spot-group .tx-list li { overflow-wrap: anywhere; }
+.spot-date { margin-right: 8px; font: 500 0.75rem var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); }

@@ -30,7 +30,7 @@ if hasattr(sys.stderr, 'reconfigure'):
 # 拆分後的 mlb_daily 套件；以下重新匯出原本 fetch_mlb 的所有名稱以維持相容。
 # 注意：重新匯出的是原物件，patch `fetch_mlb.X` 不會影響 mlb_daily 內部；
 # 測試請 patch 定義該名稱的模組（例如 `mlb_daily.net.fetch_json`）。
-from mlb_daily import cli, config, games as games_mod, htmlutil, index_page, net, news as news_mod, notify, previews, report, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate  # noqa: F401
+from mlb_daily import cli, config, games as games_mod, htmlutil, index_page, net, news as news_mod, notify, previews, report, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist  # noqa: F401
 from mlb_daily.cli import (  # noqa: F401
     main,
 )
@@ -128,6 +128,7 @@ from mlb_daily.index_page import (  # noqa: F401
     _offseason_counts,
     _safe_call,
     build_index_extras,
+    render_spotlight_slot,
     fallback_index_extras,
     render_index,
     render_latest_card,
@@ -146,6 +147,7 @@ from mlb_daily.net import (  # noqa: F401
 )
 from mlb_daily.news import (  # noqa: F401
     _safe_mlb_url,
+    fetch_all_daily_news,
     fetch_daily_news,
     fetch_game_news,
     render_news_box,
@@ -217,6 +219,7 @@ from mlb_daily.transactions import (  # noqa: F401
     _tx_display_text,
     _tx_persons,
     fetch_daily_transactions,
+    fetch_raw_transactions,
     fetch_weekly_transactions,
     filter_major_league_transactions,
     render_card_transactions,

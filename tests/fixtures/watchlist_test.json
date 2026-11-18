@@ -1,0 +1,57 @@
+{
+  "players": [
+    {
+      "id": 678906,
+      "name_zh": "鄧愷威",
+      "name_en": "Kai-Wei Teng",
+      "region": "TW"
+    },
+    {
+      "id": 701678,
+      "name_zh": "李灝宇",
+      "name_en": "Hao-Yu Lee",
+      "region": "TW"
+    },
+    {
+      "id": 691907,
+      "name_zh": "鄭宗哲",
+      "name_en": "Tsung-Che Cheng",
+      "region": "TW"
+    },
+    {
+      "id": 660271,
+      "name_zh": "大谷翔平",
+      "name_en": "Shohei Ohtani",
+      "region": "JP",
+      "aliases": [
+        "Ohtani"
+      ]
+    },
+    {
+      "id": 808982,
+      "name_zh": "李政厚",
+      "name_en": "Jung Hoo Lee",
+      "region": "KR"
+    },
+    {
+      "id": 999001,
+      "name_zh": "測試金",
+      "name_en": "Test Kimura",
+      "region": "KR",
+      "aliases": [
+        "Kim"
+      ]
+    },
+    {
+      "id": 999002,
+      "name_zh": "壞項目",
+      "name_en": "Bad Region",
+      "region": "US"
+    },
+    {
+      "name_zh": "缺id",
+      "name_en": "No Id",
+      "region": "JP"
+    }
+  ]
+}

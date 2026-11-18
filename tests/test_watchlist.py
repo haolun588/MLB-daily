@@ -1,0 +1,512 @@
+"""台日韓球員專區測試：只用 unittest 與 tests/fixtures/，不連網、不呼叫真實 Gemini／Discord。"""
+
+import contextlib
+import io
+import json
+import sys
+import unittest
+from pathlib import Path
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import test_fetch_mlb as base  # noqa: E402
+
+fetch_mlb = base.fetch_mlb
+DATE = base.DATE
+WL_PATH = str(base.FIXTURES / "watchlist_test.json")
+OHTANI, TENG, HAOYU, CHENG, JHLEE, KIM = 660271, 678906, 701678, 691907, 808982, 999001
+
+
+def load_wl():
+    return fetch_mlb.watchlist.load_watchlist(WL_PATH)
+
+
+def quiet(fn, *a, **kw):
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        return fn(*a, **kw)
+
+
+def season_box():
+    """boxscore_1001 加上名單球員（含隊 id），供整合測試。"""
+    box = base.load_fixture("boxscore_1001")
+    extra = base.load_fixture("boxscore_watchlist")
+    for side in ("away", "home"):
+        box["teams"][side]["team"] = extra["teams"][side]["team"]
+        for key, info in extra["teams"][side]["players"].items():
+            info["position"] = {"abbreviation": "DH"}
+            box["teams"][side]["players"][key] = info
+    return box
+
+
+# ---------------------------------------------------------------- 名單讀取
+class LoadWatchlistTests(unittest.TestCase):
+    def test_loads_valid_players_in_file_order_and_skips_bad(self):
+        wl = load_wl()
+        self.assertEqual(list(wl), [TENG, HAOYU, CHENG, OHTANI, JHLEE, KIM])  # 壞地區、缺 id 的項目略過
+        self.assertEqual(wl[OHTANI]["aliases"], ["Ohtani"])
+        self.assertEqual(wl[TENG]["aliases"], [])
+
+    def test_missing_file_returns_empty_with_warning(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(fetch_mlb.watchlist.load_watchlist("no/such/file.json"), {})
+        self.assertIn("Warning", err.getvalue())
+
+    def test_bad_json_and_bad_shape_return_empty(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            for name, text in (("a.json", "{not json"), ("b.json", '{"players": 5}'), ("c.json", "[]"), ("d.json", '{"x": 1}')):
+                p = Path(d) / name
+                p.write_text(text, encoding="utf-8")
+                with contextlib.redirect_stderr(io.StringIO()):
+                    self.assertEqual(fetch_mlb.watchlist.load_watchlist(str(p)), {}, name)
+
+    def test_real_settings_file_is_valid(self):
+        wl = fetch_mlb.watchlist.load_watchlist(str(base.REPO_ROOT / "settings" / "watchlist.json"))
+        self.assertEqual(len(wl), 20)
+        self.assertEqual({p["region"] for p in wl.values()}, {"TW", "JP", "KR"})
+        self.assertEqual(wl[660271]["aliases"], ["Ohtani"])
+
+
+# ---------------------------------------------------------------- 比對
+class MatchingTests(unittest.TestCase):
+    def setUp(self):
+        self.wl = load_wl()
+        self.w = fetch_mlb.watchlist
+
+    def test_players_in_text_whole_word_only(self):
+        self.assertEqual(self.w.players_in_text("Leeway given to managers", self.wl), [])
+        self.assertEqual(self.w.players_in_text("Kimbrel signs a deal", self.wl), [])
+        self.assertEqual(self.w.players_in_text("Test Kim wins award", self.wl), [KIM])  # 別名 Kim 整詞命中
+        self.assertEqual(self.w.players_in_text("OHTANI's night", self.wl), [OHTANI])  # 不分大小寫，所有格
+        self.assertEqual(self.w.players_in_text("shohei ohtani and Kai-Wei Teng", self.wl), [TENG, OHTANI])
+        self.assertEqual(self.w.players_in_text("", self.wl), [])
+
+    def test_players_in_transaction_uses_persons_and_person_id(self):
+        tx = {"person_id": 777101, "persons": [{"id": 777101, "name": "Other Guy"}, {"id": HAOYU, "name": "Hao-Yu Lee"}]}
+        self.assertEqual(self.w.players_in_transaction(tx, self.wl), [HAOYU])
+        self.assertEqual(self.w.players_in_transaction({"person_id": TENG}, self.wl), [TENG])
+        self.assertEqual(self.w.players_in_transaction({"person_id": 1}, self.wl), [])
+
+    def test_match_transactions_uses_raw_data_including_minor_league_and_multi_person(self):
+        raw = base.load_fixture("transactions_watchlist")["transactions"]
+        # 原始資料含「Minor League」描述，大聯盟過濾會濾掉，名單比對仍要看到
+        filtered = [t["description"] for t in fetch_mlb.filter_major_league_transactions(raw)]
+        self.assertNotIn("Houston Astros assigned LHP Kai-Wei Teng to the Minor League camp.", filtered)
+        matched = self.w.match_transactions(raw, self.wl)
+        descs = [m["description"] for m in matched]
+        self.assertEqual(descs, [
+            "Houston Astros optioned RHP Kai-Wei Teng to Sugar Land Space Cowboys.",
+            "Detroit Tigers traded 2B Hao-Yu Lee and RHP Other Guy to Boston Red Sox.",
+            "Houston Astros assigned LHP Kai-Wei Teng to the Minor League camp.",
+            "Boston Red Sox traded 2B Tsung-Che Cheng to Detroit Tigers for cash.",
+        ])
+        trade = matched[1]
+        self.assertEqual({p["id"] for p in trade["persons"]}, {777101, HAOYU})  # 多人交易合併，即使名單球員在第二筆
+        self.assertEqual((trade["to_team_id"], trade["from_team_id"]), (111, 116))
+        self.assertEqual(trade["type_code"], "TR")
+        self.assertEqual(self.w.players_in_transaction(trade, self.wl), [HAOYU])
+
+    def test_reversed_record_without_person_does_not_decide_direction(self):
+        # fixture 中無 person 的反向紀錄（from=老虎、to=紅襪）排在前面；應採名單球員那筆（from=紅襪、to=老虎）
+        raw = base.load_fixture("transactions_watchlist")["transactions"]
+        desc = "Boston Red Sox traded 2B Tsung-Che Cheng to Detroit Tigers for cash."
+        self.assertIsNone([t for t in raw if t["description"] == desc][0].get("person"))
+        cheng = next(m for m in self.w.match_transactions(raw, self.wl) if m["description"] == desc)
+        self.assertEqual((cheng["to_team_id"], cheng["from_team_id"]), (116, 111))
+        self.assertEqual(cheng["person_id"], CHENG)
+        spot = self.w.build_spotlight(DATE, self.wl, [cheng])
+        self.assertIn("台灣・老虎", self.w.render_spotlight_section(spot, self.wl))
+        # 一般異動過濾的去重同理：改採有 person 的紀錄
+        kept = next(t for t in fetch_mlb.filter_major_league_transactions(raw) if t["description"] == desc)
+        self.assertEqual((kept["to_team_id"], kept["from_team_id"], kept["person_id"]), (116, 111, CHENG))
+
+    def test_match_transactions_empty_inputs(self):
+        self.assertEqual(self.w.match_transactions([], self.wl), [])
+        self.assertEqual(self.w.match_transactions(base.load_fixture("transactions_watchlist")["transactions"], {}), [])
+
+
+class FetchAndMatchNewsTests(base.MlbTestBase):
+    def test_all_news_unlimited_but_daily_news_keeps_limit_and_summary(self):
+        self.api.news = "news_rss_watchlist.xml"
+        all_news = fetch_mlb.fetch_all_daily_news(DATE)
+        shown = fetch_mlb.fetch_daily_news(DATE)
+        self.assertEqual(len(all_news), 18)
+        self.assertEqual(len(shown), 12)
+        self.assertEqual([n["title"] for n in shown], [n["title"] for n in all_news[:12]])
+        teng = next(n for n in all_news if n["title"] == "Astros reshuffle pitching staff")
+        self.assertEqual(teng["summary"], "Right-hander Kai-Wei Teng was optioned & will report to camp.")  # 去標籤、解實體
+
+    def test_match_news_title_summary_and_false_positives(self):
+        self.api.news = "news_rss_watchlist.xml"
+        wl = load_wl()
+        matches = fetch_mlb.watchlist.match_news(fetch_mlb.fetch_all_daily_news(DATE), wl)
+        got = {n["title"]: ids for n, ids in matches}
+        self.assertEqual(got["Ohtani homers twice as Dodgers rally"], [OHTANI])  # 標題命中
+        self.assertEqual(got["Astros reshuffle pitching staff"], [TENG])  # 摘要命中
+        self.assertEqual(got["Ohtani and Kai-Wei Teng headline Asia roster"], [TENG, OHTANI])
+        self.assertEqual(got["Test Kim wins award"], [KIM])
+        self.assertEqual(got["Late Shohei Ohtani feature"], [OHTANI])
+        self.assertNotIn("Leeway given to managers on challenges", got)
+        self.assertNotIn("Kimbrel signs minor league deal", got)
+        self.assertEqual(len(got), 5)
+
+    def test_daily_transactions_behavior_unchanged(self):
+        self.api.transactions = "transactions_default"
+        raw = fetch_mlb.fetch_raw_transactions(DATE)
+        self.assertEqual(raw, base.load_fixture("transactions_default")["transactions"])
+        self.assertEqual(fetch_mlb.fetch_daily_transactions(DATE), fetch_mlb.filter_major_league_transactions(raw))
+        self.api.transactions = None
+        self.assertEqual(fetch_mlb.fetch_raw_transactions(DATE), [])
+
+
+# ---------------------------------------------------------------- boxscore
+class GameLineTests(unittest.TestCase):
+    def setUp(self):
+        self.wl = load_wl()
+        self.w = fetch_mlb.watchlist
+
+    def test_extract_game_lines(self):
+        lines = self.w.extract_game_lines([base.load_fixture("boxscore_watchlist")], self.wl)
+        by_id = {g["player_id"]: g for g in lines}
+        # 只投球
+        self.assertEqual(by_id[TENG], {"player_id": TENG, "team_id": 117, "batting": None, "pitching": "2.1 局、1 安打、3 三振"})
+        # 二刀流：兩列都有，0 的項目省略
+        self.assertEqual(by_id[OHTANI]["batting"], "4 打數 2 安打、1 全壘打、2 打點、1 保送")
+        self.assertEqual(by_id[OHTANI]["pitching"], "6.0 局、3 安打、1 失分、8 三振")
+        self.assertEqual(by_id[OHTANI]["team_id"], 119)
+        # 只有保送（有打席、無打數）仍顯示，打數安打一定顯示
+        self.assertEqual(by_id[JHLEE]["batting"], "0 打數 0 安打、1 保送")
+        # 只守備、代跑未打席：不列
+        self.assertNotIn(HAOYU, by_id)
+        self.assertNotIn(CHENG, by_id)
+        self.assertEqual(len(lines), 3)
+
+    def test_formats_and_bad_input(self):
+        self.assertIsNone(self.w.format_batting({}))
+        self.assertIsNone(self.w.format_batting({"atBats": 0, "plateAppearances": 0, "runs": 1}))
+        self.assertEqual(self.w.format_batting({"atBats": 3, "hits": 0, "plateAppearances": 3}), "3 打數 0 安打")
+        self.assertEqual(self.w.format_batting({"atBats": 4, "hits": 3, "doubles": 1, "triples": 1, "stolenBases": 2}),
+                         "4 打數 3 安打、1 二壘安打、1 三壘安打、2 盜壘")
+        self.assertIsNone(self.w.format_pitching({"inningsPitched": "0.0"}))
+        self.assertIsNone(self.w.format_pitching({}))
+        self.assertIsNone(self.w.format_pitching({"inningsPitched": "0.0", "battersFaced": 0, "numberOfPitches": 0, "runs": 2}))
+        # 0 局失分（面對打者或有投球數）仍顯示
+        self.assertEqual(self.w.format_pitching({"inningsPitched": "0.0", "battersFaced": 5, "hits": 2, "runs": 3}),
+                         "0.0 局、2 安打、3 失分")
+        self.assertEqual(self.w.format_pitching({"numberOfPitches": 7, "runs": 1}), "0.0 局、1 失分")
+        self.assertEqual(self.w.format_pitching({"inningsPitched": "0.1"}), "0.1 局")
+        self.assertEqual(self.w.extract_game_lines([None, {}, {"teams": []}, {"teams": {"away": 1, "home": {"players": []}}}], self.wl), [])
+        self.assertEqual(self.w.extract_game_lines([base.load_fixture("boxscore_watchlist")], {}), [])
+
+
+# ---------------------------------------------------------------- 資料與渲染
+class BuildAndRenderTests(unittest.TestCase):
+    def setUp(self):
+        self.wl = load_wl()
+        self.w = fetch_mlb.watchlist
+
+    def test_build_spotlight_prefers_translation_and_lists_news_once(self):
+        tx = {"description": "Eng desc", "description_zh": "中文異動", "person_id": TENG, "date": "2026-11-14",
+              "persons": [{"id": TENG, "name": "Kai-Wei Teng"}]}
+        news = {"title": "T", "title_zh": "中文標題", "link": "https://www.mlb.com/news/x"}
+        spot = self.w.build_spotlight(DATE, self.wl, [tx], [(news, [TENG, OHTANI])],
+                                      [{"player_id": OHTANI, "team_id": 119, "batting": "b", "pitching": None}])
+        self.assertEqual(spot[0], {"player_id": TENG, "kind": "transaction", "text": "中文異動", "date": "2026-11-14",
+                                   "persons": [{"id": TENG, "name": "Kai-Wei Teng"}],
+                                   "to_team_id": None, "from_team_id": None})
+        self.assertEqual(spot[1], {"player_id": TENG, "kind": "news", "text": "中文標題", "link": "https://www.mlb.com/news/x",
+                                   "date": DATE, "also_player_ids": [OHTANI]})  # 只列一次，歸第一位球員
+        self.assertEqual(spot[2]["kind"], "game")
+        self.assertEqual(len(spot), 3)
+        json.dumps(spot)  # 可序列化
+
+    def test_build_spotlight_transaction_also_player_ids(self):
+        tx = {"description": "Trade of Kai-Wei Teng and Hao-Yu Lee", "person_id": HAOYU, "date": DATE, "to_team_id": 111, "from_team_id": 116,
+              "persons": [{"id": HAOYU, "name": "Hao-Yu Lee"}, {"id": TENG, "name": "Kai-Wei Teng"}]}
+        spot = self.w.build_spotlight(DATE, self.wl, [tx])
+        self.assertEqual(len(spot), 1)
+        self.assertEqual(spot[0]["player_id"], HAOYU)  # 異動 persons 順序的第一位名單球員
+        self.assertEqual(spot[0]["also_player_ids"], [TENG])
+        self.assertEqual((spot[0]["to_team_id"], spot[0]["from_team_id"]), (111, 116))
+
+    def test_same_as_above_refs_for_news_and_transactions(self):
+        spot = [
+            {"player_id": TENG, "kind": "news", "text": "共同新聞", "link": "https://www.mlb.com/news/a", "date": DATE,
+             "also_player_ids": [OHTANI, 1]},
+            {"player_id": TENG, "kind": "transaction", "text": "共同異動", "date": DATE, "persons": [], "also_player_ids": [JHLEE]},
+        ]
+        html = self.w.render_spotlight_section(spot, self.wl)
+        self.assertEqual(html.count("共同新聞"), 1)  # 標題與連結只出現一次
+        self.assertEqual(html.count("共同異動"), 1)
+        self.assertEqual(html.count("https://www.mlb.com/news/a"), 1)
+        self.assertEqual(html.count("新聞：（同上則新聞）"), 1)
+        self.assertEqual(html.count("人事異動：（同上則異動）"), 1)
+        self.assertIn("大谷翔平", html)  # 第二位球員有自己的分組
+        self.assertIn("李政厚", html)
+        self.assertEqual(html.count('class="spot-group"'), 3)
+
+    def test_team_inferred_from_transaction(self):
+        def head(**kw):
+            e = {"player_id": TENG, "kind": "transaction", "text": "x", "date": DATE, **kw}
+            return self.w.render_spotlight_section([e], self.wl)
+        self.assertIn("台灣・老虎", head(to_team_id=116, from_team_id=117))  # 優先 to
+        self.assertIn("台灣・太空人", head(to_team_id=5434, from_team_id=117))  # to 非 30 隊 -> from
+        self.assertIn("台灣</span>", head(to_team_id=5434, from_team_id=5435))  # 都不是：只顯示地區
+        self.assertIn("台灣</span>", head())
+        # boxscore 球隊優先於異動推算
+        both = [{"player_id": TENG, "kind": "transaction", "text": "x", "date": DATE, "to_team_id": 116},
+                {"player_id": TENG, "kind": "game", "batting": "b", "team_id": 117, "date": DATE}]
+        self.assertIn("台灣・太空人", self.w.render_spotlight_section(both, self.wl))
+
+    def test_section_hidden_when_empty(self):
+        self.assertEqual(self.w.render_spotlight_section([], self.wl), "")
+        self.assertEqual(self.w.render_spotlight_section([{"player_id": TENG, "kind": "news", "text": "x"}], {}), "")
+        self.assertEqual(self.w.render_spotlight_section([{"player_id": 1, "kind": "game", "batting": "x"}], self.wl), "")
+
+    def test_section_groups_order_team_and_links(self):
+        spot = [
+            {"player_id": OHTANI, "kind": "game", "batting": "4 打數 2 安打", "pitching": "6.0 局", "team_id": 119, "date": DATE},
+            {"player_id": JHLEE, "kind": "news", "text": "韓國新聞", "link": "https://www.mlb.com/news/k", "date": DATE},
+            {"player_id": TENG, "kind": "news", "text": "新聞標題", "link": "https://www.mlb.com/news/t", "date": DATE},
+            {"player_id": TENG, "kind": "transaction", "text": "Houston Astros optioned RHP Kai-Wei Teng.", "date": DATE,
+             "persons": [{"id": TENG, "name": "Kai-Wei Teng"}]},
+        ]
+        html = self.w.render_spotlight_section(spot, self.wl)
+        self.assertIn('id="spot-h">台日韓球員動態', html)
+        self.assertLess(html.index("鄧愷威"), html.index("大谷翔平"))  # 台灣 → 日本 → 韓國
+        self.assertLess(html.index("大谷翔平"), html.index("李政厚"))
+        self.assertIn("台灣</span>", html)  # 沒有 boxscore 球隊：只顯示地區
+        self.assertIn("日本・道奇", html)
+        self.assertIn("韓國</span>", html)
+        self.assertIn("savant-player/678906", html)  # 球員名連結（中文名 + 內文英文名）
+        self.assertIn(">鄧愷威</a>", html)
+        self.assertIn("人事異動：", html)
+        self.assertIn("打擊 4 打數 2 安打", html)
+        self.assertIn("投球 6.0 局", html)
+        # 同一球員內順序：人事異動 → 新聞
+        self.assertLess(html.index("人事異動："), html.index("新聞："))
+
+    def test_section_escapes_external_strings(self):
+        wl = dict(self.wl)
+        wl[TENG] = {**wl[TENG], "name_zh": "<b>鄧</b>"}
+        spot = [
+            {"player_id": TENG, "kind": "news", "text": "<script>alert(1)</script>", "link": "https://www.mlb.com/news/a?x=1&y=\"2\"", "date": DATE},
+            {"player_id": TENG, "kind": "news", "text": "evil", "link": "javascript:alert(1)", "date": DATE},
+            {"player_id": TENG, "kind": "transaction", "text": "<img src=x onerror=1> Kai-Wei Teng", "date": DATE,
+             "persons": [{"id": TENG, "name": "Kai-Wei Teng"}]},
+            {"player_id": TENG, "kind": "game", "batting": "<i>x</i>", "pitching": None, "date": DATE},
+        ]
+        html = self.w.render_spotlight_section(spot, wl)
+        for raw in ("<script>", "<img src=x", "<b>鄧", "<i>x", "javascript:alert"):
+            self.assertNotIn(raw, html)
+        self.assertIn("&lt;script&gt;", html)
+        self.assertIn("&lt;b&gt;鄧", html)
+
+    def test_home_window_and_render(self):
+        meta = {
+            "2026-11-15": {"date": "2026-11-15", "spotlight": [
+                {"player_id": OHTANI, "kind": "game", "batting": "新", "pitching": None, "team_id": 119, "date": "2026-11-15"}]},
+            "2026-11-09": {"date": "2026-11-09", "spotlight": [
+                {"player_id": OHTANI, "kind": "news", "text": "邊界", "link": "https://www.mlb.com/news/e", "date": "2026-11-09"}]},
+            "2026-11-08": {"date": "2026-11-08", "spotlight": [
+                {"player_id": TENG, "kind": "news", "text": "太舊", "link": "https://www.mlb.com/news/o", "date": "2026-11-08"}]},
+            "2026-11-14": {"date": "2026-11-14"},  # 無 spotlight 欄位（舊資料）
+        }
+        entries = self.w.home_window_entries(meta)
+        self.assertEqual(sorted(e["date"] for e in entries), ["2026-11-09", "2026-11-15"])  # 最新日往回共 7 天（含）
+        html = self.w.render_spotlight_home(entries, self.wl)
+        self.assertIn("大谷翔平", html)
+        self.assertIn("日本・道奇", html)
+        self.assertIn("11/15", html)
+        self.assertLess(html.index("11/15"), html.index("11/9"))  # 新到舊
+        self.assertNotIn("太舊", html)
+        self.assertNotIn("鄧愷威", html)
+
+    def test_home_empty_states(self):
+        self.assertIsNone(self.w.home_window_entries({}))
+        self.assertEqual(self.w.render_spotlight_home(None, self.wl), "")
+        self.assertEqual(self.w.render_spotlight_home([], {}), "")
+        self.assertIn("近 7 天無台日韓球員動態。", self.w.render_spotlight_home([], self.wl))
+        self.assertIn("近 7 天無台日韓球員動態。", self.w.render_spotlight_home(
+            self.w.home_window_entries({"2026-11-15": {"date": "2026-11-15"}}), self.wl))
+
+    def test_home_tolerates_malformed_metadata(self):
+        meta = {"2026-11-15": {"spotlight": "oops"}, "2026-11-14": {"spotlight": [1, None, {"player_id": "x"}, {"player_id": OHTANI, "kind": "bad"}]},
+                "bad": {"spotlight": []}}
+        html = self.w.render_spotlight_home(self.w.home_window_entries(meta), self.wl)
+        self.assertIn("近 7 天無台日韓球員動態。", html)
+
+
+# ---------------------------------------------------------------- 整合：戰報與首頁
+class SpotlightIntegrationTests(base.MlbTestBase):
+    def setUp(self):
+        super().setUp()
+        p = mock.patch("mlb_daily.watchlist.WATCHLIST_PATH", WL_PATH)
+        p.start()
+        self.addCleanup(p.stop)
+
+    def season(self, **kw):
+        self.api.news = "news_rss_watchlist.xml"
+        self.api.boxscore_overrides[1001] = season_box()
+        return self.generate("schedule_normal", transactions="transactions_watchlist", **kw)
+
+    def test_season_report_has_spotlight_before_news_and_metadata(self):
+        meta, html = self.season()
+        self.assertIn('id="spot-h"', html)
+        self.assertLess(html.index('id="spot-h"'), html.index('id="news-h"'))
+        self.assertLess(html.index('id="games-h"'), html.index('id="tx-h"'))
+        sec = html[html.index('id="spot-h"'):html.index('id="news-h"')]
+        self.assertIn("鄧愷威", sec)
+        self.assertIn("台灣・太空人", sec)  # 球隊由 boxscore 的 team id 取得
+        self.assertIn("日本・道奇", sec)
+        self.assertIn("4 打數 2 安打、1 全壘打、2 打點、1 保送", sec)
+        self.assertIn("6.0 局、3 安打、1 失分、8 三振", sec)
+        self.assertIn("2.1 局、1 安打、3 三振", sec)
+        self.assertIn("Houston Astros assigned LHP", sec)  # 小聯盟異動也列（無金鑰：英文原文）
+        self.assertIn("Late Shohei Ohtani feature", sec)  # 不在顯示前 12 則的新聞也能比對
+        self.assertNotIn("Leeway", sec)
+        self.assertNotIn("Kimbrel", sec)
+        # 顯示的新聞區塊仍只有 12 則
+        self.assertIn('<span class="count">12 則</span>', html)
+        self.assertEqual(meta["news_count"], 12)
+        kinds = [(e["player_id"], e["kind"]) for e in meta["spotlight"]]
+        self.assertIn((TENG, "transaction"), kinds)
+        self.assertIn((HAOYU, "transaction"), kinds)
+        self.assertIn((OHTANI, "game"), kinds)
+        self.assertEqual(sum(1 for e in meta["spotlight"] if e["kind"] == "news" and e["text"] == "Ohtani and Kai-Wei Teng headline Asia roster"), 1)
+        game = next(e for e in meta["spotlight"] if e["kind"] == "game" and e["player_id"] == OHTANI)
+        self.assertEqual(game["pitching"], "6.0 局、3 安打、1 失分、8 三振")
+        json.dumps(meta)
+
+    def test_boxscore_not_refetched_for_spotlight(self):
+        self.season()
+        self.assertEqual(sum(1 for u in self.api.calls if "/game/1001/boxscore" in u), 1)
+
+    def test_metadata_written_and_home_shows_seven_day_summary(self):
+        meta, _ = self.season()
+        self.quiet_update_index(meta)
+        self.assertEqual(self.read_metadata()[DATE]["spotlight"], meta["spotlight"])
+        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        self.assertIn('id="spot-h"', index)
+        self.assertLess(index.index('id="latest-h"'), index.index('id="spot-h"'))
+        self.assertIn("大谷翔平", index)
+        self.assertIn("11/15", index)
+
+    def test_no_spotlight_when_nothing_matches(self):
+        # 有名單但當日無名單球員的異動／新聞／出賽：整區隱藏、metadata 不寫 spotlight
+        self.api.news = "news_rss.xml"
+        meta, html = self.generate("schedule_normal", transactions="transactions_default")
+        self.assertNotIn("spot-h", html)
+        self.assertNotIn("台日韓", html)
+        self.assertNotIn("spotlight", meta)
+
+    def test_no_slot_marker_left_in_output(self):
+        _, html = self.season()
+        self.assertNotIn("<!--SLOT:", html)
+
+    def test_offseason_report(self):
+        self.api.news = "news_rss_watchlist.xml"
+        self.api.transactions = "transactions_watchlist"
+        meta = quiet(fetch_mlb.generate_offseason_report, DATE)
+        html = self.read_report()
+        self.assertEqual(meta["type"], "offseason")
+        self.assertIn('id="spot-h"', html)
+        self.assertLess(html.index('id="spot-h"'), html.index('id="news-h"'))
+        self.assertIn("鄧愷威", html)
+        self.assertIn("Houston Astros assigned LHP", html)
+        self.assertNotIn("打擊", html)
+        # 休賽季無 boxscore：球隊由異動推算（鄧愷威 to 小聯盟球隊 -> 取 from 太空人；李灝宇 to 紅襪）
+        self.assertIn("台灣・太空人", html)
+        self.assertIn("台灣・紅襪", html)
+        self.assertTrue(all(e["kind"] != "game" for e in meta["spotlight"]))
+        self.assertEqual(meta["news_count"], 12)
+
+    def test_offseason_without_matches_has_no_section(self):
+        self.api.news = "news_rss.xml"
+        meta = quiet(fetch_mlb.generate_offseason_report, DATE)
+        self.assertNotIn("spot-h", self.read_report())
+        self.assertNotIn("spotlight", meta)
+
+    def test_missing_or_corrupt_watchlist_does_not_break_run(self):
+        for content in (None, "{broken"):
+            with self.subTest(content=content):
+                bad = self.tmp / "bad.json"
+                if content is None:
+                    path = str(self.tmp / "nope.json")
+                else:
+                    bad.write_text(content, encoding="utf-8")
+                    path = str(bad)
+                with mock.patch("mlb_daily.watchlist.WATCHLIST_PATH", path):
+                    meta, html = self.season()
+                    self.quiet_update_index(meta)
+                self.assertNotIn("spot-h", html)
+                self.assertNotIn("spotlight", meta)
+                self.assertEqual(meta["total_games"], 2)
+                self.assertNotIn("spot-h", (self.tmp / "index.html").read_text(encoding="utf-8"))
+
+    def test_home_empty_state_and_hidden_cases(self):
+        plain = {"date": DATE, "total_games": 2, "postponed": 0, "summary": "s", "type": "season"}
+        self.quiet_update_index(plain)
+        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        self.assertIn("近 7 天無台日韓球員動態。", index)
+        self.assertLess(index.index('id="latest-h"'), index.index('id="spot-h"'))
+        # 名單失敗：不顯示
+        with mock.patch("mlb_daily.watchlist.WATCHLIST_PATH", str(self.tmp / "nope.json")):
+            self.quiet_update_index(plain)
+        self.assertNotIn("spot-h", (self.tmp / "index.html").read_text(encoding="utf-8"))
+        # 尚無任何戰報：不顯示
+        self.assertNotIn("spot-h", quiet(fetch_mlb.render_index, {}))
+
+    def test_home_xss_from_metadata_is_escaped(self):
+        meta = {"date": DATE, "total_games": 1, "postponed": 0, "summary": "s", "type": "season", "spotlight": [
+            {"player_id": OHTANI, "kind": "news", "text": "<script>alert('X')</script>", "link": "https://www.mlb.com/news/\"><x", "date": DATE}]}
+        self.quiet_update_index(meta)
+        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn("<script>alert('X')", index)
+        self.assertIn("&lt;script&gt;alert(&#x27;X&#x27;)", index)
+        self.assertNotIn('"><x', index)
+
+    def test_translation_includes_spotlight_texts_once(self):
+        os_env = {"GEMINI_API_KEY": "test-key-not-real"}
+        sent = []
+
+        def fake_translate(items, extra=()):
+            sent.extend(it["text"] for it in items)
+            return ["ZH:" + it["text"] for it in items]
+
+        self.api.news = "news_rss_watchlist.xml"
+        self.api.boxscore_overrides[1001] = season_box()
+        self.api.schedule = "schedule_normal"
+        self.api.transactions = "transactions_watchlist"
+        with mock.patch.dict("os.environ", os_env), mock.patch("mlb_daily.translate.translate_texts", side_effect=fake_translate):
+            meta = quiet(fetch_mlb.generate_report, DATE, self.games_of("schedule_normal"))
+        html = self.read_report()
+        self.assertEqual(len(sent), len(set(sent)), "同一字串不得重送")
+        self.assertIn("Astros reshuffle pitching staff", sent)  # 不在前 12 則、但名單命中的新聞標題
+        self.assertIn("Houston Astros assigned LHP Kai-Wei Teng to the Minor League camp.", sent)  # 名單異動描述
+        sec = html[html.index('id="spot-h"'):html.index('id="news-h"')]
+        self.assertIn("ZH:Houston Astros assigned LHP", sec)
+        self.assertIn("ZH:Late Shohei Ohtani feature", sec)
+        self.assertTrue(any(e["text"].startswith("ZH:") for e in meta["spotlight"] if e["kind"] == "news"))
+        # 同描述若同時在一般異動區塊：兩處都套用譯文
+        self.assertIn("ZH:Houston Astros optioned RHP", html)
+
+
+class TemplateSlotTests(unittest.TestCase):
+    def test_slot_positions(self):
+        report = (base.REPO_ROOT / "templates" / "report.html").read_text(encoding="utf-8")
+        s = lambda n: report.index(f"<!--SLOT:{n}-->")  # noqa: E731
+        self.assertLess(s("SUMMARY"), s("SPOTLIGHT"))
+        self.assertLess(s("SPOTLIGHT"), s("NEWS"))
+        index = (base.REPO_ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+        self.assertLess(index.index("<!--SLOT:LATEST-->"), index.index("<!--SLOT:SPOTLIGHT-->"))
+
+    def test_css_has_spotlight_styles_without_horizontal_overflow_rules(self):
+        css = (base.REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        self.assertIn(".spot-group", css)
+        self.assertRegex(css, r"\.spot-group h3[^}]*overflow-wrap: anywhere")
+
+
+if __name__ == "__main__":
+    unittest.main()

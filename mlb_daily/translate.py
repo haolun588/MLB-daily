@@ -158,10 +158,11 @@ def _keep_in(text, names):
     return [n for n in dict.fromkeys(names) if n and n in text]
 
 
-def apply_translations(news, views, tx_items, extra_team_names=()):
-    """收集整頁需翻譯的文字，只呼叫一次 translate_texts，譯文寫入 *_zh 欄位。回傳是否成功套用。"""
+def apply_translations(news, views, tx_items, extra_team_names=(), extra_news=()):
+    """收集整頁需翻譯的文字，只呼叫一次 translate_texts，譯文寫入 *_zh 欄位。回傳是否成功套用。
+    extra_news：不在顯示清單內、但台日韓專區要用的新聞（只翻標題）。相同原文只送翻一次，結果套用到所有對應物件。"""
     targets = []  # (物件, 目標鍵, 原文, keep)
-    for n in news or []:
+    for n in list(news or []) + list(extra_news or []):
         targets.append((n, "title_zh", n["title"], []))
     for view in views:
         box = view.get("news")
@@ -172,7 +173,15 @@ def apply_translations(news, views, tx_items, extra_team_names=()):
             targets.append((box, dst, box[src], _keep_in(box[src], names)))
     for tx in tx_items:
         targets.append((tx, "description_zh", tx["description"], _keep_in(tx["description"], [p.get("name") for p in transactions_mod._tx_persons(tx)] or [tx.get("person_name")])))
-    items = [{"text": text, "keep": keep} for _, _, text, keep in targets]
+    items = []  # 相同原文只送一次（keep 取聯集）
+    index_of = {}
+    for _, _, text, keep in targets:
+        if text in index_of:
+            merged = items[index_of[text]]["keep"]
+            merged.extend(k for k in keep if k not in merged)
+        else:
+            index_of[text] = len(items)
+            items.append({"text": text, "keep": list(keep)})
     results = translate_texts(items, extra_team_names)
     if results is None:
         if not os.environ.get("GEMINI_API_KEY"):
@@ -182,11 +191,11 @@ def apply_translations(news, views, tx_items, extra_team_names=()):
         else:
             print("Translation: 失敗，使用原文")
         return False
-    done = 0
-    for (obj, dst, text, _), tr in zip(targets, results):
+    done = sum(1 for it, tr in zip(items, results) if tr != it["text"])
+    for obj, dst, text, _ in targets:
+        tr = results[index_of[text]]
         if tr != text:
             obj[dst] = tr
-            done += 1
             if dst == "description_zh":
                 TX_TRANSLATION_CACHE[text] = tr  # 首頁本週人事異動可沿用同一則的戰報譯文
     model = os.environ.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL

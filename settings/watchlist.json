@@ -1,0 +1,24 @@
+{
+  "players": [
+    {"id": 678906, "name_zh": "鄧愷威", "name_en": "Kai-Wei Teng", "region": "TW", "aliases": ["Kai Wei Teng"]},
+    {"id": 701678, "name_zh": "李灝宇", "name_en": "Hao-Yu Lee", "region": "TW"},
+    {"id": 691907, "name_zh": "鄭宗哲", "name_en": "Tsung-Che Cheng", "region": "TW"},
+    {"id": 801179, "name_zh": "林昱珉", "name_en": "Yu-Min Lin", "region": "TW"},
+    {"id": 800018, "name_zh": "莊陳仲敖", "name_en": "Chen Zhong-Ao Zhuang", "region": "TW"},
+    {"id": 660271, "name_zh": "大谷翔平", "name_en": "Shohei Ohtani", "region": "JP", "aliases": ["Ohtani"]},
+    {"id": 808967, "name_zh": "山本由伸", "name_en": "Yoshinobu Yamamoto", "region": "JP"},
+    {"id": 808963, "name_zh": "佐佐木朗希", "name_en": "Roki Sasaki", "region": "JP"},
+    {"id": 673548, "name_zh": "鈴木誠也", "name_en": "Seiya Suzuki", "region": "JP"},
+    {"id": 684007, "name_zh": "今永昇太", "name_en": "Shota Imanaga", "region": "JP", "aliases": ["Imanaga"]},
+    {"id": 506433, "name_zh": "達比修有", "name_en": "Yu Darvish", "region": "JP", "aliases": ["Darvish"]},
+    {"id": 673540, "name_zh": "千賀滉大", "name_en": "Kodai Senga", "region": "JP", "aliases": ["Senga"]},
+    {"id": 807799, "name_zh": "吉田正尚", "name_en": "Masataka Yoshida", "region": "JP"},
+    {"id": 579328, "name_zh": "菊池雄星", "name_en": "Yusei Kikuchi", "region": "JP"},
+    {"id": 808959, "name_zh": "村上宗隆", "name_en": "Munetaka Murakami", "region": "JP", "aliases": ["Murakami"]},
+    {"id": 672960, "name_zh": "岡本和真", "name_en": "Kazuma Okamoto", "region": "JP"},
+    {"id": 837227, "name_zh": "今井達也", "name_en": "Tatsuya Imai", "region": "JP"},
+    {"id": 808982, "name_zh": "李政厚", "name_en": "Jung Hoo Lee", "region": "KR", "aliases": ["Jung-hoo Lee"]},
+    {"id": 673490, "name_zh": "金河成", "name_en": "Ha-Seong Kim", "region": "KR"},
+    {"id": 808975, "name_zh": "金慧成", "name_en": "Hyeseong Kim", "region": "KR"}
+  ]
+}
