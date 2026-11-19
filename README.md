@@ -40,7 +40,7 @@ Workflow（`.github/workflows/daily_report.yml`）步驟順序：
 9. **Send Discord Notification**：`python fetch_mlb.py --notify-only --date ...`，只讀既有 metadata，不呼叫 API。僅在排程觸發，或手動觸發且 `notify` 勾選時執行。
 10. **Send Weekly Discord Notification**（`continue-on-error`）：本次有產生週報、且為排程或 `notify` 勾選時，`python fetch_mlb.py --notify-weekly --week ...` 發週報獨立訊息。
 
-排程：每日 04:17 UTC（約台北時間 12:17）。`concurrency` 群組 `daily-report` 避免重疊執行，job 逾時上限 330 分鐘。
+排程：主要由外部 cron-job.org 於台北時間 13:00 以 `workflow_dispatch` 觸發，GitHub schedule（每日 04:17 UTC，約台北時間 12:17）作為備援；自動觸發（未帶 `date`、`week`）時，若當日戰報已存在於 gh-pages，前置 `check` job 會跳過本次執行，避免重複產生與通知。`concurrency` 群組 `daily-report` 避免重疊執行，job 逾時上限 330 分鐘。
 
 細節見 [docs/architecture.md](docs/architecture.md)。
 

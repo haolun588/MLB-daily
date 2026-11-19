@@ -2,7 +2,9 @@ name: Daily MLB Report Generator
 
 on:
   schedule:
-    # 04:17 UTC 約為台北時間 12:17（避開整點壅塞）
+    # 主要由外部 cron-job.org 於台北時間 13:00 以 workflow_dispatch 觸發；
+    # 此 GitHub schedule（04:17 UTC，約台北 12:17）僅作備援，常有延遲。
+    # 當日戰報已存在於 gh-pages 時，自動觸發會由 check job 跳過，避免重複產生與通知。
     - cron: '17 4 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
     inputs:
@@ -27,7 +29,45 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check if report already exists
+        id: check
+        env:
+          INPUT_DATE: ${{ inputs.date }}
+          INPUT_WEEK: ${{ inputs.week }}
+        run: |
+          # 手動帶 date 或 week 時一律不跳過（需要能強制重產）
+          if [ -n "$INPUT_DATE" ] || [ -n "$INPUT_WEEK" ]; then
+            echo "手動指定 date 或 week，不檢查是否跳過"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          DATE="$(TZ=Asia/Taipei date -d yesterday +%F)"
+          YEAR="${DATE:0:4}"
+          MONTH="${DATE:5:2}"
+          if ! git fetch --depth=1 origin gh-pages; then
+            echo "::warning::無法 fetch gh-pages，視為不跳過"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git cat-file -e "origin/gh-pages:reports/$YEAR/$MONTH/$DATE.html" 2>/dev/null; then
+            echo "::notice::$DATE 戰報已存在於 gh-pages，跳過本次執行"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
   run-generator:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 330
 
