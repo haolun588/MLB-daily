@@ -393,13 +393,15 @@
     var r = sm.record;
     if (r) {
       var grid = el("dl", { "class": "sum-stats" });
-      [["戰績 W-L", r.w + "-" + r.l, ""],
-       ["勝率", rate3(r.pct), ""],
-       ["分區排名", r.divRank == null ? DASH : "第 " + r.divRank + " 名", ""],
-       ["得失分差", signed(r.rd), r.rd > 0 ? "up" : (r.rd < 0 ? "down" : "")]].forEach(function (x) {
+      [["戰績 W-L", r.w + "-" + r.l, "", null],
+       ["勝率", rate3(r.pct), "", r.pctRank],
+       ["分區排名", r.divRank == null ? DASH : "第 " + r.divRank + " 名", "", null],
+       ["得失分差", signed(r.rd), r.rd > 0 ? "up" : (r.rd < 0 ? "down" : ""), r.rdRank]].forEach(function (x) {
         var c = el("div", { "class": "sum-stat" });
         c.appendChild(el("dt", null, x[0]));
-        c.appendChild(el("dd", x[2] ? { "class": "is-" + x[2] } : null, x[1]));
+        var dd = el("dd", x[2] ? { "class": "is-" + x[2] } : null, x[1]);
+        if (typeof x[3] === "number" && isFinite(x[3])) dd.appendChild(el("span", { "class": "lg-rank" }, "#" + x[3]));
+        c.appendChild(dd);
         grid.appendChild(c);
       });
       card.appendChild(grid);
@@ -447,7 +449,11 @@
       li.appendChild(el("time", null, mdOf(m.date)));
       var body = el("div", { "class": "move-body" });
       var line = el("p", { "class": "move-line" });
-      line.appendChild(el("span", { "class": "move-name" }, String(m.player || "")));
+      if (typeof m.playerId === "number" && isFinite(m.playerId) && Math.floor(m.playerId) === m.playerId) {
+        line.appendChild(el("a", { "class": "plink move-name", href: SAVANT + m.playerId, target: "_blank", rel: "noopener" }, String(m.player || "")));
+      } else {
+        line.appendChild(el("span", { "class": "move-name" }, String(m.player || "")));
+      }
       if (m.type) line.appendChild(el("span", { "class": "tag tag-move" }, String(m.type)));
       body.appendChild(line);
       if (m.note) body.appendChild(el("p", { "class": "move-note" }, String(m.note)));
@@ -610,7 +616,7 @@
     var retry = el("button", { type: "button", "class": "btn" }, "重試");
     retry.addEventListener("click", boot);
     var eb = el("div", { "class": "state-box is-error", role: "alert" });
-    eb.appendChild(el("h2", null, "無法讀取球隊名單"));
+    eb.appendChild(el("h2", null, "無法讀取球隊專頁"));
     eb.appendChild(el("p", null, "請檢查網路連線後再試一次。"));
     eb.appendChild(el("p", { "class": "detail" }, String(err && err.message ? err.message : err)));
     eb.appendChild(retry);
