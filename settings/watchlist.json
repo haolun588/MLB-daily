@@ -1,4 +1,5 @@
 {
+  "exclude_ids": [],
   "players": [
     {"id": 678906, "name_zh": "鄧愷威", "name_en": "Kai-Wei Teng", "region": "TW", "aliases": ["Kai Wei Teng"]},
     {"id": 701678, "name_zh": "李灝宇", "name_en": "Hao-Yu Lee", "region": "TW"},

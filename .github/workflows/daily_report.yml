@@ -79,6 +79,11 @@ jobs:
           if ! git show origin/gh-pages:reports/weekly/index.json > reports/weekly/index.json 2>/dev/null; then
             rm -f reports/weekly/index.json
           fi
+          # 台日韓動態追蹤名單（--watchlist 失敗時沿用上次結果）：取不到只警告，不中止
+          if ! git show origin/gh-pages:data/watchlist.json > data/watchlist.json 2>/dev/null; then
+            rm -f data/watchlist.json
+            echo "::warning::gh-pages 尚無 data/watchlist.json"
+          fi
           # 數據排行榜資料（首頁小卡來源）：取不到只警告，不中止
           mkdir -p data
           if ! git show origin/gh-pages:data/leaders.json > data/leaders.json 2>/dev/null; then
@@ -90,6 +95,10 @@ jobs:
             rm -f data/playoffs.json
             echo "::warning::gh-pages 尚無 data/playoffs.json"
           fi
+
+      - name: Update Tracked Players Watchlist
+        continue-on-error: true
+        run: python fetch_mlb.py --watchlist
 
       - name: Update Stat Leaders
         continue-on-error: true

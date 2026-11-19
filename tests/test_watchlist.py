@@ -68,6 +68,164 @@ class LoadWatchlistTests(unittest.TestCase):
         self.assertEqual(wl[660271]["aliases"], ["Ohtani"])
 
 
+# ---------------------------------------------------------------- 動態名單（MLB API + settings 覆寫）
+def person(pid, name, country, team=1):
+    return {"id": pid, "fullName": name, "birthCountry": country, "currentTeam": {"id": team}}
+
+
+class DynamicWatchlistTests(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.tmp = Path(tmp.name)
+        self.settings = self.tmp / "settings.json"
+        self.dynamic = self.tmp / "dynamic.json"
+        self.w = fetch_mlb.watchlist
+
+    def write_settings(self, players=(), exclude=()):
+        self.settings.write_text(json.dumps({"exclude_ids": list(exclude), "players": list(players)}), encoding="utf-8")
+
+    def write_dynamic(self, players):
+        self.dynamic.write_text(json.dumps({"players": players}), encoding="utf-8")
+
+    def load(self):
+        return quiet(self.w.load_watchlist, str(self.settings), str(self.dynamic))
+
+    def fake_fetch(self, by_sport, failing=()):
+        def fetch(url, retries=3, delay=5):
+            sid = int(url.split("/sports/")[1].split("/")[0])
+            if sid in failing:
+                return None
+            return {"people": by_sport.get(sid, [])}
+        return fetch
+
+    def generate(self, by_sport, failing=()):
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=self.fake_fetch(by_sport, failing)):
+            return quiet(self.w.generate_watchlist, 2026, None, str(self.settings), str(self.dynamic))
+
+    def written(self):
+        return json.loads(self.dynamic.read_text(encoding="utf-8"))
+
+    # ---- 抓取過濾
+    def test_mlb_keeps_tw_jp_kr_minors_only_taiwan(self):
+        self.write_settings()
+        ok = self.generate({
+            1: [person(1, "A Tw", "Taiwan"), person(2, "B Jp", "Japan"), person(3, "C Kr", "Republic of Korea"),
+                person(4, "D Us", "USA"), person(5, "E Kr", "South Korea")],
+            11: [person(6, "F Tw", "Taiwan"), person(7, "G Jp", "Japan"), person(8, "H Kr", "Republic of Korea")],
+            16: [person(9, "I Tw", "Taiwan")],
+        })
+        self.assertTrue(ok)
+        got = {p["id"]: (p["region"], p["level"]) for p in self.written()["players"]}
+        self.assertEqual(got, {1: ("TW", "MLB"), 2: ("JP", "MLB"), 3: ("KR", "MLB"), 5: ("KR", "MLB"),
+                               6: ("TW", "AAA"), 9: ("TW", "ROK")})
+
+    def test_dedup_keeps_highest_level(self):
+        self.write_settings()
+        self.generate({13: [person(1, "A Tw", "Taiwan")], 12: [person(1, "A Tw", "Taiwan")],
+                       14: [person(1, "A Tw", "Taiwan")], 11: [person(2, "B Tw", "Taiwan")],
+                       1: [person(2, "B Tw", "Taiwan")]})
+        got = {p["id"]: p["level"] for p in self.written()["players"]}
+        self.assertEqual(got, {1: "AA", 2: "MLB"})
+
+    def test_single_sport_failure_skipped_all_failure_keeps_old_file(self):
+        self.write_settings()
+        self.assertTrue(self.generate({1: [person(1, "A Tw", "Taiwan")]}, failing=(11, 12)))
+        self.assertEqual([p["id"] for p in self.written()["players"]], [1])
+        old = self.dynamic.read_text(encoding="utf-8")
+        self.assertFalse(self.generate({1: [person(2, "B Tw", "Taiwan")]}, failing=(1, 11, 12, 13, 14, 16)))
+        self.assertEqual(self.dynamic.read_text(encoding="utf-8"), old)
+
+    def test_missing_zh_lists_players_without_settings_entry(self):
+        self.write_settings([{"id": 1, "name_zh": "甲", "name_en": "A Tw", "region": "TW"}], exclude=[3])
+        self.generate({1: [person(1, "A Tw", "Taiwan"), person(2, "B Jp", "Japan"), person(3, "C Jp", "Japan")]})
+        data = self.written()
+        self.assertEqual([p["id"] for p in data["missing_zh"]], [2])
+        self.assertEqual(data["missing_zh"][0], {"id": 2, "name_en": "B Jp", "region": "JP", "level": "MLB"})
+        self.assertEqual(data["season"], 2026)
+        self.assertIn("updatedAt", data)
+
+    # ---- 合併
+    def test_settings_override_and_extra_players(self):
+        self.write_settings([
+            {"id": 1, "name_zh": "甲", "name_en": "A Tw", "region": "TW", "aliases": ["Aa"]},
+            {"id": 50, "name_zh": "海外", "name_en": "Overseas Guy", "region": "JP"},
+        ])
+        self.write_dynamic([
+            {"id": 1, "name_en": "A Tw X", "region": "JP", "level": "AAA"},
+            {"id": 2, "name_en": "B Jp", "region": "JP", "level": "MLB"},
+        ])
+        wl = self.load()
+        self.assertEqual(wl[1]["name_zh"], "甲")
+        self.assertEqual(wl[1]["region"], "TW")  # settings 覆寫動態值
+        self.assertEqual(wl[1]["aliases"], ["Aa"])
+        self.assertEqual(wl[1]["level"], "AAA")
+        self.assertTrue(wl[1]["has_zh"])
+        self.assertEqual(wl[50]["name_zh"], "海外")  # 動態沒有的 settings 球員照樣加入
+        self.assertIsNone(wl[50]["level"])
+        self.assertTrue(wl[50]["has_zh"])
+        self.assertEqual(sorted(wl), [1, 2, 50])
+
+    def test_name_zh_falls_back_to_english_with_has_zh_false(self):
+        self.write_settings()
+        self.write_dynamic([{"id": 2, "name_en": "B Jp", "region": "JP", "level": "MLB"}])
+        p = self.load()[2]
+        self.assertEqual(p["name_zh"], "B Jp")
+        self.assertFalse(p["has_zh"])
+        self.assertEqual(p["aliases"], [])
+        self.assertEqual(p["level"], "MLB")
+
+    def test_exclude_ids_removes_from_both_sources(self):
+        self.write_settings([{"id": 1, "name_zh": "甲", "name_en": "A Tw", "region": "TW"}], exclude=[1, 2])
+        self.write_dynamic([{"id": 2, "name_en": "B Jp", "region": "JP", "level": "MLB"},
+                            {"id": 3, "name_en": "C Jp", "region": "JP", "level": "MLB"}])
+        self.assertEqual(list(self.load()), [3])
+
+    def test_missing_or_corrupt_cache_falls_back_to_settings_with_warning(self):
+        self.write_settings([{"id": 1, "name_zh": "甲", "name_en": "A Tw", "region": "TW"}])
+        for content in (None, "{broken", '{"players": 5}'):
+            with self.subTest(content=content):
+                if content is not None:
+                    self.dynamic.write_text(content, encoding="utf-8")
+                err = io.StringIO()
+                with contextlib.redirect_stderr(err):
+                    wl = self.w.load_watchlist(str(self.settings), str(self.dynamic))
+                self.assertEqual(list(wl), [1])
+                self.assertIn("Warning", err.getvalue())
+
+    def test_explicit_path_without_dynamic_path_ignores_cache(self):
+        self.write_settings([{"id": 1, "name_zh": "甲", "name_en": "A Tw", "region": "TW"}])
+        self.write_dynamic([{"id": 2, "name_en": "B Jp", "region": "JP", "level": "MLB"}])
+        with mock.patch("mlb_daily.watchlist.DYNAMIC_WATCHLIST_PATH", str(self.dynamic)):
+            self.assertEqual(list(quiet(self.w.load_watchlist, str(self.settings))), [1])
+
+    def test_default_paths_read_config_at_call_time(self):
+        self.write_settings([{"id": 1, "name_zh": "甲", "name_en": "A Tw", "region": "TW"}])
+        self.write_dynamic([{"id": 2, "name_en": "B Jp", "region": "JP", "level": "MLB"}])
+        with mock.patch("mlb_daily.watchlist.WATCHLIST_PATH", str(self.settings)), \
+                mock.patch("mlb_daily.watchlist.DYNAMIC_WATCHLIST_PATH", str(self.dynamic)):
+            self.assertEqual(list(quiet(self.w.load_watchlist)), [1, 2])
+
+    # ---- 排序
+    def test_sort_region_then_settings_order_then_level_then_name(self):
+        self.write_settings([
+            {"id": 10, "name_zh": "乙", "name_en": "Zed Jp", "region": "JP"},
+            {"id": 11, "name_zh": "丙", "name_en": "Amy Jp", "region": "JP"},
+            {"id": 12, "name_zh": "丁", "name_en": "Tw One", "region": "TW"},
+        ])
+        self.write_dynamic([
+            {"id": 21, "name_en": "Kr Mlb", "region": "KR", "level": "MLB"},
+            {"id": 22, "name_en": "Jp Aaa", "region": "JP", "level": "AAA"},
+            {"id": 23, "name_en": "Jp Mlb B", "region": "JP", "level": "MLB"},
+            {"id": 24, "name_en": "Jp Mlb A", "region": "JP", "level": "MLB"},
+            {"id": 25, "name_en": "Tw Rok", "region": "TW", "level": "ROK"},
+            {"id": 26, "name_en": "Tw Aa", "region": "TW", "level": "AA"},
+            {"id": 11, "name_en": "Amy Jp", "region": "JP", "level": "MLB"},
+        ])
+        self.assertEqual(list(self.load()), [12, 26, 25, 10, 11, 24, 23, 22, 21])
+
+
 # ---------------------------------------------------------------- 比對
 class MatchingTests(unittest.TestCase):
     def setUp(self):

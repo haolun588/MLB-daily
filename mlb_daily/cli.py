@@ -6,7 +6,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 
-from . import games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, storage, team_page, timeutil, weekly
+from . import games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, storage, team_page, timeutil, watchlist, weekly
 from .config import MAX_WAIT_CHECKS, SITE_BASE_URL, WAIT_SLEEP_SECONDS
 
 
@@ -73,6 +73,19 @@ def _run_leaders(args):
         print("Note: 找不到 reports/metadata.json，未重新產生首頁（首頁將於下次每日產生時帶入小卡）。")
 
 
+def _run_watchlist(args):
+    """--watchlist：從 MLB API 抓台日韓球員名單，寫 data/watchlist.json；全部抓取失敗回傳非 0。"""
+    today = _taipei_today(args.date)
+    season = rosters.resolve_roster_context(today)["season"]
+    try:
+        ok = watchlist.generate_watchlist(season)
+    except OSError as e:
+        print(f"Error: 寫入追蹤名單失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+        sys.exit(1)
+    if not ok:
+        sys.exit(1)
+
+
 def _run_playoffs(args):
     """--playoffs：抓取季後賽系列賽，寫 data/playoffs.json 與 playoffs.html，再重新產生首頁；抓取失敗回傳非 0。"""
     today = _taipei_today(args.date)
@@ -112,6 +125,8 @@ def main():
 
     parser.add_argument("--playoffs", action="store_true", help="Fetch the postseason bracket and write data/playoffs.json and playoffs.html, then refresh the homepage (no report, no notification)")
 
+    parser.add_argument("--watchlist", action="store_true", help="Fetch Taiwan/Japan/Korea players from the MLB API (MLB: TW/JP/KR, minors: TW only) and write data/watchlist.json (no report, no notification)")
+
     args = parser.parse_args()
     if args.notify_only and (args.check_wait or args.no_notify):
         print("Error: --notify-only cannot be combined with --check-wait or --no-notify", file=sys.stderr)
@@ -138,10 +153,18 @@ def main():
     if args.playoffs and (args.leaders or args.rosters or args.notify_only or args.check_wait or args.no_notify or weekly_mode or args.week or args.force):
         print("Error: --playoffs cannot be combined with other modes or options (only --date is allowed)", file=sys.stderr)
         sys.exit(1)
+    if args.watchlist and (args.leaders or args.playoffs or args.rosters or args.notify_only or args.check_wait or args.no_notify or weekly_mode or args.week or args.force):
+        print("Error: --watchlist cannot be combined with other modes or options (only --date is allowed)", file=sys.stderr)
+        sys.exit(1)
     if args.max_wait_checks < 1:
         print("Error: --max-wait-checks must be >= 1", file=sys.stderr)
         sys.exit(1)
     
+    # --watchlist：動態追蹤名單（不碰每日戰報流程與 metadata）
+    if args.watchlist:
+        _run_watchlist(args)
+        return
+
     # --leaders：數據排行榜（不碰每日戰報流程與 metadata）
     if args.leaders:
         _run_leaders(args)

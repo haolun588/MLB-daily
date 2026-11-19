@@ -1,14 +1,14 @@
 """台日韓球員專區：追蹤名單、比對（異動／新聞／boxscore）、組成資料與渲染。
 
-層級與 transactions／news 相同，只依賴 config 與 htmlutil；異動、新聞以 dict 形狀傳入，不 import 其他功能模組。"""
+層級與 transactions／news 相同，只依賴 config、htmlutil、net、storage、timeutil；異動、新聞以 dict 形狀傳入，不 import 其他功能模組。"""
 
 import json
 import re
 import sys
 from datetime import date, timedelta
 
-from . import htmlutil
-from .config import DATE_KEY_RE, TEAM_META, TEAM_NAMES_EN, WATCHLIST_PATH
+from . import htmlutil, net, storage, timeutil
+from .config import DATE_KEY_RE, DYNAMIC_WATCHLIST_PATH, TEAM_META, TEAM_NAMES_EN, WATCHLIST_PATH
 
 REGION_NAMES = {"TW": "台灣", "JP": "日本", "KR": "韓國"}
 REGION_ORDER = {"TW": 0, "JP": 1, "KR": 2}
@@ -17,36 +17,180 @@ HOME_WINDOW_DAYS = 7
 HOME_EMPTY_TEXT = "近 7 天無台日韓球員動態。"
 
 
+# ---------------------------------------------------------------- 動態名單抓取（MLB API）
+# sportId → 層級；大聯盟收台日韓，小聯盟只收台灣
+LEVELS = {1: "MLB", 11: "AAA", 12: "AA", 13: "A+", 14: "A", 16: "ROK"}
+LEVEL_ORDER = {"MLB": 0, "AAA": 1, "AA": 2, "A+": 3, "A": 4, "ROK": 5}
+MINOR_SPORT_IDS = (11, 12, 13, 14, 16)
+BIRTH_COUNTRY_REGION = {
+    "Taiwan": "TW", "Japan": "JP",
+    "Republic of Korea": "KR", "South Korea": "KR", "Korea": "KR",
+}
+PLAYERS_URL = "https://statsapi.mlb.com/api/v1/sports/{sport_id}/players?season={season}"
+
+
+def _parse_sport_players(data, sport_id):
+    """解析單一 sportId 的 /players 回應 → [(id, name_en, region, level)]；小聯盟只收台灣。"""
+    out = []
+    people = data.get("people") if isinstance(data, dict) else None
+    if not isinstance(people, list):
+        return out
+    for p in people:
+        if not isinstance(p, dict):
+            continue
+        pid = htmlutil._int_id(p.get("id"))
+        name = str(p.get("fullName") or "").strip()
+        region = BIRTH_COUNTRY_REGION.get(str(p.get("birthCountry") or "").strip())
+        if pid is None or not name or region is None:
+            continue
+        if sport_id != 1 and region != "TW":
+            continue
+        out.append((pid, name, region, LEVELS[sport_id]))
+    return out
+
+
+def fetch_dynamic_players(season):
+    """抓取各層級球員並過濾台日韓，依 id 去重、保留最高層級。回傳 [{id,name_en,region,level}]；
+    單一 sportId 失敗警告並略過，全部失敗回傳 None。"""
+    best = {}
+    ok = 0
+    for sport_id in (1,) + MINOR_SPORT_IDS:
+        data = net.fetch_json(PLAYERS_URL.format(sport_id=sport_id, season=season))
+        if not isinstance(data, dict) or not isinstance(data.get("people"), list):
+            print(f"Warning: sportId={sport_id}（{LEVELS[sport_id]}）球員清單抓取失敗，略過。", file=sys.stderr)
+            continue
+        ok += 1
+        for pid, name, region, level in _parse_sport_players(data, sport_id):
+            old = best.get(pid)
+            if old is None or LEVEL_ORDER[level] < LEVEL_ORDER[old["level"]]:
+                best[pid] = {"id": pid, "name_en": name, "region": region, "level": level}
+    if ok == 0:
+        return None
+    return list(best.values())
+
+
+def _read_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _settings_exclude_ids(data):
+    raw = data.get("exclude_ids") if isinstance(data, dict) else None
+    if not isinstance(raw, list):
+        return set()
+    return {i for i in (htmlutil._int_id(x) for x in raw) if i is not None}
+
+
+def generate_watchlist(season, now=None, path=None, dynamic_path=None):
+    """抓取並寫 data/watchlist.json。全部抓取失敗回傳 False（不覆寫舊檔）。
+    missing_zh：動態名單中 settings 沒有中文名對照（且未被排除）的球員。"""
+    path = path or WATCHLIST_PATH
+    dynamic_path = dynamic_path or DYNAMIC_WATCHLIST_PATH
+    players = fetch_dynamic_players(season)
+    if players is None:
+        print(f"Error: {season} 賽季的台日韓球員名單全部抓取失敗，保留既有檔案不覆寫。", file=sys.stderr)
+        return False
+    try:
+        settings = _read_json(path)
+    except (OSError, ValueError) as e:
+        print(f"Warning: 無法讀取 {path}（{type(e).__name__}: {e}），缺中文名清單以全部球員計。", file=sys.stderr)
+        settings = {}
+    raw_players = settings.get("players") if isinstance(settings, dict) else None
+    known = {htmlutil._int_id(p.get("id")) for p in raw_players if isinstance(p, dict)} \
+        if isinstance(raw_players, list) else set()
+    excluded = _settings_exclude_ids(settings)
+    players.sort(key=lambda p: (REGION_ORDER[p["region"]], LEVEL_ORDER[p["level"]], p["name_en"]))
+    missing = [p for p in players if p["id"] not in known and p["id"] not in excluded]
+    now = now or timeutil.get_taipei_now()
+    data = {"updatedAt": now.isoformat(timespec="seconds"), "season": season, "players": players, "missing_zh": missing}
+    storage.write_json_atomic(dynamic_path, data)
+    counts = {r: sum(1 for p in players if p["region"] == r) for r in REGION_NAMES}
+    print(f"Successfully wrote {dynamic_path}：台灣 {counts['TW']}、日本 {counts['JP']}、韓國 {counts['KR']} 位。")
+    if missing:
+        print(f"缺中文名（{len(missing)} 位，請補進 {path}）：")
+        for p in missing:
+            print(f"  {p['id']}  {p['name_en']}  {p['level']}  {p['region']}")
+    return True
+
+
 # ---------------------------------------------------------------- 名單讀取
-def load_watchlist(path=None):
-    """讀取追蹤名單，回傳 {person id: 球員 dict}（依檔案順序）。path 預設為 WATCHLIST_PATH（呼叫時才取值）。
-    讀檔失敗、JSON 錯誤或格式不符：印警告並回傳空 dict（專區不顯示，不中斷執行）；個別格式錯誤的球員略過。"""
+def _clean_player(p):
+    """驗證並正規化一筆 settings 球員；格式錯誤回傳 None。"""
+    if not isinstance(p, dict):
+        return None
+    pid = htmlutil._int_id(p.get("id"))
+    name_zh, name_en, region = p.get("name_zh"), p.get("name_en"), p.get("region")
+    if pid is None or not isinstance(name_zh, str) or not isinstance(name_en, str) \
+            or not name_zh.strip() or not name_en.strip() or region not in REGION_NAMES:
+        print(f"Warning: 追蹤名單中略過格式錯誤的項目：{str(p)[:80]}", file=sys.stderr)
+        return None
+    aliases = p.get("aliases") or []
+    aliases = [a.strip() for a in aliases if isinstance(a, str) and a.strip()] if isinstance(aliases, list) else []
+    return {"id": pid, "name_zh": name_zh.strip(), "name_en": name_en.strip(), "region": region, "aliases": aliases}
+
+
+def _load_dynamic(dynamic_path):
+    """讀動態快取 → [{id,name_en,region,level}]；缺檔或損毀印警告並回傳 []。"""
+    try:
+        data = _read_json(dynamic_path)
+        players = data["players"]
+        if not isinstance(players, list):
+            raise ValueError("players 不是陣列")
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        print(f"Warning: 無法讀取動態追蹤名單 {dynamic_path}（{type(e).__name__}: {e}），僅使用 settings 名單。", file=sys.stderr)
+        return []
+    out = []
+    for p in players:
+        if not isinstance(p, dict):
+            continue
+        pid = htmlutil._int_id(p.get("id"))
+        name_en, region = p.get("name_en"), p.get("region")
+        if pid is None or not isinstance(name_en, str) or not name_en.strip() or region not in REGION_NAMES:
+            continue
+        level = p.get("level") if p.get("level") in LEVEL_ORDER else None
+        out.append({"id": pid, "name_en": name_en.strip(), "region": region, "level": level})
+    return out
+
+
+def load_watchlist(path=None, dynamic_path=None):
+    """讀取追蹤名單，回傳 {person id: 球員 dict}。
+
+    合併 data/watchlist.json（MLB API 動態名單）與 settings/watchlist.json（中文名、aliases、region 覆寫，
+    以及動態名單沒有的球員），再移除 exclude_ids。球員 dict：id、name_zh（無中文名時為 name_en）、name_en、
+    region、aliases、level（可為 None）、has_zh。排序：地區 → settings 內球員（依檔案順序）→ 其餘依層級、英文名。
+    path 預設為 WATCHLIST_PATH、dynamic_path 預設為 DYNAMIC_WATCHLIST_PATH（皆呼叫時才取值）；
+    明確傳 path 而未傳 dynamic_path 時不讀動態快取（只用該 settings 檔）。
+    settings 讀檔失敗、JSON 錯誤或格式不符：印警告並回傳空 dict；動態快取缺失或損毀：印警告、只用 settings。"""
+    use_dynamic = path is None or dynamic_path is not None
     path = path or WATCHLIST_PATH
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = _read_json(path)
         players = data["players"]
         if not isinstance(players, list):
             raise ValueError("players 不是陣列")
     except (OSError, ValueError, KeyError, TypeError) as e:
         print(f"Warning: 無法讀取追蹤名單 {path}（{type(e).__name__}: {e}），台日韓球員專區不顯示。", file=sys.stderr)
         return {}
-    wl = {}
-    for p in players:
-        if not isinstance(p, dict):
-            continue
-        pid = htmlutil._int_id(p.get("id"))
-        name_zh, name_en, region = p.get("name_zh"), p.get("name_en"), p.get("region")
-        if pid is None or not isinstance(name_zh, str) or not isinstance(name_en, str) \
-                or not name_zh.strip() or not name_en.strip() or region not in REGION_NAMES:
-            print(f"Warning: 追蹤名單中略過格式錯誤的項目：{str(p)[:80]}", file=sys.stderr)
-            continue
-        aliases = p.get("aliases") or []
-        aliases = [a.strip() for a in aliases if isinstance(a, str) and a.strip()] if isinstance(aliases, list) else []
-        wl.setdefault(pid, {
-            "id": pid, "name_zh": name_zh.strip(), "name_en": name_en.strip(), "region": region, "aliases": aliases,
-        })
-    return wl
+    excluded = _settings_exclude_ids(data)
+    merged = {}  # id → (settings 序, 球員 dict)
+    for i, p in enumerate(players):
+        cp = _clean_player(p)
+        if cp is not None and cp["id"] not in merged:
+            cp.update(level=None, has_zh=True)
+            merged[cp["id"]] = (i, cp)
+    if use_dynamic:
+        for d in _load_dynamic(dynamic_path or DYNAMIC_WATCHLIST_PATH):
+            if d["id"] in merged:
+                merged[d["id"]][1]["level"] = d["level"]
+            else:
+                merged[d["id"]] = (len(players), {
+                    "id": d["id"], "name_zh": d["name_en"], "name_en": d["name_en"], "region": d["region"],
+                    "aliases": [], "level": d["level"], "has_zh": False})
+    items = [v for pid, v in merged.items() if pid not in excluded]
+    items.sort(key=lambda v: (
+        REGION_ORDER[v[1]["region"]], v[0],
+        LEVEL_ORDER.get(v[1]["level"], len(LEVEL_ORDER)), v[1]["name_en"]))
+    return {v[1]["id"]: v[1] for v in items}
 
 
 # ---------------------------------------------------------------- 比對（含週報介面）

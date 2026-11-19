@@ -198,6 +198,7 @@ ROSTER_FETCH_INTERVAL = 0.5
 
 # ---------------------------------------------------------------- 台日韓球員專區
 WATCHLIST_PATH = os.path.join("settings", "watchlist.json")
+DYNAMIC_WATCHLIST_PATH = os.path.join("data", "watchlist.json")  # --watchlist 從 MLB API 抓取的快取
 
 
 # ---------------------------------------------------------------- 休賽季每週總整理

@@ -76,6 +76,10 @@ python fetch_mlb.py --notify-only --date 2026-07-20
 # 抓取 30 隊名單與本季數據，寫入 data/teams/（不產生戰報、不發通知）
 python fetch_mlb.py --rosters
 
+# 台日韓追蹤名單：從 MLB API 抓大聯盟台日韓、小聯盟台灣球員，寫入 data/watchlist.json 並列出缺中文名者
+# （中文名與別名在 settings/watchlist.json 補，exclude_ids 可手動排除）
+python fetch_mlb.py --watchlist
+
 # 季後賽對戰樹：寫入 data/playoffs.json 與 playoffs.html
 python fetch_mlb.py --playoffs
 

@@ -9,7 +9,7 @@
 ```
 fetch_mlb.py              薄入口（重新匯出 mlb_daily 內所有名稱，CLI 不變）
 mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、leaders、playoffs、previews、rosters、team_page、report、weekly、index_page、notify、cli）
-settings/watchlist.json   台日韓球員追蹤名單（納入版控）
+settings/watchlist.json   台日韓球員中文名／別名覆寫與 exclude_ids（納入版控）；動態名單為 data/watchlist.json（--watchlist 產生，不入版控）
 settings/offseason_calendar.json   休賽季重要日程（手動維護，週報頁尾「下週日程」用；納入版控，目前為空檔）
 templates/report.html     戰報與休賽季快報頁面骨架
 templates/index.html      首頁骨架
@@ -48,7 +48,8 @@ tests/fixtures/           API 假資料（schedule、boxscore、content、transa
 graph TD
     A[排程 04:17 UTC / 手動觸發] --> T[單元測試]
     T -->|失敗| X[中止]
-    T --> L[Update Stat Leaders：--leaders，失敗不中止]
+    T --> W[Update Watchlist：--watchlist，失敗不中止]
+    W --> L[Update Stat Leaders：--leaders，失敗不中止]
     L --> P[Update Postseason Bracket：--playoffs，失敗不中止]
     P --> B[產生：--check-wait --no-notify]
     B --> C{全數完賽?}
@@ -72,6 +73,7 @@ graph TD
 9. **每週總整理**（休賽季，見「休賽季每週總整理」一節）：Restore 步驟額外還原 `data/daily/` 與 `reports/weekly/index.json`；`Generate Weekly Report`（`continue-on-error: true`）緊接在 Generate Daily Report 之後；部署後若本次有產生週報，另有「等待週報網址 200」與「`--notify-weekly`」兩個步驟（條件同每日通知）。`workflow_dispatch` 新增 `week` 輸入（手動補產指定週）。
 10. **數據排行榜**（見「數據排行榜」一節）：Restore 步驟額外還原 `data/leaders.json`（取不到只警告）；`Update Stat Leaders`（`python fetch_mlb.py --leaders`，`continue-on-error: true`）在 Generate Daily Report 之前執行。
 11. **季後賽對戰樹**（見「季後賽對戰樹」一節）：Restore 步驟額外還原 `data/playoffs.json`（取不到只警告）；`Update Postseason Bracket`（`python fetch_mlb.py --playoffs`，`continue-on-error: true`）緊接在 Update Stat Leaders 之後。
+12. **台日韓動態名單**（見「台日韓球員專區」一節）：Restore 步驟額外還原 `data/watchlist.json`（取不到只警告）；`Update Tracked Players Watchlist`（`python fetch_mlb.py --watchlist`，`continue-on-error: true`）在 Update Stat Leaders 之前執行。
 
 ---
 
@@ -92,7 +94,7 @@ graph TD
 | `storage` | `load_metadata`／`save_metadata`、`write_report`、`write_json_atomic`；週報相關：`write_daily_snapshot`、`write_weekly_report`、`load_weekly_index`／`save_weekly_index`／`latest_weekly_entry` |
 | `transactions` | 人事異動篩選與渲染、`split_game_transactions`、每週異動 |
 | `news` | `fetch_daily_news`（MLB.com RSS）、`fetch_game_news`（單場 content）與渲染 |
-| `watchlist` | 台日韓球員專區：讀名單、比對異動／新聞／boxscore、組成 `spotlight` 資料與渲染（只依賴 `config`、`htmlutil`） |
+| `watchlist` | 台日韓球員專區：從 MLB API 抓動態名單、合併 settings 覆寫、比對異動／新聞／boxscore、組成 `spotlight` 資料與渲染（只依賴 `config`、`htmlutil`、`net`、`storage`、`timeutil`） |
 | `translate` | Gemini 翻譯、`apply_translations`、`LAST_TRANSLATION`、`TX_TRANSLATION_CACHE`、`translate_weekly_transactions` |
 | `games` | `check_all_games_finalized`（API 失敗拋 `ApiError`，只有 `totalGames == 0` 才視為無賽事）、`classify_game_status`、焦點球員評分、決定、比賽卡片與 view、摘要句 |
 | `standings` | 戰績側欄（`render_standings_aside` 的 `extra_html` 可接首頁小卡 HTML，不 import `leaders`） |
@@ -292,8 +294,11 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 
 ## 台日韓球員專區
 
-- **名單**：`settings/watchlist.json`（納入版控；`data/` 被忽略故不放那裡，部署時 `exclude_assets` 排除 `settings`）。格式 `{"players": [{"id", "name_zh", "name_en", "region", "aliases"?}]}`：`id` 為 MLB person id，`region` 為 `TW`／`JP`／`KR`，`aliases` 為選填的新聞比對別名（姓氏常見如 Lee、Kim 者不要加姓氏）。讀檔失敗、JSON 錯誤或格式不符：印警告、視為空名單、專區不顯示，不中斷執行；個別格式錯誤的球員略過。
-- **新增球員**：在 `players` 加一筆（先用 `statsapi.mlb.com/api/v1/people/search` 查 id），不需改程式。
+- **名單來源**：動態名單 + 本地覆寫。`python fetch_mlb.py --watchlist [--date]`（不可與其他模式併用）呼叫 `/sports/{sportId}/players?season=`：sportId=1（大聯盟）收 `birthCountry` 為 Taiwan／Japan／Republic of Korea（容錯 South Korea、Korea）的球員，region 為 `TW`／`JP`／`KR`；小聯盟（11=AAA、12=AA、13=A+、14=A、16=ROK）只收 Taiwan。依 id 去重並記錄最高層級 `level`（MLB > AAA > AA > A+ > A > ROK）。單一 sportId 失敗警告略過，全部失敗不覆寫舊檔並以非 0 結束。球季沿用 `rosters.resolve_roster_context`。結果寫 `data/watchlist.json`：`{"updatedAt","season","players":[{id,name_en,region,level}],"missing_zh":[...]}`；`missing_zh` 為沒有中文名對照的球員，執行時也會印出（id、英文名、層級、region），方便補進 settings。
+- **本地覆寫**：`settings/watchlist.json`（納入版控；`data/` 被忽略，部署時 `exclude_assets` 排除 `settings`）。格式 `{"exclude_ids": [], "players": [{"id", "name_zh", "name_en", "region", "aliases"?}]}`：`players` 提供中文名與別名（姓氏常見如 Lee、Kim 者不要加姓氏），其欄位覆寫動態值，也可補入 API 抓不到的球員（例如海外出生的台日韓球員）；`exclude_ids` 手動排除（例如出生地是台灣但非台灣籍）。
+- **讀取與合併**：`load_watchlist(path=None, dynamic_path=None)` 合併動態快取與 settings 後移除 `exclude_ids`，回傳 `{person id: {id, name_zh, name_en, region, aliases, level, has_zh}}`；沒有中文名時 `name_zh` 填 `name_en`、`has_zh` 為 False，`level` 可為 None（settings 獨有的球員）。排序：地區（台→日→韓）→ settings 內球員依檔案順序 → 其餘依層級再依英文名。動態快取缺失或損毀：印警告、只用 settings；settings 讀檔失敗、JSON 錯誤或格式不符：印警告、視為空名單、專區不顯示，不中斷執行；個別格式錯誤的球員略過。明確傳 `path` 而未傳 `dynamic_path` 時不讀動態快取（供測試）。
+- **workflow**：Restore 步驟額外還原 `data/watchlist.json`（取不到只警告）；`Update Tracked Players Watchlist`（`--watchlist`，`continue-on-error: true`）在 `--leaders` 之前執行，失敗時沿用上次結果；`data/watchlist.json` 與 `data/leaders.json` 相同，只存在 gh-pages。
+- **補中文名／新增球員**：在 settings 的 `players` 加一筆（id 可由 `--watchlist` 的缺中文名清單取得，或用 `statsapi.mlb.com/api/v1/people/search` 查），不需改程式。
 - **比對**：異動用未經大聯盟過濾的原始資料（含小聯盟），比對 `person.id`；多人交易依相同描述合併。新聞用當日全部 RSS（不受顯示上限 12 則限制），比對標題與 `<description>` 純文字，整詞、不分大小寫，只比對 `name_en` 與 `aliases`。boxscore 用當日已抓資料，依 `ID{personId}` 取成績，不重抓。
 - **成績列**：打擊列需有打席（`plateAppearances` 或 `atBats` > 0）；投球列需有投球局數、`battersFaced` 或 `numberOfPitches` 任一大於 0（0 局失分也顯示）。0 的項目省略，打數與安打一定顯示。
 - **顯示**：戰報區塊「台日韓球員動態」依台灣、日本、韓國再依名單順序分組；沒有內容整區隱藏。首頁顯示最新戰報日期往回 7 天（含）的 metadata `spotlight` 彙整，無內容顯示「近 7 天無台日韓球員動態。」。分組標題的球隊：優先取 boxscore 球隊，沒有則由異動的 `to_team_id`、`from_team_id` 推算（只取 30 隊之一），都沒有只顯示地區。
@@ -313,7 +318,7 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 - `date`、`has_games`。
 - `transactions`：經大聯盟過濾、戰報實際顯示的異動（賽季日含各場卡片內的），每筆 `type_code`、`date`、`description`、`description_zh`（無譯文為 `null`）、`person_id`、`person_name`、`persons`（`[{id, name}]`）、`to_team_id`、`from_team_id`。
 - `news`：當天戰報實際顯示（最多 12 則）的新聞，每則 `title`、`title_zh`、`link`、`published`（ISO 字串）、`image`、`summary`（RSS 純文字，供名單比對）。新聞抓取失敗存空清單。
-- 不存台日韓比對結果；週報產生時用當下的 `settings/watchlist.json` 重新比對。
+- 不存台日韓比對結果；週報產生時用當下的合併名單（動態快取 + `settings/watchlist.json`）重新比對。
 
 `data/` 在 `.gitignore`、不在 `exclude_assets`，隨部署累積在 gh-pages；workflow 每次從 gh-pages 還原 `data/daily/`（`git archive origin/gh-pages data/daily | tar -x`，失敗只警告）。
 
