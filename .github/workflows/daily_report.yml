@@ -138,6 +138,10 @@ jobs:
         continue-on-error: true
         run: python fetch_mlb.py --rosters
 
+      - name: Stamp asset versions (cache busting)
+        run: |
+          python -m mlb_daily.stamp_assets . "${GITHUB_SHA::7}"
+
       - name: Deploy Site to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:

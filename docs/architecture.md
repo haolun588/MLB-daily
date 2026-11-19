@@ -68,6 +68,7 @@ graph TD
 4. **更新名單**：`python fetch_mlb.py --rosters`（`continue-on-error: true`），見「球隊專頁」一節。
 5. **歷史只在 gh-pages**：`index.html` 與 `reports/metadata.json` 不進 main；workflow 在產生報表前先從 gh-pages 取回 `metadata.json`（取不到或非 JSON 物件即失敗），產生後隨 gh-pages 部署。
 6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,mlb_daily,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
+6a. **資源版本號**：部署前執行 `python -m mlb_daily.stamp_assets . "${GITHUB_SHA::7}"`，把工作目錄內 HTML 引用的本站 `assets/*.js`、`assets/*.css`（含 `../assets/` 等相對路徑）加上或替換成 `?v=<commit 前 7 碼>`，避免瀏覽器快取舊版 JS／CSS 搭配新資料。只改 runner 工作目錄、不 commit 回 main，repo 內原始 HTML／模板不含版本號；略過 `docs`、`templates`、`tests` 等不部署的目錄；外部網址不動。gh-pages 上只靠 `keep_files` 保留的舊戰報不在本次處理範圍，仍引用無版本號的資源（下次重產時才會更新）。
 7. **等待 Pages**：每 15 秒檢查當日戰報網址，最多 20 次（約 5 分鐘），逾時只警告、仍繼續下一步。
 8. **通知**：`python fetch_mlb.py --notify-only --date <日期>`，僅排程觸發或手動勾選 `notify` 時執行。
 9. **每週總整理**（休賽季，見「休賽季每週總整理」一節）：Restore 步驟額外還原 `data/daily/` 與 `reports/weekly/index.json`；`Generate Weekly Report`（`continue-on-error: true`）緊接在 Generate Daily Report 之後；部署後若本次有產生週報，另有「等待週報網址 200」與「`--notify-weekly`」兩個步驟（條件同每日通知）。`workflow_dispatch` 新增 `week` 輸入（手動補產指定週）。
