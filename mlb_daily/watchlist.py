@@ -29,8 +29,11 @@ BIRTH_COUNTRY_REGION = {
 PLAYERS_URL = "https://statsapi.mlb.com/api/v1/sports/{sport_id}/players?season={season}"
 
 
+TEAMS_URL = "https://statsapi.mlb.com/api/v1/teams?sportIds=11,12,13,14,16&season={season}"
+
+
 def _parse_sport_players(data, sport_id):
-    """解析單一 sportId 的 /players 回應 → [(id, name_en, region, level)]；小聯盟只收台灣。"""
+    """解析單一 sportId 的 /players 回應 → [(id, name_en, region, level, current_team_id)]；小聯盟只收台灣。"""
     out = []
     people = data.get("people") if isinstance(data, dict) else None
     if not isinstance(people, list):
@@ -45,27 +48,87 @@ def _parse_sport_players(data, sport_id):
             continue
         if sport_id != 1 and region != "TW":
             continue
-        out.append((pid, name, region, LEVELS[sport_id]))
+        team = p.get("currentTeam")
+        team_id = htmlutil._int_id(team.get("id")) if isinstance(team, dict) else None
+        out.append((pid, name, region, LEVELS[sport_id], team_id))
     return out
 
 
-def fetch_dynamic_players(season):
-    """抓取各層級球員並過濾台日韓，依 id 去重、保留最高層級。回傳 [{id,name_en,region,level}]；
-    單一 sportId 失敗警告並略過，全部失敗回傳 None。"""
+def _parse_affiliates(data):
+    """解析 /teams?sportIds=11,... 回應 → {附屬隊 id: (母隊 MLB id, 層級)}；格式不符回傳 {}。"""
+    teams = data.get("teams") if isinstance(data, dict) else None
+    out = {}
+    if not isinstance(teams, list):
+        return out
+    for t in teams:
+        if not isinstance(t, dict):
+            continue
+        tid = htmlutil._int_id(t.get("id"))
+        org = htmlutil._int_id(t.get("parentOrgId"))
+        sport = t.get("sport")
+        level = LEVELS.get(htmlutil._int_id(sport.get("id")) if isinstance(sport, dict) else None)
+        if tid is not None and org is not None and level is not None:
+            out[tid] = (org, level)
+    return out
+
+
+def _org_and_level(team_id, affiliates):
+    """currentTeam id → (母隊 MLB id, 當前層級)；本身是 30 隊之一為 (自己, "MLB")；對不到為 (None, None)。"""
+    if team_id is None:
+        return None, None
+    if team_id in TEAM_META:
+        return team_id, "MLB"
+    return affiliates.get(team_id, (None, None))
+
+
+def _previous_players(dynamic_path):
+    """讀既有動態名單的球員清單；缺檔或損毀回傳 []。"""
+    try:
+        players = _read_json(dynamic_path)["players"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return []
+    return [p for p in players if isinstance(p, dict)] if isinstance(players, list) else []
+
+
+def fetch_dynamic_players(season, dynamic_path=None):
+    """抓取各層級球員並過濾台日韓，依 id 去重、保留最高層級。
+    回傳 [{id,name_en,region,level,org_id,current_level}]（org_id 為母隊 MLB id、current_level 為 currentTeam 所在層級，
+    對不到或 teams 端點失敗為 None）。單一 sportId 失敗（含 people 為空）警告並沿用既有 data/watchlist.json 中
+    該層級的球員（新資料有同 id 者以新資料為準）；全部失敗回傳 None。"""
+    dynamic_path = dynamic_path or DYNAMIC_WATCHLIST_PATH
+    affiliates = _parse_affiliates(net.fetch_json(TEAMS_URL.format(season=season)))
+    if not affiliates:
+        print("Warning: 附屬球隊對照抓取失敗，org_id／current_level 將為空。", file=sys.stderr)
     best = {}
+    failed = []
     ok = 0
     for sport_id in (1,) + MINOR_SPORT_IDS:
         data = net.fetch_json(PLAYERS_URL.format(sport_id=sport_id, season=season))
-        if not isinstance(data, dict) or not isinstance(data.get("people"), list):
-            print(f"Warning: sportId={sport_id}（{LEVELS[sport_id]}）球員清單抓取失敗，略過。", file=sys.stderr)
+        if not isinstance(data, dict) or not isinstance(data.get("people"), list) or not data["people"]:
+            print(f"Warning: sportId={sport_id}（{LEVELS[sport_id]}）球員清單抓取失敗或為空，略過。", file=sys.stderr)
+            failed.append(LEVELS[sport_id])
             continue
         ok += 1
-        for pid, name, region, level in _parse_sport_players(data, sport_id):
+        for pid, name, region, level, team_id in _parse_sport_players(data, sport_id):
             old = best.get(pid)
             if old is None or LEVEL_ORDER[level] < LEVEL_ORDER[old["level"]]:
-                best[pid] = {"id": pid, "name_en": name, "region": region, "level": level}
+                org_id, current_level = _org_and_level(team_id, affiliates)
+                best[pid] = {"id": pid, "name_en": name, "region": region, "level": level,
+                             "org_id": org_id, "current_level": current_level}
     if ok == 0:
         return None
+    if failed:
+        carried = 0
+        for p in _previous_players(dynamic_path):
+            pid = htmlutil._int_id(p.get("id"))
+            if pid is None or pid in best or p.get("level") not in failed \
+                    or p.get("region") not in REGION_NAMES or not str(p.get("name_en") or "").strip():
+                continue
+            cl = p.get("current_level")
+            best[pid] = {"id": pid, "name_en": str(p["name_en"]).strip(), "region": p["region"], "level": p["level"],
+                         "org_id": htmlutil._int_id(p.get("org_id")), "current_level": cl if cl in LEVEL_ORDER else None}
+            carried += 1
+        print(f"{'、'.join(failed)} 層級抓取失敗或為空，沿用上次名單中的 {carried} 位球員。")
     return list(best.values())
 
 
@@ -86,7 +149,7 @@ def generate_watchlist(season, now=None, path=None, dynamic_path=None):
     missing_zh：動態名單中 settings 沒有中文名對照（且未被排除）的球員。"""
     path = path or WATCHLIST_PATH
     dynamic_path = dynamic_path or DYNAMIC_WATCHLIST_PATH
-    players = fetch_dynamic_players(season)
+    players = fetch_dynamic_players(season, dynamic_path)
     if players is None:
         print(f"Error: {season} 賽季的台日韓球員名單全部抓取失敗，保留既有檔案不覆寫。", file=sys.stderr)
         return False
@@ -148,7 +211,10 @@ def _load_dynamic(dynamic_path):
         if pid is None or not isinstance(name_en, str) or not name_en.strip() or region not in REGION_NAMES:
             continue
         level = p.get("level") if p.get("level") in LEVEL_ORDER else None
-        out.append({"id": pid, "name_en": name_en.strip(), "region": region, "level": level})
+        org_id = htmlutil._int_id(p.get("org_id"))
+        current_level = p.get("current_level") if p.get("current_level") in LEVEL_ORDER else None
+        out.append({"id": pid, "name_en": name_en.strip(), "region": region, "level": level,
+                    "org_id": org_id, "current_level": current_level})
     return out
 
 
@@ -157,7 +223,7 @@ def load_watchlist(path=None, dynamic_path=None):
 
     合併 data/watchlist.json（MLB API 動態名單）與 settings/watchlist.json（中文名、aliases、region 覆寫，
     以及動態名單沒有的球員），再移除 exclude_ids。球員 dict：id、name_zh（無中文名時為 name_en）、name_en、
-    region、aliases、level（可為 None）、has_zh。排序：地區 → settings 內球員（依檔案順序）→ 其餘依層級、英文名。
+    region、aliases、level（可為 None）、org_id、current_level（可為 None）、has_zh。排序：地區 → settings 內球員（依檔案順序）→ 其餘依層級、英文名。
     path 預設為 WATCHLIST_PATH、dynamic_path 預設為 DYNAMIC_WATCHLIST_PATH（皆呼叫時才取值）；
     明確傳 path 而未傳 dynamic_path 時不讀動態快取（只用該 settings 檔）。
     settings 讀檔失敗、JSON 錯誤或格式不符：印警告並回傳空 dict；動態快取缺失或損毀：印警告、只用 settings。"""
@@ -176,16 +242,17 @@ def load_watchlist(path=None, dynamic_path=None):
     for i, p in enumerate(players):
         cp = _clean_player(p)
         if cp is not None and cp["id"] not in merged:
-            cp.update(level=None, has_zh=True)
+            cp.update(level=None, org_id=None, current_level=None, has_zh=True)
             merged[cp["id"]] = (i, cp)
     if use_dynamic:
         for d in _load_dynamic(dynamic_path or DYNAMIC_WATCHLIST_PATH):
             if d["id"] in merged:
-                merged[d["id"]][1]["level"] = d["level"]
+                merged[d["id"]][1].update(level=d["level"], org_id=d["org_id"], current_level=d["current_level"])
             else:
                 merged[d["id"]] = (len(players), {
                     "id": d["id"], "name_zh": d["name_en"], "name_en": d["name_en"], "region": d["region"],
-                    "aliases": [], "level": d["level"], "has_zh": False})
+                    "aliases": [], "level": d["level"], "org_id": d["org_id"],
+                    "current_level": d["current_level"], "has_zh": False})
     items = [v for pid, v in merged.items() if pid not in excluded]
     items.sort(key=lambda v: (
         REGION_ORDER[v[1]["region"]], v[0],

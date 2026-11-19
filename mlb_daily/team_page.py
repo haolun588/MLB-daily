@@ -132,10 +132,18 @@ def compute_leaders(players, min_pa=TEAM_PAGE_LEADER_MIN_PA, min_ip=TEAM_PAGE_LE
 
 
 # ---------------------------------------------------------------- 台日韓標籤
-def tracked_names(players, wl):
-    """該隊名單中屬於台日韓追蹤名單的球員中文名（依追蹤名單順序）。"""
+def tracked_names(players, wl, team_id=None):
+    """球隊專頁「台日韓球員」標籤：先列該隊名單上的追蹤球員 {"name"}（依追蹤名單順序），
+    再列母隊為該隊、不在名單上、目前在小聯盟的台灣球員 {"name","level"}（依層級 AAA→ROK，再依英文名）。"""
     ids = {p.get("id") for p in (players or []) if isinstance(p, dict)}
-    return [info["name_zh"] for pid, info in (wl or {}).items() if pid in ids]
+    out = [{"name": info["name_zh"]} for pid, info in (wl or {}).items() if pid in ids]
+    if team_id is not None:
+        minors = [info for pid, info in (wl or {}).items()
+                  if pid not in ids and info.get("region") == "TW" and info.get("org_id") == team_id
+                  and info.get("current_level") not in (None, "MLB") and info.get("current_level") in watchlist.LEVEL_ORDER]
+        minors.sort(key=lambda i: (watchlist.LEVEL_ORDER[i["current_level"]], i.get("name_en") or ""))
+        out.extend({"name": i["name_zh"], "level": i["current_level"]} for i in minors)
+    return out
 
 
 # ---------------------------------------------------------------- 球隊摘要
@@ -384,7 +392,7 @@ def make_extras(today, ctx, snapshot_dir=None, wl=None):
         for key, fn in (
             ("record", lambda: build_record(standings, team_id)),
             ("postseason", lambda: postseason_result(playoffs_data, team_id) if playoffs_data else None),
-            ("tracked", lambda: tracked_names(players, wl)),
+            ("tracked", lambda: tracked_names(players, wl, team_id)),
         ):
             try:
                 out[key] = fn()

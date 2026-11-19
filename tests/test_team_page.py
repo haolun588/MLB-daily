@@ -341,9 +341,34 @@ class RecordAndTrackedTests(unittest.TestCase):
     def test_tracked_names_match_roster_ids_in_watchlist_order(self):
         wl = {1: {"name_zh": "甲"}, 2: {"name_zh": "乙"}, 3: {"name_zh": "丙"}}
         players = [{"id": 3}, {"id": 1}, {"id": 99}]
-        self.assertEqual(team_page.tracked_names(players, wl), ["甲", "丙"])
+        self.assertEqual(team_page.tracked_names(players, wl), [{"name": "甲"}, {"name": "丙"}])
         self.assertEqual(team_page.tracked_names(players, {}), [])
         self.assertEqual(team_page.tracked_names(None, wl), [])
+
+    def test_tracked_names_adds_minor_league_taiwanese_by_level(self):
+        def m(name_zh, name_en, org, level, region="TW"):
+            return {"name_zh": name_zh, "name_en": name_en, "region": region, "org_id": org, "current_level": level}
+        wl = {
+            1: m("名單", "Roster Guy", 133, "MLB"),
+            2: m("甲", "Zed", 133, "A"),
+            3: m("乙", "Amy", 133, "AAA"),
+            4: m("丙", "Bob", 133, "AAA"),
+            5: m("丁", "Cat", 133, "ROK"),
+            6: m("戊", "Dan", 133, "A+"),
+            7: m("己", "Eve", 133, "AA"),
+            8: m("他隊", "Fay", 109, "AAA"),
+            9: m("日本", "Gus", 133, "AAA", region="JP"),
+            10: m("在名單", "Hal", 133, "AAA"),
+            11: m("無層級", "Ian", 133, None),
+            12: m("大聯盟", "Jon", 133, "MLB"),
+            13: m("無母隊", "Kit", None, "AAA"),
+        }
+        got = team_page.tracked_names([{"id": 1}, {"id": 10}], wl, 133)
+        self.assertEqual(got, [
+            {"name": "名單"}, {"name": "在名單"},
+            {"name": "乙", "level": "AAA"}, {"name": "丙", "level": "AAA"}, {"name": "己", "level": "AA"},
+            {"name": "戊", "level": "A+"}, {"name": "甲", "level": "A"}, {"name": "丁", "level": "ROK"}])
+        self.assertEqual(team_page.tracked_names([{"id": 1}], wl), [{"name": "名單"}])   # 沒給 team_id 不列小聯盟
 
 
 class StandingsRunDiffTests(unittest.TestCase):

@@ -92,16 +92,18 @@ class DynamicWatchlistTests(unittest.TestCase):
     def load(self):
         return quiet(self.w.load_watchlist, str(self.settings), str(self.dynamic))
 
-    def fake_fetch(self, by_sport, failing=()):
+    def fake_fetch(self, by_sport, failing=(), teams=None):
         def fetch(url, retries=3, delay=5):
+            if "/teams?" in url:
+                return None if teams is None else {"teams": teams}
             sid = int(url.split("/sports/")[1].split("/")[0])
             if sid in failing:
                 return None
             return {"people": by_sport.get(sid, [])}
         return fetch
 
-    def generate(self, by_sport, failing=()):
-        with mock.patch("mlb_daily.net.fetch_json", side_effect=self.fake_fetch(by_sport, failing)):
+    def generate(self, by_sport, failing=(), teams=None):
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=self.fake_fetch(by_sport, failing, teams)):
             return quiet(self.w.generate_watchlist, 2026, None, str(self.settings), str(self.dynamic))
 
     def written(self):
@@ -142,9 +144,76 @@ class DynamicWatchlistTests(unittest.TestCase):
         self.generate({1: [person(1, "A Tw", "Taiwan"), person(2, "B Jp", "Japan"), person(3, "C Jp", "Japan")]})
         data = self.written()
         self.assertEqual([p["id"] for p in data["missing_zh"]], [2])
-        self.assertEqual(data["missing_zh"][0], {"id": 2, "name_en": "B Jp", "region": "JP", "level": "MLB"})
+        self.assertEqual(data["missing_zh"][0], {"id": 2, "name_en": "B Jp", "region": "JP", "level": "MLB",
+                                                  "org_id": None, "current_level": None})
         self.assertEqual(data["season"], 2026)
         self.assertIn("updatedAt", data)
+
+    # ---- 母隊與層級
+    def test_org_id_and_current_level(self):
+        self.write_settings()
+        teams = [{"id": 400, "parentOrgId": 133, "sport": {"id": 11}},
+                 {"id": 2310, "parentOrgId": 109, "sport": {"id": 13}}]
+        self.generate({
+            1: [person(1, "In Mlb", "Taiwan", team=133), person(2, "Optioned", "Taiwan", team=400)],
+            13: [person(3, "High A", "Taiwan", team=2310), person(4, "Unknown", "Taiwan", team=99999),
+                 person(5, "No Team", "Taiwan", team=None)],
+        }, teams=teams)
+        got = {p["id"]: (p["org_id"], p["current_level"]) for p in self.written()["players"]}
+        self.assertEqual(got, {1: (133, "MLB"), 2: (133, "AAA"), 3: (109, "A+"), 4: (None, None), 5: (None, None)})
+
+    def test_teams_endpoint_failure_gives_none_but_rest_works(self):
+        self.write_settings()
+        self.assertTrue(self.generate({1: [person(1, "A Tw", "Taiwan", team=400), person(2, "B Tw", "Taiwan", team=133)]}))
+        got = {p["id"]: (p["org_id"], p["current_level"]) for p in self.written()["players"]}
+        self.assertEqual(got, {1: (None, None), 2: (133, "MLB")})
+
+    def test_load_watchlist_carries_org_id_and_current_level(self):
+        self.write_settings([{"id": 1, "name_zh": "甲", "name_en": "A Tw", "region": "TW"},
+                             {"id": 50, "name_zh": "海外", "name_en": "Overseas", "region": "JP"}])
+        self.write_dynamic([{"id": 1, "name_en": "A Tw", "region": "TW", "level": "AAA", "org_id": 133, "current_level": "AAA"},
+                            {"id": 2, "name_en": "B Tw", "region": "TW", "level": "AA", "org_id": "x", "current_level": "bad"},
+                            {"id": 3, "name_en": "C Tw", "region": "TW", "level": "A"}])
+        wl = self.load()
+        self.assertEqual((wl[1]["org_id"], wl[1]["current_level"]), (133, "AAA"))
+        self.assertEqual((wl[2]["org_id"], wl[2]["current_level"]), (None, None))
+        self.assertEqual((wl[3]["org_id"], wl[3]["current_level"]), (None, None))
+        self.assertEqual((wl[50]["org_id"], wl[50]["current_level"]), (None, None))
+
+    # ---- 穩定性：空陣列視為失敗、沿用舊檔
+    def test_empty_people_counts_as_failure_and_carries_old_level(self):
+        self.write_settings()
+        self.write_dynamic([
+            {"id": 10, "name_en": "Old Aaa", "region": "TW", "level": "AAA", "org_id": 133, "current_level": "AAA"},
+            {"id": 11, "name_en": "Old Aa", "region": "TW", "level": "AA", "org_id": 109, "current_level": "AA"},
+            {"id": 12, "name_en": "Old Mlb", "region": "JP", "level": "MLB", "org_id": 133, "current_level": "MLB"}])
+        self.generate({1: [person(1, "New Mlb", "Taiwan")], 11: [], 12: [person(11, "Old Aa", "Taiwan")]},
+                      teams=[{"id": 400, "parentOrgId": 133, "sport": {"id": 12}}])
+        got = {p["id"]: p for p in self.written()["players"]}
+        self.assertEqual(sorted(got), [1, 10, 11])       # 12（舊 MLB 層級）不沿用，MLB 層級本次成功
+        self.assertEqual(got[10]["level"], "AAA")
+        self.assertEqual((got[10]["org_id"], got[10]["current_level"]), (133, "AAA"))
+
+    def test_carried_player_yields_to_new_data(self):
+        self.write_settings()
+        self.write_dynamic([{"id": 10, "name_en": "Old Aaa", "region": "TW", "level": "AAA"}])
+        self.generate({1: [person(10, "Old Aaa", "Taiwan")], 11: []})
+        got = {p["id"]: p["level"] for p in self.written()["players"]}
+        self.assertEqual(got, {10: "MLB"})
+
+    def test_failure_without_old_file_just_skips(self):
+        self.write_settings()
+        self.assertTrue(self.generate({1: [person(1, "A Tw", "Taiwan")]}, failing=(11,)))
+        self.assertEqual([p["id"] for p in self.written()["players"]], [1])
+
+    def test_carry_count_is_reported(self):
+        self.write_settings()
+        self.write_dynamic([{"id": 10, "name_en": "Old Aaa", "region": "TW", "level": "AAA"}])
+        out = io.StringIO()
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=self.fake_fetch({1: [person(1, "A", "Taiwan")]}, failing=(11,))), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            self.w.generate_watchlist(2026, None, str(self.settings), str(self.dynamic))
+        self.assertIn("沿用上次名單中的 1 位", out.getvalue())
 
     # ---- 合併
     def test_settings_override_and_extra_players(self):
