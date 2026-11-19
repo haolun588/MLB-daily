@@ -2586,7 +2586,7 @@ class RosterFlowTests(MlbTestBase):
         self.assertNotIn("index.json.tmp", files)
         self.assertFalse(any(n.endswith(".tmp") for n in files))
         team = self.read_team(147)
-        self.assertEqual(set(team), {"meta", "players"})
+        self.assertEqual(set(team), {"meta", "players", "summary", "recent", "leaders"})   # 後三者為球隊專頁附加資料（見 test_team_page）
         self.assertEqual(team["meta"]["id"], 147)
         self.assertEqual(team["meta"]["abbr"], "NYY")
         self.assertEqual(team["meta"]["rosterType"], "40Man")

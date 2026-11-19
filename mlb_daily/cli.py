@@ -6,7 +6,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 
-from . import games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, storage, timeutil, weekly
+from . import games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, storage, team_page, timeutil, weekly
 from .config import MAX_WAIT_CHECKS, SITE_BASE_URL, WAIT_SLEEP_SECONDS
 
 
@@ -167,7 +167,7 @@ def main():
                 sys.exit(1)
         else:
             today = timeutil.get_taipei_now().date()
-        sys.exit(0 if rosters.fetch_rosters(today) > 0 else 1)
+        sys.exit(0 if rosters.fetch_rosters(today, team_page.make_extras) > 0 else 1)
 
     # 1. Resolve date
     if args.date:

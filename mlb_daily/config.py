@@ -275,3 +275,9 @@ POSTSEASON_SERIES_URL = "https://statsapi.mlb.com/api/v1/schedule/postseason/ser
 PLAYOFFS_PATH = os.path.join("data", "playoffs.json")
 PLAYOFFS_PAGE_PATH = "playoffs.html"
 PLAYOFFS_SCHEMA = 1
+
+# ---- 球隊專頁（近期動態與隊內數據王）
+TEAM_PAGE_RECENT_DAYS = 30        # 近期動態回溯天數（含今天）
+TEAM_PAGE_NEWS_LIMIT = 5          # 每隊顯示的相關新聞則數
+TEAM_PAGE_LEADER_MIN_PA = 300     # AVG、OPS 的打席門檻
+TEAM_PAGE_LEADER_MIN_IP = 50      # ERA、WHIP 的投球局數門檻

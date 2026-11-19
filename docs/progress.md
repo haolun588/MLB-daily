@@ -140,3 +140,10 @@
 - [x] 已完成（本機以真實 API 實跑 `--playoffs`，比數與冠軍與 2026 實際結果一致，瀏覽器實測桌面 1024／1366 寬與手機 375 寬，無橫向捲動、隊名無溢出，首頁小卡顯示「2026 世界大賽冠軍：釀酒人（4–1 勝光芒）」）：`mlb_daily/playoffs.py`、`templates/playoffs.html`、`--playoffs`；`data/playoffs.json` 與根目錄 `playoffs.html`；首頁側欄小卡；全站導覽列「季後賽」；勝場計算（`F`／`O`、延賽去重）、待定隊伍處理；workflow 還原 `data/playoffs.json` 並新增 `Update Postseason Bracket`（`continue-on-error`）；測試 `tests/test_playoffs.py`
 - [ ] 待辦：GitHub 實測（手動觸發 workflow，確認 `playoffs.html`、`data/playoffs.json` 隨部署出現、首頁小卡與導覽列連結）
 - [ ] 待辦：2027 季後賽進行中確認進行中標題與小卡（目前只用程式改出的 fixture 測試）
+
+### 🏟️ 階段二十一：球隊專頁（2026-11-19）
+依 `docs/plans/20261119_球隊專頁設計.md`（使用者已核准設計稿；未表態項目採計畫文件第六節的預設決定）。
+
+- [x] 已完成（635 個測試全過；本機以真實 API 實跑 `--rosters` 並於瀏覽器實測四區塊、換隊、L/R 標籤、375px 無水平捲動）：`mlb_daily/team_page.py`、`fetch_rosters` 的 `extras_factory`、`assets/teams.js` 與 `assets/style.css` 新區塊、`teams.html` 標題改為「球隊專頁」；各隊 JSON 新增 `summary`／`recent`／`leaders`；測試 `tests/test_team_page.py`
+- [ ] 待辦：GitHub 實測（手動觸發 workflow，確認 gh-pages 的 `data/teams/*.json` 含新欄位、近期動態有資料）
+- [ ] 待辦：2027 賽季中確認摘要「截至 M/D」標籤、季後賽行與數據王門檻是否合適

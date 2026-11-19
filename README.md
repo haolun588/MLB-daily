@@ -12,7 +12,7 @@
 - **休賽季快報**：昨日無賽事時，產出「新聞＋大聯盟層級人事異動」頁面，不會留白。
 - **歷史存檔**：[archive.html](archive.html) 以 JavaScript 讀取 `reports/metadata.json`，依月份分組；首頁顯示最新一期與近期清單。
 - **Gemini 翻譯**：新聞標題、單場賽後新聞（Headline／Blurb）與人事異動描述以 Gemini 翻成繁體中文；球員姓名維持英文原名，球隊名稱沿用程式內建譯名。沒有金鑰、額度用盡或回應格式錯誤時，自動改用英文原文，不會讓整次執行失敗。
-- **球隊名單頁**：[teams.html](teams.html) 點選隊徽顯示該隊名單（賽季中 26 人現役、休賽季 40 人），分 SP、RP、野手三張表並附本季數據，可排序，網址可帶球隊縮寫（如 `teams.html#NYY`）。名單資料由每日 workflow 更新。
+- **球隊專頁**：[teams.html](teams.html) 點選隊徽顯示該隊專頁：球隊摘要（戰績、季後賽成績、台日韓球員）、近 30 天動態（人事異動與相關新聞）、隊內數據王，以及名單（賽季中 26 人現役、休賽季 40 人；SP、RP、野手三張表並附本季數據與慣用手標籤），名單可排序，網址可帶球隊縮寫（如 `teams.html#NYY`）。名單資料由每日 workflow 更新。
 - **休賽季每週總整理**：休賽季每週一（台北時間）彙整上一個 ISO 週的人事異動與新聞，產出 `reports/weekly/YYYY-Www.html`：本週重點（交易、大聯盟簽約、延長合約）、分類整理、各隊動態（標出本週最忙球隊）、新聞精選 10 則、台日韓球員標註、下週日程（手動維護 `settings/offseason_calendar.json`）。資料來自每日戰報存下的 `data/daily/*.json`，不重抓 API、不重新翻譯；不足 7 天時照產並標示涵蓋天數。首頁休賽季區塊、歷史存檔頁與 Discord 都附連結。
 - **數據排行榜**：[leaders.html](leaders.html) 列出打者與投手各 6 項前 10 名（`python fetch_mlb.py --leaders`），首頁側欄附小卡。
 - **季後賽對戰樹**：[playoffs.html](playoffs.html) 顯示整屆季後賽對戰樹（外卡、分區、聯盟冠軍賽、世界大賽），非季後賽期間顯示上一屆結果；桌面為對稱樹狀圖、手機為依輪次堆疊；首頁側欄附小卡（`python fetch_mlb.py --playoffs`）。
@@ -131,6 +131,7 @@ mlb_daily/                主程式套件（只用標準庫）
   standings.py            戰績側欄
   previews.py             賽事預告、先發投手、開季倒數
   rosters.py              球隊名單
+  team_page.py            球隊專頁附加資料（摘要、近期動態、數據王）
   report.py               戰報與休賽季快報組裝（並寫每日資料快照）
   weekly.py               休賽季每週總整理
   index_page.py           首頁
@@ -143,10 +144,10 @@ templates/
 assets/
   style.css               共用樣式表（部署到 gh-pages）
   archive.js              歷史存檔頁的動態腳本
-  teams.js                球隊名單頁的動態腳本
+  teams.js                球隊專頁的動態腳本
 index.html                首頁（由腳本依 metadata 全量重新產生）
 archive.html              歷史存檔頁（讀取 reports/metadata.json）
-teams.html                球隊名單頁（讀取 data/teams/*.json）
+teams.html                球隊專頁（讀取 data/teams/*.json）
 data/teams/               名單 JSON（index.json、{teamId}.json；僅部署於 gh-pages，main 忽略）
 data/daily/               每日資料快照 YYYY-MM-DD.json（週報來源；僅部署於 gh-pages，main 忽略）
 settings/                 watchlist.json（台日韓追蹤名單）、offseason_calendar.json（休賽季日程，手動維護）

@@ -189,12 +189,20 @@ def build_team_players(roster_data):
     return [p for p in players if p]
 
 
-def fetch_rosters(today):
-    """抓 30 隊名單與數據，寫 data/teams/{id}.json 與 index.json。回傳成功隊數。"""
+def fetch_rosters(today, extras_factory=None):
+    """抓 30 隊名單與數據，寫 data/teams/{id}.json 與 index.json。回傳成功隊數。
+    extras_factory(today, ctx) 回傳 extras(team_id, players) -> dict，其內容併入各隊 JSON（球隊專頁的 summary／recent／leaders）；
+    工廠或 extras 失敗只印警告，名單照寫。"""
     ctx = resolve_roster_context(today)
     roster_type, season, roster_season = ctx["rosterType"], ctx["season"], ctx["rosterSeason"]
     print(f"Roster context: rosterType={roster_type}, season={season}, rosterSeason={roster_season}")
     now_iso = timeutil.get_taipei_now().isoformat(timespec="seconds")
+    extras = None
+    if extras_factory is not None:
+        try:
+            extras = extras_factory(today, ctx)
+        except Exception as e:  # noqa: BLE001 - 附加資料失敗不得影響名單
+            print(f"Warning: 球隊專頁附加資料初始化失敗（{type(e).__name__}: {e}），只寫名單。", file=sys.stderr)
     teams_index = []
     ok_count = 0
     for i, (tid, meta) in enumerate(sorted(TEAM_META.items(), key=lambda kv: kv[1]["abbr"])):
@@ -210,11 +218,18 @@ def fetch_rosters(today):
         if players is None:
             print(f"Warning: {meta['abbr']} 名單抓取失敗，保留舊檔（若有）。", file=sys.stderr)
         else:
+            extra = {}
+            if extras is not None:
+                try:
+                    extra = extras(tid, players) or {}
+                except Exception as e:  # noqa: BLE001
+                    print(f"Warning: {meta['abbr']} 球隊專頁附加資料失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
             try:
                 storage.write_json_atomic(os.path.join(ROSTER_DIR, f"{tid}.json"), {
                     "meta": {"id": tid, "abbr": meta["abbr"], "name": meta["name"], "rosterType": roster_type,
                              "season": season, "updatedAt": now_iso},
                     "players": players,
+                    **extra,
                 })
                 entry["ok"] = True
                 entry["updatedAt"] = now_iso

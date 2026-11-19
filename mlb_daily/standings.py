@@ -57,6 +57,7 @@ def fetch_standings(season):
                 "streak": str((tr.get("streak") or {}).get("streakCode") or "–"),
                 "clinch": str(clinch) if clinch else "",
                 "rank": storage._to_int(tr.get("divisionRank"), 99),
+                "run_diff": storage._to_int(tr.get("runDifferential"), None),
             })
             records[tid] = (wins, losses)
     divisions = []

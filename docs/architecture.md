@@ -8,7 +8,7 @@
 
 ```
 fetch_mlb.py              薄入口（重新匯出 mlb_daily 內所有名稱，CLI 不變）
-mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、leaders、playoffs、previews、rosters、report、weekly、index_page、notify、cli）
+mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、leaders、playoffs、previews、rosters、team_page、report、weekly、index_page、notify、cli）
 settings/watchlist.json   台日韓球員追蹤名單（納入版控）
 settings/offseason_calendar.json   休賽季重要日程（手動維護，週報頁尾「下週日程」用；納入版控，目前為空檔）
 templates/report.html     戰報與休賽季快報頁面骨架
@@ -18,8 +18,8 @@ templates/leaders.html    數據排行頁骨架
 templates/playoffs.html   季後賽對戰樹頁骨架
 assets/style.css          共用樣式表
 assets/archive.js         歷史存檔頁腳本
-assets/teams.js           球隊名單頁腳本
-teams.html                球隊名單頁（執行時以 JS 讀取 data/teams/*.json）
+assets/teams.js           球隊專頁腳本（球隊摘要、近期動態、隊內數據王、名單）
+teams.html                球隊專頁（導覽列文字仍為「球隊名單」；執行時以 JS 讀取 data/teams/*.json）
 data/teams/               名單 JSON（僅存在於 gh-pages，main 以 .gitignore 忽略）
 data/leaders.json        數據排行榜資料（僅存在於 gh-pages）
 data/playoffs.json       季後賽對戰樹資料（僅存在於 gh-pages）
@@ -79,7 +79,7 @@ graph TD
 
 `fetch_mlb.py` 是薄入口：UTF-8 reconfigure、重新匯出原本所有名稱、呼叫 `main`。實際程式在 `mlb_daily/`，由下而上相依（下層不得 import 上層）：
 
-`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news`／`watchlist` → `translate`／`games`／`standings`／`leaders`／`playoffs`／`previews`／`rosters` → `report`／`weekly`／`index_page`／`notify` → `cli`
+`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news`／`watchlist` → `translate`／`games`／`standings`／`leaders`／`playoffs`／`previews`／`rosters` → `team_page`（可用 `weekly`、`standings`、`playoffs`、`watchlist`、`storage`；由 `cli` 傳給 `rosters`） → `report`／`weekly`／`index_page`／`notify` → `cli`
 
 `weekly` 與 `report` 同層：可用 `transactions`、`news`、`watchlist`、`rosters`、`htmlutil`、`storage`、`timeutil`、`config`，**不得** import `report`／`index_page`／`notify`／`cli`。首頁與通知需要週報資料時，由 `index_page`／`notify`／`cli` 透過 `storage.load_weekly_index`／`latest_weekly_entry` 讀 `reports/weekly/index.json`，不 import `weekly`。
 
@@ -99,7 +99,8 @@ graph TD
 | `leaders` | 數據排行榜（與 `standings` 同層，賽季與是否賽季中由 `cli` 傳入）：`fetch_leaders`（5 個請求）、`generate_leaders`（寫 `data/leaders.json` 與根目錄 `leaders.html`，12 項全失敗不覆寫）、`render_leaders_page`（`templates/leaders.html`）、`render_leaders_card`（首頁側欄小卡，`index_page` 讀 `storage.load_leaders` 後渲染） |
 | `playoffs` | 季後賽對戰樹（與 `leaders` 同層，只依賴 `config`、`timeutil`、`net`、`htmlutil`、`storage`）：`fetch_postseason`（單一請求）、`parse_postseason`（純函式，含 `feedsInto`／`byeIds`）、`generate_playoffs`（寫 `data/playoffs.json` 與根目錄 `playoffs.html`，抓取失敗不覆寫）、`render_playoffs_page`（`templates/playoffs.html`）、`render_playoffs_card`（首頁側欄小卡，`index_page` 讀 `storage.load_playoffs` 後渲染） |
 | `previews` | 賽事預告、先發投手、開季倒數 |
-| `rosters` | 球隊名單（`--rosters`） |
+| `rosters` | 球隊名單（`--rosters`）；`fetch_rosters(today, extras_factory)` 可把球隊專頁附加資料併入各隊 JSON |
+| `team_page` | 球隊專頁附加資料：`compute_leaders`（隊內數據王）、`build_recent`（近 30 天動態）、`postseason_result`、`build_record`、`tracked_names`、`make_extras`（`cli` 的 `--rosters` 傳給 `fetch_rosters`） |
 | `report` | `render_report`（賽季戰報與休賽季快報共用）、`generate_report`、`generate_offseason_report`；兩條流程結束時各寫一份每日快照（`build_daily_snapshot`） |
 | `weekly` | 休賽季每週總整理：週次計算、讀每日快照、分類、各隊動態、新聞精選、下週日程、渲染 `templates/weekly.html`、`generate_weekly_report` |
 | `index_page` | 首頁附加資訊、`_safe_call`、`update_index_page`、`refresh_index_page`（不新增 metadata 只重產首頁）、休賽季區塊的最新週報連結 |
@@ -257,7 +258,7 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 
 `index.json`：`updatedAt`、`rosterType`、`season`、`teams`（每隊 `id`、`abbr`、`name`、`color`、`league`、`division`、`ok`，成功者另有 `updatedAt`）。
 
-`{id}.json`：
+`{id}.json`（`summary`、`recent`、`leaders` 為球隊專頁附加資料，見「球隊專頁」一節；任一區塊產生失敗時該欄缺席，前端降級）：
 - `meta`：`id`、`abbr`、`name`、`rosterType`、`season`、`updatedAt`。
 - `players`：每人 `id`、`name`、`number`、`pos`（API 原始位置代號）、`group`（`SP`／`RP`／`POS`）、`hitting`、`pitching`；二刀流（`TWP`）另有 `pitchingGroup`。
   - `hitting`：`g`、`pa`、`avg`、`obp`、`slg`、`hr`、`sb`、`bbPct`、`kPct`、`wrcPlus`、`war`。
@@ -268,6 +269,24 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 
 - 投手（`pos == P`）：本季 `gs / g >= 0.5` 為 `SP`，其餘（含無數據）為 `RP`。
 - 野手與二刀流：`group` 皆為 `POS`，在野手表顯示（守位欄）；`TWP` 另以 `pitchingGroup` 進入對應的 SP／RP 表。
+
+---
+
+## 球隊專頁
+
+`teams.html` 由上而下四個區塊：球隊摘要、近期動態（近 30 天）、隊內數據王、名單（SP／RP／野手三張表與慣用手標籤，維持原樣）。附加資料由 `--rosters` 流程以 `team_page.make_extras(today, ctx)` 產生並寫入各隊 `{id}.json`（`fetch_rosters` 的 `extras_factory`），不新增獨立 CLI 或 workflow 步驟。
+
+| 欄位 | 內容與來源 |
+|---|---|
+| `summary.record` | `w`、`l`、`pct`、`divRank`、`rd`（得失分差）；`standings.fetch_standings(season)`（多一個請求；失敗為 `null`） |
+| `summary.postseason` | `{text, outcome}`（`champion`／`eliminated`／`active`／`missed`）；讀 `data/playoffs.json`，其 `season` 與名單數據賽季相同才採用，否則 `null`（賽季中前端不顯示該行） |
+| `summary.tracked` | 該隊名單中屬於 `settings/watchlist.json` 的球員中文名 |
+| `recent.moves` | 讀 `data/daily/*.json` 近 30 天（含今天），沿用 `weekly` 的分類與 `team_moves`（交易雙方各記一次、DFA／釋出為離開）：`date`、`dir`（`in`／`out`）、`player`、`type`、`note`（譯文，缺則原文）；傷兵名單等未列入週報分類的異動不顯示 |
+| `recent.news` | 同樣讀每日快照，以中英文隊名、暱稱與口語簡稱比對標題與摘要（英文整詞、中文子字串），依 link 去重、新到舊最多 5 則；只收 http(s) 連結；來源固定 `MLB.com` |
+| `recent.snapshotDays` | 窗口內實際讀到的快照檔數；為 0 時前端顯示「尚無近期資料」而非「沒有異動」 |
+| `leaders` | 打擊 AVG／HR／OPS／SB／WAR、投球 ERA／SO／SV／WHIP／WAR 各一名；AVG、OPS 需 300 打席，ERA、WHIP 需 50 局，HR／SB／SO／SV 需大於 0，無人達標 `id`／`name`／`value` 為 `null`；`thresholds` 同時寫入（常數在 `config.TEAM_PAGE_*`） |
+
+`data/daily/` 與 `data/playoffs.json` 只存在於 gh-pages；workflow 的「Restore history from gh-pages」步驟已還原它們，且「Update Team Rosters」在「Generate Daily Report」之後執行，所以當天快照也讀得到。讀不到、缺天或損壞的快照略過（`weekly.load_week_snapshots`），任何來源失敗只影響對應欄位，名單照寫。名單頁副標依 `rosterType` 顯示「26 人現役名單」或「40 人名單」；摘要右上角標籤：休賽季「YYYY 賽季最終」，賽季中「截至 M/D」。
 
 ---
 
