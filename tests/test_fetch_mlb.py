@@ -3208,7 +3208,7 @@ class ReviewFixTests(SidebarBase):
     """S2 審查修正：時鐘固定、翻譯不重複耗時、延長合約比對、缺欄位、動態圖例等。"""
 
     def test_clock_is_fixed_by_default(self):
-        self.assertEqual(fetch_mlb.get_taipei_now().date(), date(2026, 11, 18))
+        self.assertEqual(fetch_mlb.timeutil.get_taipei_now().date(), date(2026, 11, 18))
 
     def test_extension_regex_is_narrow(self):
         def tx(desc, code="SGN"):
