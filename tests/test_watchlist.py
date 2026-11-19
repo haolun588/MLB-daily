@@ -358,6 +358,106 @@ class GameLineTests(unittest.TestCase):
         self.assertEqual(self.w.extract_game_lines([base.load_fixture("boxscore_watchlist")], {}), [])
 
 
+# ---------------------------------------------------------------- 台灣球員小聯盟比賽成績
+def minor_split(date, team, opp, stat, game_pk=1, is_home=True, abbr="AAA"):
+    return {"date": date, "sport": {"abbreviation": abbr}, "team": {"name": team}, "opponent": {"name": opp},
+            "isHome": is_home, "game": {"gamePk": game_pk}, "stat": stat}
+
+
+def minor_people(pid, hitting=(), pitching=()):
+    stats = []
+    if hitting:
+        stats.append({"group": {"displayName": "hitting"}, "splits": list(hitting)})
+    if pitching:
+        stats.append({"group": {"displayName": "pitching"}, "splits": list(pitching)})
+    return {"id": pid, "stats": stats}
+
+
+HIT = {"plateAppearances": 5, "atBats": 4, "hits": 2, "doubles": 1, "baseOnBalls": 1}
+PIT = {"inningsPitched": "1.0", "hits": 0, "runs": 0, "strikeOuts": 1}
+
+
+class MinorGameLineTests(unittest.TestCase):
+    def setUp(self):
+        self.wl = load_wl()
+        self.w = fetch_mlb.watchlist
+
+    def run_fetch(self, responses, wl=None):
+        """responses：{sportId: 回應 dict 或 None}；回傳 (lines, 呼叫的 URL 清單)。"""
+        urls = []
+
+        def fake(url, retries=3, delay=5):
+            urls.append(url)
+            sid = int(url.rsplit("sportId=", 1)[1].rstrip(")"))
+            return responses.get(sid)
+
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=fake),                 contextlib.redirect_stderr(io.StringIO()):
+            lines = self.w.fetch_minor_game_lines(DATE, self.wl if wl is None else wl)
+        return lines, urls
+
+    def test_parse_batting_pitching_merge_filter_and_doubleheader(self):
+        people = [
+            minor_people(HAOYU,
+                         hitting=[minor_split(DATE, "Toledo Mud Hens", "St. Paul Saints", HIT, game_pk=1),
+                                  minor_split(DATE, "Toledo Mud Hens", "St. Paul Saints", HIT, game_pk=2),  # 雙重賽第二場
+                                  minor_split("2020-01-01", "Toledo Mud Hens", "X", HIT, game_pk=3)],  # 非當日
+                         pitching=[minor_split(DATE, "Toledo Mud Hens", "St. Paul Saints", PIT, game_pk=1)]),  # 同場合併
+            minor_people(TENG, pitching=[minor_split(DATE, "Sugar Land", "Y", {"inningsPitched": "0.0"}, game_pk=9)]),  # 無投球：不列
+        ]
+        lines, urls = self.run_fetch({11: {"people": people}, 12: {"people": []}, 13: {"people": []},
+                                      14: {"people": []}, 16: {"people": []}})
+        self.assertEqual(len(urls), 5)  # 逐一 sportId，共 5 次
+        self.assertEqual([int(u.rsplit("sportId=", 1)[1].rstrip(")")) for u in urls], [11, 12, 13, 14, 16])
+        self.assertEqual(len(lines), 2)
+        g1, g2 = lines
+        self.assertEqual(g1["player_id"], HAOYU)
+        self.assertEqual(g1["level"], "AAA")
+        self.assertEqual(g1["team_name"], "Toledo Mud Hens")
+        self.assertEqual(g1["opponent"], "St. Paul Saints")
+        self.assertEqual(g1["batting"], "4 打數 2 安打、1 二壘安打、1 保送")
+        self.assertEqual(g1["pitching"], "1.0 局、1 三振")  # 同 gamePk 的打擊與投球合併成一筆
+        self.assertIsNone(g2["pitching"])  # 第二場只有打擊
+
+    def test_only_tw_players_queried(self):
+        lines, urls = self.run_fetch({})
+        ids = urls[0].split("personIds=")[1].split("&")[0].split(",")
+        self.assertEqual(set(ids), {str(TENG), str(HAOYU), str(CHENG)})  # 日、韓不查
+
+    def test_no_tw_players_makes_no_api_call(self):
+        wl = {k: v for k, v in self.wl.items() if v["region"] != "TW"}
+        lines, urls = self.run_fetch({}, wl=wl)
+        self.assertEqual((lines, urls), ([], []))
+        self.assertEqual(self.run_fetch({}, wl={})[1], [])
+
+    def test_failed_sport_id_is_skipped_with_warning(self):
+        people = [minor_people(HAOYU, hitting=[minor_split(DATE, "A", "B", HIT)])]
+        err = io.StringIO()
+        with mock.patch("mlb_daily.net.fetch_json",
+                        side_effect=lambda url, **kw: {"people": people} if "sportId=12" in url else None),                 contextlib.redirect_stderr(err):
+            lines = self.w.fetch_minor_game_lines(DATE, self.wl)
+        self.assertEqual([g["level"] for g in lines], ["AA"])
+        self.assertEqual(err.getvalue().count("Warning"), 4)
+
+    def test_render_has_level_label_team_and_escapes_html(self):
+        line = {"player_id": HAOYU, "team_id": None, "batting": "4 打數 2 安打", "pitching": None, "level": "AAA",
+                "team_name": "<b>Mud</b> Hens", "opponent": "A&B <i>x</i>", "is_home": True}
+        mlb = {"player_id": HAOYU, "team_id": 117, "batting": "3 打數 1 安打", "pitching": None}
+        entries = self.w.build_spotlight(DATE, self.wl, game_lines=[mlb, line])
+        self.assertEqual(entries[1]["level"], "AAA")
+        self.assertNotIn("level", entries[0])
+        json.dumps(entries)
+        html = self.w.render_spotlight_section(entries, self.wl)
+        self.assertIn("3A：&lt;b&gt;Mud&lt;/b&gt; Hens 對 A&amp;B &lt;i&gt;x&lt;/i&gt;", html)
+        self.assertNotIn("<b>", html)
+        self.assertLess(html.index("3 打數 1 安打"), html.index("4 打數 2 安打"))  # 大聯盟在前
+        for level, label in (("AA", "2A"), ("A+", "高階1A"), ("A", "1A"), ("ROK", "新人聯盟")):
+            e = self.w.build_spotlight(DATE, self.wl, game_lines=[{**line, "level": level}])
+            self.assertIn(label + "：", self.w.render_spotlight_section(e, self.wl))
+        # 首頁（含日期）也能顯示
+        home = self.w.render_spotlight_home([{**e, "date": DATE} for e in entries], self.wl)
+        self.assertIn("3A：", home)
+
+
 # ---------------------------------------------------------------- 資料與渲染
 class BuildAndRenderTests(unittest.TestCase):
     def setUp(self):
@@ -536,6 +636,29 @@ class SpotlightIntegrationTests(base.MlbTestBase):
         game = next(e for e in meta["spotlight"] if e["kind"] == "game" and e["player_id"] == OHTANI)
         self.assertEqual(game["pitching"], "6.0 局、3 安打、1 失分、8 三振")
         json.dumps(meta)
+
+    def test_minor_league_lines_in_season_report(self):
+        people = [minor_people(HAOYU, hitting=[minor_split(DATE, "Toledo Mud Hens", "St. Paul Saints", HIT)])]
+        orig = self.api.fetch
+
+        def fetch(url, retries=3, delay=5):
+            if "stats(group=" in url:
+                return {"people": people} if "sportId=11" in url else {"people": []}
+            return orig(url)
+
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=fetch):
+            meta, html = self.season()
+        sec = html[html.index('id="spot-h"'):html.index('id="news-h"')]
+        self.assertIn("3A：Toledo Mud Hens 對 St. Paul Saints", sec)
+        self.assertIn("4 打數 2 安打、1 二壘安打、1 保送", sec)
+        game = next(e for e in meta["spotlight"] if e["kind"] == "game" and e.get("level") == "AAA")
+        self.assertEqual(game["player_id"], HAOYU)
+        json.dumps(meta)
+
+    def test_minor_failure_does_not_break_report(self):
+        meta, html = self.season()  # FakeApi 對 gameLog 網址回傳 None
+        self.assertIn('id="spot-h"', html)
+        self.assertFalse(any(e.get("level") for e in meta["spotlight"]))
 
     def test_boxscore_not_refetched_for_spotlight(self):
         self.season()

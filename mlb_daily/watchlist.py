@@ -350,6 +350,65 @@ def extract_game_lines(boxscores, wl):
     return lines
 
 
+# ---------------------------------------------------------------- 台灣球員小聯盟比賽成績（gameLog）
+MINOR_LEVEL_LABELS = {"AAA": "3A", "AA": "2A", "A+": "高階1A", "A": "1A", "ROK": "新人聯盟"}
+MINOR_SPORT_LEVELS = {11: "AAA", 12: "AA", 13: "A+", 14: "A", 16: "ROK"}
+MINOR_GAMELOG_URL = ("https://statsapi.mlb.com/api/v1/people?personIds={ids}"
+                     "&hydrate=stats(group=[hitting,pitching],type=[gameLog],season={season},sportId={sport_id})")
+
+
+def _parse_minor_gamelog(data, date_str, level):
+    """解析單一 sportId 的 gameLog 回應 → 當日比賽紀錄 list（同球員同 gamePk 的打擊／投球合併）。"""
+    games = {}  # (player_id, gamePk 或流水號) → 紀錄（保留首次出現順序）
+    people = data.get("people") if isinstance(data, dict) else None
+    if not isinstance(people, list):
+        return []
+    for p in people:
+        pid = htmlutil._int_id(p.get("id")) if isinstance(p, dict) else None
+        if pid is None or not isinstance(p.get("stats"), list):
+            continue
+        for st in p["stats"]:
+            if not isinstance(st, dict) or not isinstance(st.get("splits"), list):
+                continue
+            group = str((st.get("group") or {}).get("displayName") or "").lower() if isinstance(st.get("group"), dict) else ""
+            if group not in ("hitting", "pitching"):
+                continue
+            for sp in st["splits"]:
+                if not isinstance(sp, dict) or sp.get("date") != date_str or not isinstance(sp.get("stat"), dict):
+                    continue
+                game = sp.get("game") if isinstance(sp.get("game"), dict) else {}
+                pk = htmlutil._int_id(game.get("gamePk"))
+                key = (pid, pk if pk is not None else f"n{len(games)}")
+                rec = games.setdefault(key, {
+                    "player_id": pid, "team_id": None, "batting": None, "pitching": None, "level": level,
+                    "team_name": str((sp.get("team") or {}).get("name") or "") if isinstance(sp.get("team"), dict) else "",
+                    "opponent": str((sp.get("opponent") or {}).get("name") or "") if isinstance(sp.get("opponent"), dict) else "",
+                    "is_home": sp.get("isHome") if isinstance(sp.get("isHome"), bool) else None,
+                    "game_pk": pk})
+                text = format_batting(sp["stat"]) if group == "hitting" else format_pitching(sp["stat"])
+                if text:
+                    rec[group == "hitting" and "batting" or "pitching"] = text
+    return [r for r in games.values() if r["batting"] or r["pitching"]]
+
+
+def fetch_minor_game_lines(date_str, wl):
+    """名單中台灣球員（不論層級）在 date_str 的小聯盟比賽成績；日韓不查。
+    逐一 sportId 查詢（11/12/13/14/16），單一 sportId 失敗只警告略過；沒有台灣球員不打 API。
+    回傳 [{player_id, team_id(None), batting, pitching, level, team_name, opponent, is_home, game_pk}]。"""
+    ids = [pid for pid, p in (wl or {}).items() if p.get("region") == "TW"]
+    if not ids or not DATE_KEY_RE.match(str(date_str)):
+        return []
+    id_text = ",".join(str(i) for i in ids)
+    lines = []
+    for sport_id, level in MINOR_SPORT_LEVELS.items():
+        data = net.fetch_json(MINOR_GAMELOG_URL.format(ids=id_text, season=str(date_str)[:4], sport_id=sport_id))
+        if not isinstance(data, dict) or not isinstance(data.get("people"), list):
+            print(f"Warning: 台灣球員 {level} 比賽成績抓取失敗，略過。", file=sys.stderr)
+            continue
+        lines.extend(_parse_minor_gamelog(data, date_str, level))
+    return lines
+
+
 # ---------------------------------------------------------------- 組成可序列化的資料
 def build_spotlight(date_str, wl, tx_matches=(), news_matches=(), game_lines=()):
     """組成 metadata `spotlight` 清單（純文字，渲染時才 escape）。呼叫時機須在翻譯之後（優先取譯文）。
@@ -357,7 +416,7 @@ def build_spotlight(date_str, wl, tx_matches=(), news_matches=(), game_lines=())
     - transaction：{"player_id", "kind", "text", "date", "persons", "to_team_id", "from_team_id", "also_player_ids"?}，
       每筆異動只存一次，歸第一位名單球員；其餘名單球員在 also_player_ids，渲染時顯示「（同上則異動）」。
     - news：{"player_id", "kind", "text", "link", "date", "also_player_ids"?}，一則新聞只列一次，歸第一位名單球員。
-    - game：{"player_id", "kind", "batting", "pitching", "team_id", "date"}。"""
+    - game：{"player_id", "kind", "batting", "pitching", "team_id", "date"}；小聯盟另有 level、team_name、opponent、is_home。"""
     entries = []
     for tx in tx_matches:
         ids = players_in_transaction(tx, wl)
@@ -380,8 +439,12 @@ def build_spotlight(date_str, wl, tx_matches=(), news_matches=(), game_lines=())
             entry["also_player_ids"] = list(ids[1:])
         entries.append(entry)
     for g in game_lines:
-        entries.append({"player_id": g["player_id"], "kind": "game", "batting": g.get("batting"),
-                        "pitching": g.get("pitching"), "team_id": g.get("team_id"), "date": date_str})
+        entry = {"player_id": g["player_id"], "kind": "game", "batting": g.get("batting"),
+                 "pitching": g.get("pitching"), "team_id": g.get("team_id"), "date": date_str}
+        if g.get("level"):  # 小聯盟比賽：另存層級、所屬隊與對手
+            entry.update(level=g["level"], team_name=g.get("team_name") or "", opponent=g.get("opponent") or "",
+                         is_home=g.get("is_home"))
+        entries.append(entry)
     return entries
 
 
@@ -437,6 +500,21 @@ def _player_team_id(entries):
     return None
 
 
+def _minor_prefix(e):
+    """小聯盟比賽項目的前綴（層級標籤與球隊對手）；大聯盟項目回傳空字串。"""
+    level = e.get("level")
+    if level not in MINOR_LEVEL_LABELS:
+        return ""
+    label = htmlutil.esc(MINOR_LEVEL_LABELS[level])
+    team, opp = str(e.get("team_name") or ""), str(e.get("opponent") or "")
+    detail = ""
+    if team and opp:
+        detail = f"：{htmlutil.esc(team)} 對 {htmlutil.esc(opp)}"
+    elif team:
+        detail = f"：{htmlutil.esc(team)}"
+    return f'<span class="spot-meta">{label}{detail}</span> '
+
+
 def _render_item(e, show_date=False):
     """單一項目 <li>；所有外部字串經 esc。show_date 時（首頁）前置 M/D。"""
     kind = e.get("kind")
@@ -466,7 +544,8 @@ def _render_item(e, show_date=False):
             rows.append("投球 " + htmlutil.esc(e["pitching"]))
         if not rows:
             return ""
-        return "".join(f"<li>{date_html}{r}</li>" for r in rows)
+        prefix = _minor_prefix(e)
+        return "".join(f"<li>{date_html}{prefix}{r}</li>" for r in rows)
     else:
         return ""
     return f"<li>{date_html}{body}</li>"

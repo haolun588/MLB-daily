@@ -88,10 +88,16 @@ def _spotlight_matches(wl, raw_tx, news_all, news_shown):
         return [], [], []
 
 
-def _spotlight_build(date_str, wl, tx_matches, news_matches, boxscores=()):
-    """翻譯完成後組成 metadata 用的 spotlight 清單與戰報區塊 HTML；失敗回傳 ([], "")。"""
+def _spotlight_build(date_str, wl, tx_matches, news_matches, boxscores=(), minor=False):
+    """翻譯完成後組成 metadata 用的 spotlight 清單與戰報區塊 HTML；失敗回傳 ([], "")。
+    minor=True（賽季戰報）時另加入台灣球員當日小聯盟比賽成績。"""
     try:
         lines = watchlist.extract_game_lines(boxscores, wl)
+        if minor:
+            try:
+                lines += watchlist.fetch_minor_game_lines(date_str, wl)
+            except Exception as e:  # noqa: BLE001 - 小聯盟成績失敗不得影響專區其餘內容
+                print(f"Warning: 台灣球員小聯盟成績產生失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
         entries = watchlist.build_spotlight(date_str, wl, tx_matches, news_matches, lines)
         return entries, watchlist.render_spotlight_section(entries, wl)
     except Exception as e:  # noqa: BLE001
@@ -193,7 +199,7 @@ def generate_report(date_str, games):
     team_names = [(v[side]["id"], v[side]["name_en"]) for v in game_views for side in ("away", "home")]
     translated = translate.apply_translations(news, game_views, tx_items + tx_matches, team_names, extra_news)
     cards_html = [c if isinstance(c, str) else games_mod.render_game_card(c) for c in cards]
-    spotlight, spotlight_html = _spotlight_build(date_str, wl, tx_matches, news_matches, boxscores)
+    spotlight, spotlight_html = _spotlight_build(date_str, wl, tx_matches, news_matches, boxscores, minor=True)
 
     storage.write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list, news,
                                                  spotlight_html))
