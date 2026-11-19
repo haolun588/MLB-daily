@@ -2,7 +2,7 @@
 
 import sys
 
-from . import htmlutil, leaders as leaders_mod, net, previews, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
+from . import htmlutil, leaders as leaders_mod, net, playoffs as playoffs_mod, previews, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
 from .config import DATE_KEY_RE, SEASON_URL, WEEK_KEY_RE
 
 
@@ -16,8 +16,8 @@ def _safe_call(label, fn, *args):
 
 
 def _fallback_roster_context(today):
-    """賽季判斷完全失敗時以月份推估（4–10 月視為賽季中）。"""
-    return {"rosterType": "active" if 4 <= today.month <= 10 else "40Man", "season": today.year}
+    """賽季判斷完全失敗時以月份推估（4–10 月視為賽季中；1–3 月的數據賽季是上一年，與 resolve_roster_context 一致）。"""
+    return {"rosterType": "active" if 4 <= today.month <= 10 else "40Man", "season": today.year - 1 if today.month <= 3 else today.year}
 
 
 def _leaders_card_html():
@@ -26,13 +26,28 @@ def _leaders_card_html():
     return (_safe_call("數據排行小卡", leaders_mod.render_leaders_card, data) or "") if data else ""
 
 
+def _playoffs_card_html(season):
+    """讀 data/playoffs.json（不連網）渲染側欄小卡；只在資料屬於當前賽季（季後賽開打到隔年開季前）時顯示。
+    例行賽期間檔案內是上一屆結果，賽季不符而隱藏；沒有檔案或任何失敗都回傳空字串。"""
+    data = _safe_call("季後賽讀取", storage.load_playoffs)
+    if not data or data.get("season") != season:
+        return ""
+    return _safe_call("季後賽小卡", playoffs_mod.render_playoffs_card, data) or ""
+
+
+def _aside_extra_html(season):
+    """首頁側欄戰績表下方的小卡：數據排行在前、季後賽在後。"""
+    cards = [c for c in (_leaders_card_html(), _playoffs_card_html(season)) if c]
+    return "\n".join(cards)
+
+
 def fallback_index_extras(now=None):
     """build_index_extras 整體失敗時的最低限度輸出：戰績錯誤版側欄與手機按鈕（避免桌機右側空欄）。"""
     now = now or timeutil.get_taipei_now()
     ctx = _fallback_roster_context(now.date())
     return {
         "UPCOMING": "",
-        "STANDINGS": standings_mod.render_standings_aside(None, ctx["season"], ctx["rosterType"] == "active", now, _leaders_card_html()),
+        "STANDINGS": standings_mod.render_standings_aside(None, ctx["season"], ctx["rosterType"] == "active", now, _aside_extra_html(ctx["season"])),
         "STANDINGS_UI": standings_mod.render_standings_fab(),
     }
 
@@ -65,7 +80,7 @@ def build_index_extras(now=None):
             _safe_call("最新週報", render_latest_weekly_link, None, today) or "",
             _safe_call("人事異動渲染", transactions_mod.render_weekly_transactions, weekly) or "",
         ) if p)
-    leaders_card = _leaders_card_html()
+    leaders_card = _aside_extra_html(season)
     aside = _safe_call("戰績渲染", standings_mod.render_standings_aside, standings, season, in_season, now, leaders_card)
     if not aside:
         aside = standings_mod.render_standings_aside(None, season, in_season, now, leaders_card)

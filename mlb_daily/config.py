@@ -268,3 +268,10 @@ LEADERS_CATEGORIES = (
     ("fip", "pitching", "FIP", "規定局數・MLB 官方數據"),
     ("war_pitching", "pitching", "投手 WAR", "MLB 官方數據・不設門檻"),
 )
+
+
+# ---------------------------------------------------------------- 季後賽對戰樹
+POSTSEASON_SERIES_URL = "https://statsapi.mlb.com/api/v1/schedule/postseason/series?season={season}&sportId=1"
+PLAYOFFS_PATH = os.path.join("data", "playoffs.json")
+PLAYOFFS_PAGE_PATH = "playoffs.html"
+PLAYOFFS_SCHEMA = 1

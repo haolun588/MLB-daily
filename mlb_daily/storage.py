@@ -4,7 +4,7 @@ import json
 import os
 import sys
 
-from .config import DAILY_SNAPSHOT_DIR, LEADERS_PATH, LEADERS_SCHEMA, WEEKLY_DIR, WEEKLY_INDEX_PATH
+from .config import DAILY_SNAPSHOT_DIR, LEADERS_PATH, LEADERS_SCHEMA, PLAYOFFS_PATH, PLAYOFFS_SCHEMA, WEEKLY_DIR, WEEKLY_INDEX_PATH
 
 
 def write_report(date_str, html_content):
@@ -146,6 +146,22 @@ def load_leaders(path=None):
     except (OSError, ValueError):
         return None
     if not isinstance(data, dict) or data.get("schema") != LEADERS_SCHEMA or not isinstance(data.get("categories"), dict):
+        return None
+    season = data.get("season")
+    if isinstance(season, bool) or not isinstance(season, int):
+        return None
+    return data
+
+
+# ---------------------------------------------------------------- 季後賽對戰樹
+def load_playoffs(path=None):
+    """讀取 data/playoffs.json；不存在、損壞或 schema 不符一律回傳 None（首頁不顯示小卡）。"""
+    try:
+        with open(path or PLAYOFFS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or data.get("schema") != PLAYOFFS_SCHEMA or not isinstance(data.get("rounds"), dict):
         return None
     season = data.get("season")
     if isinstance(season, bool) or not isinstance(season, int):

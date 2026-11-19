@@ -1742,3 +1742,198 @@ img { max-width: 100%; height: auto; }
 }
 
 .ld-mini-more:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ==========================================================================
+   季後賽對戰樹（playoffs.html 與首頁側欄小卡）
+   ========================================================================== */
+
+.po-wrap { margin-top: 20px; }
+
+/* ---------- 冠軍橫幅 ---------- */
+.po-champion {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--amber);
+  border-radius: var(--radius);
+}
+
+.po-champ-logo picture, .po-champ-logo img { display: block; width: 40px; height: 40px; }
+.po-champ-k { font-size: 0.75rem; letter-spacing: 0.08em; color: var(--text-2); }
+.po-champ-n { font: 700 1.25rem/1.4 var(--font-serif); letter-spacing: 0.04em; }
+
+/* ---------- 系列賽卡片 ---------- */
+.po-s {
+  min-width: 0;
+  padding: 6px 8px 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.po-s.is-live { border-color: var(--amber); }
+
+.po-sh {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.6875rem;
+  color: var(--text-2);
+}
+
+.po-label { font-weight: 700; letter-spacing: 0.04em; }
+.po-live { color: var(--amber); font-weight: 700; }
+
+.po-teams { list-style: none; }
+
+.po-team {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  column-gap: 6px;
+  min-height: 30px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.po-team:last-child { border-bottom: 0; }
+.po-logo picture, .po-logo img { display: block; width: 18px; height: 18px; }
+.po-nm { min-width: 0; overflow-wrap: anywhere; }
+.po-byeline { display: none; }
+.po-w { font: 700 0.9375rem var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; min-width: 1.2em; }
+.po-bye { font-size: 0.625rem; color: var(--text-2); border: 1px solid var(--line); border-radius: 2px; padding: 0 3px; white-space: nowrap; }
+.po-adv { font-size: 0.625rem; color: var(--teal); font-weight: 700; white-space: nowrap; }
+.po-team.is-win .po-nm { font-weight: 700; }
+.po-team.is-lose { color: var(--text-3); }
+.po-team.is-lose .po-w { font-weight: 500; }
+.po-team.is-tbd .po-nm { color: var(--text-3); }
+
+/* ---------- 手機／平板：依輪次直向堆疊（世界大賽 → 聯盟冠軍賽 → 分區 → 外卡） ---------- */
+.po-tree { display: none; }
+
+.po-round { margin-top: 20px; }
+.po-round > h3 { font: 700 1.0625rem/1.4 var(--font-serif); letter-spacing: 0.04em; padding-bottom: 6px; border-bottom: 1px solid var(--text); }
+.po-round-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px 16px; margin-top: 10px; }
+.po-lg { min-width: 0; display: grid; gap: 8px; align-content: start; }
+.po-lg > h4 { font: 700 0.75rem/1.4 var(--font-sans); letter-spacing: 0.14em; color: var(--text-2); }
+
+@media (min-width: 640px) {
+  .po-round-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .po-round-body > .po-lg-ws { grid-column: 1 / -1; max-width: 360px; }
+}
+
+/* ---------- 桌面：左右對稱 7 欄格線（美外卡｜美分區｜美冠軍賽｜世界大賽｜國冠軍賽｜國分區｜國外卡） ---------- */
+@media (min-width: 1024px) {
+  .po-stack { display: none; }
+
+  .po-tree {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: auto repeat(2, 1fr);
+    column-gap: 22px;
+    row-gap: 18px;
+    padding-bottom: 8px;
+  }
+
+  .po-colhead {
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--text);
+    font: 700 0.8125rem/1.4 var(--font-sans);
+    letter-spacing: 0.1em;
+    text-align: center;
+  }
+
+  .po-cell { position: relative; display: flex; align-items: center; min-width: 0; }
+  .po-cell > .po-s { width: 100%; }
+
+  /* 連接線：外卡→分區、分區→冠軍賽、冠軍賽→世界大賽（以框線實作，不用 JS） */
+  .po-cell::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    border-top: 1px solid var(--text-3);
+  }
+
+  .po-al.po-f::after, .po-al.po-d::after, .po-al.po-l::after { left: 100%; }
+  .po-nl.po-f::after, .po-nl.po-d::after, .po-nl.po-l::after { right: 100%; }
+
+  /* 分區 → 冠軍賽：兩個分區收斂到同一組冠軍賽（冠軍賽格跨兩列，連接點在 1/4 與 3/4 處） */
+  .po-cell.po-l::before {
+    content: "";
+    position: absolute;
+    top: 25%;
+    height: 50%;
+    width: 11px;
+    border: solid var(--text-3);
+    border-width: 1px 0;
+  }
+
+  .po-al.po-l::before { left: -11px; border-left-width: 1px; }
+  .po-nl.po-l::before { right: -11px; border-right-width: 1px; }
+  .po-cell.po-l::before { border-style: solid; }
+
+  /* 冠軍賽 → 世界大賽的短線由兩側冠軍賽格的 ::after 負責，世界大賽格自己不畫線 */
+  .po-cell.po-ws::after { display: none; }
+  .po-cell.po-ws > .po-s { border-top: 3px solid var(--amber); }
+
+  /* 樹內卡片很窄（內寬約 100–116px）：不放「晉級」「首輪輪空」標籤，勝隊靠粗體表示；輪空改在卡片標頭下方小字 */
+  .po-tree .po-team { grid-template-columns: 18px minmax(0, 1fr) auto; font-size: 0.8125rem; }
+  .po-tree .po-nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
+  .po-tree .po-w { min-width: 1em; }
+  .po-tree .po-adv, .po-tree .po-bye { display: none; }
+  .po-tree .po-byeline { display: block; padding: 2px 0; font-size: 0.625rem; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ---------- 首頁側欄小卡（放在數據排行小卡下方，同一個 .st-panel 內） ---------- */
+.po-card-mini {
+  margin: 14px 8px 0;
+  padding: 12px 6px 0;
+  border-top: 1px solid var(--text);
+}
+
+.po-mini-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; }
+.po-mini-head h3 { font: 700 1rem/1.35 var(--font-serif); letter-spacing: 0.04em; }
+.po-mini-sub { font-size: 0.6875rem; color: var(--text-2); }
+
+.po-card-mini h4 {
+  margin-top: 10px;
+  padding-bottom: 3px;
+  font: 700 0.75rem/1.4 var(--font-sans);
+  letter-spacing: 0.14em;
+  color: var(--text-2);
+}
+
+.po-mini { list-style: none; }
+
+.po-mini li {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.po-mini li:last-child { border-bottom: 0; }
+.po-mini li.is-done { color: var(--text-2); }
+.po-mini-champ { margin-top: 8px; font-size: 0.875rem; line-height: 1.6; }
+
+.po-mini-more {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 44px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+.po-mini-more:hover { text-decoration: underline; text-underline-offset: 3px; }

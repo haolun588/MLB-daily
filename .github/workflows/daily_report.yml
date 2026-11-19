@@ -85,10 +85,19 @@ jobs:
             rm -f data/leaders.json
             echo "::warning::gh-pages 尚無 data/leaders.json"
           fi
+          # 季後賽對戰樹資料（首頁小卡來源）：取不到只警告，不中止
+          if ! git show origin/gh-pages:data/playoffs.json > data/playoffs.json 2>/dev/null; then
+            rm -f data/playoffs.json
+            echo "::warning::gh-pages 尚無 data/playoffs.json"
+          fi
 
       - name: Update Stat Leaders
         continue-on-error: true
         run: python fetch_mlb.py --leaders
+
+      - name: Update Postseason Bracket
+        continue-on-error: true
+        run: python fetch_mlb.py --playoffs
 
       - name: Generate Daily Report
         env:

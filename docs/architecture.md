@@ -8,17 +8,22 @@
 
 ```
 fetch_mlb.py              薄入口（重新匯出 mlb_daily 內所有名稱，CLI 不變）
-mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、leaders、previews、rosters、report、weekly、index_page、notify、cli）
+mlb_daily/                主程式套件（config、timeutil、net、htmlutil、storage、transactions、news、watchlist、translate、games、standings、leaders、playoffs、previews、rosters、report、weekly、index_page、notify、cli）
 settings/watchlist.json   台日韓球員追蹤名單（納入版控）
 settings/offseason_calendar.json   休賽季重要日程（手動維護，週報頁尾「下週日程」用；納入版控，目前為空檔）
 templates/report.html     戰報與休賽季快報頁面骨架
 templates/index.html      首頁骨架
 templates/weekly.html     休賽季每週總整理頁面骨架
+templates/leaders.html    數據排行頁骨架
+templates/playoffs.html   季後賽對戰樹頁骨架
 assets/style.css          共用樣式表
 assets/archive.js         歷史存檔頁腳本
 assets/teams.js           球隊名單頁腳本
 teams.html                球隊名單頁（執行時以 JS 讀取 data/teams/*.json）
 data/teams/               名單 JSON（僅存在於 gh-pages，main 以 .gitignore 忽略）
+data/leaders.json        數據排行榜資料（僅存在於 gh-pages）
+data/playoffs.json       季後賽對戰樹資料（僅存在於 gh-pages）
+leaders.html／playoffs.html   數據排行頁與季後賽對戰樹頁（腳本產生；僅存在於 gh-pages，main 以 .gitignore 的 /leaders.html、/playoffs.html 忽略）
 data/daily/YYYY-MM-DD.json   每日資料快照（已翻譯的大聯盟異動與新聞，供週報使用；僅存在於 gh-pages）
 reports/weekly/YYYY-Www.html 休賽季每週總整理（僅存在於 gh-pages）
 reports/weekly/index.json    週報索引（僅存在於 gh-pages，workflow 先取回）
@@ -29,7 +34,9 @@ reports/YYYY/MM/YYYY-MM-DD.html   戰報（僅存在於 gh-pages，main 忽略�
 tests/test_fetch_mlb.py   單元測試
 tests/test_watchlist.py   台日韓球員專區測試
 tests/test_weekly.py      休賽季每週總整理測試
-tests/fixtures/           API 假資料（schedule、boxscore、content、transactions、RSS）；daily_snapshots/ 為週報用的每日快照、offseason_calendar_test.json 為日程設定
+tests/test_leaders.py     數據排行榜測試
+tests/test_playoffs.py    季後賽對戰樹測試
+tests/fixtures/           API 假資料（schedule、boxscore、content、transactions、RSS）；daily_snapshots/ 為週報用的每日快照、offseason_calendar_test.json 為日程設定；leaders_*.json、sabermetrics_*.json 為排行榜；postseason_series_2026.json 為 2026 季後賽系列賽真實回應
 .github/workflows/daily_report.yml   排程、測試、部署、通知
 ```
 
@@ -42,7 +49,8 @@ graph TD
     A[排程 04:17 UTC / 手動觸發] --> T[單元測試]
     T -->|失敗| X[中止]
     T --> L[Update Stat Leaders：--leaders，失敗不中止]
-    L --> B[產生：--check-wait --no-notify]
+    L --> P[Update Postseason Bracket：--playoffs，失敗不中止]
+    P --> B[產生：--check-wait --no-notify]
     B --> C{全數完賽?}
     C -->|否，未達 8 次| D[睡 30 分鐘後重查]
     D --> C
@@ -63,6 +71,7 @@ graph TD
 8. **通知**：`python fetch_mlb.py --notify-only --date <日期>`，僅排程觸發或手動勾選 `notify` 時執行。
 9. **每週總整理**（休賽季，見「休賽季每週總整理」一節）：Restore 步驟額外還原 `data/daily/` 與 `reports/weekly/index.json`；`Generate Weekly Report`（`continue-on-error: true`）緊接在 Generate Daily Report 之後；部署後若本次有產生週報，另有「等待週報網址 200」與「`--notify-weekly`」兩個步驟（條件同每日通知）。`workflow_dispatch` 新增 `week` 輸入（手動補產指定週）。
 10. **數據排行榜**（見「數據排行榜」一節）：Restore 步驟額外還原 `data/leaders.json`（取不到只警告）；`Update Stat Leaders`（`python fetch_mlb.py --leaders`，`continue-on-error: true`）在 Generate Daily Report 之前執行。
+11. **季後賽對戰樹**（見「季後賽對戰樹」一節）：Restore 步驟額外還原 `data/playoffs.json`（取不到只警告）；`Update Postseason Bracket`（`python fetch_mlb.py --playoffs`，`continue-on-error: true`）緊接在 Update Stat Leaders 之後。
 
 ---
 
@@ -70,7 +79,7 @@ graph TD
 
 `fetch_mlb.py` 是薄入口：UTF-8 reconfigure、重新匯出原本所有名稱、呼叫 `main`。實際程式在 `mlb_daily/`，由下而上相依（下層不得 import 上層）：
 
-`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news`／`watchlist` → `translate`／`games`／`standings`／`leaders`／`previews`／`rosters` → `report`／`weekly`／`index_page`／`notify` → `cli`
+`config`／`timeutil` → `net`／`htmlutil`／`storage` → `transactions`／`news`／`watchlist` → `translate`／`games`／`standings`／`leaders`／`playoffs`／`previews`／`rosters` → `report`／`weekly`／`index_page`／`notify` → `cli`
 
 `weekly` 與 `report` 同層：可用 `transactions`、`news`、`watchlist`、`rosters`、`htmlutil`、`storage`、`timeutil`、`config`，**不得** import `report`／`index_page`／`notify`／`cli`。首頁與通知需要週報資料時，由 `index_page`／`notify`／`cli` 透過 `storage.load_weekly_index`／`latest_weekly_entry` 讀 `reports/weekly/index.json`，不 import `weekly`。
 
@@ -88,6 +97,7 @@ graph TD
 | `games` | `check_all_games_finalized`（API 失敗拋 `ApiError`，只有 `totalGames == 0` 才視為無賽事）、`classify_game_status`、焦點球員評分、決定、比賽卡片與 view、摘要句 |
 | `standings` | 戰績側欄（`render_standings_aside` 的 `extra_html` 可接首頁小卡 HTML，不 import `leaders`） |
 | `leaders` | 數據排行榜（與 `standings` 同層，賽季與是否賽季中由 `cli` 傳入）：`fetch_leaders`（5 個請求）、`generate_leaders`（寫 `data/leaders.json` 與根目錄 `leaders.html`，12 項全失敗不覆寫）、`render_leaders_page`（`templates/leaders.html`）、`render_leaders_card`（首頁側欄小卡，`index_page` 讀 `storage.load_leaders` 後渲染） |
+| `playoffs` | 季後賽對戰樹（與 `leaders` 同層，只依賴 `config`、`timeutil`、`net`、`htmlutil`、`storage`）：`fetch_postseason`（單一請求）、`parse_postseason`（純函式，含 `feedsInto`／`byeIds`）、`generate_playoffs`（寫 `data/playoffs.json` 與根目錄 `playoffs.html`，抓取失敗不覆寫）、`render_playoffs_page`（`templates/playoffs.html`）、`render_playoffs_card`（首頁側欄小卡，`index_page` 讀 `storage.load_playoffs` 後渲染） |
 | `previews` | 賽事預告、先發投手、開季倒數 |
 | `rosters` | 球隊名單（`--rosters`） |
 | `report` | `render_report`（賽季戰報與休賽季快報共用）、`generate_report`、`generate_offseason_report`；兩條流程結束時各寫一份每日快照（`build_daily_snapshot`） |
@@ -317,6 +327,15 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 - 賽季：沿用 `rosters.resolve_roster_context`（賽季中標題「YYYY 賽季・截至 M/D」，其餘「YYYY 賽季最終」）。
 - `data/leaders.json`：`schema`、`season`、`in_season`、`as_of`、`generated_at`、`categories`（12 個 key → 名次項目陣列 `{rank,id,name,team_id,value}`，失敗為 `null`）。
 - 首頁側欄戰績表下方的小卡只讀 `data/leaders.json`（無檔不顯示）；`leaders.html` 與 `data/leaders.json` 只存在 gh-pages。workflow 在每日產生前執行 `--leaders`（`continue-on-error`），並從 gh-pages 還原舊的 `data/leaders.json`。
+
+## 季後賽對戰樹
+
+- CLI：`python fetch_mlb.py --playoffs [--date]`，不可與其他模式併用（與 `--leaders` 互斥）；寫 `data/playoffs.json` 與 `playoffs.html`，`reports/metadata.json` 存在時再重產首頁（失敗只警告）。抓取失敗或兩年都沒資料時不覆寫舊檔並以非 0 結束。
+- 資料：`/schedule/postseason/series?season=YYYY&sportId=1`，一次請求取得整屆。今年已有完賽或進行中的比賽就用今年，否則改抓去年；標題進行中為「YYYY 季後賽・截至 M/D」，完成為「YYYY 季後賽結果」。
+- 勝場計算：`codedGameState == "F"`，或 `"O"`（Game Over）且 `isWinner` 已有布林值才計入；`"D"`（延賽）排除；以 `gamePk` 去重。外卡接到哪一組分區以隊伍 ID 比對（不用字母），輪空隊伍為出現在分區、但不在外卡的隊伍；`config` 對照表查不到的 id 視為待定，不參與對應與輪空判斷。
+- `data/playoffs.json`：`schema`、`season`、`status`、`champion`、`rounds`（`AL`／`NL` 各有 `F`／`D`／`L`，另有 `WS`）、`asOf`、`updatedAt`；外卡系列賽多 `feedsInto`，分區系列賽多 `byeIds`。
+- 頁面：桌面（≥1024px）7 欄對稱格線，樹內卡片不顯示「晉級」，輪空改在卡片標頭下方小字；手機與平板依輪次直向堆疊。兩套 DOM 以 CSS 切換。
+- 首頁小卡：只讀 `data/playoffs.json`（無檔不顯示），資料賽季（`season`）與 `resolve_roster_context` 的賽季相同才顯示。`playoffs.html` 與 `data/playoffs.json` 只存在 gh-pages。
 
 ## 搜尋
 

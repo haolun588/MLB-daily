@@ -30,7 +30,7 @@ if hasattr(sys.stderr, 'reconfigure'):
 # 拆分後的 mlb_daily 套件；以下重新匯出原本 fetch_mlb 的所有名稱以維持相容。
 # 注意：重新匯出的是原物件，patch `fetch_mlb.X` 不會影響 mlb_daily 內部；
 # 測試請 patch 定義該名稱的模組（例如 `mlb_daily.net.fetch_json`）。
-from mlb_daily import cli, config, games as games_mod, htmlutil, index_page, leaders, net, news as news_mod, notify, previews, report, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist, weekly  # noqa: F401
+from mlb_daily import cli, config, games as games_mod, htmlutil, index_page, leaders, net, news as news_mod, notify, playoffs, previews, report, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist, weekly  # noqa: F401
 from mlb_daily.cli import (  # noqa: F401
     main,
 )
@@ -60,6 +60,10 @@ from mlb_daily.config import (  # noqa: F401
     LEADERS_PITCHING_URL,
     LEADERS_SCHEMA,
     LEADERS_TOP_VISIBLE,
+    PLAYOFFS_PAGE_PATH,
+    PLAYOFFS_PATH,
+    PLAYOFFS_SCHEMA,
+    POSTSEASON_SERIES_URL,
     LEGACY_ABBR_ALIASES,
     LOGO_URL,
     MAX_WAIT_CHECKS,
@@ -170,6 +174,16 @@ from mlb_daily.leaders import (  # noqa: F401
     render_leaders_card,
     render_leaders_page,
 )
+from mlb_daily.playoffs import (  # noqa: F401
+    build_playoffs_data,
+    fetch_postseason,
+    generate_playoffs,
+    has_started,
+    parse_postseason,
+    playoffs_title,
+    render_playoffs_card,
+    render_playoffs_page,
+)
 from mlb_daily.net import (  # noqa: F401
     ApiError,
     LAST_POST,
@@ -242,6 +256,7 @@ from mlb_daily.storage import (  # noqa: F401
     latest_weekly_entry,
     load_leaders,
     load_metadata,
+    load_playoffs,
     load_weekly_index,
     save_metadata,
     save_weekly_index,

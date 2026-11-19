@@ -133,3 +133,10 @@
 - [x] 已完成（已審查，瀏覽器實測排行頁與首頁小卡、375px 抽屜皆已完成）：`mlb_daily/leaders.py`、`templates/leaders.html`、`--leaders`；`data/leaders.json` 與根目錄 `leaders.html`；首頁側欄小卡；全站導覽列「數據排行」；名次一律以顯示值判斷並列；workflow 還原 `data/leaders.json` 並於每日產生前執行 `--leaders`（`continue-on-error`）；測試 `tests/test_leaders.py`（共 533 個測試全過）
 - [ ] 待辦：GitHub 實測（手動觸發 workflow，確認 `leaders.html`、`data/leaders.json` 隨部署出現、首頁小卡與導覽列連結）
 - [ ] 待辦：2027 賽季中確認「截至 M/D」標題與季後賽期間行為（目前只用 fixture 測試）
+
+### 🏆 階段二十：季後賽對戰樹（2026-11-19）
+依 `docs/plans/20261119_季後賽對戰樹設計.md`（使用者已核准：獨立頁加首頁小卡、非季後賽期間顯示上一屆結果、手機直向堆疊）。
+
+- [x] 已完成（本機以真實 API 實跑 `--playoffs`，比數與冠軍與 2026 實際結果一致，瀏覽器實測桌面 1024／1366 寬與手機 375 寬，無橫向捲動、隊名無溢出，首頁小卡顯示「2026 世界大賽冠軍：釀酒人（4–1 勝光芒）」）：`mlb_daily/playoffs.py`、`templates/playoffs.html`、`--playoffs`；`data/playoffs.json` 與根目錄 `playoffs.html`；首頁側欄小卡；全站導覽列「季後賽」；勝場計算（`F`／`O`、延賽去重）、待定隊伍處理；workflow 還原 `data/playoffs.json` 並新增 `Update Postseason Bracket`（`continue-on-error`）；測試 `tests/test_playoffs.py`
+- [ ] 待辦：GitHub 實測（手動觸發 workflow，確認 `playoffs.html`、`data/playoffs.json` 隨部署出現、首頁小卡與導覽列連結）
+- [ ] 待辦：2027 季後賽進行中確認進行中標題與小卡（目前只用程式改出的 fixture 測試）

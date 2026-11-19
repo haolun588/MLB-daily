@@ -1,0 +1,1728 @@
+{
+ "series": [
+  {
+   "series": {
+    "id": "W_1",
+    "gameType": "W"
+   },
+   "games": [
+    {
+     "gamePk": 849805,
+     "gameType": "W",
+     "officialDate": "2026-10-23",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 2,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 3,
+       "isWinner": true
+      }
+     },
+     "description": "World Series Game 1",
+     "seriesDescription": "World Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849802,
+     "gameType": "W",
+     "officialDate": "2026-10-24",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 2
+       },
+       "score": 4,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 0
+       },
+       "score": 5,
+       "isWinner": true
+      }
+     },
+     "description": "World Series Game 2",
+     "seriesDescription": "World Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 2
+    },
+    {
+     "gamePk": 849804,
+     "gameType": "W",
+     "officialDate": "2026-10-26",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 3,
+        "losses": 0
+       },
+       "score": 10,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 3
+       },
+       "score": 1,
+       "isWinner": false
+      }
+     },
+     "description": "World Series Game 3",
+     "seriesDescription": "World Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 3
+    },
+    {
+     "gamePk": 849803,
+     "gameType": "W",
+     "officialDate": "2026-10-27",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 3,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 3
+       },
+       "score": 4,
+       "isWinner": true
+      }
+     },
+     "description": "World Series Game 4",
+     "seriesDescription": "World Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 4
+    },
+    {
+     "gamePk": 849799,
+     "gameType": "W",
+     "officialDate": "2026-10-28",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 4,
+        "losses": 1
+       },
+       "score": 4,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 4
+       },
+       "score": 1,
+       "isWinner": false
+      }
+     },
+     "description": "World Series Game 5",
+     "seriesDescription": "World Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 5
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "F_2",
+    "gameType": "F"
+   },
+   "games": [
+    {
+     "gamePk": 849851,
+     "gameType": "F",
+     "officialDate": "2026-09-29",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 111,
+        "name": "Boston Red Sox"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 0,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 147,
+        "name": "New York Yankees"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 9,
+       "isWinner": true
+      }
+     },
+     "description": "AL Wild Card 'B' Game 1",
+     "seriesDescription": "AL Wild Card Series",
+     "gamesInSeries": 3,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849848,
+     "gameType": "F",
+     "officialDate": "2026-09-30",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 111,
+        "name": "Boston Red Sox"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 2
+       },
+       "score": 2,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 147,
+        "name": "New York Yankees"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 0
+       },
+       "score": 9,
+       "isWinner": true
+      }
+     },
+     "description": "AL Wild Card 'B' Game 2",
+     "seriesDescription": "AL Wild Card Series",
+     "gamesInSeries": 3,
+     "seriesGameNumber": 2
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "F_1",
+    "gameType": "F"
+   },
+   "games": [
+    {
+     "gamePk": 849849,
+     "gameType": "F",
+     "officialDate": "2026-09-29",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 145,
+        "name": "Chicago White Sox"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 6,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 117,
+        "name": "Houston Astros"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": false
+      }
+     },
+     "description": "AL Wild Card 'A' Game 1",
+     "seriesDescription": "AL Wild Card Series",
+     "gamesInSeries": 3,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849846,
+     "gameType": "F",
+     "officialDate": "2026-09-30",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 145,
+        "name": "Chicago White Sox"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 0
+       },
+       "score": 7,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 117,
+        "name": "Houston Astros"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 2
+       },
+       "score": 3,
+       "isWinner": false
+      }
+     },
+     "description": "AL Wild Card 'A' Game 2",
+     "seriesDescription": "AL Wild Card Series",
+     "gamesInSeries": 3,
+     "seriesGameNumber": 2
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "F_4",
+    "gameType": "F"
+   },
+   "games": [
+    {
+     "gamePk": 849843,
+     "gameType": "F",
+     "officialDate": "2026-09-29",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 112,
+        "name": "Chicago Cubs"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 0,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 135,
+        "name": "San Diego Padres"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 8,
+       "isWinner": true
+      }
+     },
+     "description": "NL Wild Card 'B' Game 1",
+     "seriesDescription": "NL Wild Card Series",
+     "gamesInSeries": 3,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849842,
+     "gameType": "F",
+     "officialDate": "2026-09-30",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 112,
+        "name": "Chicago Cubs"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 2
+       },
+       "score": 1,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 135,
+        "name": "San Diego Padres"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 0
+       },
+       "score": 4,
+       "isWinner": true
+      }
+     },
+     "description": "NL Wild Card 'B' Game 2",
+     "seriesDescription": "NL Wild Card Series",
+     "gamesInSeries": 3,
+     "seriesGameNumber": 2
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "F_3",
+    "gameType": "F"
+   },
+   "games": [
+    {
+     "gamePk": 849845,
+     "gameType": "F",
+     "officialDate": "2026-09-29",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 143,
+        "name": "Philadelphia Phillies"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 144,
+        "name": "Atlanta Braves"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 5,
+       "isWinner": true
+      }
+     },
+     "description": "NL Wild Card 'A' Game 1",
+     "seriesDescription": "NL Wild Card Series",
+     "gamesInSeries": 3,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849841,
+     "gameType": "F",
+     "officialDate": "2026-09-30",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 143,
+        "name": "Philadelphia Phillies"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 1
+       },
+       "score": 4,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 144,
+        "name": "Atlanta Braves"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": false
+      }
+     },
+     "description": "NL Wild Card 'A' Game 2",
+     "seriesDescription": "NL Wild Card Series",
+     "gamesInSeries": 3,
+     "seriesGameNumber": 2
+    },
+    {
+     "gamePk": 849844,
+     "gameType": "F",
+     "officialDate": "2026-10-01",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 143,
+        "name": "Philadelphia Phillies"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 2
+       },
+       "score": 2,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 144,
+        "name": "Atlanta Braves"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 1
+       },
+       "score": 6,
+       "isWinner": true
+      }
+     },
+     "description": "NL Wild Card 'A' Game 3",
+     "seriesDescription": "NL Wild Card Series",
+     "gamesInSeries": 3,
+     "seriesGameNumber": 3
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "D_2",
+    "gameType": "D"
+   },
+   "games": [
+    {
+     "gamePk": 849829,
+     "gameType": "D",
+     "officialDate": "2026-10-03",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 145,
+        "name": "Chicago White Sox"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 3,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 0,
+       "isWinner": false
+      }
+     },
+     "description": "ALDS 'B' Game 1",
+     "seriesDescription": "AL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849834,
+     "gameType": "D",
+     "officialDate": "2026-10-05",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 145,
+        "name": "Chicago White Sox"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 0
+       },
+       "score": 4,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 2
+       },
+       "score": 3,
+       "isWinner": false
+      }
+     },
+     "description": "ALDS 'B' Game 2",
+     "seriesDescription": "AL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 2
+    },
+    {
+     "gamePk": 849833,
+     "gameType": "D",
+     "officialDate": "2026-10-07",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 2
+       },
+       "score": 9,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 145,
+        "name": "Chicago White Sox"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": false
+      }
+     },
+     "description": "ALDS 'B' Game 3",
+     "seriesDescription": "AL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 3
+    },
+    {
+     "gamePk": 849832,
+     "gameType": "D",
+     "officialDate": "2026-10-08",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 2
+       },
+       "score": 9,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 145,
+        "name": "Chicago White Sox"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 2
+       },
+       "score": 5,
+       "isWinner": false
+      }
+     },
+     "description": "ALDS 'B' Game 4",
+     "seriesDescription": "AL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 4
+    },
+    {
+     "gamePk": 849831,
+     "gameType": "D",
+     "officialDate": "2026-10-10",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 145,
+        "name": "Chicago White Sox"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 3
+       },
+       "score": 0,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 3,
+        "losses": 2
+       },
+       "score": 2,
+       "isWinner": true
+      }
+     },
+     "description": "ALDS 'B' Game 5",
+     "seriesDescription": "AL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 5
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "D_1",
+    "gameType": "D"
+   },
+   "games": [
+    {
+     "gamePk": 849835,
+     "gameType": "D",
+     "officialDate": "2026-10-03",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 147,
+        "name": "New York Yankees"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 0,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 1,
+       "isWinner": true
+      }
+     },
+     "description": "ALDS 'A' Game 1",
+     "seriesDescription": "AL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849839,
+     "gameType": "D",
+     "officialDate": "2026-10-05",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 147,
+        "name": "New York Yankees"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 2
+       },
+       "score": 2,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 0
+       },
+       "score": 5,
+       "isWinner": true
+      }
+     },
+     "description": "ALDS 'A' Game 2",
+     "seriesDescription": "AL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 2
+    },
+    {
+     "gamePk": 849838,
+     "gameType": "D",
+     "officialDate": "2026-10-07",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 3,
+        "losses": 0
+       },
+       "score": 4,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 147,
+        "name": "New York Yankees"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 3
+       },
+       "score": 3,
+       "isWinner": false
+      }
+     },
+     "description": "ALDS 'A' Game 3",
+     "seriesDescription": "AL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 3
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "D_4",
+    "gameType": "D"
+   },
+   "games": [
+    {
+     "gamePk": 849828,
+     "gameType": "D",
+     "officialDate": "2026-10-03",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 144,
+        "name": "Atlanta Braves"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 5,
+       "isWinner": true
+      }
+     },
+     "description": "NLDS 'B' Game 1",
+     "seriesDescription": "NL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849823,
+     "gameType": "D",
+     "officialDate": "2026-10-04",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 144,
+        "name": "Atlanta Braves"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 1
+       },
+       "score": 2,
+       "isWinner": false
+      }
+     },
+     "description": "NLDS 'B' Game 2",
+     "seriesDescription": "NL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 2
+    },
+    {
+     "gamePk": 849819,
+     "gameType": "D",
+     "officialDate": "2026-10-06",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 144,
+        "name": "Atlanta Braves"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 2
+       },
+       "score": 1,
+       "isWinner": false
+      }
+     },
+     "description": "NLDS 'B' Game 3",
+     "seriesDescription": "NL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 3
+    },
+    {
+     "gamePk": 849822,
+     "gameType": "D",
+     "officialDate": "2026-10-07",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+       },
+       "leagueRecord": {
+        "wins": 3,
+        "losses": 1
+       },
+       "score": 4,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 144,
+        "name": "Atlanta Braves"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 3
+       },
+       "score": 1,
+       "isWinner": false
+      }
+     },
+     "description": "NLDS 'B' Game 4",
+     "seriesDescription": "NL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 4
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "D_3",
+    "gameType": "D"
+   },
+   "games": [
+    {
+     "gamePk": 849830,
+     "gameType": "D",
+     "officialDate": "2026-10-03",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 135,
+        "name": "San Diego Padres"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 2,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 3,
+       "isWinner": true
+      }
+     },
+     "description": "NLDS 'A' Game 1",
+     "seriesDescription": "NL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849825,
+     "gameType": "D",
+     "officialDate": "2026-10-04",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 135,
+        "name": "San Diego Padres"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 2
+       },
+       "score": 3,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 0
+       },
+       "score": 4,
+       "isWinner": true
+      }
+     },
+     "description": "NLDS 'A' Game 2",
+     "seriesDescription": "NL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 2
+    },
+    {
+     "gamePk": 849826,
+     "gameType": "D",
+     "officialDate": "2026-10-06",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 135,
+        "name": "San Diego Padres"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 2
+       },
+       "score": 4,
+       "isWinner": true
+      }
+     },
+     "description": "NLDS 'A' Game 3",
+     "seriesDescription": "NL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 3
+    },
+    {
+     "gamePk": 849827,
+     "gameType": "D",
+     "officialDate": "2026-10-07",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 3,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 135,
+        "name": "San Diego Padres"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 3
+       },
+       "score": 1,
+       "isWinner": false
+      }
+     },
+     "description": "NLDS 'A' Game 4 ",
+     "seriesDescription": "NL Division Series",
+     "gamesInSeries": 5,
+     "seriesGameNumber": 4
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "L_2",
+    "gameType": "L"
+   },
+   "games": [
+    {
+     "gamePk": 849809,
+     "gameType": "L",
+     "officialDate": "2026-10-11",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 1,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 2,
+       "isWinner": true
+      }
+     },
+     "description": "NLCS Game 1",
+     "seriesDescription": "NL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849812,
+     "gameType": "L",
+     "officialDate": "2026-10-12",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 2
+       },
+       "score": 4,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 0
+       },
+       "score": 7,
+       "isWinner": true
+      }
+     },
+     "description": "NLCS Game 2",
+     "seriesDescription": "NL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 2
+    },
+    {
+     "gamePk": 849811,
+     "gameType": "L",
+     "officialDate": "2026-10-14",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 3,
+        "losses": 0
+       },
+       "score": 6,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 3
+       },
+       "score": 2,
+       "isWinner": false
+      }
+     },
+     "description": "NLCS Game 3",
+     "seriesDescription": "NL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 3
+    },
+    {
+     "gamePk": 849810,
+     "gameType": "L",
+     "officialDate": "2026-10-15",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 158,
+        "name": "Milwaukee Brewers"
+       },
+       "leagueRecord": {
+        "wins": 4,
+        "losses": 0
+       },
+       "score": 6,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 4
+       },
+       "score": 4,
+       "isWinner": false
+      }
+     },
+     "description": "NLCS Game 4",
+     "seriesDescription": "NL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 4
+    }
+   ]
+  },
+  {
+   "series": {
+    "id": "L_1",
+    "gameType": "L"
+   },
+   "games": [
+    {
+     "gamePk": 849820,
+     "gameType": "L",
+     "officialDate": "2026-10-12",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 0
+       },
+       "score": 7,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 0,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": false
+      }
+     },
+     "description": "ALCS Game 1",
+     "seriesDescription": "AL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 1
+    },
+    {
+     "gamePk": 849813,
+     "gameType": "L",
+     "officialDate": "2026-10-13",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 1
+       },
+       "score": 1,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": true
+      }
+     },
+     "description": "ALCS Game 2",
+     "seriesDescription": "AL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 2
+    },
+    {
+     "gamePk": 849818,
+     "gameType": "L",
+     "officialDate": "2026-10-15",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 1,
+        "losses": 2
+       },
+       "score": 2,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 1
+       },
+       "score": 3,
+       "isWinner": true
+      }
+     },
+     "description": "ALCS Game 3",
+     "seriesDescription": "AL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 3
+    },
+    {
+     "gamePk": 849817,
+     "gameType": "L",
+     "officialDate": "2026-10-18",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "D",
+      "detailedState": "Postponed"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 3,
+        "losses": 2
+       }
+      },
+      "home": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 3
+       }
+      }
+     },
+     "description": "ALCS Game 4",
+     "seriesDescription": "AL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 4
+    },
+    {
+     "gamePk": 849816,
+     "gameType": "L",
+     "officialDate": "2026-10-17",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 2
+       },
+       "score": 7,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 2
+       },
+       "score": 3,
+       "isWinner": false
+      }
+     },
+     "description": "ALCS Game 4",
+     "seriesDescription": "AL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 4
+    },
+    {
+     "gamePk": 849817,
+     "gameType": "L",
+     "officialDate": "2026-10-18",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 3,
+        "losses": 2
+       },
+       "score": 3,
+       "isWinner": true
+      },
+      "home": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 3
+       },
+       "score": 1,
+       "isWinner": false
+      }
+     },
+     "description": "ALCS Game 5, Makeup of 10/16",
+     "seriesDescription": "AL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 5
+    },
+    {
+     "gamePk": 849815,
+     "gameType": "L",
+     "officialDate": "2026-10-19",
+     "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final"
+     },
+     "teams": {
+      "away": {
+       "team": {
+        "id": 114,
+        "name": "Cleveland Guardians"
+       },
+       "leagueRecord": {
+        "wins": 2,
+        "losses": 4
+       },
+       "score": 3,
+       "isWinner": false
+      },
+      "home": {
+       "team": {
+        "id": 139,
+        "name": "Tampa Bay Rays"
+       },
+       "leagueRecord": {
+        "wins": 4,
+        "losses": 2
+       },
+       "score": 7,
+       "isWinner": true
+      }
+     },
+     "description": "ALCS Game 6",
+     "seriesDescription": "AL Championship Series",
+     "gamesInSeries": 7,
+     "seriesGameNumber": 6
+    }
+   ]
+  }
+ ]
+}

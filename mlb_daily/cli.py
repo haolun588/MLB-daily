@@ -6,7 +6,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 
-from . import games as games_mod, index_page, leaders, net, notify, report, rosters, storage, timeutil, weekly
+from . import games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, storage, timeutil, weekly
 from .config import MAX_WAIT_CHECKS, SITE_BASE_URL, WAIT_SLEEP_SECONDS
 
 
@@ -73,6 +73,26 @@ def _run_leaders(args):
         print("Note: 找不到 reports/metadata.json，未重新產生首頁（首頁將於下次每日產生時帶入小卡）。")
 
 
+def _run_playoffs(args):
+    """--playoffs：抓取季後賽系列賽，寫 data/playoffs.json 與 playoffs.html，再重新產生首頁；抓取失敗回傳非 0。"""
+    today = _taipei_today(args.date)
+    as_of = today - timedelta(days=1)  # 資料截至「昨日」，與每日戰報預設日期一致
+    try:
+        ok = playoffs.generate_playoffs(as_of)
+    except OSError as e:
+        print(f"Error: 寫入季後賽對戰樹失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+        sys.exit(1)
+    if not ok:
+        sys.exit(1)
+    if os.path.exists("reports/metadata.json"):  # 讓首頁小卡立即更新；失敗不影響對戰樹
+        try:
+            index_page.refresh_index_page()
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - metadata 損壞會 sys.exit；對戰樹已產生，不應以非 0 結束
+            print(f"Warning: 對戰樹產生後重新產生首頁失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+    else:
+        print("Note: 找不到 reports/metadata.json，未重新產生首頁（首頁將於下次每日產生時帶入小卡）。")
+
+
 def main():
     parser = argparse.ArgumentParser(description="MLB Daily Report Generator Script")
     parser.add_argument("--date", type=str, help="Target report date in YYYY-MM-DD format (defaults to yesterday in Taipei Time)")
@@ -89,6 +109,8 @@ def main():
     parser.add_argument("--notify-weekly", action="store_true", help="Send the weekly summary Discord message from reports/weekly/index.json (latest week, or --week)")
 
     parser.add_argument("--leaders", action="store_true", help="Fetch the stat leaderboards and write data/leaders.json and leaders.html, then refresh the homepage (no report, no notification)")
+
+    parser.add_argument("--playoffs", action="store_true", help="Fetch the postseason bracket and write data/playoffs.json and playoffs.html, then refresh the homepage (no report, no notification)")
 
     args = parser.parse_args()
     if args.notify_only and (args.check_wait or args.no_notify):
@@ -113,6 +135,9 @@ def main():
     if args.leaders and (args.rosters or args.notify_only or args.check_wait or args.no_notify or weekly_mode or args.week or args.force):
         print("Error: --leaders cannot be combined with other modes or options (only --date is allowed)", file=sys.stderr)
         sys.exit(1)
+    if args.playoffs and (args.leaders or args.rosters or args.notify_only or args.check_wait or args.no_notify or weekly_mode or args.week or args.force):
+        print("Error: --playoffs cannot be combined with other modes or options (only --date is allowed)", file=sys.stderr)
+        sys.exit(1)
     if args.max_wait_checks < 1:
         print("Error: --max-wait-checks must be >= 1", file=sys.stderr)
         sys.exit(1)
@@ -120,6 +145,11 @@ def main():
     # --leaders：數據排行榜（不碰每日戰報流程與 metadata）
     if args.leaders:
         _run_leaders(args)
+        return
+
+    # --playoffs：季後賽對戰樹（不碰每日戰報流程與 metadata）
+    if args.playoffs:
+        _run_playoffs(args)
         return
 
     # --weekly / --notify-weekly：休賽季每週總整理（不碰每日戰報流程與 metadata）

@@ -14,6 +14,8 @@
 - **Gemini 翻譯**：新聞標題、單場賽後新聞（Headline／Blurb）與人事異動描述以 Gemini 翻成繁體中文；球員姓名維持英文原名，球隊名稱沿用程式內建譯名。沒有金鑰、額度用盡或回應格式錯誤時，自動改用英文原文，不會讓整次執行失敗。
 - **球隊名單頁**：[teams.html](teams.html) 點選隊徽顯示該隊名單（賽季中 26 人現役、休賽季 40 人），分 SP、RP、野手三張表並附本季數據，可排序，網址可帶球隊縮寫（如 `teams.html#NYY`）。名單資料由每日 workflow 更新。
 - **休賽季每週總整理**：休賽季每週一（台北時間）彙整上一個 ISO 週的人事異動與新聞，產出 `reports/weekly/YYYY-Www.html`：本週重點（交易、大聯盟簽約、延長合約）、分類整理、各隊動態（標出本週最忙球隊）、新聞精選 10 則、台日韓球員標註、下週日程（手動維護 `settings/offseason_calendar.json`）。資料來自每日戰報存下的 `data/daily/*.json`，不重抓 API、不重新翻譯；不足 7 天時照產並標示涵蓋天數。首頁休賽季區塊、歷史存檔頁與 Discord 都附連結。
+- **數據排行榜**：[leaders.html](leaders.html) 列出打者與投手各 6 項前 10 名（`python fetch_mlb.py --leaders`），首頁側欄附小卡。
+- **季後賽對戰樹**：[playoffs.html](playoffs.html) 顯示整屆季後賽對戰樹（外卡、分區、聯盟冠軍賽、世界大賽），非季後賽期間顯示上一屆結果；桌面為對稱樹狀圖、手機為依輪次堆疊；首頁側欄附小卡（`python fetch_mlb.py --playoffs`）。
 - **Discord 通知**：頁面部署且 Pages 可開啟後才發送；休賽季快報若無新聞與人事異動則不發。週報另發一則獨立訊息。
 
 ---
@@ -73,6 +75,9 @@ python fetch_mlb.py --notify-only --date 2026-07-20
 
 # 抓取 30 隊名單與本季數據，寫入 data/teams/（不產生戰報、不發通知）
 python fetch_mlb.py --rosters
+
+# 季後賽對戰樹：寫入 data/playoffs.json 與 playoffs.html
+python fetch_mlb.py --playoffs
 
 # 休賽季每週總整理：週一且休賽季才產生上一週；--week 指定週次、--force 略過週一與休賽季判斷
 python fetch_mlb.py --weekly
