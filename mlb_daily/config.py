@@ -191,7 +191,7 @@ EARLY_MORNING_HOUR = 6  # 台北時間早於此時視為「凌晨」
 DATE_KEY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
-# ---------------------------------------------------------------- 球隊名單（--rosters）
+# ---------------------------------------------------------------- 球隊專頁（--rosters）
 ROSTER_DIR = os.path.join("data", "teams")
 ROSTER_FETCH_INTERVAL = 0.5
 

@@ -1,4 +1,4 @@
-"""球隊名單 JSON 的抓取與整理。"""
+"""球隊專頁 JSON 的抓取與整理。"""
 
 import os
 import sys

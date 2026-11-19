@@ -130,7 +130,7 @@ mlb_daily/                主程式套件（只用標準庫）
   games.py                完賽檢查、焦點球員、比賽卡片、摘要句
   standings.py            戰績側欄
   previews.py             賽事預告、先發投手、開季倒數
-  rosters.py              球隊名單
+  rosters.py              球隊專頁
   team_page.py            球隊專頁附加資料（摘要、近期動態、數據王）
   report.py               戰報與休賽季快報組裝（並寫每日資料快照）
   weekly.py               休賽季每週總整理

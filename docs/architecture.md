@@ -19,7 +19,7 @@ templates/playoffs.html   季後賽對戰樹頁骨架
 assets/style.css          共用樣式表
 assets/archive.js         歷史存檔頁腳本
 assets/teams.js           球隊專頁腳本（球隊摘要、近期動態、隊內數據王、名單）
-teams.html                球隊專頁（導覽列文字仍為「球隊名單」；執行時以 JS 讀取 data/teams/*.json）
+teams.html                球隊專頁（執行時以 JS 讀取 data/teams/*.json）
 data/teams/               名單 JSON（僅存在於 gh-pages，main 以 .gitignore 忽略）
 data/leaders.json        數據排行榜資料（僅存在於 gh-pages）
 data/playoffs.json       季後賽對戰樹資料（僅存在於 gh-pages）
@@ -64,7 +64,7 @@ graph TD
 1. **觸發**：cron `17 4 * * *`（約台北 12:17）或 `workflow_dispatch`（輸入 `date`、`notify`）。`concurrency` 群組 `daily-report`（不取消進行中），job `timeout-minutes: 330`。
 2. **測試**：`python -m unittest discover -s tests -v`。
 3. **產生**：`python fetch_mlb.py --check-wait --no-notify --date <日期>`，環境變數帶入 `GEMINI_API_KEY`。
-4. **更新名單**：`python fetch_mlb.py --rosters`（`continue-on-error: true`），見「球隊名單」一節。
+4. **更新名單**：`python fetch_mlb.py --rosters`（`continue-on-error: true`），見「球隊專頁」一節。
 5. **歷史只在 gh-pages**：`index.html` 與 `reports/metadata.json` 不進 main；workflow 在產生報表前先從 gh-pages 取回 `metadata.json`（取不到或非 JSON 物件即失敗），產生後隨 gh-pages 部署。
 6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,mlb_daily,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
 7. **等待 Pages**：每 15 秒檢查當日戰報網址，最多 20 次（約 5 分鐘），逾時只警告、仍繼續下一步。
@@ -99,7 +99,7 @@ graph TD
 | `leaders` | 數據排行榜（與 `standings` 同層，賽季與是否賽季中由 `cli` 傳入）：`fetch_leaders`（5 個請求）、`generate_leaders`（寫 `data/leaders.json` 與根目錄 `leaders.html`，12 項全失敗不覆寫）、`render_leaders_page`（`templates/leaders.html`）、`render_leaders_card`（首頁側欄小卡，`index_page` 讀 `storage.load_leaders` 後渲染） |
 | `playoffs` | 季後賽對戰樹（與 `leaders` 同層，只依賴 `config`、`timeutil`、`net`、`htmlutil`、`storage`）：`fetch_postseason`（單一請求）、`parse_postseason`（純函式，含 `feedsInto`／`byeIds`）、`generate_playoffs`（寫 `data/playoffs.json` 與根目錄 `playoffs.html`，抓取失敗不覆寫）、`render_playoffs_page`（`templates/playoffs.html`）、`render_playoffs_card`（首頁側欄小卡，`index_page` 讀 `storage.load_playoffs` 後渲染） |
 | `previews` | 賽事預告、先發投手、開季倒數 |
-| `rosters` | 球隊名單（`--rosters`）；`fetch_rosters(today, extras_factory)` 可把球隊專頁附加資料併入各隊 JSON |
+| `rosters` | 球隊專頁（`--rosters`）；`fetch_rosters(today, extras_factory)` 可把球隊專頁附加資料併入各隊 JSON |
 | `team_page` | 球隊專頁附加資料：`compute_leaders`（隊內數據王）、`build_recent`（近 30 天動態）、`postseason_result`、`build_record`、`tracked_names`、`make_extras`（`cli` 的 `--rosters` 傳給 `fetch_rosters`） |
 | `report` | `render_report`（賽季戰報與休賽季快報共用）、`generate_report`、`generate_offseason_report`；兩條流程結束時各寫一份每日快照（`build_daily_snapshot`） |
 | `weekly` | 休賽季每週總整理：週次計算、讀每日快照、分類、各隊動態、新聞精選、下週日程、渲染 `templates/weekly.html`、`generate_weekly_report` |
@@ -230,7 +230,7 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 
 ---
 
-## 球隊名單
+## 球隊專頁
 
 `python fetch_mlb.py --rosters`（可搭配 `--date` 指定「今天」，不可與 `--notify-only`、`--check-wait` 併用）：不產生戰報、不動 metadata、不發通知。
 

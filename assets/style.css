@@ -878,7 +878,7 @@ img { max-width: 100%; height: auto; }
   color: var(--text-2);
 }
 
-/* ---------- 全站導覽列（球隊名單／歷史存檔） ---------- */
+/* ---------- 全站導覽列（球隊專頁／歷史存檔） ---------- */
 .nav-links { display: flex; align-items: center; }
 .nav-links a { padding: 0 14px; }
 .nav-links a:last-child { padding-right: 0; }
@@ -888,7 +888,7 @@ img { max-width: 100%; height: auto; }
 .nav-row .nav-links a:hover { border-bottom-color: var(--text); }
 .nav-row .nav-links a[aria-current="page"] { color: var(--text); font-weight: 700; border-bottom-color: var(--accent); }
 
-/* 首頁：球隊名單入口卡 */
+/* 首頁：球隊專頁入口卡 */
 .teams-entry {
   display: flex;
   align-items: center;
@@ -908,7 +908,7 @@ img { max-width: 100%; height: auto; }
 .teams-entry .go { flex: none; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
 
 /* ==========================================================================
-   球隊名單頁（teams.html）
+   球隊專頁頁（teams.html）
    ========================================================================== */
 
 /* ---------- 隊徽選單 ---------- */

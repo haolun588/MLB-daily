@@ -616,7 +616,7 @@
     var retry = el("button", { type: "button", "class": "btn" }, "重試");
     retry.addEventListener("click", boot);
     var eb = el("div", { "class": "state-box is-error", role: "alert" });
-    eb.appendChild(el("h2", null, "無法讀取球隊名單"));
+    eb.appendChild(el("h2", null, "無法讀取球隊專頁"));
     eb.appendChild(el("p", null, "請檢查網路連線後再試一次。"));
     eb.appendChild(el("p", { "class": "detail" }, String(err && err.message ? err.message : err)));
     eb.appendChild(retry);

@@ -497,7 +497,7 @@ class RenderPageTests(PlayoffsTestBase):
         m = re.search(r'<nav class="nav-row" aria-label="頁面導覽">(.*?)</nav>', page, re.S).group(1)
         links = re.findall(r'<a([^>]*?)href="([^"]+)"([^>]*)>([^<]*)</a>', m)
         self.assertEqual([(h, t) for _a, h, _b, t in links],
-                         [("index.html", "← 首頁"), ("teams.html", "球隊名單"), ("leaders.html", "數據排行"),
+                         [("index.html", "← 首頁"), ("teams.html", "球隊專頁"), ("leaders.html", "數據排行"),
                           ("playoffs.html", "季後賽"), ("archive.html", "歷史存檔")])
         self.assertEqual([t for a, _h, b, t in links if "aria-current" in a + b], ["季後賽"])
         self.assertIn('href="assets/style.css"', page)

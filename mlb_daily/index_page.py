@@ -178,7 +178,7 @@ def render_latest_weekly_link(entry=None, today=None):
 
 
 TEAMS_ENTRY_HTML = """  <a class="teams-entry" href="teams.html">
-    <span><strong>球隊名單</strong><span class="sub-txt">30 隊球員名單與本季數據，依守備位置分組</span></span>
+    <span><strong>球隊專頁</strong><span class="sub-txt">30 隊戰績、名單、近期動態與隊內數據王</span></span>
     <span class="go" aria-hidden="true">30 隊名單 →</span>
   </a>"""
 
@@ -194,7 +194,7 @@ def render_spotlight_slot(metadata):
 
 
 def render_index(metadata, extras=None):
-    """首頁：最新一期大卡 + 左欄補充區塊（extras）+ 球隊名單入口 + 近期 6 期（不含最新一期）+ 戰績側邊欄。
+    """首頁：最新一期大卡 + 左欄補充區塊（extras）+ 球隊專頁入口 + 近期 6 期（不含最新一期）+ 戰績側邊欄。
     每次由 templates/index.html 全量重新產生。extras 為 build_index_extras 的結果（None 時不輸出側欄與補充區塊）。"""
     extras = extras or {}
     side_slots = {

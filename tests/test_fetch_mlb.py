@@ -2340,7 +2340,7 @@ class SummarySentenceTests(MlbTestBase):
             self.assertNotIn("<b>", fetch_mlb.render_postponed_card(view))
 
 
-# ---------------------------------------------------------------- 球隊名單（模組 R2）
+# ---------------------------------------------------------------- 球隊專頁（模組 R2）
 def _split(stat, team=None):
     sp = {"stat": stat}
     if team:
@@ -2768,7 +2768,7 @@ class TeamAbbrTests(MlbTestBase):
 
 
 class SiteNavTests(MlbTestBase):
-    """R3：全站導覽列與球隊名單頁（模組 R3）。"""
+    """R3：全站導覽列與球隊專頁頁（模組 R3）。"""
 
     def nav_of(self, html):
         m = re.search(r'<nav class="nav-row" aria-label="頁面導覽">(.*?)</nav>', html, re.S)
@@ -2797,7 +2797,7 @@ class SiteNavTests(MlbTestBase):
         self.make_site_files()
         _, html = self.generate("schedule_normal")
         report_dir = self.tmp / "reports" / "2026" / "11"
-        links = self.assert_nav_resolves(html, report_dir, ["← 首頁", "球隊名單", "數據排行", "季後賽", "歷史存檔"])
+        links = self.assert_nav_resolves(html, report_dir, ["← 首頁", "球隊專頁", "數據排行", "季後賽", "歷史存檔"])
         self.assertEqual([h for h, _, _ in links], ["../../../index.html", "../../../teams.html", "../../../leaders.html", "../../../playoffs.html", "../../../archive.html"])
         self.assertFalse(any(cur for _, _, cur in links))
 
@@ -2806,13 +2806,13 @@ class SiteNavTests(MlbTestBase):
         self.run_main("schedule_empty")
         html = self.read_report()
         report_dir = self.tmp / "reports" / "2026" / "11"
-        self.assert_nav_resolves(html, report_dir, ["← 首頁", "球隊名單", "數據排行", "季後賽", "歷史存檔"])
+        self.assert_nav_resolves(html, report_dir, ["← 首頁", "球隊專頁", "數據排行", "季後賽", "歷史存檔"])
 
     def test_index_nav_and_teams_entry(self):
         self.make_site_files()
         self.run_main("schedule_normal")
         html = (self.tmp / "index.html").read_text(encoding="utf-8")
-        links = self.assert_nav_resolves(html, self.tmp, ["球隊名單", "數據排行", "季後賽", "歷史存檔"])
+        links = self.assert_nav_resolves(html, self.tmp, ["球隊專頁", "數據排行", "季後賽", "歷史存檔"])
         self.assertEqual([h for h, _, _ in links], ["teams.html", "leaders.html", "playoffs.html", "archive.html"])
         # 首頁入口卡：連到 teams.html，且位於最新一期卡片之後、近期區塊之前
         entry = re.search(r'<a class="teams-entry" href="([^"]+)">.*?30 隊名單', html, re.S)
@@ -2828,7 +2828,7 @@ class SiteNavTests(MlbTestBase):
     def test_static_pages_nav_and_current(self):
         for name, current, hrefs in (
             ("archive.html", "歷史存檔", ["index.html", "teams.html", "leaders.html", "playoffs.html", "archive.html"]),
-            ("teams.html", "球隊名單", ["index.html", "teams.html", "leaders.html", "playoffs.html", "archive.html"]),
+            ("teams.html", "球隊專頁", ["index.html", "teams.html", "leaders.html", "playoffs.html", "archive.html"]),
         ):
             html = (REPO_ROOT / name).read_text(encoding="utf-8")
             links = self.nav_links(html)
