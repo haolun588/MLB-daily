@@ -1058,10 +1058,6 @@ img { max-width: 100%; height: auto; }
 .roster .c-pos { left: var(--numw); width: var(--posw); min-width: var(--posw); max-width: var(--posw); text-align: left; }
 .roster .c-pos ~ .c-name { left: calc(var(--numw) + var(--posw)); }
 
-/* 投打習慣（B/T）：窄欄、置中、不換行 */
-.roster .c-bt { width: 3rem; min-width: 3rem; padding-left: 6px; padding-right: 6px; text-align: center; white-space: nowrap; font: 500 0.8125rem var(--font-mono); color: var(--text-2); }
-.roster thead .c-bt { font-family: inherit; font-weight: 600; }
-
 /* 守位小標籤：等寬、細框、不用彩色 */
 .pos {
   display: inline-block;
