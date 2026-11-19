@@ -63,6 +63,19 @@ class RecentMovesTests(unittest.TestCase):
         moves = team_page.build_recent(BOS, snaps)["moves"]
         self.assertEqual([m["player"] for m in moves], ["B", "A"])
 
+    def test_player_id_from_person_id_persons_or_none(self):
+        a = tx("SFA", "Red Sox signed free agent RHP A.", to_id=BOS, person="A")
+        a["person_id"] = 123
+        b = tx("SFA", "Red Sox signed free agent RHP B.", to_id=BOS, person="B")
+        b["person_id"] = None
+        b["persons"] = [{"id": 456, "name": "B"}]
+        c = tx("SFA", "Red Sox signed free agent RHP C.", to_id=BOS, person="C")
+        c["person_id"] = None
+        c["persons"] = []
+        snaps = {"2026-11-10": snap("2026-11-10", [a, b, c])}
+        got = {m["player"]: m["playerId"] for m in team_page.build_recent(BOS, snaps)["moves"]}
+        self.assertEqual(got, {"A": 123, "B": 456, "C": None})
+
     def test_snapshot_days_counts_loaded_files(self):
         self.assertEqual(team_page.build_recent(BOS, {})["snapshotDays"], 0)
         self.assertEqual(team_page.build_recent(BOS, {"2026-11-10": snap("2026-11-10")})["snapshotDays"], 1)
@@ -308,9 +321,22 @@ class PostseasonResultTests(unittest.TestCase):
 class RecordAndTrackedTests(unittest.TestCase):
     def test_build_record(self):
         st = {"divisions": [{"teams": [{"id": NYY, "wins": 90, "losses": 72, "pct": ".556", "rank": 2, "run_diff": 55}]}]}
-        self.assertEqual(team_page.build_record(st, NYY), {"w": 90, "l": 72, "pct": 0.556, "divRank": 2, "rd": 55})
+        self.assertEqual(team_page.build_record(st, NYY), {"w": 90, "l": 72, "pct": 0.556, "divRank": 2, "rd": 55,
+                                                           "pctRank": 1, "rdRank": 1})
         self.assertIsNone(team_page.build_record(st, BOS))
         self.assertIsNone(team_page.build_record(None, NYY))
+
+    def test_league_ranks_with_ties_and_missing_values(self):
+        def t(tid, pct, rd):
+            return {"id": tid, "wins": 1, "losses": 1, "pct": pct, "rank": 1, "run_diff": rd}
+        st = {"divisions": [
+            {"teams": [t(LAD, ".600", 100), t(NYY, ".600", 50)]},
+            {"teams": [t(BOS, ".500", 50), t(SF, ".400", -10), t(WSH, "--", None)]}]}
+        lad, nyy, bos, sf, wsh = (team_page.build_record(st, i) for i in (LAD, NYY, BOS, SF, WSH))
+        self.assertEqual((lad["pctRank"], nyy["pctRank"], bos["pctRank"], sf["pctRank"]), (1, 1, 3, 4))   # 並列 1,1,3
+        self.assertEqual((lad["rdRank"], nyy["rdRank"], bos["rdRank"], sf["rdRank"]), (1, 2, 2, 4))       # 並列 1,2,2,4
+        self.assertIsNone(wsh["pctRank"])      # 無值的隊伍不排名，也不影響他隊
+        self.assertIsNone(wsh["rdRank"])
 
     def test_tracked_names_match_roster_ids_in_watchlist_order(self):
         wl = {1: {"name_zh": "甲"}, 2: {"name_zh": "乙"}, 3: {"name_zh": "丙"}}

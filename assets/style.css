@@ -1200,6 +1200,7 @@ img { max-width: 100%; height: auto; }
 .sum-stat dd { margin-top: 2px; font: 700 1.375rem/1.3 var(--font-mono); font-variant-numeric: tabular-nums; }
 .sum-stat dd.is-up { color: var(--teal); }
 .sum-stat dd.is-down { color: var(--accent-ink); }
+.sum-stat dd .lg-rank { margin-left: 6px; font-size: 0.75rem; font-weight: 400; color: var(--text-2); }
 
 .sum-post { margin-top: 14px; font-size: 1rem; line-height: 1.6; }
 .sum-post-label {

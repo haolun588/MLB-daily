@@ -187,17 +187,34 @@ def postseason_result(data, team_id):
 
 
 def build_record(standings, team_id):
-    """戰績摘要 {"w","l","pct","divRank","rd"}；standings 為 fetch_standings 的回傳（可為 None）。"""
+    """戰績摘要 {"w","l","pct","divRank","rd","pctRank","rdRank"}；standings 為 fetch_standings 的回傳（可為 None）。
+    pctRank／rdRank 為全大聯盟排名（勝率高到低、得失分差大到小；並列採標準競賽排名 1,2,2,4；該隊無值則 None）。"""
     if not isinstance(standings, dict):
         return None
-    for div in standings.get("divisions") or []:
-        for t in div.get("teams") or []:
-            if t.get("id") == team_id:
-                try:
-                    pct = float(t["pct"])
-                except (TypeError, ValueError, KeyError):
-                    pct = None
-                return {"w": t["wins"], "l": t["losses"], "pct": pct, "divRank": t.get("rank"), "rd": t.get("run_diff")}
+
+    def num(v):
+        if isinstance(v, bool):
+            return None
+        try:
+            f = float(v)
+        except (TypeError, ValueError):
+            return None
+        return f if f == f and f not in (float("inf"), float("-inf")) else None
+
+    def rank_of(value, values):
+        if value is None:
+            return None
+        return 1 + sum(1 for v in values if v > value)
+
+    teams = [t for div in standings.get("divisions") or [] for t in div.get("teams") or []]
+    pcts = [p for p in (num(t.get("pct")) for t in teams) if p is not None]
+    rds = [r for r in (num(t.get("run_diff")) for t in teams) if r is not None]
+    for t in teams:
+        if t.get("id") == team_id:
+            pct = num(t.get("pct"))
+            rd = num(t.get("run_diff"))
+            return {"w": t["wins"], "l": t["losses"], "pct": pct, "divRank": t.get("rank"), "rd": t.get("run_diff"),
+                    "pctRank": rank_of(pct, pcts), "rdRank": rank_of(rd, rds)}
     return None
 
 
@@ -259,6 +276,15 @@ def _tx_player(tx):
     return str(tx.get("person_name") or (names[0] if names else "") or "")
 
 
+def _tx_player_id(tx):
+    """球員 id（整數或 None）：優先 person_id，其次 persons[0].id。"""
+    persons = [p for p in (tx.get("persons") or []) if isinstance(p, dict)]
+    for cand in (tx.get("person_id"), persons[0].get("id") if persons else None):
+        if isinstance(cand, int) and not isinstance(cand, bool):
+            return cand
+    return None
+
+
 def _news_date(news, fallback):
     published = str(news.get("published") or "")
     if re.match(r"^\d{4}-\d{2}-\d{2}", published):
@@ -296,6 +322,7 @@ def build_recent(team_id, snapshots, news_limit=TEAM_PAGE_NEWS_LIMIT, start=None
                 "date": it["date"],
                 "dir": "in" if direction == "join" else "out",
                 "player": _tx_player(tx),
+                "playerId": _tx_player_id(tx),
                 "type": weekly.CATEGORY_LABELS.get(it["category"], ""),
                 "note": str(tx.get("description_zh") or tx.get("description") or ""),
             })
