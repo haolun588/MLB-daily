@@ -1,4 +1,4 @@
-/* 球隊名單頁：讀取 data/teams/index.json 與 data/teams/{id}.json，渲染、排序、hash 導覽。
+/* 球隊專頁：讀取 data/teams/index.json 與 data/teams/{id}.json，渲染球隊摘要、近期動態、隊內數據王與名單，排序、hash 導覽。
    所有資料文字一律用 textContent / setAttribute 寫入 DOM，不以字串拼接 HTML。 */
 (function () {
   "use strict";
@@ -63,7 +63,7 @@
 
   /* ---------- 狀態 ---------- */
   // index：index.json；cache[隊伍 id]：已載入的隊伍檔；sorts[表格鍵] = {key, dir}
-  var state = { index: null, cache: {}, current: null, sorts: {}, listening: false };
+  var state = { index: null, cache: {}, current: null, sorts: {}, expanded: {}, listening: false };
   function $(id) { return document.getElementById(id); }
 
   function el(tag, attrs, text) {
@@ -218,6 +218,7 @@
       } else {
         nameTd.appendChild(document.createTextNode(r.name));
       }
+      if (r.hand) nameTd.appendChild(el("small", { "class": "hand hand-" + r.hand.code, title: r.hand.title }, r.hand.code));
       if (r.twp) nameTd.appendChild(el("small", { "class": "tag tag-twp" }, "二刀流"));
       row.appendChild(nameTd);
       cols.forEach(function (c) {
@@ -240,8 +241,19 @@
     return s;
   }
 
-  function row(p, stats, twp) {
-    return { id: p.id, name: String(p.name == null ? "" : p.name), number: p.number, pos: p.pos, stats: stats || null, twp: twp };
+  var HAND_TITLES = {
+    throws: { L: "投球慣用手：左投", R: "投球慣用手：右投" },
+    bats: { L: "打擊慣用手：左打", R: "打擊慣用手：右打", S: "打擊慣用手：左右開弓" }
+  };
+
+  // kind: "throws"（投手表）或 "bats"（野手表）；沒資料或不認得的代碼回傳 null（不顯示標籤）
+  function handOf(p, kind) {
+    var code = p[kind];
+    return typeof code === "string" && HAND_TITLES[kind][code] ? { code: code, title: HAND_TITLES[kind][code] } : null;
+  }
+
+  function row(p, stats, twp, kind) {
+    return { id: p.id, name: String(p.name == null ? "" : p.name), number: p.number, pos: p.pos, stats: stats || null, twp: twp, hand: handOf(p, kind) };
   }
 
   /* ---------- 球隊 ---------- */
@@ -297,7 +309,16 @@
   function renderRoster(box, info, data, refocus) {
     var abbr = info.abbr;
     var players = data.players;
-    box.appendChild(titleBar(info, players.length));
+
+    // 1 球隊摘要（頁首）、2 近期動態、3 隊內數據王；缺資料的區塊降級（摘要只有隊名，其餘不顯示）
+    box.appendChild(summaryCard(info, data.summary));
+    if (data.recent) box.appendChild(recentBlock(abbr, data.recent));
+    if (data.leaders) box.appendChild(leadersBlock(data.leaders));
+
+    // 4 名單（SP／RP／野手三張表）
+    var rwrap = el("section", { "class": "block", "aria-label": "名單" });
+    rwrap.appendChild(blockHead("名單", players.length + " 人"));
+    box.appendChild(rwrap);
 
     if (info.ok === false) {     // 最近一次更新失敗：仍顯示舊檔，並標明資料時間
       var when = data.meta && data.meta.updatedAt ? formatTime(data.meta.updatedAt) : "";
@@ -311,7 +332,7 @@
       if (!list.length) return;
       var s = section(g === "SP" ? "SP 先發投手" : "RP 後援投手", list.length);
       s.appendChild(buildTable(abbr + ":" + g,
-        list.map(function (p) { return row(p, p.pitching, !!(p.hitting && p.pitching)); }),
+        list.map(function (p) { return row(p, p.pitching, !!(p.hitting && p.pitching), "throws"); }),
         g === "SP" ? SP_COLS : RP_COLS, { key: "ip", dir: "desc" }));
       box.appendChild(s);
     });
@@ -321,7 +342,7 @@
     if (bats.length) {
       var bs = section("野手", bats.length);
       bs.appendChild(buildTable(abbr + ":POS",
-        bats.map(function (p) { return row(p, p.hitting, !!(p.hitting && p.pitching)); }),
+        bats.map(function (p) { return row(p, p.hitting, !!(p.hitting && p.pitching), "bats"); }),
         HIT_COLS, { key: "_pos", dir: "asc" }, true));
       box.appendChild(bs);
     }
@@ -341,6 +362,205 @@
         }
       }
     }
+  }
+
+  /* ---------- 1 球隊摘要 ---------- */
+  function signed(n) { return n == null ? DASH : (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n); }
+
+  function mdOf(iso) {            // "2026-11-18T12:17:00+08:00" 或 "2026-11-18" -> "11/18"
+    var m = /^\d{4}-(\d\d)-(\d\d)/.exec(iso || "");
+    return m ? m[1] + "/" + m[2] : "";
+  }
+
+  function summaryCard(info, sm) {
+    var card = el("section", { "class": "team-summary" + (isDarkColor(info.color) ? " team-stripe--dark" : ""), "aria-label": "球隊摘要" });
+    if (/^#[0-9a-f]{6}$/i.test(info.color || "")) card.style.setProperty("--team", info.color);
+
+    var top = el("div", { "class": "sum-top" });
+    top.appendChild(logo(info, 56));
+    var ttl = el("div", { "class": "sum-title" });
+    ttl.appendChild(el("h2", null, info.name));
+    var divName = DIVISIONS.filter(function (d) { return d[0] === info.league && d[1] === info.division; })[0];
+    ttl.appendChild(el("p", { "class": "sum-div" }, divName ? divName[2] : ""));
+    top.appendChild(ttl);
+    var idx = state.index;
+    var asOf = mdOf(idx.updatedAt);
+    var tag = idx.rosterType === "active" ? (asOf ? "截至 " + asOf : "") : idx.season + " 賽季最終";
+    if (tag) top.appendChild(el("span", { "class": "sum-final" }, tag));
+    card.appendChild(top);
+
+    if (!sm) return card;
+    var r = sm.record;
+    if (r) {
+      var grid = el("dl", { "class": "sum-stats" });
+      [["戰績 W-L", r.w + "-" + r.l, ""],
+       ["勝率", rate3(r.pct), ""],
+       ["分區排名", r.divRank == null ? DASH : "第 " + r.divRank + " 名", ""],
+       ["得失分差", signed(r.rd), r.rd > 0 ? "up" : (r.rd < 0 ? "down" : "")]].forEach(function (x) {
+        var c = el("div", { "class": "sum-stat" });
+        c.appendChild(el("dt", null, x[0]));
+        c.appendChild(el("dd", x[2] ? { "class": "is-" + x[2] } : null, x[1]));
+        grid.appendChild(c);
+      });
+      card.appendChild(grid);
+    }
+
+    var po = sm.postseason;
+    if (po && po.text) {
+      var ps = el("p", { "class": "sum-post is-" + String(po.outcome || "").replace(/[^a-z]/g, "") });
+      ps.appendChild(el("span", { "class": "sum-post-label" }, "季後賽"));
+      ps.appendChild(document.createTextNode(po.text));
+      card.appendChild(ps);
+    }
+
+    if (Array.isArray(sm.tracked) && sm.tracked.length) {
+      var tr = el("div", { "class": "sum-tracked" });
+      tr.appendChild(el("span", { "class": "sum-tracked-label" }, "台日韓球員"));
+      sm.tracked.forEach(function (n) { tr.appendChild(el("span", { "class": "tag tag-track" }, String(n))); });
+      card.appendChild(tr);
+    }
+    return card;
+  }
+
+  /* ---------- 2 近期動態 ---------- */
+  var MOVES_VISIBLE = 8;          // 每欄先顯示的人事異動筆數，其餘以「顯示全部」展開
+
+  function blockHead(label, note) {
+    var h = el("div", { "class": "block-head" });
+    h.appendChild(el("h2", null, label));
+    if (note) h.appendChild(el("span", { "class": "count" }, note));
+    return h;
+  }
+
+  function moveList(ekey, title, moves, emptyText) {
+    var col = el("div", { "class": "move-col" });
+    col.appendChild(el("h3", null, title + "（" + moves.length + "）"));
+    if (!moves.length) {
+      col.appendChild(el("p", { "class": "empty-line" }, emptyText));
+      return col;
+    }
+    var expanded = !!state.expanded[ekey];
+    var ul = el("ul", { "class": "moves" });
+    moves.forEach(function (m, i) {
+      var li = el("li");
+      if (i >= MOVES_VISIBLE && !expanded) li.hidden = true;
+      li.appendChild(el("time", null, mdOf(m.date)));
+      var body = el("div", { "class": "move-body" });
+      var line = el("p", { "class": "move-line" });
+      line.appendChild(el("span", { "class": "move-name" }, String(m.player || "")));
+      if (m.type) line.appendChild(el("span", { "class": "tag tag-move" }, String(m.type)));
+      body.appendChild(line);
+      if (m.note) body.appendChild(el("p", { "class": "move-note" }, String(m.note)));
+      li.appendChild(body);
+      ul.appendChild(li);
+    });
+    col.appendChild(ul);
+    if (moves.length > MOVES_VISIBLE) {
+      var label = function () { return state.expanded[ekey] ? "收合" : "顯示全部（" + moves.length + "）"; };
+      var more = el("button", { type: "button", "class": "moves-more", "aria-expanded": expanded ? "true" : "false" }, label());
+      more.addEventListener("click", function () {
+        state.expanded[ekey] = !state.expanded[ekey];
+        var items = ul.querySelectorAll("li");
+        for (var i = MOVES_VISIBLE; i < items.length; i++) items[i].hidden = !state.expanded[ekey];
+        more.setAttribute("aria-expanded", state.expanded[ekey] ? "true" : "false");
+        more.textContent = label();
+      });
+      col.appendChild(more);
+    }
+    return col;
+  }
+
+  function emptyBox(title, text) {
+    var b = el("div", { "class": "empty-box", role: "status" });
+    b.appendChild(el("strong", null, title));
+    b.appendChild(el("span", null, text));
+    return b;
+  }
+
+  function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? u : null; }
+
+  function recentBlock(abbr, rc) {
+    var sec = el("section", { "class": "block", "aria-label": "近期動態" });
+    var days = typeof rc.snapshotDays === "number" ? rc.snapshotDays : 0;
+    var span = days >= 1 && days < 30 ? "近 " + days + " 天" : "近 30 天";   // 快照不足 30 天時標示實際涵蓋天數
+    sec.appendChild(blockHead("近期動態", span));
+    var noData = days === 0;      // 完全沒有每日資料：不能宣稱「沒有異動」
+
+    sec.appendChild(el("h3", { "class": "sub-head" }, "人事異動"));
+    var moves = Array.isArray(rc.moves) ? rc.moves : [];
+    if (!moves.length) {
+      sec.appendChild(noData
+        ? emptyBox("尚無近期資料", "每日資料累積中，之後會顯示近 30 天的人事異動。")
+        : emptyBox(span + "沒有人事異動", "這段期間球隊沒有交易、簽約或名單異動的紀錄。"));
+    } else {
+      var cols = el("div", { "class": "move-cols" });
+      cols.appendChild(moveList(abbr + ":in", "加入", moves.filter(function (m) { return m.dir === "in"; }), span + "沒有球員加入。"));
+      cols.appendChild(moveList(abbr + ":out", "離開", moves.filter(function (m) { return m.dir === "out"; }), span + "沒有球員離開。"));
+      sec.appendChild(cols);
+    }
+
+    sec.appendChild(el("h3", { "class": "sub-head" }, "相關新聞"));
+    var news = (Array.isArray(rc.news) ? rc.news : []).filter(function (n) { return safeUrl(n.url); });
+    if (!news.length) {
+      sec.appendChild(noData
+        ? emptyBox("尚無近期資料", "每日資料累積中，之後會顯示近 30 天的相關新聞。")
+        : emptyBox(span + "沒有相關新聞", "休賽季消息較少，有新報導時會顯示在這裡。"));
+    } else {
+      var ul = el("ul", { "class": "news team-news" });
+      news.forEach(function (n) {
+        var li = el("li");
+        li.appendChild(el("time", null, mdOf(n.date)));
+        var body = el("div");
+        body.appendChild(el("a", { "class": "title", href: safeUrl(n.url), target: "_blank", rel: "noopener" }, String(n.title || "")));
+        if (n.source) body.appendChild(el("span", { "class": "src" }, String(n.source)));
+        li.appendChild(body);
+        ul.appendChild(li);
+      });
+      sec.appendChild(ul);
+    }
+    return sec;
+  }
+
+  /* ---------- 3 隊內數據王（由 Python 預先算好，見 mlb_daily/team_page.py） ---------- */
+  var LEADER_LABELS = {
+    hitting: { avg: ["AVG 打擊率", rate3], hr: ["HR 全壘打", int], ops: ["OPS", rate3], sb: ["SB 盜壘", int], war: ["WAR", fixed(1)] },
+    pitching: { era: ["ERA 防禦率", fixed(2)], so: ["SO 三振", int], sv: ["SV 救援成功", int], whip: ["WHIP", fixed(2)], war: ["WAR", fixed(1)] }
+  };
+
+  function leadersBlock(lead) {
+    var sec = el("section", { "class": "block", "aria-label": "隊內數據王" });
+    sec.appendChild(blockHead("隊內數據王", state.index.season + " 球季"));
+    [["hitting", "打擊"], ["pitching", "投球"]].forEach(function (g) {
+      var list = Array.isArray(lead[g[0]]) ? lead[g[0]] : [];
+      if (!list.length) return;
+      sec.appendChild(el("h3", { "class": "sub-head" }, g[1]));
+      var grid = el("div", { "class": "leader-grid" });
+      list.forEach(function (it) {
+        var def = LEADER_LABELS[g[0]][it.key];
+        if (!def) return;
+        var card = el("div", { "class": "leader" });
+        card.appendChild(el("span", { "class": "leader-cat" }, def[0]));
+        if (it.value != null && it.name) {
+          card.appendChild(el("span", { "class": "leader-val" }, def[1](it.value)));
+          if (typeof it.id === "number" && isFinite(it.id) && Math.floor(it.id) === it.id) {
+            card.appendChild(el("a", { "class": "plink leader-name", href: SAVANT + it.id, target: "_blank", rel: "noopener" }, String(it.name)));
+          } else {
+            card.appendChild(el("span", { "class": "leader-name" }, String(it.name)));
+          }
+        } else {
+          card.appendChild(el("span", { "class": "leader-val is-empty" }, DASH));
+          card.appendChild(el("span", { "class": "leader-name is-empty" }, "無人達標"));
+        }
+        grid.appendChild(card);
+      });
+      sec.appendChild(grid);
+    });
+    var th = lead.thresholds || {};
+    if (th.minPa != null && th.minIp != null) {
+      sec.appendChild(el("p", { "class": "block-note" },
+        "AVG、OPS 需 " + th.minPa + " 打席以上；ERA、WHIP 需 " + th.minIp + " 局以上；HR、SB、SO、SV 需至少 1。依目前名單計算，交易來的球員含其他球隊成績。"));
+    }
+    return sec;
   }
 
   function titleBar(info, count) {
