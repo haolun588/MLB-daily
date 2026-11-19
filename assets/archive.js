@@ -4,6 +4,7 @@
   'use strict';
 
   var DATA_URL = 'reports/metadata.json';
+  var WEEKLY_URL = 'reports/weekly/index.json';
   var WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 
   var app = document.getElementById('app');
@@ -141,6 +142,53 @@
     app.setAttribute('aria-busy', 'false');
   }
 
+  // ---------- 每週總整理（讀不到、格式不符或沒有週報就不顯示） ----------
+  function isWeek(s) { return /^\d{4}-W\d{2}$/.test(s); }
+
+  function mdText(s) {
+    return isDate(s) ? Number(s.slice(5, 7)) + '/' + Number(s.slice(8, 10)) : '';
+  }
+
+  function renderWeekly(data) {
+    var weeks = data && Array.isArray(data.weeks) ? data.weeks.filter(function (w) {
+      return w && typeof w === 'object' && typeof w.week === 'string' && isWeek(w.week);
+    }) : [];
+    if (!weeks.length) return;
+    weeks.sort(function (a, b) { return a.week < b.week ? 1 : (a.week > b.week ? -1 : 0); }); // 新到舊
+
+    var list = el('ul', { cls: 'weeks' });
+    weeks.forEach(function (w) {
+      var range = mdText(w.start) && mdText(w.end) ? mdText(w.start) + '～' + mdText(w.end) : '';
+      var kids = [el('span', { cls: 'top' }, [
+        el('span', { cls: 'd', text: w.week }),
+        el('span', { cls: 'wk', text: range })
+      ])];
+      var txCount = Number(w.tx_count);
+      if (isFinite(txCount)) kids.push(el('span', { cls: 'c', text: '異動 ' + txCount + ' 筆' }));
+      var days = Number(w.days);
+      if (isFinite(days) && days > 0 && days < 7) kids.push(el('span', { cls: 'pp', text: '涵蓋 ' + days + '／7 天' }));
+      list.appendChild(el('li', {}, [el('a', {
+        cls: 'day',
+        attrs: { href: 'reports/weekly/' + w.week + '.html', title: w.week }
+      }, kids)]));
+    });
+
+    content.insertBefore(el('section', { cls: 'month', attrs: { id: 'weekly', 'aria-labelledby': 'weekly-h' } }, [
+      el('div', { cls: 'section-head' }, [
+        el('h2', { text: '每週總整理', attrs: { id: 'weekly-h' } }),
+        el('span', { cls: 'count', text: weeks.length + ' 期' })
+      ]),
+      list
+    ]), content.firstChild);
+  }
+
+  function loadWeekly() {
+    fetch(WEEKLY_URL, { cache: 'no-store' })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) { if (data) renderWeekly(data); })
+      .catch(function () { /* 讀不到就不顯示 */ });
+  }
+
   // ---------- 載入 ----------
   function load() {
     showLoading();
@@ -155,6 +203,7 @@
           throw new Error('索引格式不正確');
         }
         render(data);
+        loadWeekly();
       })
       .catch(showError);
   }

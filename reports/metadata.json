@@ -1176,5 +1176,15 @@
     "transactions_count": 39,
     "translated": false,
     "news_count": 0
+  },
+  "2026-11-18": {
+    "date": "2026-11-18",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "合格報價決定已經出爐——這將如何影響自由球員市場？；銀棒獎出現13位首次獲獎的球員。",
+    "type": "offseason",
+    "transactions_count": 8,
+    "translated": true,
+    "news_count": 2
   }
 }
