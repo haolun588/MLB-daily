@@ -30,11 +30,19 @@ if hasattr(sys.stderr, 'reconfigure'):
 # 拆分後的 mlb_daily 套件；以下重新匯出原本 fetch_mlb 的所有名稱以維持相容。
 # 注意：重新匯出的是原物件，patch `fetch_mlb.X` 不會影響 mlb_daily 內部；
 # 測試請 patch 定義該名稱的模組（例如 `mlb_daily.net.fetch_json`）。
-from mlb_daily import cli, config, games as games_mod, htmlutil, index_page, leaders, net, news as news_mod, notify, playoffs, previews, report, rosters, standings as standings_mod, storage, team_page, timeutil, transactions as transactions_mod, translate, watchlist, weekly  # noqa: F401
+from mlb_daily import analysis as analysis_mod, cli, config, games as games_mod, htmlutil, index_page, leaders, net, news as news_mod, notify, playoffs, previews, report, rosters, standings as standings_mod, storage, team_page, timeutil, transactions as transactions_mod, translate, watchlist, weekly  # noqa: F401
 from mlb_daily.cli import (  # noqa: F401
     main,
 )
+from mlb_daily.analysis import (  # noqa: F401
+    _safe_fangraphs_url,
+    fetch_daily_analysis,
+    render_analysis_section,
+)
 from mlb_daily.config import (  # noqa: F401
+    ANALYSIS_LIMIT,
+    ANALYSIS_RSS_URL,
+    ANALYSIS_SOURCE,
     CANCELLED_REASONS,
     CLINCH_LABELS,
     CLINCH_LEGEND,

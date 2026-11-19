@@ -2,7 +2,7 @@
 
 import sys
 
-from . import games as games_mod, htmlutil, net, news as news_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
+from . import analysis as analysis_mod, games as games_mod, htmlutil, net, news as news_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
 from .config import DAILY_SNAPSHOT_SCHEMA
 
 
@@ -45,7 +45,7 @@ def render_games_section(cards_html):
 
 
 # ---------------------------------------------------------------- 組裝：整頁
-def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news=None, spotlight_html=""):
+def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news=None, spotlight_html="", analysis=None):
     """賽季戰報與休賽季快報共用：組出所有插槽後交給 render_page。"""
     cards_html = list(cards_html)
     tx_list = list(tx_list)
@@ -68,6 +68,7 @@ def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list
         "SEARCH": render_search() if cards_html else "",
         "SPOTLIGHT": spotlight_html,
         "NEWS": news_mod.render_news_section(news, page_type),
+        "ANALYSIS": analysis_mod.render_analysis_section(analysis),
         "GAMES": games,
         "TRANSACTIONS": transactions,
         "GENERATED_AT": htmlutil.esc(timeutil.get_taipei_now().strftime("%Y-%m-%d %H:%M")),
@@ -159,6 +160,7 @@ def generate_report(date_str, games):
     transactions_count = len(tx_list)
     news_all = news_mod.fetch_all_daily_news(date_str)
     news = None if news_all is None else news_all[:12]
+    analysis = analysis_mod.fetch_daily_analysis(date_str)
     wl = watchlist.load_watchlist()
     tx_matches, news_matches, extra_news = _spotlight_matches(wl, raw_tx, news_all, news)
     boxscores = []
@@ -197,12 +199,12 @@ def generate_report(date_str, games):
 
     tx_items = [tx for v in game_views for g in v["tx_groups"] for tx in g["items"]] + list(tx_list)
     team_names = [(v[side]["id"], v[side]["name_en"]) for v in game_views for side in ("away", "home")]
-    translated = translate.apply_translations(news, game_views, tx_items + tx_matches, team_names, extra_news)
+    translated = translate.apply_translations(news, game_views, tx_items + tx_matches, team_names, extra_news, analysis=analysis)
     cards_html = [c if isinstance(c, str) else games_mod.render_game_card(c) for c in cards]
     spotlight, spotlight_html = _spotlight_build(date_str, wl, tx_matches, news_matches, boxscores, minor=True)
 
     storage.write_report(date_str, render_report(date_str, "season", cards_html, postponed_count, tx_list, news,
-                                                 spotlight_html))
+                                                 spotlight_html, analysis))
     _save_daily_snapshot(date_str, True, snapshot_tx, news)
 
     summary_sentence = f"昨日共進行了 {total_games} 場賽事。"
@@ -244,12 +246,13 @@ def generate_offseason_report(date_str):
     tx_list = transactions_mod.filter_major_league_transactions(raw_tx)
     news_all = news_mod.fetch_all_daily_news(date_str)
     news = None if news_all is None else news_all[:12]
+    analysis = analysis_mod.fetch_daily_analysis(date_str)
     wl = watchlist.load_watchlist()
     tx_matches, news_matches, extra_news = _spotlight_matches(wl, raw_tx, news_all, news)
-    translated = translate.apply_translations(news, [], tx_list + tx_matches, extra_news=extra_news)
+    translated = translate.apply_translations(news, [], tx_list + tx_matches, extra_news=extra_news, analysis=analysis)
     spotlight, spotlight_html = _spotlight_build(date_str, wl, tx_matches, news_matches)
     storage.write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list, news=news,
-                                                 spotlight_html=spotlight_html))
+                                                 spotlight_html=spotlight_html, analysis=analysis))
     _save_daily_snapshot(date_str, False, tx_list, news)
     meta = {
         "date": date_str,

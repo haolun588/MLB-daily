@@ -86,6 +86,10 @@ SLOT_RE = re.compile(r"<!--SLOT:([A-Z_]+)-->")
 # 每日新聞（MLB 官方 RSS）
 NEWS_RSS_URL = "https://www.mlb.com/feeds/news/rss.xml"
 NEWS_SOURCE = "MLB.com"
+# 深度分析（FanGraphs RSS）
+ANALYSIS_RSS_URL = "https://blogs.fangraphs.com/feed/"
+ANALYSIS_SOURCE = "FanGraphs"
+ANALYSIS_LIMIT = 6
 TAIPEI_TZ = timezone(timedelta(hours=8))
 _UNSET = object()  # 「未提供參數」的哨兵值（None 代表呼叫端已取得但失敗）
 

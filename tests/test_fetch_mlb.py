@@ -57,6 +57,8 @@ class FakeApi:
         self.schedule_calls = 0
         self.transactions = "transactions_empty"
         self.news = None  # RSS fixture 檔名（含副檔名）；None 代表抓取失敗（預設，不影響既有測試）
+        self.analysis = None  # FanGraphs RSS fixture 檔名；None 代表抓取失敗
+        self.analysis_text = None  # 若設定，直接作為 FanGraphs RSS 回應文字（優先於 analysis）
         self.news_text = None  # 若設定，直接作為 RSS 回應文字（優先於 news）
         self.fail_boxscore = set()
         self.boxscore_overrides = {}  # gamePk -> 自訂 boxscore dict（覆蓋 fixture）
@@ -115,6 +117,10 @@ class FakeApi:
             if self.news_text is not None:
                 return self.news_text
             return load_text_fixture(self.news) if self.news else None
+        if "blogs.fangraphs.com/feed" in url:
+            if self.analysis_text is not None:
+                return self.analysis_text
+            return load_text_fixture(self.analysis) if self.analysis else None
         return None
 
 
@@ -1553,6 +1559,145 @@ class DailyNewsTests(MlbTestBase):
         self.assertEqual([n["title"] for n in fetch_mlb.fetch_daily_news(DATE)], ["Good"])
 
 
+class AnalysisTests(MlbTestBase):
+    def fetch(self, date=DATE, **kw):
+        self.api.analysis = "fangraphs_rss.xml"
+        with contextlib.redirect_stderr(io.StringIO()):
+            return fetch_mlb.fetch_daily_analysis(date, **kw)
+
+    def test_only_report_day_sorted_newest_first(self):
+        items = self.fetch(limit=50)
+        titles = [a["title"] for a in items]
+        self.assertNotIn("Next day article (out of range)", titles)
+        self.assertNotIn("Previous day article (out of range)", titles)
+        times = [a["published"] for a in items]
+        self.assertEqual(times, sorted(times, reverse=True))
+        self.assertTrue(titles[0].startswith("Evil <script>"))
+        self.assertEqual(len(items), 9)
+
+    def test_limit_is_six_by_default(self):
+        items = self.fetch()
+        self.assertEqual(fetch_mlb.ANALYSIS_LIMIT, 6)
+        self.assertEqual(len(items), 6)
+
+    def test_podcasts_filtered(self):
+        titles = [a["title"] for a in self.fetch(limit=50)]
+        self.assertFalse(any(t.startswith("Effectively Wild") for t in titles))
+        self.assertNotIn("Some talk show", titles)  # category: Effectively Wild
+        self.assertNotIn("Lowercase podcast category", titles)  # category: podcasts（不分大小寫）
+
+    def test_unsafe_links_dropped(self):
+        items = self.fetch(limit=50)
+        titles = [a["title"] for a in items]
+        for bad in ("Offsite link article", "Lookalike host article", "Http link article", "Unsafe javascript link"):
+            self.assertNotIn(bad, titles)
+        self.assertTrue(all(a["link"].startswith("https://") for a in items))
+
+    def test_safe_url_rules(self):
+        ok = fetch_mlb._safe_fangraphs_url
+        for good in ("https://blogs.fangraphs.com/x/", "https://www.fangraphs.com/x", "https://fangraphs.com/x"):
+            self.assertEqual(ok(good), good)
+        for bad in ("http://blogs.fangraphs.com/x", "javascript:alert(1)", "https://evil.com/x",
+                    "https://blogs.fangraphs.com.evil.com/x", "https://evilfangraphs.com/x",
+                    "https://user@blogs.fangraphs.com/x", "https://blogs.fangraphs.com:8443/x",
+                    "//blogs.fangraphs.com/x", "https://blogs.fangraphs.com/a b", "https://www.mlb.com/x", "", None, 5):
+            self.assertIsNone(ok(bad), bad)
+        self.assertIsNone(fetch_mlb._safe_mlb_url("https://blogs.fangraphs.com/x"))  # MLB 檢查未被放寬
+
+    def test_author_field_and_missing_author(self):
+        by_title = {a["title"]: a for a in self.fetch(limit=50)}
+        self.assertEqual(by_title["Day article 1"]["author"], "Writer 1")
+        self.assertEqual(by_title["No author article"]["author"], "")
+
+    def test_fetch_failure_and_malformed_return_none(self):
+        self.api.analysis = None
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertIsNone(fetch_mlb.fetch_daily_analysis(DATE))
+        for bad in ("<rss><channel><item>", "not xml", "<html><body>blocked</body></html>"):
+            self.api.analysis_text = bad
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertIsNone(fetch_mlb.fetch_daily_analysis(DATE), bad)
+
+    def test_zero_items_is_empty_list(self):
+        self.assertEqual(self.fetch("2026-12-25"), [])
+
+    def test_render_structure_and_author(self):
+        out = fetch_mlb.render_analysis_section(self.fetch())
+        self.assertIn('aria-labelledby="analysis-h"', out)
+        self.assertIn('<h2 id="analysis-h">深度分析</h2>', out)
+        self.assertIn('<span class="sub">FanGraphs 進階數據分析</span>', out)
+        self.assertIn('<span class="count">6 則</span>', out)
+        self.assertIn('<ol class="news is-single">', out)
+        self.assertEqual(out.count("<li>"), 6)
+        self.assertIn('<span class="src">FanGraphs · Writer 1</span>', out)
+        self.assertIn('<span class="src">FanGraphs</span>', out)  # 無作者
+        self.assertNotIn("<time", out)
+        self.assertNotIn("<img", out)
+
+    def test_render_empty_returns_empty_string(self):
+        self.assertEqual(fetch_mlb.render_analysis_section(None), "")
+        self.assertEqual(fetch_mlb.render_analysis_section([]), "")
+
+    def test_render_escapes_and_rechecks_href(self):
+        out = fetch_mlb.render_analysis_section(self.fetch())
+        self.assertNotIn("<script>", out)
+        self.assertNotIn("<b>Durham</b>", out)
+        self.assertIn("Evil &lt;script&gt;alert(&#x27;XSS_MARKER&#x27;)&lt;/script&gt; &amp; Ace &quot;pitches&quot;", out)
+        self.assertIn("FanGraphs · &lt;b&gt;Durham&lt;/b&gt;", out)
+        self.assertIn('href="https://www.fangraphs.com/a?x=1&amp;y=2"', out)
+        bad = {"title": "T", "link": "javascript:alert(1)", "author": ""}
+        self.assertEqual(fetch_mlb.render_analysis_section([bad]), "")
+
+    def test_render_prefers_title_zh(self):
+        item = {"title": "Eng title", "title_zh": "中文標題", "link": "https://blogs.fangraphs.com/a/", "author": ""}
+        out = fetch_mlb.render_analysis_section([item])
+        self.assertIn(">中文標題</a>", out)
+        self.assertNotIn("Eng title", out)
+
+    def test_translation_writes_title_zh_in_same_batch(self):
+        os.environ["GEMINI_API_KEY"] = "test-key"
+        items = [{"title": "Ace dominates", "link": "https://blogs.fangraphs.com/a/", "author": ""}]
+        news = [{"title": "News one"}]
+        seen = []
+
+        def fake(texts, extra=()):
+            seen.append([t["text"] for t in texts])
+            return ["譯:" + t["text"] for t in texts]
+
+        with mock.patch("mlb_daily.translate.translate_texts", side_effect=fake), contextlib.redirect_stdout(io.StringIO()):
+            fetch_mlb.apply_translations(news, [], [], analysis=items)
+        self.assertEqual(len(seen), 1)  # 只送一次
+        self.assertEqual(items[0]["title_zh"], "譯:Ace dominates")
+        self.assertEqual(news[0]["title_zh"], "譯:News one")
+
+    def test_season_report_shows_section_after_news(self):
+        self.api.news = "news_rss.xml"
+        self.api.analysis = "fangraphs_rss.xml"
+        _, html = self.generate("schedule_normal")
+        self.assertIn('aria-labelledby="analysis-h"', html)
+        self.assertLess(html.index('id="news-h"'), html.index('id="analysis-h"'))
+        self.assertIn("Day article 1", html)
+
+    def test_offseason_report_shows_section(self):
+        self.api.analysis = "fangraphs_rss.xml"
+        self.run_main("schedule_empty")
+        self.assertIn('aria-labelledby="analysis-h"', self.read_report())
+
+    def test_fetch_failure_does_not_break_report_and_hides_section(self):
+        self.api.analysis = None  # 抓取失敗
+        meta, html = self.generate("schedule_normal")
+        self.assertNotIn("analysis-h", html)
+        self.assertEqual(meta["type"], "season")
+
+    def test_xss_sweep_full_page(self):
+        self.api.analysis = "fangraphs_rss.xml"
+        self.run_main("schedule_empty")
+        html = re.sub(r"<script>\s*\(function \(\) \{.*?</script>", "", self.read_report(), flags=re.S)
+        self.assertIn("analysis-h", html)
+        self.assertNotIn("<script", html)
+        self.assertNotIn("<b>Durham</b>", html)
+
+
 class NewsRenderTests(MlbTestBase):
     def news(self):
         self.api.news = "news_rss.xml"
@@ -2258,7 +2403,7 @@ class SlotTests(unittest.TestCase):
 
     def test_shell_templates_have_expected_slots(self):
         report = (REPO_ROOT / "templates" / "report.html").read_text(encoding="utf-8")
-        for name in ("TITLE", "DATE_LONG", "SUBTITLE", "SUMMARY", "SEARCH", "NEWS", "GAMES", "TRANSACTIONS", "GENERATED_AT"):
+        for name in ("TITLE", "DATE_LONG", "SUBTITLE", "SUMMARY", "SEARCH", "NEWS", "ANALYSIS", "GAMES", "TRANSACTIONS", "GENERATED_AT"):
             self.assertIn(f"<!--SLOT:{name}-->", report)
         index = (REPO_ROOT / "templates" / "index.html").read_text(encoding="utf-8")
         for name in ("LATEST", "RECENT"):

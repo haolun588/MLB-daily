@@ -94,6 +94,7 @@ graph TD
 | `htmlutil` | `esc()`（所有外部字串輸出到 HTML 前一律經過）、顏色、`logo_picture`、`player_link`、模板與 `fill_slots`、`_section_message` |
 | `storage` | `load_metadata`／`save_metadata`、`write_report`、`write_json_atomic`；週報相關：`write_daily_snapshot`、`write_weekly_report`、`load_weekly_index`／`save_weekly_index`／`latest_weekly_entry` |
 | `transactions` | 人事異動篩選與渲染、`split_game_transactions`、每週異動 |
+| `analysis` | `fetch_daily_analysis`（FanGraphs RSS 深度分析）與 `render_analysis_section` |
 | `news` | `fetch_daily_news`（MLB.com RSS）、`fetch_game_news`（單場 content）與渲染 |
 | `watchlist` | 台日韓球員專區：從 MLB API 抓動態名單、合併 settings 覆寫、比對異動／新聞／boxscore、組成 `spotlight` 資料與渲染（只依賴 `config`、`htmlutil`、`net`、`storage`、`timeutil`） |
 | `translate` | Gemini 翻譯、`apply_translations`、`LAST_TRANSLATION`、`TX_TRANSLATION_CACHE`、`translate_weekly_transactions` |
@@ -200,6 +201,7 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 ### 新聞
 
 - 每日新聞：MLB.com RSS（`https://www.mlb.com/feeds/news/rss.xml`），取台北時間該日 00:00–24:00 發布者，新到舊，最多 12 則。賽季頁附在戰報上方；休賽季頁第一則為頭條。
+- 深度分析：FanGraphs RSS（`https://blogs.fangraphs.com/feed/`，`mlb_daily/analysis.py`），取台北時間該日發布者，新到舊，最多 6 則；濾掉 podcast（標題以 Effectively Wild 開頭，或 category 為 Podcasts／Effectively Wild）；link 須為 https 且主機為 `blogs.fangraphs.com`、`www.fangraphs.com` 或 `fangraphs.com`，否則整則捨棄。顯示於「今日新聞」下方（`ANALYSIS` 插槽，賽季與休賽季頁皆有），顯示標題（翻譯成中文）與「FanGraphs · 作者」，不顯示圖片與時間；抓取失敗或當日無文章時整個區塊不顯示。標題與新聞同一批送翻譯。目前不寫入每日快照、週報、球隊專頁或台日韓名單比對。
 - 單場賽後新聞：`game/{gamePk}/content` 的 recap headline 與 blurb；缺漏時用比分備份文字（不翻譯）。
 
 ---
@@ -207,7 +209,7 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 ## 翻譯流程（Gemini）
 
 - 以 `urllib` 直接呼叫 Gemini Interactions API，不安裝 SDK；金鑰讀環境變數 `GEMINI_API_KEY`，模型可由 `GEMINI_MODEL` 覆寫。
-- 範圍：RSS 新聞標題、單場賽後新聞的 Headline／Blurb、人事異動描述。球員姓名逐字保留英文，數據縮寫保留，球隊名稱依內建對照表。
+- 範圍：RSS 新聞標題、FanGraphs 深度分析標題、單場賽後新聞的 Headline／Blurb、人事異動描述。球員姓名逐字保留英文，數據縮寫保留，球隊名稱依內建對照表。
 - 整頁先收集所有文字，一次送翻（超過 60 則分批）；每則附 `keep` 清單，譯文必須逐字包含其中字串，否則該則退回原文。
 - 退回原文的情況：無金鑰、無內容、整批失敗（HTTP 錯誤、非 JSON、長度不符）。結果寫入 `translated`。
 - 譯文先寫入 `*_zh` 欄位，渲染時優先使用譯文；球員超連結在譯文出爐後才用英文姓名比對替換。

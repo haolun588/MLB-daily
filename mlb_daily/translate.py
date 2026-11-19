@@ -158,11 +158,12 @@ def _keep_in(text, names):
     return [n for n in dict.fromkeys(names) if n and n in text]
 
 
-def apply_translations(news, views, tx_items, extra_team_names=(), extra_news=()):
+def apply_translations(news, views, tx_items, extra_team_names=(), extra_news=(), analysis=()):
     """收集整頁需翻譯的文字，只呼叫一次 translate_texts，譯文寫入 *_zh 欄位。回傳是否成功套用。
+    analysis：FanGraphs 深度分析（只翻標題，與新聞同一批送出）。
     extra_news：不在顯示清單內、但台日韓專區要用的新聞（只翻標題）。相同原文只送翻一次，結果套用到所有對應物件。"""
     targets = []  # (物件, 目標鍵, 原文, keep)
-    for n in list(news or []) + list(extra_news or []):
+    for n in list(news or []) + list(extra_news or []) + list(analysis or []):
         targets.append((n, "title_zh", n["title"], []))
     for view in views:
         box = view.get("news")

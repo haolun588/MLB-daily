@@ -8,7 +8,7 @@
 
 ## 功能
 
-- **賽季戰報**：前一日（台北時間）所有賽事的比分、R/H/E、投球決定（勝／敗／救援）、打擊與投球焦點球員（球員名連到 Baseball Savant）、賽後新聞、當日人事異動，加上當日 MLB.com 新聞。頁面內有隊伍搜尋（中英文隊名或縮寫，可再按 Enter 跳到下一場）。
+- **賽季戰報**：前一日（台北時間）所有賽事的比分、R/H/E、投球決定（勝／敗／救援）、打擊與投球焦點球員（球員名連到 Baseball Savant）、賽後新聞、當日人事異動，加上當日 MLB.com 新聞，以及新聞下方的 FanGraphs 深度分析（進階數據文章標題，翻成中文並連到原文；無文章時不顯示）。頁面內有隊伍搜尋（中英文隊名或縮寫，可再按 Enter 跳到下一場）。
 - **休賽季快報**：昨日無賽事時，產出「新聞＋大聯盟層級人事異動」頁面，不會留白。
 - **歷史存檔**：[archive.html](archive.html) 以 JavaScript 讀取 `reports/metadata.json`，依月份分組；首頁顯示最新一期與近期清單。
 - **Gemini 翻譯**：新聞標題、單場賽後新聞（Headline／Blurb）與人事異動描述以 Gemini 翻成繁體中文；球員姓名維持英文原名，球隊名稱沿用程式內建譯名。沒有金鑰、額度用盡或回應格式錯誤時，自動改用英文原文，不會讓整次執行失敗。
@@ -130,6 +130,7 @@ mlb_daily/                主程式套件（只用標準庫）
   storage.py              metadata 與檔案寫入
   transactions.py         人事異動篩選與渲染、每週異動
   news.py                 MLB.com RSS 與單場新聞
+  analysis.py             FanGraphs RSS 深度分析
   translate.py            Gemini 翻譯
   games.py                完賽檢查、焦點球員、比賽卡片、摘要句
   standings.py            戰績側欄
