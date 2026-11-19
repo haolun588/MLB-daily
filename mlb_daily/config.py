@@ -277,7 +277,16 @@ PLAYOFFS_PAGE_PATH = "playoffs.html"
 PLAYOFFS_SCHEMA = 1
 
 # ---- 球隊專頁（近期動態與隊內數據王）
-TEAM_PAGE_RECENT_DAYS = 30        # 近期動態回溯天數（含今天）
+TEAM_PAGE_RECENT_DAYS = 30        # 近期動態回溯天數（以報表日＝執行日前一天為終點，往前共 30 天）
 TEAM_PAGE_NEWS_LIMIT = 5          # 每隊顯示的相關新聞則數
 TEAM_PAGE_LEADER_MIN_PA = 300     # AVG、OPS 的打席門檻
 TEAM_PAGE_LEADER_MIN_IP = 50      # ERA、WHIP 的投球局數門檻
+
+# 新聞隊名比對要排除的前綴：這些球團（日、韓、台等聯盟）的暱稱與大聯盟球隊同名（如 Yomiuri Giants、Kia Tigers、LG Twins）；
+# "X" 用來排除 X-rays。比對時不分大小寫，且前綴與暱稱之間只允許空白或連字號。
+NON_MLB_TEAM_PREFIXES = (
+    "Yomiuri", "Hanshin", "Chunichi", "Hiroshima", "Toyo", "Yakult", "Tokyo Yakult", "DeNA", "Yokohama",
+    "Orix", "SoftBank", "Nippon-Ham", "Nippon Ham", "Seibu", "Rakuten", "Lotte",
+    "Kia", "KIA", "LG", "Samsung", "SSG", "Doosan", "Kiwoom", "Hanwha", "NC", "KT",
+    "CTBC", "Uni-President", "Fubon", "X",
+)

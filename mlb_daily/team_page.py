@@ -1,15 +1,16 @@
-"""球隊專頁的附加資料：球隊摘要、近 30 天動態、隊內數據王（寫進 data/teams/{id}.json）。
+"""球隊專頁的附加資料：球隊摘要、近 30 天動態（報表日往前 30 天）、隊內數據王（寫進 data/teams/{id}.json）。
 
 層級在 rosters／weekly／standings／playoffs 之上、cli 之下。純函式（compute_leaders、build_recent、
 postseason_result、tracked_names）不連網；讀不到或缺資料一律降級為空狀態，不丟例外（呼叫端另有保護）。"""
 
 import re
 import sys
-from datetime import timedelta
+from datetime import date, timedelta
 
 from . import standings as standings_mod, storage, watchlist, weekly
 from .config import (
     NEWS_SOURCE,
+    NON_MLB_TEAM_PREFIXES,
     TEAM_META,
     TEAM_NAMES_EN,
     TEAM_SLANG_ALIASES,
@@ -60,23 +61,42 @@ def _number(value):
     return value
 
 
+def _tiebreak(p, stats, gate):
+    """同值時的次要排序鍵（越小越優先）：打擊 PA 多者、投球 IP 多者優先，再依球員 id 小者。"""
+    if gate == "pa":
+        volume = _number(stats.get("pa")) or 0
+    else:
+        volume = (_ip_outs(stats.get("ip")) or 0) if gate == "ip" else 0
+    pid = p.get("id")
+    return (-volume, pid if isinstance(pid, int) and not isinstance(pid, bool) else float("inf"))
+
+
 def _pick_leader(players, group, field, direction, qualify, count_only):
-    """回傳 (player, value) 或 None。同值取名單中較前者；count_only 項目需 > 0。"""
+    """回傳 (player, value) 或 None。同值依 _tiebreak（PA／IP 多者、再 id 小者）；count_only 項目需 > 0。
+    field 為 None 時為 OPS：優先用 API 原始 ops 欄位，沒有才用 OBP + SLG。"""
     best = None
     for p in players:
         stats = p.get(group)
         if not isinstance(stats, dict) or not qualify(stats):
             continue
-        if field is None:  # OPS = OBP + SLG
-            obp, slg = _number(stats.get("obp")), _number(stats.get("slg"))
-            value = None if obp is None or slg is None else round(obp + slg, 3)
+        if field is None:  # OPS：原始 ops 欄位優先，否則 OBP + SLG
+            value = _number(stats.get("ops"))
+            if value is None:
+                obp, slg = _number(stats.get("obp")), _number(stats.get("slg"))
+                value = None if obp is None or slg is None else round(obp + slg, 3)
         else:
             value = _number(stats.get(field))
         if value is None or (count_only and value <= 0):
             continue
-        if best is None or (value < best[1] if direction == "asc" else value > best[1]):
-            best = (p, value)
-    return best
+        gate = "pa" if group == "hitting" else "ip"
+        key = _tiebreak(p, stats, gate)
+        if best is None:
+            best = (p, value, key)
+            continue
+        better = value < best[1] if direction == "asc" else value > best[1]
+        if better or (value == best[1] and key < best[2]):
+            best = (p, value, key)
+    return None if best is None else (best[0], best[1])
 
 
 def compute_leaders(players, min_pa=TEAM_PAGE_LEADER_MIN_PA, min_ip=TEAM_PAGE_LEADER_MIN_IP):
@@ -151,8 +171,8 @@ def postseason_result(data, team_id):
         return {"text": "未晉級季後賽", "outcome": "missed"}
 
     rnd, s = best
-    mine = next(t for t in s["teams"] if t.get("id") == team_id)
-    other = next((t for t in s["teams"] if t is not mine), {})
+    mine = next(t for t in s["teams"] if isinstance(t, dict) and t.get("id") == team_id)
+    other = next((t for t in s["teams"] if t is not mine and isinstance(t, dict)), {})
     name, opp = ROUND_NAMES[rnd], _opponent_name(other)
     mw, ow = _number(mine.get("wins")) or 0, _number(other.get("wins")) or 0
     if s.get("winnerId") == team_id:
@@ -182,27 +202,56 @@ def build_record(standings, team_id):
 
 
 # ---------------------------------------------------------------- 近期動態
+_BOUNDARY_BEFORE = r"(?<![A-Za-z0-9])"
+_BOUNDARY_AFTER = r"(?![A-Za-z0-9])"
+_PREFIX_RE = re.compile(
+    _BOUNDARY_BEFORE + "(?:" + "|".join(re.escape(p) for p in sorted(NON_MLB_TEAM_PREFIXES, key=len, reverse=True)) + r")[\s-]*$",
+    re.IGNORECASE)
+
+
 def _team_terms(team_id):
-    """該隊新聞比對用的關鍵字：英文全名、暱稱、口語簡稱，以及中文全名與簡稱。"""
+    """該隊新聞比對用的關鍵字，分三類 {"full", "nick", "zh"}：
+    full＝英文城市＋暱稱全名（不分大小寫）；nick＝單獨暱稱與口語簡稱（分大小寫、整詞，且前面不得是日韓等球團名）；
+    zh＝中文全名（子字串比對）。中文簡稱（巨人、老虎、光芒、國民…）歧義太多，不納入；
+    譯文標題一定同時帶英文原文（比對文字含 title），所以只靠英文與中文全名不會漏掉真正的球隊新聞。"""
+    full, nick, zh = [], [], []
     en = TEAM_NAMES_EN.get(team_id)
-    terms = []
     if en:
-        terms += [en[0], en[1], en[2]]
-    terms += TEAM_SLANG_ALIASES.get(team_id, [])
+        full_en, nick_en, short_zh = en
+        (full if full_en != nick_en else nick).append(full_en)   # Athletics 沒有城市，全名等於暱稱
+        nick.append(nick_en)
+    nick += TEAM_SLANG_ALIASES.get(team_id, [])
     if team_id in TEAM_META:
-        terms.append(TEAM_META[team_id]["name"])
-    return [t for t in dict.fromkeys(terms) if t]
+        name_zh = TEAM_META[team_id]["name"]
+        if not en or name_zh != en[2]:          # 中文全名即簡稱者（運動家）歧義大，只靠英文
+            zh.append(name_zh)
+    dedupe = lambda items: [t for t in dict.fromkeys(items) if t]  # noqa: E731
+    return {"full": dedupe(full), "nick": dedupe(nick), "zh": dedupe(zh)}
 
 
-def _term_regex(terms):
-    """英文詞整詞比對（不分大小寫）、中文詞子字串比對，合成一個 regex。"""
-    alts = []
-    for t in sorted(terms, key=len, reverse=True):
-        if re.search(r"[A-Za-z]", t):
-            alts.append(r"(?<![A-Za-z0-9])" + re.escape(t) + r"(?![A-Za-z0-9])")
-        else:
-            alts.append(re.escape(t))
-    return re.compile("|".join(alts), re.IGNORECASE)
+def _word_regex(terms, flags=0):
+    alts = [_BOUNDARY_BEFORE + re.escape(t) + _BOUNDARY_AFTER for t in sorted(terms, key=len, reverse=True)]
+    return re.compile("|".join(alts), flags) if alts else None
+
+
+def _term_matcher(terms):
+    """回傳 matches(text) -> bool。規則見 _team_terms；暱稱命中時另檢查前面是否緊接非大聯盟球團名（Yomiuri Giants、LG Twins）。"""
+    full_re = _word_regex(terms["full"], re.IGNORECASE)
+    nick_re = _word_regex(terms["nick"])
+    zh_re = re.compile("|".join(re.escape(t) for t in sorted(terms["zh"], key=len, reverse=True))) if terms["zh"] else None
+
+    def matches(text):
+        if full_re and full_re.search(text):
+            return True
+        if zh_re and zh_re.search(text):
+            return True
+        if nick_re:
+            for m in nick_re.finditer(text):
+                if not _PREFIX_RE.search(text[:m.start()]):
+                    return True
+        return False
+
+    return matches
 
 
 def _tx_player(tx):
@@ -221,12 +270,24 @@ def _is_http(url):
     return isinstance(url, str) and re.match(r"^https?://", url, re.IGNORECASE) is not None
 
 
-def build_recent(team_id, snapshots, news_limit=TEAM_PAGE_NEWS_LIMIT):
+def _in_window(day, start, end):
+    """日期字串是否落在 [start, end]（date 物件，None 代表不設限）；無法解析的日期保留（它來自窗口內的快照）。"""
+    try:
+        d = date.fromisoformat(str(day))
+    except ValueError:
+        return True
+    return (start is None or d >= start) and (end is None or d <= end)
+
+
+def build_recent(team_id, snapshots, news_limit=TEAM_PAGE_NEWS_LIMIT, start=None, end=None):
     """某隊近期動態 {"moves", "news", "snapshotDays"}。snapshots 為 weekly.load_week_snapshots 的回傳。
+    start／end（date）限定異動日期窗口（含兩端），異動本身的日期可能早於快照日，窗口外者不列。
     moves：依 weekly 的分類與方向判斷（加入 in／離開 out），新到舊；news：依隊名關鍵字比對標題與摘要，新到舊。"""
     items = weekly._collect_items(snapshots)
     moves = []
     for it in items:
+        if not _in_window(it["date"], start, end):
+            continue
         for tid, direction in weekly.team_moves(it):
             if tid != team_id:
                 continue
@@ -239,7 +300,7 @@ def build_recent(team_id, snapshots, news_limit=TEAM_PAGE_NEWS_LIMIT):
                 "note": str(tx.get("description_zh") or tx.get("description") or ""),
             })
 
-    pattern = _term_regex(_team_terms(team_id))
+    matches = _term_matcher(_team_terms(team_id))
     seen, found = set(), []
     for key in sorted(snapshots, reverse=True):
         for n in snapshots[key]["news"]:
@@ -247,7 +308,7 @@ def build_recent(team_id, snapshots, news_limit=TEAM_PAGE_NEWS_LIMIT):
             if not _is_http(link) or link in seen:
                 continue
             text = " ".join(str(n.get(k) or "") for k in ("title", "title_zh", "summary"))
-            if not pattern.search(text):
+            if not matches(text):
                 continue
             seen.add(link)
             found.append({"ts": weekly._published_ts(n.get("published")), "date": _news_date(n, key),
@@ -258,6 +319,12 @@ def build_recent(team_id, snapshots, news_limit=TEAM_PAGE_NEWS_LIMIT):
 
 
 # ---------------------------------------------------------------- 整合（供 rosters.fetch_rosters 呼叫）
+def recent_window(today):
+    """近期動態窗口 (起日, 終日)：終日為報表日（today 的前一天），往前共 TEAM_PAGE_RECENT_DAYS 天。"""
+    end = today - timedelta(days=1)
+    return end - timedelta(days=TEAM_PAGE_RECENT_DAYS - 1), end
+
+
 def make_extras(today, ctx, snapshot_dir=None, wl=None):
     """回傳 extras(team_id, players) -> dict（summary、recent、leaders）。
     今天的戰績、季後賽、每日快照與追蹤名單只在這裡讀一次；任何來源失敗都只讓對應欄位缺席或為空。"""
@@ -274,8 +341,10 @@ def make_extras(today, ctx, snapshot_dir=None, wl=None):
             playoffs_data = data
     except Exception as e:  # noqa: BLE001
         print(f"Warning: 球隊專頁季後賽資料讀取失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+    start = end = None
     try:
-        days = [today - timedelta(days=i) for i in range(TEAM_PAGE_RECENT_DAYS)]
+        start, end = recent_window(today)
+        days = [end - timedelta(days=i) for i in range(TEAM_PAGE_RECENT_DAYS)]
         snapshots = weekly.load_week_snapshots(days, snapshot_dir)
     except Exception as e:  # noqa: BLE001
         print(f"Warning: 球隊專頁每日快照讀取失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
@@ -283,15 +352,24 @@ def make_extras(today, ctx, snapshot_dir=None, wl=None):
     if wl is None:
         wl = watchlist.load_watchlist()
 
+    def summary(team_id, players):
+        out = {"record": None, "postseason": None, "tracked": []}   # 各欄位獨立降級，一個出錯不影響其他
+        for key, fn in (
+            ("record", lambda: build_record(standings, team_id)),
+            ("postseason", lambda: postseason_result(playoffs_data, team_id) if playoffs_data else None),
+            ("tracked", lambda: tracked_names(players, wl)),
+        ):
+            try:
+                out[key] = fn()
+            except Exception as e:  # noqa: BLE001
+                print(f"Warning: 球隊 {team_id} 摘要的 {key} 欄位產生失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+        return out
+
     def extras(team_id, players):
         out = {}
         for key, fn in (
-            ("summary", lambda: {
-                "record": build_record(standings, team_id),
-                "postseason": postseason_result(playoffs_data, team_id) if playoffs_data else None,
-                "tracked": tracked_names(players, wl),
-            }),
-            ("recent", lambda: build_recent(team_id, snapshots)),
+            ("summary", lambda: summary(team_id, players)),
+            ("recent", lambda: build_recent(team_id, snapshots, start=start, end=end)),
             ("leaders", lambda: compute_leaders(players)),
         ):
             try:

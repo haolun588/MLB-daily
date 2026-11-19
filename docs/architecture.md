@@ -281,10 +281,10 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 | `summary.record` | `w`、`l`、`pct`、`divRank`、`rd`（得失分差）；`standings.fetch_standings(season)`（多一個請求；失敗為 `null`） |
 | `summary.postseason` | `{text, outcome}`（`champion`／`eliminated`／`active`／`missed`）；讀 `data/playoffs.json`，其 `season` 與名單數據賽季相同才採用，否則 `null`（賽季中前端不顯示該行） |
 | `summary.tracked` | 該隊名單中屬於 `settings/watchlist.json` 的球員中文名 |
-| `recent.moves` | 讀 `data/daily/*.json` 近 30 天（含今天），沿用 `weekly` 的分類與 `team_moves`（交易雙方各記一次、DFA／釋出為離開）：`date`、`dir`（`in`／`out`）、`player`、`type`、`note`（譯文，缺則原文）；傷兵名單等未列入週報分類的異動不顯示 |
+| `recent.moves` | 讀 `data/daily/*.json` 報表日（執行日前一天）起往前 30 天，且異動日期須落在窗口內；相關新聞比對：英文城市＋暱稱全名不分大小寫，單獨暱稱與口語簡稱分大小寫整詞並排除日韓球團前綴（`config.NON_MLB_TEAM_PREFIXES`），中文只比對全名，沿用 `weekly` 的分類與 `team_moves`（交易雙方各記一次、DFA／釋出為離開）：`date`、`dir`（`in`／`out`）、`player`、`type`、`note`（譯文，缺則原文）；傷兵名單等未列入週報分類的異動不顯示 |
 | `recent.news` | 同樣讀每日快照，以中英文隊名、暱稱與口語簡稱比對標題與摘要（英文整詞、中文子字串），依 link 去重、新到舊最多 5 則；只收 http(s) 連結；來源固定 `MLB.com` |
 | `recent.snapshotDays` | 窗口內實際讀到的快照檔數；為 0 時前端顯示「尚無近期資料」而非「沒有異動」 |
-| `leaders` | 打擊 AVG／HR／OPS／SB／WAR、投球 ERA／SO／SV／WHIP／WAR 各一名；AVG、OPS 需 300 打席，ERA、WHIP 需 50 局，HR／SB／SO／SV 需大於 0，無人達標 `id`／`name`／`value` 為 `null`；`thresholds` 同時寫入（常數在 `config.TEAM_PAGE_*`） |
+| `leaders` | 打擊 AVG／HR／OPS／SB／WAR、投球 ERA／SO／SV／WHIP／WAR 各一名；AVG、OPS 需 300 打席，ERA、WHIP 需 50 局，HR／SB／SO／SV 需大於 0，同值依 PA／IP 多者、再球員 id 小者；無人達標 `id`／`name`／`value` 為 `null`；`thresholds` 同時寫入（常數在 `config.TEAM_PAGE_*`） |
 
 `data/daily/` 與 `data/playoffs.json` 只存在於 gh-pages；workflow 的「Restore history from gh-pages」步驟已還原它們，且「Update Team Rosters」在「Generate Daily Report」之後執行，所以當天快照也讀得到。讀不到、缺天或損壞的快照略過（`weekly.load_week_snapshots`），任何來源失敗只影響對應欄位，名單照寫。名單頁副標依 `rosterType` 顯示「26 人現役名單」或「40 人名單」；摘要右上角標籤：休賽季「YYYY 賽季最終」，賽季中「截至 M/D」。
 

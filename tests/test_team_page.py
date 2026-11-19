@@ -68,6 +68,27 @@ class RecentMovesTests(unittest.TestCase):
         self.assertEqual(team_page.build_recent(BOS, {"2026-11-10": snap("2026-11-10")})["snapshotDays"], 1)
 
 
+class RecentWindowTests(unittest.TestCase):
+    def test_moves_outside_window_are_dropped(self):
+        old = tx("SFA", "Red Sox signed free agent RHP Old.", to_id=BOS, day="2026-10-01", person="Old")
+        ok = tx("SFA", "Red Sox signed free agent RHP Ok.", to_id=BOS, day="2026-11-10", person="Ok")
+        edge = tx("SFA", "Red Sox signed free agent RHP Edge.", to_id=BOS, day="2026-11-16", person="Edge")
+        late = tx("SFA", "Red Sox signed free agent RHP Late.", to_id=BOS, day="2026-11-19", person="Late")
+        snaps = {"2026-11-18": snap("2026-11-18", [old, ok, edge, late])}
+        moves = team_page.build_recent(BOS, snaps, start=date(2026, 11, 16), end=date(2026, 11, 18))["moves"]
+        self.assertEqual([m["player"] for m in moves], ["Edge"])      # 11-10 早於起日 11-16、11-19 晚於終日
+        wide = team_page.build_recent(BOS, snaps, start=date(2026, 11, 1), end=date(2026, 11, 18))["moves"]
+        self.assertEqual([m["player"] for m in wide], ["Edge", "Ok"])
+        self.assertEqual(len(team_page.build_recent(BOS, snaps)["moves"]), 4)     # 不給窗口則不設限
+
+    def test_window_bounds_are_inclusive_and_unparseable_date_is_kept(self):
+        self.assertTrue(team_page._in_window("garbage", date(2026, 11, 1), date(2026, 11, 2)))
+        self.assertFalse(team_page._in_window("2026-10-31", date(2026, 11, 1), date(2026, 11, 2)))
+        self.assertTrue(team_page._in_window("2026-11-01", date(2026, 11, 1), date(2026, 11, 2)))
+        self.assertTrue(team_page._in_window("2026-11-02", date(2026, 11, 1), date(2026, 11, 2)))
+        self.assertFalse(team_page._in_window("2026-11-03", date(2026, 11, 1), date(2026, 11, 2)))
+
+
 class RecentNewsTests(unittest.TestCase):
     def rec(self, items, team=NYY, limit=5):
         return team_page.build_recent(team, {"2026-11-10": snap("2026-11-10", items=items)}, news_limit=limit)["news"]
@@ -75,7 +96,7 @@ class RecentNewsTests(unittest.TestCase):
     def test_matches_english_and_chinese_team_terms(self):
         out = self.rec([
             news("Yankees re-sign ace", "https://x/1"),
-            news("Offseason notebook", "https://x/2", zh="洋基補強牛棚"),
+            news("Offseason notebook", "https://x/2", zh="紐約洋基補強牛棚"),
             news("Yanks eye outfield help", "https://x/3"),
             news("Dodgers win", "https://x/4"),
             news("Notes", "https://x/5", summary="The New York Yankees are in talks.")])
@@ -99,6 +120,39 @@ class RecentNewsTests(unittest.TestCase):
         out = self.rec([news("Yankees sign", "https://x/1", zh="洋基簽約")])
         self.assertEqual(out[0]["title"], "洋基簽約")
         self.assertEqual(out[0]["source"], "MLB.com")
+
+    def test_false_positives_are_excluded(self):
+        cases = [
+            (TB, "X-rays came back negative for the shortstop"), (TB, "Prospect's X-Rays look clean"),
+            (138, "Collectors are trading cards again"),
+            (WSH, "Japanese nationals dominate the WBC"),
+            (SF, "Yomiuri Giants ace posted"), (SF, "Lotte Giants outfielder to MLB"),
+            (116, "Hanshin Tigers star eyes MLB"), (116, "Kia Tigers pitcher signs"), (116, "KIA Tigers lefty"),
+            (MIN, "LG Twins slugger posted"), (MIN, "NC Dinos and LG Twins meet"),
+            (WSH, "讀賣巨人與韓國國民打者"), (SF, "讀賣巨人外野手赴美"), (WSH, "韓國國民打者轉戰大聯盟"),
+            (TB, "新秀綻放光芒"), (108, "天使之城迎來新球季"), (116, "阪神老虎投手簽約"), (MIN, "LG雙城隊打者"),
+        ]
+        for team, title in cases:
+            with self.subTest(title=title):
+                self.assertEqual(self.rec([news(title, "https://x/1")], team=team), [])
+
+    def test_true_positives_still_match(self):
+        cases = [
+            (SF, "Giants sign veteran reliever"), (SF, "San Francisco Giants add depth"), (SF, "san francisco giants add depth"),
+            (SF, "舊金山巨人簽下新投手"), (TB, "Rays trade for outfielder"), (TB, "坦帕灣光芒交易外野手"),
+            (WSH, "Nationals promote prospect"), (WSH, "華盛頓國民簽約"), (138, "Cards extend closer"),
+            (MIN, "Twins hire new pitching coach"), (116, "Tigers claim lefty"), (116, "Detroit Tigers re-sign"),
+            (110, "O's acquire catcher"), (136, "M's add bat"), (133, "A's stadium update"), (133, "Athletics sign OF"),
+            (SF, "Giants beat Yomiuri Giants in exhibition"),       # 同句同時有真正的隊名
+        ]
+        for team, title in cases:
+            with self.subTest(title=title):
+                self.assertEqual(len(self.rec([news(title, "https://x/1")], team=team)), 1)
+
+    def test_chinese_short_name_alone_does_not_match(self):
+        # 中文簡稱歧義太多；譯文標題一律帶英文原文，真實新聞仍會由英文命中
+        self.assertEqual(self.rec([news("Offseason notebook", "https://x/1", zh="巨人簽下新投手")], team=SF), [])
+        self.assertEqual(len(self.rec([news("Giants sign arm", "https://x/2", zh="巨人簽下新投手")], team=SF)), 1)
 
     def test_non_http_links_are_dropped(self):
         self.assertEqual(self.rec([news("Yankees sign", "javascript:alert(1)")]), [])
@@ -145,6 +199,24 @@ class LeadersTests(unittest.TestCase):
         self.assertEqual((p["so"]["name"], p["so"]["value"]), ("Ace", 220))
         self.assertEqual((p["sv"]["name"], p["sv"]["value"]), ("Closer", 35))
         self.assertEqual((p["war"]["name"], p["war"]["value"]), ("Ace", 6.0))
+
+    def test_ties_prefer_more_volume_then_lower_id(self):
+        players = [hitter(30, "Few PA", 400, .300, .380, .500, 20, 10, 3.0), hitter(20, "Many PA", 600, .300, .380, .500, 20, 10, 3.0),
+                   hitter(10, "Many PA Low Id", 600, .300, .380, .500, 20, 10, 3.0)]
+        h = by_key(team_page.compute_leaders(players)["hitting"])
+        for key in ("avg", "ops", "hr", "sb", "war"):
+            self.assertEqual(h[key]["id"], 10, key)
+        self.assertEqual(by_key(team_page.compute_leaders(list(reversed(players)))["hitting"])["hr"]["id"], 10)   # 與名單順序無關
+        pitchers = [pitcher(5, "Short", "60.0", 3.0, 1.1, 50, 0, 1.0), pitcher(4, "Long", "100.1", 3.0, 1.1, 50, 0, 1.0),
+                    pitcher(3, "Long Low Id", "100.1", 3.0, 1.1, 50, 0, 1.0)]
+        p = by_key(team_page.compute_leaders(pitchers)["pitching"])
+        for key in ("era", "whip", "so", "war"):
+            self.assertEqual(p[key]["id"], 3, key)
+
+    def test_ops_prefers_raw_field(self):
+        raw = hitter(1, "Raw", 500, .300, .300, .300, 1, 1, 1.0)
+        raw["hitting"]["ops"] = .901
+        self.assertEqual(by_key(team_page.compute_leaders([raw])["hitting"])["ops"]["value"], .901)
 
     def test_ip_exactly_fifty_qualifies(self):
         p = by_key(team_page.compute_leaders([pitcher(10, "Fifty", "50.0", 3.0, 1.1, 40, 0, 0.5)])["pitching"])
@@ -274,16 +346,35 @@ class MakeExtrasTests(base.MlbTestBase):
         shutil.copytree(SNAP_DIR, d)
         return str(d)
 
-    def test_window_is_30_days_inclusive_and_ignores_future_files(self):
-        extras = team_page.make_extras(date(2026, 11, 18), self.ctx, snapshot_dir=self.snap_dir(), wl={})
-        out = extras(WSH, [])
-        self.assertEqual(out["recent"]["snapshotDays"], 2)       # 只有 11-16、11-18；11-19 之後的檔案不在窗口內
-        # 窗口邊界：以 11-16 為今天，往前 30 天含 11-16、不含更早，且 11-18 屬未來
-        extras2 = team_page.make_extras(date(2026, 11, 16), self.ctx, snapshot_dir=self.snap_dir_again(), wl={})
-        self.assertEqual(extras2(WSH, [])["recent"]["snapshotDays"], 1)
+    def snapshot_days(self, today):
+        extras = team_page.make_extras(today, self.ctx, snapshot_dir=self.snap_dir_again(), wl={})
+        return extras(WSH, [])["recent"]["snapshotDays"]
+
+    def test_window_ends_at_report_day_and_ignores_later_files(self):
+        shutil.copytree(SNAP_DIR, self.tmp / "data" / "daily")
+        # 今天 11-19 -> 報表日 11-18 為終點；可用快照有 11-16、18、20、22（19 為壞檔），只有 11-16、11-18 在窗口內
+        self.assertEqual(self.snapshot_days(date(2026, 11, 19)), 2)
+        self.assertEqual(team_page.recent_window(date(2026, 11, 19))[1], date(2026, 11, 18))
+
+    def test_window_covers_30_days_ending_yesterday_boundaries(self):
+        shutil.copytree(SNAP_DIR, self.tmp / "data" / "daily")
+        # 今天 12-16 -> 窗口 11-16..12-15（共 30 天）：最早一天 11-16 計入
+        self.assertEqual(team_page.recent_window(date(2026, 12, 16)), (date(2026, 11, 16), date(2026, 12, 15)))
+        self.assertEqual(self.snapshot_days(date(2026, 12, 16)), 4)
+        # 今天 12-17 -> 窗口 11-17..12-16：再早一天的 11-16 排除
+        self.assertEqual(self.snapshot_days(date(2026, 12, 17)), 3)
 
     def snap_dir_again(self):
         return str(self.tmp / "data" / "daily")
+
+    def test_summary_fields_degrade_independently(self):
+        extras = team_page.make_extras(date(2026, 11, 18), self.ctx, snapshot_dir=str(self.tmp / "nope"), wl={})
+        with mock.patch("mlb_daily.team_page.build_record", side_effect=RuntimeError("boom")), \
+                contextlib.redirect_stderr(io.StringIO()):
+            out = extras(NYY, [{"id": 1}])
+        self.assertIsNone(out["summary"]["record"])
+        self.assertEqual(out["summary"]["tracked"], [])
+        self.assertIn("postseason", out["summary"])
 
     def test_missing_snapshot_dir_gives_empty_recent(self):
         extras = team_page.make_extras(date(2026, 11, 18), self.ctx, snapshot_dir=str(self.tmp / "nope"), wl={})
@@ -322,7 +413,7 @@ class RosterIntegrationTests(base.MlbTestBase):
 
     def run_rosters(self):
         out, err = io.StringIO(), io.StringIO()
-        with mock.patch.object(sys, "argv", ["fetch_mlb.py", "--rosters", "--date", "2026-11-18"]), \
+        with mock.patch.object(sys, "argv", ["fetch_mlb.py", "--rosters", "--date", "2026-11-19"]), \
                 contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             try:
                 fetch_mlb.main()

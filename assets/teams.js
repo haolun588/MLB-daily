@@ -481,19 +481,21 @@
 
   function recentBlock(abbr, rc) {
     var sec = el("section", { "class": "block", "aria-label": "近期動態" });
-    sec.appendChild(blockHead("近期動態", "近 30 天"));
-    var noData = rc.snapshotDays === 0;      // 完全沒有每日資料：不能宣稱「沒有異動」
+    var days = typeof rc.snapshotDays === "number" ? rc.snapshotDays : 0;
+    var span = days >= 1 && days < 30 ? "近 " + days + " 天" : "近 30 天";   // 快照不足 30 天時標示實際涵蓋天數
+    sec.appendChild(blockHead("近期動態", span));
+    var noData = days === 0;      // 完全沒有每日資料：不能宣稱「沒有異動」
 
     sec.appendChild(el("h3", { "class": "sub-head" }, "人事異動"));
     var moves = Array.isArray(rc.moves) ? rc.moves : [];
     if (!moves.length) {
       sec.appendChild(noData
         ? emptyBox("尚無近期資料", "每日資料累積中，之後會顯示近 30 天的人事異動。")
-        : emptyBox("近 30 天沒有人事異動", "這段期間球隊沒有交易、簽約或名單異動的紀錄。"));
+        : emptyBox(span + "沒有人事異動", "這段期間球隊沒有交易、簽約或名單異動的紀錄。"));
     } else {
       var cols = el("div", { "class": "move-cols" });
-      cols.appendChild(moveList(abbr + ":in", "加入", moves.filter(function (m) { return m.dir === "in"; }), "近 30 天沒有球員加入。"));
-      cols.appendChild(moveList(abbr + ":out", "離開", moves.filter(function (m) { return m.dir === "out"; }), "近 30 天沒有球員離開。"));
+      cols.appendChild(moveList(abbr + ":in", "加入", moves.filter(function (m) { return m.dir === "in"; }), span + "沒有球員加入。"));
+      cols.appendChild(moveList(abbr + ":out", "離開", moves.filter(function (m) { return m.dir === "out"; }), span + "沒有球員離開。"));
       sec.appendChild(cols);
     }
 
@@ -502,7 +504,7 @@
     if (!news.length) {
       sec.appendChild(noData
         ? emptyBox("尚無近期資料", "每日資料累積中，之後會顯示近 30 天的相關新聞。")
-        : emptyBox("近 30 天沒有相關新聞", "休賽季消息較少，有新報導時會顯示在這裡。"));
+        : emptyBox(span + "沒有相關新聞", "休賽季消息較少，有新報導時會顯示在這裡。"));
     } else {
       var ul = el("ul", { "class": "news team-news" });
       news.forEach(function (n) {
@@ -556,7 +558,7 @@
     var th = lead.thresholds || {};
     if (th.minPa != null && th.minIp != null) {
       sec.appendChild(el("p", { "class": "block-note" },
-        "AVG、OPS 需 " + th.minPa + " 打席以上；ERA、WHIP 需 " + th.minIp + " 局以上；HR、SB、SO、SV 需至少 1。"));
+        "AVG、OPS 需 " + th.minPa + " 打席以上；ERA、WHIP 需 " + th.minIp + " 局以上；HR、SB、SO、SV 需至少 1。依目前名單計算，交易來的球員含其他球隊成績。"));
     }
     return sec;
   }
