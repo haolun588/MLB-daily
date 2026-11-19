@@ -418,7 +418,15 @@
     if (Array.isArray(sm.tracked) && sm.tracked.length) {
       var tr = el("div", { "class": "sum-tracked" });
       tr.appendChild(el("span", { "class": "sum-tracked-label" }, "台日韓球員"));
-      sm.tracked.forEach(function (n) { tr.appendChild(el("span", { "class": "tag tag-track" }, String(n))); });
+      var LEVEL_ZH = { "AAA": "3A", "AA": "2A", "A+": "高階1A", "A": "1A", "ROK": "新人聯盟" };
+      sm.tracked.forEach(function (n) {
+        var isObj = n !== null && typeof n === "object";
+        var name = isObj ? n.name : n;
+        var lv = isObj && LEVEL_ZH.hasOwnProperty(n.level) ? LEVEL_ZH[n.level] : null;
+        var tag = el("span", { "class": "tag tag-track" + (lv ? " is-minor" : "") }, String(name));
+        if (lv) tag.appendChild(el("span", { "class": "tag-level" }, lv));
+        tr.appendChild(tag);
+      });
       card.appendChild(tr);
     }
     return card;

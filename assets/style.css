@@ -1220,6 +1220,8 @@ img { max-width: 100%; height: auto; }
 .sum-tracked { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
 .sum-tracked-label { margin-right: 4px; font-size: 0.8125rem; color: var(--text-2); }
 .tag-track { color: var(--accent-ink); }
+.tag-track.is-minor { color: var(--text-2); font-weight: 500; }
+.tag-level { margin-left: 4px; font-size: 0.6875rem; font-weight: 400; }
 
 /* ---------- 區塊通用 ---------- */
 .block { margin-top: 40px; }
