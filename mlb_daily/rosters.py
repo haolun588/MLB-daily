@@ -144,6 +144,13 @@ def pitcher_group(pitching):
     return "RP"
 
 
+def _hand_code(person, key):
+    """person[key].code（batSide／pitchHand）；非字串或空值視為 None。"""
+    hand = person.get(key)
+    code = hand.get("code") if isinstance(hand, dict) else None
+    return code if isinstance(code, str) and code else None
+
+
 def build_player(entry):
     """roster 單筆 -> 精簡球員 dict；缺 person.id 回傳 None。"""
     person = entry.get("person") or {}
@@ -156,6 +163,8 @@ def build_player(entry):
         "name": person.get("fullName") or "",
         "number": str(entry.get("jerseyNumber") or ""),
         "pos": pos,
+        "bats": _hand_code(person, "batSide"),
+        "throws": _hand_code(person, "pitchHand"),
     }
     if pos == "P":
         pitching = build_pitching(person)

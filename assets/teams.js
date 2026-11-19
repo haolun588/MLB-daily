@@ -197,6 +197,8 @@
     th("_num", "#", "c-num", "背號", "asc");
     if (hasPos) th("_pos", "守位", "c-pos", "守位（C、1B、2B、3B、SS、LF、CF、RF、DH、其他）", "asc");
     th("_name", "球員", "c-name", "依姓名排序", "asc");
+    var bth = el("th", { scope: "col", "class": "c-bt", title: "打擊／投球慣用手（左 L、右 R、左右開弓 S）" }, "B/T");
+    tr.appendChild(bth);
     // 越低越好的欄位（ERA/WHIP/FIP）第一次點擊先升冪，其餘先降冪
     cols.forEach(function (c) { th(c.k, c.label, "", c.tip, /^(era|whip|fip)$/.test(c.k) ? "asc" : "desc"); });
     var thead = el("thead");
@@ -220,6 +222,7 @@
       }
       if (r.twp) nameTd.appendChild(el("small", { "class": "tag tag-twp" }, "二刀流"));
       row.appendChild(nameTd);
+      row.appendChild(el("td", { "class": "c-bt" }, handText(r.bats, r.throws)));
       cols.forEach(function (c) {
         var text = r.stats ? c.fmt(r.stats[c.k], r.stats) : DASH;
         row.appendChild(el("td", { "class": "n" + (text === DASH ? " is-empty" : "") }, text));
@@ -240,8 +243,14 @@
     return s;
   }
 
+  function handText(bats, throws) {
+    if (typeof bats !== "string" || !bats) bats = DASH;
+    if (typeof throws !== "string" || !throws) throws = DASH;
+    return bats === DASH && throws === DASH ? DASH : bats + "/" + throws;
+  }
+
   function row(p, stats, twp) {
-    return { id: p.id, name: String(p.name == null ? "" : p.name), number: p.number, pos: p.pos, stats: stats || null, twp: twp };
+    return { id: p.id, name: String(p.name == null ? "" : p.name), number: p.number, pos: p.pos, bats: p.bats, throws: p.throws, stats: stats || null, twp: twp };
   }
 
   /* ---------- 球隊 ---------- */

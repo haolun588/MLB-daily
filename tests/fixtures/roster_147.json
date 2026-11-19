@@ -65,7 +65,15 @@
        }
       ]
      }
-    ]
+    ],
+    "batSide": {
+     "code": "R",
+     "description": "R"
+    },
+    "pitchHand": {
+     "code": "R",
+     "description": "R"
+    }
    },
    "jerseyNumber": "45",
    "position": {
@@ -141,7 +149,15 @@
        }
       ]
      }
-    ]
+    ],
+    "batSide": {
+     "code": "L",
+     "description": "L"
+    },
+    "pitchHand": {
+     "code": "L",
+     "description": "L"
+    }
    },
    "jerseyNumber": "47",
    "position": {
@@ -284,7 +300,15 @@
        }
       ]
      }
-    ]
+    ],
+    "batSide": {
+     "code": "R",
+     "description": "R"
+    },
+    "pitchHand": {
+     "code": "R",
+     "description": "R"
+    }
    },
    "jerseyNumber": "99",
    "position": {
@@ -405,7 +429,15 @@
        }
       ]
      }
-    ]
+    ],
+    "batSide": {
+     "code": "L",
+     "description": "L"
+    },
+    "pitchHand": {
+     "code": "R",
+     "description": "R"
+    }
    },
    "jerseyNumber": "34",
    "position": {
@@ -420,7 +452,15 @@
    "person": {
     "id": 682617,
     "fullName": "Marco Luciano",
-    "stats": []
+    "stats": [],
+    "batSide": {
+     "code": "S",
+     "description": "S"
+    },
+    "pitchHand": {
+     "code": "R",
+     "description": "R"
+    }
    },
    "jerseyNumber": "",
    "position": {
