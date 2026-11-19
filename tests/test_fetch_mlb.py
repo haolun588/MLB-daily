@@ -2348,12 +2348,17 @@ def _split(stat, team=None):
     return sp
 
 
-def _entry(pos, stats=None, pid=1, name="Test Player", number="9"):
-    """組出 roster API 單筆；stats 為 [(type, group, [splits])]。"""
+def _entry(pos, stats=None, pid=1, name="Test Player", number="9", bat_side=None, pitch_hand=None):
+    """組出 roster API 單筆；stats 為 [(type, group, [splits])]；bat_side／pitch_hand 為選填原始值。"""
+    person = {"id": pid, "fullName": name,
+              "stats": [{"type": {"displayName": t}, "group": {"displayName": g}, "splits": sp}
+                        for t, g, sp in (stats or [])]}
+    if bat_side is not None:
+        person["batSide"] = bat_side
+    if pitch_hand is not None:
+        person["pitchHand"] = pitch_hand
     return {
-        "person": {"id": pid, "fullName": name,
-                   "stats": [{"type": {"displayName": t}, "group": {"displayName": g}, "splits": sp}
-                             for t, g, sp in (stats or [])]},
+        "person": person,
         "jerseyNumber": number,
         "position": {"abbreviation": pos},
     }
@@ -2612,9 +2617,34 @@ class RosterFlowTests(MlbTestBase):
         players = {p["name"]: p for p in self.read_team(147)["players"]}
         self.assertEqual(set(players["Aaron Judge"]["hitting"]), set(sample_hit))
         self.assertEqual(set(players["Gerrit Cole"]["pitching"]), set(sample_pit))
-        base = {"id", "name", "number", "pos", "group", "hitting", "pitching"}
+        base = {"id", "name", "number", "pos", "bats", "throws", "group", "hitting", "pitching"}
         self.assertEqual(set(players["Aaron Judge"]), base)
         self.assertEqual(set(players["Test Twoway"]), base | {"pitchingGroup"})
+        self.assertTrue(set(sample_players[0]) >= base)
+        self.assertTrue(all("bats" in p and "throws" in p for p in sample_players))
+
+    def test_hands_from_fixture(self):
+        self.run_rosters()
+        players = {p["name"]: p for p in self.read_team(147)["players"]}
+        self.assertEqual((players["Gerrit Cole"]["bats"], players["Gerrit Cole"]["throws"]), ("R", "R"))
+        self.assertEqual((players["Brent Headrick"]["bats"], players["Brent Headrick"]["throws"]), ("L", "L"))
+        self.assertEqual((players["Marco Luciano"]["bats"], players["Marco Luciano"]["throws"]), ("S", "R"))
+        self.assertEqual((players["No Data Fielder"]["bats"], players["No Data Fielder"]["throws"]), (None, None))
+
+    def test_build_player_hands(self):
+        p = fetch_mlb.build_player(_entry("LF", bat_side={"code": "L"}, pitch_hand={"code": "R"}))
+        self.assertEqual((p["bats"], p["throws"]), ("L", "R"))
+        p = fetch_mlb.build_player(_entry("TWP", bat_side={"code": "S"}, pitch_hand={"code": "L"}))
+        self.assertEqual((p["bats"], p["throws"]), ("S", "L"))
+        p = fetch_mlb.build_player(_entry("P"))
+        self.assertEqual((p["bats"], p["throws"]), (None, None))
+        p = fetch_mlb.build_player(_entry("P", bat_side={"code": "R"}))
+        self.assertEqual((p["bats"], p["throws"]), ("R", None))
+
+    def test_build_player_hands_invalid_types(self):
+        for bad in ("R", 5, ["R"], {"code": 1}, {"code": None}, {"code": ["R"]}, {"code": ""}, {}):
+            p = fetch_mlb.build_player(_entry("1B", bat_side=bad, pitch_hand=bad))
+            self.assertEqual((p["bats"], p["throws"]), (None, None), bad)
 
     def test_requests_use_roster_context(self):
         self.run_rosters()
@@ -2827,6 +2857,18 @@ class SiteNavTests(MlbTestBase):
         self.assertNotIn("teams.sample.json", js)
         for old, new in (("ARI", "AZ"), ("KCR", "KC"), ("OAK", "ATH")):
             self.assertRegex(js, rf'{old}:\s*"{new}"')
+
+    def test_teams_js_renders_hand_tag(self):
+        js = (REPO_ROOT / "assets" / "teams.js").read_text(encoding="utf-8")
+        css = (REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        self.assertIn('"class": "hand', js)
+        self.assertIn('"hand hand-"', js)
+        for sel in (".hand-L", ".hand-R", ".hand-S"):
+            self.assertIn(sel, css)
+        self.assertIn('"throws")', js)
+        self.assertIn('"bats")', js)
+        self.assertNotIn('"B/T"', js)
+        self.assertIn(".hand {", css)
 
     def test_style_has_nav_and_teams_rules(self):
         css = (REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")

@@ -28,6 +28,9 @@
   --cancel: #9b3b3b;    /* 取消（框線） */
   --cancel-ink: #dc8585;/* 取消（文字） */
   --teal: #3fb8a5;      /* SB */
+  --hand-l: #6ea8fe;    /* 左（L）：藍 */
+  --hand-r: #f0686c;    /* 右（R）：紅 */
+  --hand-s: #b98cf5;    /* 左右開弓（S）：紫 */
 
   --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
@@ -62,6 +65,9 @@
     --cancel: #8a2f2f;
     --cancel-ink: #8a2f2f;
     --teal: #0d7a6b;
+    --hand-l: #1f5fbf;
+    --hand-r: #b3262b;
+    --hand-s: #6b3fb3;
   }
 }
 
@@ -1070,6 +1076,22 @@ img { max-width: 100%; height: auto; }
   text-align: center;
   color: var(--text-2);
 }
+
+/* 名字後的慣用手小方框（投手表＝投球、野手表＝打擊） */
+.hand {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font: 700 0.625rem/1.5 var(--font-mono);
+  text-align: center;
+  vertical-align: middle;
+  color: var(--text-2);
+}
+.hand-L { color: var(--hand-l); border-color: var(--hand-l); }
+.hand-R { color: var(--hand-r); border-color: var(--hand-r); }
+.hand-S { color: var(--hand-s); border-color: var(--hand-s); }
 
 .roster .c-name {
   left: var(--numw);

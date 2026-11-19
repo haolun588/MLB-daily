@@ -218,6 +218,7 @@
       } else {
         nameTd.appendChild(document.createTextNode(r.name));
       }
+      if (r.hand) nameTd.appendChild(el("small", { "class": "hand hand-" + r.hand.code, title: r.hand.title }, r.hand.code));
       if (r.twp) nameTd.appendChild(el("small", { "class": "tag tag-twp" }, "二刀流"));
       row.appendChild(nameTd);
       cols.forEach(function (c) {
@@ -240,8 +241,19 @@
     return s;
   }
 
-  function row(p, stats, twp) {
-    return { id: p.id, name: String(p.name == null ? "" : p.name), number: p.number, pos: p.pos, stats: stats || null, twp: twp };
+  var HAND_TITLES = {
+    throws: { L: "投球慣用手：左投", R: "投球慣用手：右投" },
+    bats: { L: "打擊慣用手：左打", R: "打擊慣用手：右打", S: "打擊慣用手：左右開弓" }
+  };
+
+  // kind: "throws"（投手表）或 "bats"（野手表）；沒資料或不認得的代碼回傳 null（不顯示標籤）
+  function handOf(p, kind) {
+    var code = p[kind];
+    return typeof code === "string" && HAND_TITLES[kind][code] ? { code: code, title: HAND_TITLES[kind][code] } : null;
+  }
+
+  function row(p, stats, twp, kind) {
+    return { id: p.id, name: String(p.name == null ? "" : p.name), number: p.number, pos: p.pos, stats: stats || null, twp: twp, hand: handOf(p, kind) };
   }
 
   /* ---------- 球隊 ---------- */
@@ -311,7 +323,7 @@
       if (!list.length) return;
       var s = section(g === "SP" ? "SP 先發投手" : "RP 後援投手", list.length);
       s.appendChild(buildTable(abbr + ":" + g,
-        list.map(function (p) { return row(p, p.pitching, !!(p.hitting && p.pitching)); }),
+        list.map(function (p) { return row(p, p.pitching, !!(p.hitting && p.pitching), "throws"); }),
         g === "SP" ? SP_COLS : RP_COLS, { key: "ip", dir: "desc" }));
       box.appendChild(s);
     });
@@ -321,7 +333,7 @@
     if (bats.length) {
       var bs = section("野手", bats.length);
       bs.appendChild(buildTable(abbr + ":POS",
-        bats.map(function (p) { return row(p, p.hitting, !!(p.hitting && p.pitching)); }),
+        bats.map(function (p) { return row(p, p.hitting, !!(p.hitting && p.pitching), "bats"); }),
         HIT_COLS, { key: "_pos", dir: "asc" }, true));
       box.appendChild(bs);
     }
