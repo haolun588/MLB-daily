@@ -277,6 +277,13 @@ img { max-width: 100%; height: auto; }
   color: var(--text-2);
 }
 
+/* 區塊副標：緊貼 h2 右側，並把 count 推到最右 */
+.section-head .sub {
+  margin-right: auto;
+  font-size: 0.8125rem;
+  color: var(--text-2);
+}
+
 /* ---------- 新聞 ---------- */
 .news { list-style: none; }
 
@@ -287,6 +294,8 @@ img { max-width: 100%; height: auto; }
   padding: 14px 0;
   border-bottom: 1px solid var(--line);
 }
+
+.news.is-single li { grid-template-columns: minmax(0, 1fr); }
 
 .news time {
   font: 500 0.875rem/1.8 var(--font-mono);
