@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MLB 每日戰報 - 2026-11-22 休賽季快報</title>
+  <meta name="color-scheme" content="dark light">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../assets/style.css?v=0386441">
+</head>
+<body>
+<header class="masthead wrap">
+  <nav class="nav-row" aria-label="頁面導覽">
+    <a href="../../../index.html">← 首頁</a>
+    <span class="nav-links"><a href="../../../teams.html">球隊專頁</a><a href="../../../leaders.html">數據排行</a><a href="../../../playoffs.html">季後賽</a><a href="../../../archive.html">歷史存檔</a></span>
+  </nav>
+  <div class="brand">
+    <h1>MLB 每日戰報</h1>
+    <p class="dateline">2026 年 11 月 22 日（日）休賽季快報</p>
+  </div>
+</header>
+<main>
+<div class="wrap">
+  <dl class="overview">
+    <div><dt>新聞</dt><dd>3 則</dd></div><div><dt>人事異動</dt><dd>0 筆</dd></div>
+  </dl>
+</div>
+
+
+<section class="section wrap" aria-labelledby="news-h"><div class="section-head"><h2 id="news-h">今日新聞</h2><span class="count">3 則</span></div><article class="lead-story"><img class="lead-img" src="https://img.mlbstatic.com/mlb-images/image/upload/t_16x9/t_w1024/mlb/fs0u2fbw0oyvujcwu9qc" alt="這些頂級自由球員的下一個球隊將會得到哪個版本的他們？" loading="lazy"><p class="kicker">頭條 · 11/22 10:40</p><h3><a href="https://www.mlb.com/news/mlb-free-agents-in-2026-2027-class-who-are-toughest-to-project" target="_blank" rel="noopener">這些頂級自由球員的下一個球隊將會得到哪個版本的他們？</a></h3><p class="src">MLB.com</p></article><ol class="news is-two-col"><li><time datetime="2026-11-22T07:34">07:34</time><div><a class="title" href="https://www.mlb.com/news/josue-de-paula-arrival-creates-left-field-question-for-dodgers-with-teoscar-hernandez" target="_blank" rel="noopener">道奇可能會交易 Teo，以便在 2027 年給予 De Paula 更多磨練機會嗎？</a><span class="src">MLB.com · 11/22 07:34</span></div></li><li><time datetime="2026-11-22T03:08">03:08</time><div><a class="title" href="https://www.mlb.com/news/a-j-ewing-contract-extension-mets" target="_blank" rel="noopener">Ewing 與大都會達成 8 年 9500 萬美元的延長合約（消息來源）</a><span class="src">MLB.com · 11/22 03:08</span></div></li></ol></section>
+<section class="section wrap" aria-labelledby="analysis-h"><div class="section-head"><h2 id="analysis-h">深度分析</h2><span class="sub">FanGraphs 進階數據分析</span><span class="count">2 則</span></div><ol class="news is-single"><li><div><a class="title" href="https://blogs.fangraphs.com/sunday-notes-edgar-martinez-and-cj-gillman-are-different-spices-in-seattles-new-stew/" target="_blank" rel="noopener">週日筆記：Edgar Martinez 與 CJ Gillman 是水手新陣容中的不同調味料</a><span class="src">FanGraphs · David Laurila</span></div></li><li><div><a class="title" href="https://blogs.fangraphs.com/minnesota-rolls-royce-to-los-angeles-in-swap-of-former-first-rounders/" target="_blank" rel="noopener">明尼蘇達雙城透過前首輪選秀球員互換交易前往洛杉磯</a><span class="src">FanGraphs · Michael Baumann</span></div></li></ol></section>
+
+<section class="section wrap" aria-labelledby="tx-h"><div class="section-head"><h2 id="tx-h">大聯盟人事異動</h2><span class="count">0 筆</span></div><p class="section-empty">本日無大聯盟人事異動。</p></section>
+</main>
+<footer class="wrap site-footer">
+  <span>資料來源：MLB Stats API</span>
+  <span>產生時間：2026-11-23 13:01（台北時間）</span>
+</footer>
+<script>
+(function () {
+  var form = document.getElementById('searchForm');
+  var input = document.getElementById('q');
+  var hint = document.getElementById('searchHint');
+  if (!form || !input || !hint) return;   // 無比賽卡片時不輸出搜尋區
+  var DEFAULT_HINT = hint.textContent;
+  var lastQuery = '', lastIndex = -1, timer = null;
+
+  function say(msg, isError) {
+    hint.textContent = msg;               // 一律 textContent，不拼接 HTML
+    hint.classList.toggle('is-error', !!isError);
+  }
+
+  // data-teams 以 | 分隔：縮寫、中文名、英文名…
+  function find(q) {
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.game[data-teams]'));
+    var exact = [], partial = [];
+    cards.forEach(function (card) {
+      var tokens = card.getAttribute('data-teams').toLowerCase().split('|');
+      if (tokens.indexOf(q) !== -1) exact.push(card);
+      else if (tokens.some(function (t) { return t.indexOf(q) !== -1; })) partial.push(card);
+    });
+    return exact.length ? exact : partial;   // 精確縮寫／全名優先，沒有才用部分比對
+  }
+
+  function flash(card) {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    card.classList.add('is-hit');
+    clearTimeout(timer);
+    timer = setTimeout(function () { card.classList.remove('is-hit'); }, 2200);
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var raw = input.value.trim();
+    var q = raw.toLowerCase();
+    document.querySelectorAll('.game.is-hit').forEach(function (c) { c.classList.remove('is-hit'); });
+    if (!q) { say(DEFAULT_HINT, false); lastQuery = ''; return; }
+
+    var results = find(q);
+    if (!results.length) {
+      say('找不到「' + raw + '」，請輸入隊名或縮寫，例：洋基、LAD', true);
+      lastQuery = ''; lastIndex = -1;
+      return;
+    }
+    lastIndex = (q === lastQuery) ? (lastIndex + 1) % results.length : 0;  // 再按 Enter 跳下一筆
+    lastQuery = q;
+    flash(results[lastIndex]);
+    say(results.length > 1
+      ? '共 ' + results.length + ' 場，目前第 ' + (lastIndex + 1) + ' 場，再按 Enter 跳下一場'
+      : '已跳至「' + raw + '」的比賽', false);
+  });
+
+  input.addEventListener('input', function () { lastQuery = ''; });
+})();
+</script>
+</body>
+</html>
