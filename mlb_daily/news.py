@@ -118,7 +118,7 @@ def render_news_section(news, page_type):
     else:
         rest = list(news)
         lead = ""
-        if page_type == "offseason":
+        if page_type in ("offseason", "rest_day"):
             top = rest.pop(0)
             image = ""
             if top.get("image"):
@@ -135,7 +135,7 @@ def render_news_section(news, page_type):
             f'<span class="src">{htmlutil.esc(NEWS_SOURCE)} · {htmlutil.esc(n["published"].strftime("%m/%d %H:%M"))}</span></div></li>'
             for n in rest
         )
-        cls = "news is-two-col" if page_type == "offseason" else "news"
+        cls = "news is-two-col" if page_type in ("offseason", "rest_day") else "news"
         body = lead + (f'<ol class="{cls}">{items}</ol>' if items else "")
     return f'<section class="section wrap" aria-labelledby="news-h">{head}{body}</section>'
 

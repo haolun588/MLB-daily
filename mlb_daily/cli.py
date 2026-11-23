@@ -219,7 +219,8 @@ def main():
             print(f"Error: reports/metadata.json 中找不到 {date_str} 的資料，無法發送通知。", file=sys.stderr)
             sys.exit(1)
         if not notify.should_notify(entry):
-            print(f"{date_str} 為休賽季快報且無新聞、無人事異動，不發送 Discord 通知。")
+            label = "休兵日快報" if storage.entry_type(entry) == "rest_day" else "休賽季快報"
+            print(f"{date_str} 為{label}且無新聞、無人事異動，不發送 Discord 通知。")
             return
         notify.send_discord_notification(entry)
         return
@@ -261,14 +262,21 @@ def main():
 
     # Check if there are games scheduled
     if not games:
-        print(f"No games scheduled or found on {date_str}. Generating offseason report.")
-        empty_meta = report.generate_offseason_report(date_str)
+        kind, reason = season.classify_no_game_day(date_str)
+        if kind == "rest_day":
+            print(f"No games scheduled or found on {date_str}. Generating rest day report ({reason}).")
+            empty_meta = report.generate_rest_day_report(date_str, reason)
+            label = "休兵日快報"
+        else:
+            print(f"No games scheduled or found on {date_str}. Generating offseason report.")
+            empty_meta = report.generate_offseason_report(date_str)
+            label = "休賽季快報"
         index_page.update_index_page(empty_meta)
         if not args.no_notify:
             if notify.should_notify(empty_meta):
                 notify.send_discord_notification(empty_meta)
             else:
-                print("休賽季快報無新聞、無人事異動，不發送 Discord 通知。")
+                print(f"{label}無新聞、無人事異動，不發送 Discord 通知。")
         sys.exit(0)
 
     # 3. Generate report files

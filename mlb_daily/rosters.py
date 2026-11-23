@@ -28,8 +28,8 @@ def _season_started(year, start, today):
             continue
         for g in d.get("games") or []:
             status = (g.get("status") or {}) if isinstance(g, dict) else {}
-            if status.get("abstractGameState") == "Final" or (
-                    d.get("date") == today_iso and status.get("detailedState") not in ("Postponed", "Cancelled")):
+            if season_mod.is_completed(status) or (
+                    d.get("date") == today_iso and not season_mod.is_cancelled_or_postponed(status)):
                 season_mod.set_confirmed_started(year)
                 return True
     return False

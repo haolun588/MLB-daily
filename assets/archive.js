@@ -114,8 +114,9 @@
           el('span', { cls: 'd', text: mm + '-' + day }),
           el('span', { cls: 'wk', text: '週' + weekday(d) })
         ]);
-        var isOff = info.type ? info.type === 'offseason' : games === 0;
-        var count = el('span', { cls: 'c', text: isOff ? '休賽' : games + ' 場' });
+        var isRest = info.type === 'rest_day';
+        var isOff = isRest || (info.type ? info.type === 'offseason' : games === 0);
+        var count = el('span', { cls: 'c', text: isRest ? '休兵' : (isOff ? '休賽' : games + ' 場') });
         var kids = [top, count];
         if (pp) kids.push(el('span', { cls: 'pp', text: '延賽 ' + pp }));
 

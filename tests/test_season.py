@@ -115,6 +115,16 @@ class ResolveContextTests(SeasonTestBase):
             self.assertEqual(ctx, {"rosterType": "40Man", "season": 2025, "rosterSeason": 2026})
             self.assertIn("Warning", self.errs)
 
+    def test_cancelled_final_games_do_not_confirm_start(self):
+        post = {"abstractGameState": "Final", "detailedState": "Postponed", "codedGameState": "D"}
+        canc = {"abstractGameState": "Final", "detailedState": "Cancelled", "codedGameState": "C"}
+        nocode = {"abstractGameState": "Final", "detailedState": "Postponed: Rain"}
+        for st in (post, canc, nocode):
+            self.net.schedule = {"dates": [{"date": "2026-04-10", "games": [{"status": st}]}]}
+            ctx = self.resolve(date(2026, 4, 10))
+            self.assertEqual(ctx, {"rosterType": "40Man", "season": 2025, "rosterSeason": 2026})
+            self.assertFalse(season.confirmed_started(2026))
+
     def test_confirmed_started_cache_skips_schedule(self):
         self.write_cache({"years": {"2026": {"regularSeasonStartDate": START, "postSeasonEndDate": END,
                                               "confirmedStarted": True}}})

@@ -112,8 +112,8 @@ def render_latest_card(date_str, entry):
     kind = storage.entry_type(entry)
     date_main, _, weekday = timeutil.fmt_date_long(date_str).partition("（")
     wk = f"（{weekday}" if weekday else ""
-    if kind == "offseason":
-        eyebrow = "休賽季快報"
+    if kind in ("offseason", "rest_day"):
+        eyebrow = "休兵日" if kind == "rest_day" else "休賽季快報"
         stats = [("", label, text) for label, text in _offseason_counts(entry)]
     else:
         eyebrow = "戰報"
@@ -142,8 +142,8 @@ def render_recent_item(date_str, entry):
     date_main, _, weekday = timeutil.fmt_date_long(date_str).partition("（")
     wk = f"（{weekday}" if weekday else ""
     summary = str(entry.get("summary", ""))
-    if kind == "offseason":
-        label, label_cls = "休賽季", "k is-off"
+    if kind in ("offseason", "rest_day"):
+        label, label_cls = ("休兵日" if kind == "rest_day" else "休賽季"), "k is-off"
         counts = "、".join(f"{lab} {text}" for lab, text in _offseason_counts(entry))
         if counts:
             summary = f"{summary}（{counts}）" if summary else counts

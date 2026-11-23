@@ -7,9 +7,10 @@
 
 import json
 import sys
+from datetime import timedelta
 
 from . import net, storage, timeutil
-from .config import SEASON_URL, _UNSET
+from .config import SEASON_URL, SEASON_RANGE_SCHEDULE_URL, _UNSET
 
 _state = {"path": None, "data": None}
 
@@ -101,22 +102,42 @@ def _parse_dates(info):
     return start, end
 
 
-def get_season_dates(year, season_data=_UNSET):
-    """回傳 (開季日, 季後賽結束日)（date）；API 成功時更新快取，失敗時改用快取（印 warning），都沒有回 None。
-    season_data：呼叫端已取得的 /seasons/{year} 回應（None 代表已失敗）；省略時自行請求。"""
+# 休兵日判斷用的 /seasons 欄位（存進快取 years[year]，API 失敗時從快取讀）
+_INFO_KEYS = ("lastDate1stHalf", "firstDate2ndHalf", "postSeasonStartDate")
+REST_WINDOW_DAYS = 14
+
+
+def _parse_info(info):
+    """只保留可解析的日期欄位（isoformat 字串）。"""
+    out = {}
+    if isinstance(info, dict):
+        for k in _INFO_KEYS:
+            d = timeutil._parse_iso_date(info.get(k))
+            if d is not None:
+                out[k] = d.isoformat()
+    return out
+
+
+def _season_lookup(year, season_data=_UNSET):
+    """回傳 ((開季日, 季後賽結束日) 或 None, 額外日期欄位 dict)；API 成功時更新快取，失敗時改用快取（印 warning）。"""
     data = net.fetch_json(SEASON_URL.format(year=year)) if season_data is _UNSET else season_data
-    dates = None
     try:
         info = data["seasons"][0]
         dates = _parse_dates(info)
         if dates is not None:
+            extra = _parse_info(info)
             if cache_enabled():
                 entry = _load()["years"].setdefault(str(year), {})
                 entry["regularSeasonStartDate"] = dates[0].isoformat()
                 entry["postSeasonEndDate"] = dates[1].isoformat()
+                for k in _INFO_KEYS:
+                    if k in extra:
+                        entry[k] = extra[k]
+                    else:
+                        entry.pop(k, None)
                 entry["fetchedAt"] = timeutil.get_taipei_now().isoformat(timespec="seconds")
                 _save()
-            return dates
+            return dates, extra
     except (TypeError, KeyError, IndexError, AttributeError):
         pass
     cached = _load()["years"].get(str(year))
@@ -125,5 +146,85 @@ def get_season_dates(year, season_data=_UNSET):
                               "postSeasonEndDate": cached.get("postSeasonEndDate")})
         if dates is not None:
             print(f"Warning: 無法取得 {year} 賽季日期，改用快取的賽季日期（{cached.get('fetchedAt', '?')} 取得）。", file=sys.stderr)
-            return dates
-    return None
+            return dates, _parse_info(cached)
+    return None, {}
+
+
+def get_season_dates(year, season_data=_UNSET):
+    """回傳 (開季日, 季後賽結束日)（date）；API 成功時更新快取，失敗時改用快取（印 warning），都沒有回 None。
+    season_data：呼叫端已取得的 /seasons/{year} 回應（None 代表已失敗）；省略時自行請求。"""
+    return _season_lookup(year, season_data)[0]
+
+
+def get_season_info(year, season_data=_UNSET):
+    """回傳 {lastDate1stHalf, firstDate2ndHalf, postSeasonStartDate}（isoformat 字串，取不到的欄位省略）。"""
+    return _season_lookup(year, season_data)[1]
+
+
+# ---------------------------------------------------------------- 無比賽日分類
+def is_cancelled_or_postponed(status):
+    """延賽／取消（這類比賽的 abstractGameState 也是 Final，不能只看它）。"""
+    status = status if isinstance(status, dict) else {}
+    detailed = str(status.get("detailedState") or "")
+    return status.get("codedGameState") in ("D", "C") or detailed.startswith(("Postponed", "Cancelled"))
+
+
+def is_completed(status):
+    """真正完賽：abstractGameState 為 Final，且不是延賽／取消。"""
+    status = status if isinstance(status, dict) else {}
+    return status.get("abstractGameState") == "Final" and not is_cancelled_or_postponed(status)
+
+
+def _range_games(start, end):
+    """區間內所有賽事（status dict 的 list）；查詢失敗或格式不符回傳 None。"""
+    data = net.fetch_json(SEASON_RANGE_SCHEDULE_URL.format(start=start.isoformat(), end=end.isoformat()))
+    if not isinstance(data, dict) or not isinstance(data.get("dates"), list):
+        return None
+    out = []
+    for day in data["dates"]:
+        if not isinstance(day, dict) or not isinstance(day.get("games", []), list):
+            return None
+        for g in day.get("games", []):
+            if not isinstance(g, dict):
+                return None
+            st = g.get("status")
+            out.append(st if isinstance(st, dict) else {})
+    return out
+
+
+def _rest_reason(d, info):
+    last1 = timeutil._parse_iso_date(info.get("lastDate1stHalf"))
+    first2 = timeutil._parse_iso_date(info.get("firstDate2ndHalf"))
+    post = timeutil._parse_iso_date(info.get("postSeasonStartDate"))
+    if last1 and first2 and last1 < d < first2:
+        return "明星賽假期"
+    if post and d >= post:
+        return "季後賽休兵"
+    if last1 or first2 or post:
+        return "例行賽休兵日"
+    return "休兵日"
+
+
+def classify_no_game_day(date_str):
+    """無比賽日分類：回傳 ("rest_day", reason) 或 ("offseason", None)。
+    在 [開季日, 季後賽結束日] 內，且前 14 天有完賽、後 14 天（不超過季後賽結束日）有賽程 → 休兵日；
+    任一段查詢成功但無符合比賽 → 休賽季；查詢失敗則依日期區間判休兵日（印 warning）。"""
+    d = timeutil._parse_iso_date(date_str)
+    if d is None:
+        return "offseason", None
+    dates, info = _season_lookup(d.year)
+    if dates is None or not (dates[0] <= d <= dates[1]):
+        return "offseason", None
+    reason = _rest_reason(d, info)
+    delta = timedelta(days=1)
+    if d >= dates[1]:  # 後段區間為空
+        return "offseason", None
+    prev = _range_games(d - timedelta(days=REST_WINDOW_DAYS), d - delta)
+    nxt = _range_games(d + delta, min(d + timedelta(days=REST_WINDOW_DAYS), dates[1]))
+    prev_ok = None if prev is None else any(is_completed(s) for s in prev)
+    next_ok = None if nxt is None else any(not is_cancelled_or_postponed(s) for s in nxt)
+    if prev_ok is False or next_ok is False:
+        return "offseason", None
+    if prev_ok is None or next_ok is None:
+        print(f"Warning: 無法查詢 {date_str} 前後賽程，依日期區間判定為休兵日。", file=sys.stderr)
+    return "rest_day", reason

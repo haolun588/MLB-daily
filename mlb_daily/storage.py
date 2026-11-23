@@ -69,7 +69,7 @@ def _to_int(value, default=0):
 def entry_type(entry):
     """metadata 項目的頁面類型；舊資料缺 type 時以 total_games 推斷。"""
     t = entry.get("type")
-    if t in ("season", "offseason"):
+    if t in ("season", "offseason", "rest_day"):
         return t
     return "season" if _to_int(entry.get("total_games")) > 0 else "offseason"
 

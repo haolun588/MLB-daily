@@ -1,4 +1,4 @@
-"""每日戰報與休賽季快報的產生。"""
+"""每日戰報、休賽季快報與休兵日快報的產生。"""
 
 import sys
 
@@ -7,10 +7,12 @@ from .config import DAILY_SNAPSHOT_SCHEMA
 
 
 # ---------------------------------------------------------------- 渲染：總覽與區塊
-def render_summary(page_type, total_games=0, postponed=0, news_count=None, transactions_count=0):
-    """news_count 為 None（新聞功能尚未接上）時，休賽季總覽省略「新聞」一格。"""
-    if page_type == "offseason":
+def render_summary(page_type, total_games=0, postponed=0, news_count=None, transactions_count=0, rest_reason=""):
+    """news_count 為 None（新聞功能尚未接上）時，休賽季／休兵日總覽省略「新聞」一格；休兵日第一格為賽程（rest_reason）。"""
+    if page_type in ("offseason", "rest_day"):
         items = []
+        if page_type == "rest_day":
+            items.append(f"<div><dt>賽程</dt><dd>{htmlutil.esc(rest_reason)}</dd></div>")
         if news_count is not None:
             items.append(f"<div><dt>新聞</dt><dd>{int(news_count)} 則</dd></div>")
         items.append(f"<div><dt>人事異動</dt><dd>{int(transactions_count)} 筆</dd></div>")
@@ -45,14 +47,16 @@ def render_games_section(cards_html):
 
 
 # ---------------------------------------------------------------- 組裝：整頁
-def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news=None, spotlight_html="", analysis=None):
-    """賽季戰報與休賽季快報共用：組出所有插槽後交給 render_page。"""
+def render_report(date_str, page_type, cards_html=(), postponed_count=0, tx_list=(), news=None, spotlight_html="",
+                  analysis=None, rest_reason=""):
+    """賽季戰報、休賽季快報與休兵日快報共用：組出所有插槽後交給 render_page。"""
     cards_html = list(cards_html)
     tx_list = list(tx_list)
-    if page_type == "offseason":
-        subtitle, title_suffix = "休賽季快報", " 休賽季快報"
+    if page_type in ("offseason", "rest_day"):
+        subtitle, title_suffix = ("休兵日", " 休兵日") if page_type == "rest_day" else ("休賽季快報", " 休賽季快報")
         summary = render_summary(
-            "offseason", news_count=None if news is None else len(news), transactions_count=len(tx_list))
+            page_type, news_count=None if news is None else len(news), transactions_count=len(tx_list),
+            rest_reason=rest_reason)
         games = ""
         transactions = transactions_mod.render_transactions_section(tx_list, "大聯盟人事異動", "本日無大聯盟人事異動。")
     else:
@@ -230,19 +234,27 @@ def generate_report(date_str, games):
     return meta
 
 
-def build_offseason_summary(news, transactions_count):
-    """休賽季 metadata 摘要（純文字，渲染時另行 escape）：優先用前 3 則新聞標題（已翻譯用譯文）。"""
+def _build_no_game_summary(news, transactions_count, label):
+    """無賽事日 metadata 摘要（純文字，渲染時另行 escape）：優先用前 3 則新聞標題（已翻譯用譯文）。"""
     titles = [(n.get("title_zh") or n["title"]).strip() for n in (news or [])[:3]]
     titles = [t for t in titles if t]
     if titles:
         return "；".join(titles) + "。"
     if transactions_count > 0:
-        return f"休賽季：人事異動 {transactions_count} 筆"
-    return "休賽季，無重大消息"
+        return f"{label}：人事異動 {transactions_count} 筆"
+    return f"{label}，無重大消息"
 
 
-def generate_offseason_report(date_str):
-    """無賽事日：產出「休賽季快報」頁面（新聞＋大聯盟人事異動），回傳 metadata。"""
+def build_offseason_summary(news, transactions_count):
+    return _build_no_game_summary(news, transactions_count, "休賽季")
+
+
+def build_rest_day_summary(news, transactions_count):
+    return _build_no_game_summary(news, transactions_count, "休兵日")
+
+
+def _generate_no_game_report(date_str, page_type, rest_reason=""):
+    """無賽事日：產出快報頁面（新聞＋大聯盟人事異動），回傳 metadata。page_type 為 "offseason" 或 "rest_day"。"""
     raw_tx = transactions_mod.fetch_raw_transactions(date_str)
     tx_list = transactions_mod.filter_major_league_transactions(raw_tx)
     news_all = news_mod.fetch_all_daily_news(date_str)
@@ -252,20 +264,34 @@ def generate_offseason_report(date_str):
     tx_matches, news_matches, extra_news = _spotlight_matches(wl, raw_tx, news_all, news)
     translated = translate.apply_translations(news, [], tx_list + tx_matches, extra_news=extra_news, analysis=analysis)
     spotlight, spotlight_html = _spotlight_build(date_str, wl, tx_matches, news_matches)
-    storage.write_report(date_str, render_report(date_str, "offseason", tx_list=tx_list, news=news,
-                                                 spotlight_html=spotlight_html, analysis=analysis))
-    _save_daily_snapshot(date_str, False, tx_list, news)
+    storage.write_report(date_str, render_report(date_str, page_type, tx_list=tx_list, news=news,
+                                                 spotlight_html=spotlight_html, analysis=analysis,
+                                                 rest_reason=rest_reason))
+    _save_daily_snapshot(date_str, False, tx_list, news)  # has_games：當日無比賽（休兵日亦然）
+    summary = (build_rest_day_summary if page_type == "rest_day" else build_offseason_summary)(news, len(tx_list))
     meta = {
         "date": date_str,
         "total_games": 0,
         "postponed": 0,
-        "summary": build_offseason_summary(news, len(tx_list)),
-        "type": "offseason",
+        "summary": summary,
+        "type": page_type,
         "transactions_count": len(tx_list),
         "translated": translated,
     }
+    if page_type == "rest_day":
+        meta["rest_reason"] = rest_reason
     if news is not None:  # 抓取失敗時不寫 news_count
         meta["news_count"] = len(news)
     if spotlight:  # 有內容才寫入
         meta["spotlight"] = spotlight
     return meta
+
+
+def generate_offseason_report(date_str):
+    """無賽事日：產出「休賽季快報」頁面（新聞＋大聯盟人事異動），回傳 metadata。"""
+    return _generate_no_game_report(date_str, "offseason")
+
+
+def generate_rest_day_report(date_str, reason):
+    """賽季中無賽事日：產出「休兵日」頁面（內容同休賽季快報，總覽第一格為賽程原因），回傳 metadata。"""
+    return _generate_no_game_report(date_str, "rest_day", reason)

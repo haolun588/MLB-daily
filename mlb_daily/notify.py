@@ -11,8 +11,8 @@ from .config import SITE_BASE_URL
 
 
 def should_notify(entry):
-    """休賽季快報在新聞與人事異動皆為 0（缺欄位視為 0）時不發通知；其餘照常。"""
-    if storage.entry_type(entry) == "offseason":
+    """休賽季快報與休兵日快報在新聞與人事異動皆為 0（缺欄位視為 0）時不發通知；其餘照常。"""
+    if storage.entry_type(entry) in ("offseason", "rest_day"):
         return storage._to_int(entry.get("news_count")) > 0 or storage._to_int(entry.get("transactions_count")) > 0
     return True
 
@@ -33,13 +33,15 @@ def send_discord_notification(new_meta):
     parts = date_str.split('-')
     report_url = f"https://haolun588.github.io/MLB-daily/reports/{parts[0]}/{parts[1]}/{date_str}.html"
     
-    if storage.entry_type(new_meta) == "offseason":
+    kind = storage.entry_type(new_meta)
+    if kind in ("offseason", "rest_day"):
+        label = "休兵日快報" if kind == "rest_day" else "休賽季快報"
         parts_text = []
         if "news_count" in new_meta:
             parts_text.append(f"新聞 {storage._to_int(new_meta['news_count'])} 則")
         if "transactions_count" in new_meta:
             parts_text.append(f"人事異動 {storage._to_int(new_meta['transactions_count'])} 筆")
-        description = "休賽季快報：" + "、".join(parts_text) if parts_text else "休賽季快報已生成。"
+        description = f"{label}：" + "、".join(parts_text) if parts_text else f"{label}已生成。"
         fields = []
     else:
         description = "昨日焦點戰報與最新賽況已生成，點擊下方連結即可瀏覽完整內容！"
