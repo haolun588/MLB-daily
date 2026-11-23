@@ -6,8 +6,8 @@ import sys
 import time
 from datetime import datetime, timedelta
 
-from . import games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, storage, team_page, timeutil, watchlist, weekly
-from .config import MAX_WAIT_CHECKS, SITE_BASE_URL, WAIT_SLEEP_SECONDS
+from . import games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, season, storage, team_page, timeutil, watchlist, weekly
+from .config import MAX_WAIT_CHECKS, SEASON_CACHE_PATH, SITE_BASE_URL, WAIT_SLEEP_SECONDS
 
 
 def _taipei_today(date_arg):
@@ -74,11 +74,14 @@ def _run_leaders(args):
 
 
 def _run_watchlist(args):
-    """--watchlist：從 MLB API 抓台日韓球員名單，寫 data/watchlist.json；全部抓取失敗回傳非 0。"""
+    """--watchlist：從 MLB API 抓台日韓球員名單（可跨多個賽季），寫 data/watchlist.json；全部抓取失敗回傳非 0。"""
     today = _taipei_today(args.date)
-    season = rosters.resolve_roster_context(today)["season"]
+    ctx = rosters.resolve_roster_context(today)
+    dates = season.get_season_dates(today.year)
+    season_end = dates[1] if dates else None
+    seasons = watchlist.watchlist_seasons(today, ctx, season_end)
     try:
-        ok = watchlist.generate_watchlist(season)
+        ok = watchlist.generate_watchlist(seasons)
     except OSError as e:
         print(f"Error: 寫入追蹤名單失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
         sys.exit(1)
@@ -160,6 +163,9 @@ def main():
         print("Error: --max-wait-checks must be >= 1", file=sys.stderr)
         sys.exit(1)
     
+    # 啟用賽季日期／單日 context 快取（各步驟為獨立 process，靠 data/season_cache.json 共用）
+    season.enable_cache(SEASON_CACHE_PATH)
+
     # --watchlist：動態追蹤名單（不碰每日戰報流程與 metadata）
     if args.watchlist:
         _run_watchlist(args)

@@ -130,6 +130,11 @@ jobs:
             rm -f data/leaders.json
             echo "::warning::gh-pages 尚無 data/leaders.json"
           fi
+          # 賽季日期與當日賽季判斷快取（各步驟共用；取不到只警告，不中止）
+          if ! git show origin/gh-pages:data/season_cache.json > data/season_cache.json 2>/dev/null; then
+            rm -f data/season_cache.json
+            echo "::warning::gh-pages 尚無 data/season_cache.json"
+          fi
           # 季後賽對戰樹資料（首頁小卡來源）：取不到只警告，不中止
           if ! git show origin/gh-pages:data/playoffs.json > data/playoffs.json 2>/dev/null; then
             rm -f data/playoffs.json

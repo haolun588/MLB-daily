@@ -28,6 +28,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 import fetch_mlb  # noqa: E402
+from mlb_daily import season as season_mod  # noqa: E402
 
 DATE = "2026-11-15"
 WINNER_ROW = '<tr class="is-win">'
@@ -164,6 +165,11 @@ class MlbTestBase(unittest.TestCase):
         discord = mock.patch("mlb_daily.notify.send_discord_notification")
         self.discord = discord.start()
         self.addCleanup(discord.stop)
+        # 賽季快取預設關閉；跑 main() 的測試不得啟用（以免寫出 data/season_cache.json 或跨測試殘留 process 記憶）
+        enable = mock.patch("mlb_daily.season.enable_cache")
+        self.enable_cache = enable.start()
+        self.addCleanup(enable.stop)
+        self.addCleanup(season_mod.disable_cache)
 
     # ---- helpers ----
     def games_of(self, schedule_name):
@@ -2902,6 +2908,34 @@ class RosterFlowTests(MlbTestBase):
         self.assertEqual(code, 1)
         index = self.read_index()
         self.assertFalse(any(t["ok"] for t in index["teams"]))
+
+    def test_empty_roster_counts_as_failure_and_keeps_old_file(self):
+        self.run_rosters()
+        before = (self.tmp / "data" / "teams" / "147.json").read_bytes()
+        orig = self.api.fetch
+
+        def fetch(url, retries=3, delay=5):
+            if "/teams/147/roster?" in url:
+                return {"roster": []}
+            return orig(url, retries, delay)
+
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=fetch):
+            code, _, err = self.run_rosters()
+        self.assertEqual(code, 0)  # 其餘球隊仍成功
+        self.assertEqual((self.tmp / "data" / "teams" / "147.json").read_bytes(), before)
+        entry = next(t for t in self.read_index()["teams"] if t["id"] == 147)
+        self.assertFalse(entry["ok"])
+        self.assertIn("回傳 0 人", err)
+
+    def test_all_empty_rosters_exit_1_and_keep_old_index(self):
+        self.run_rosters()
+        before_index = (self.tmp / "data" / "teams" / "index.json").read_bytes()
+        before_team = (self.tmp / "data" / "teams" / "147.json").read_bytes()
+        self.api.roster_override = {"roster": []}
+        code, _, _ = self.run_rosters()
+        self.assertEqual(code, 1)
+        self.assertEqual((self.tmp / "data" / "teams" / "index.json").read_bytes(), before_index)
+        self.assertEqual((self.tmp / "data" / "teams" / "147.json").read_bytes(), before_team)
 
     def test_malformed_roster_response_counts_as_failure(self):
         self.api.roster_override = {"unexpected": True}

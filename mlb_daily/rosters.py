@@ -4,8 +4,9 @@ import os
 import sys
 import time
 
-from . import net, storage, timeutil
+from . import net, season as season_mod, storage, timeutil
 from .config import (
+    SEASON_SCHEDULE_URL,
     ROSTER_DIR,
     ROSTER_FETCH_INTERVAL,
     TEAM_META,
@@ -13,34 +14,64 @@ from .config import (
 )
 
 
+def _season_started(year, start, today):
+    """賽季日期區間內，確認開季真的發生（停擺防護）。回傳 True／False；查詢失敗回傳 None（無法判斷）。"""
+    if season_mod.confirmed_started(year):
+        return True
+    data = net.fetch_json(SEASON_SCHEDULE_URL.format(start=start.isoformat(), end=today.isoformat()))
+    dates = data.get("dates") if isinstance(data, dict) else None
+    if not isinstance(dates, list):
+        return None
+    today_iso = today.isoformat()
+    for d in dates:
+        if not isinstance(d, dict):
+            continue
+        for g in d.get("games") or []:
+            status = (g.get("status") or {}) if isinstance(g, dict) else {}
+            if status.get("abstractGameState") == "Final" or (
+                    d.get("date") == today_iso and status.get("detailedState") not in ("Postponed", "Cancelled")):
+                season_mod.set_confirmed_started(year)
+                return True
+    return False
+
+
 def resolve_roster_context(today, season_data=_UNSET):
     """依台北日期 today（date）判斷名單類型與數據賽季。
 
     回傳 dict：rosterType（active／40Man）、season（數據賽季 statsSeason）、rosterSeason（名單 season 參數）。
-    賽季 API 失敗或缺日期時退回以月份推估並印 warning。
+    快取啟用（cli.main）時，同一天只算一次，結果存進 data/season_cache.json 供各步驟共用。
+    賽季 API 失敗時沿用快取的賽季日期；快取也沒有則退回以月份推估並印 warning（此結果不寫入快取）。
+    日期上落在賽季中時，另查例行賽賽程確認開季真的發生（停擺防護）；查詢失敗則依日期判為賽季中。
     season_data：呼叫端已取得的 /seasons/{today.year} 回應（可為 None 代表已失敗）；省略時自行請求。
     """
+    cached = season_mod.get_context(today)
+    if cached is not None:
+        return cached
     year = today.year
-    start = end = None
-    data = net.fetch_json(f"https://statsapi.mlb.com/api/v1/seasons/{year}?sportId=1") if season_data is _UNSET else season_data
-    try:
-        info = data["seasons"][0]
-        start = timeutil._parse_iso_date(info.get("regularSeasonStartDate"))
-        end = timeutil._parse_iso_date(info.get("postSeasonEndDate")) or timeutil._parse_iso_date(info.get("seasonEndDate"))
-    except (TypeError, KeyError, IndexError, AttributeError):
-        pass
-    if start is None or end is None:
+    dates = season_mod.get_season_dates(year, season_data)
+    if dates is None:
         print(f"Warning: 無法取得 {year} 賽季日期，改以月份推估賽季。", file=sys.stderr)
         if 4 <= today.month <= 10:
             return {"rosterType": "active", "season": year, "rosterSeason": year}
         if today.month >= 11:
             return {"rosterType": "40Man", "season": year, "rosterSeason": year}
         return {"rosterType": "40Man", "season": year - 1, "rosterSeason": year}
+    start, end = dates
     if today < start:
-        return {"rosterType": "40Man", "season": year - 1, "rosterSeason": year}
-    if today > end:
-        return {"rosterType": "40Man", "season": year, "rosterSeason": year}
-    return {"rosterType": "active", "season": year, "rosterSeason": year}
+        ctx = {"rosterType": "40Man", "season": year - 1, "rosterSeason": year}
+    elif today > end:
+        ctx = {"rosterType": "40Man", "season": year, "rosterSeason": year}
+    else:
+        started = _season_started(year, start, today)
+        if started is False:
+            print(f"Warning: {year} 賽季日期已到（{start.isoformat()} 起），但查無已完賽或今日賽程，視為延後開季。", file=sys.stderr)
+            ctx = {"rosterType": "40Man", "season": year - 1, "rosterSeason": year}
+        else:
+            if started is None:
+                print(f"Warning: 無法確認 {year} 賽季是否已開打，依日期判為賽季中。", file=sys.stderr)
+            ctx = {"rosterType": "active", "season": year, "rosterSeason": year}
+    season_mod.set_context(today, ctx)
+    return ctx
 
 
 def roster_url(team_id, roster_type, roster_season, stats_season):
@@ -215,8 +246,9 @@ def fetch_rosters(today, extras_factory=None):
             players = build_team_players(net.fetch_json(roster_url(tid, roster_type, roster_season, season)))
         except Exception as e:
             print(f"Warning: {meta['abbr']} 名單處理失敗：{e}", file=sys.stderr)
-        if players is None:
-            print(f"Warning: {meta['abbr']} 名單抓取失敗，保留舊檔（若有）。", file=sys.stderr)
+        if not players:  # None（抓取失敗／格式不符）或 []（0 人，視為異常）都保留舊檔
+            reason = "抓取失敗" if players is None else "回傳 0 人"
+            print(f"Warning: {meta['abbr']} 名單{reason}，保留舊檔（若有）。", file=sys.stderr)
         else:
             extra = {}
             if extras is not None:
@@ -237,8 +269,12 @@ def fetch_rosters(today, extras_factory=None):
             except OSError as e:
                 print(f"Warning: {meta['abbr']} 寫檔失敗：{e}", file=sys.stderr)
         teams_index.append(entry)
-    storage.write_json_atomic(os.path.join(ROSTER_DIR, "index.json"), {
-        "updatedAt": now_iso, "rosterType": roster_type, "season": season, "teams": teams_index,
-    })
+    index_path = os.path.join(ROSTER_DIR, "index.json")
+    if ok_count == 0 and os.path.exists(index_path):  # 全部失敗且已有舊索引：保留，避免把上次成功的索引覆寫成全 ok=False
+        print("Warning: 30 隊名單全部失敗，保留既有 index.json 不覆寫。", file=sys.stderr)
+    else:
+        storage.write_json_atomic(index_path, {
+            "updatedAt": now_iso, "rosterType": roster_type, "season": season, "teams": teams_index,
+        })
     print(f"Rosters done: {ok_count}/{len(TEAM_META)} teams updated.")
     return ok_count

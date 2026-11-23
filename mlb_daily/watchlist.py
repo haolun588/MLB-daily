@@ -90,33 +90,88 @@ def _previous_players(dynamic_path):
     return [p for p in players if isinstance(p, dict)] if isinstance(players, list) else []
 
 
-def fetch_dynamic_players(season, dynamic_path=None):
-    """抓取各層級球員並過濾台日韓，依 id 去重、保留最高層級。
+def watchlist_seasons(today, ctx, season_end=None):
+    """決定動態名單要查的賽季。回傳 {"mlb": {"required": [...], "optional": [...]}, "minor": {...}}（皆為遞增整數 list）。
+    必查賽季失敗會讓該層級走舊檔 fallback；選查賽季失敗只印訊息。
+    大聯盟：必查 {ctx.season, ctx.rosterSeason}；當年季後賽結束後（today > season_end，取不到時以 11 月起推估）
+      且 today.year == ctx.season（尚未跨年）時，選查 year+1（休賽季新簽球員要到開幕才出現在 season=year-1）。
+    小聯盟：必查 ctx.season；ctx.rosterSeason 不同時選查（下一季的小聯盟資料休賽季不完整）。"""
+    season, roster_season = ctx["season"], ctx["rosterSeason"]
+    mlb_required = sorted({season, roster_season})
+    after_season = (today > season_end) if season_end is not None else today.month >= 11
+    mlb_optional = [season + 1] if after_season and today.year == season and season + 1 not in mlb_required else []
+    minor_optional = [roster_season] if roster_season != season else []
+    return {"mlb": {"required": mlb_required, "optional": mlb_optional},
+            "minor": {"required": [season], "optional": minor_optional}}
+
+
+def _normalize_seasons(seasons):
+    """整數賽季（舊呼叫方式）視為大聯盟、小聯盟都只必查該賽季。"""
+    if isinstance(seasons, int):
+        return {"mlb": {"required": [seasons], "optional": []}, "minor": {"required": [seasons], "optional": []}}
+    return seasons
+
+
+def planned_seasons(seasons):
+    """計畫查詢的所有賽季（遞增、去重），寫入 data/watchlist.json 的 season 欄位。"""
+    seasons = _normalize_seasons(seasons)
+    return sorted({y for grp in seasons.values() for key in ("required", "optional") for y in grp[key]})
+
+
+def _rank(level, season):
+    """去重排序鍵（越小越優先）：大聯盟名單中有的人一律最優先；其次較新賽季；同賽季才比層級高低。"""
+    return (0 if level == "MLB" else 1, -season, LEVEL_ORDER[level])
+
+
+def fetch_dynamic_players(seasons, dynamic_path=None):
+    """抓取各層級球員並過濾台日韓，依 id 去重。
+    seasons：watchlist_seasons 的結果，或單一整數賽季（兩者層級都只查該賽季）。
+    每個 sportId 依序查各賽季（遞增）：必查賽季失敗（含 people 為空）→ 該層級列入 failed，沿用既有 data/watchlist.json
+    中該層級的球員（新資料有同 id 者以新資料為準），已成功賽季的資料照樣併入；選查賽季失敗或為空只印訊息。
+    大聯盟各賽季依 id 聯集；小聯盟同一人出現在多個賽季時以較新賽季的層級為準、同賽季才比層級高低；跨層級 MLB 優先。
     回傳 [{id,name_en,region,level,org_id,current_level}]（org_id 為母隊 MLB id、current_level 為 currentTeam 所在層級，
-    對不到或 teams 端點失敗為 None）。單一 sportId 失敗（含 people 為空）警告並沿用既有 data/watchlist.json 中
-    該層級的球員（新資料有同 id 者以新資料為準）；全部失敗回傳 None。"""
+    對不到或 teams 端點失敗為 None）；全部 sportId 都失敗回傳 None。"""
     dynamic_path = dynamic_path or DYNAMIC_WATCHLIST_PATH
-    affiliates = _parse_affiliates(net.fetch_json(TEAMS_URL.format(season=season)))
+    seasons = _normalize_seasons(seasons)
+    minor = seasons["minor"]
+    minor_all = sorted(set(minor["required"]) | set(minor["optional"]))
+    affiliates = {}
+    for y in dict.fromkeys([minor_all[-1]] + list(minor["required"])):  # 最新賽季優先，空了退回必查賽季
+        affiliates = _parse_affiliates(net.fetch_json(TEAMS_URL.format(season=y)))
+        if affiliates:
+            break
     if not affiliates:
         print("Warning: 附屬球隊對照抓取失敗，org_id／current_level 將為空。", file=sys.stderr)
-    best = {}
+    best = {}  # id → (rank, 球員 dict)
     failed = []
     ok = 0
     for sport_id in (1,) + MINOR_SPORT_IDS:
-        data = net.fetch_json(PLAYERS_URL.format(sport_id=sport_id, season=season))
-        if not isinstance(data, dict) or not isinstance(data.get("people"), list) or not data["people"]:
-            print(f"Warning: sportId={sport_id}（{LEVELS[sport_id]}）球員清單抓取失敗或為空，略過。", file=sys.stderr)
-            failed.append(LEVELS[sport_id])
-            continue
-        ok += 1
-        for pid, name, region, level, team_id in _parse_sport_players(data, sport_id):
-            old = best.get(pid)
-            if old is None or LEVEL_ORDER[level] < LEVEL_ORDER[old["level"]]:
-                org_id, current_level = _org_and_level(team_id, affiliates)
-                best[pid] = {"id": pid, "name_en": name, "region": region, "level": level,
-                             "org_id": org_id, "current_level": current_level}
+        grp = seasons["mlb"] if sport_id == 1 else minor
+        required = set(grp["required"])
+        sport_ok = False
+        for season in sorted(required | set(grp["optional"])):
+            data = net.fetch_json(PLAYERS_URL.format(sport_id=sport_id, season=season))
+            if not isinstance(data, dict) or not isinstance(data.get("people"), list) or not data["people"]:
+                if season in required:
+                    print(f"Warning: sportId={sport_id}（{LEVELS[sport_id]}）{season} 賽季球員清單抓取失敗或為空，略過。", file=sys.stderr)
+                    if LEVELS[sport_id] not in failed:
+                        failed.append(LEVELS[sport_id])
+                else:
+                    print(f"Note: sportId={sport_id}（{LEVELS[sport_id]}）{season} 賽季（選查）無資料，略過。")
+                continue
+            sport_ok = True
+            for pid, name, region, level, team_id in _parse_sport_players(data, sport_id):
+                rank = _rank(level, season)
+                old = best.get(pid)
+                if old is None or rank < old[0]:
+                    org_id, current_level = _org_and_level(team_id, affiliates)
+                    best[pid] = (rank, {"id": pid, "name_en": name, "region": region, "level": level,
+                                        "org_id": org_id, "current_level": current_level})
+        if sport_ok:
+            ok += 1
     if ok == 0:
         return None
+    best = {pid: v[1] for pid, v in best.items()}
     if failed:
         carried = 0
         for p in _previous_players(dynamic_path):
@@ -128,7 +183,7 @@ def fetch_dynamic_players(season, dynamic_path=None):
             best[pid] = {"id": pid, "name_en": str(p["name_en"]).strip(), "region": p["region"], "level": p["level"],
                          "org_id": htmlutil._int_id(p.get("org_id")), "current_level": cl if cl in LEVEL_ORDER else None}
             carried += 1
-        print(f"{'、'.join(failed)} 層級抓取失敗或為空，沿用上次名單中的 {carried} 位球員。")
+        print(f"{'、'.join(failed)} 層級必查賽季抓取失敗或為空，沿用上次名單中的 {carried} 位球員。")
     return list(best.values())
 
 
@@ -144,14 +199,15 @@ def _settings_exclude_ids(data):
     return {i for i in (htmlutil._int_id(x) for x in raw) if i is not None}
 
 
-def generate_watchlist(season, now=None, path=None, dynamic_path=None):
-    """抓取並寫 data/watchlist.json。全部抓取失敗回傳 False（不覆寫舊檔）。
+def generate_watchlist(seasons, now=None, path=None, dynamic_path=None):
+    """抓取並寫 data/watchlist.json。seasons 同 fetch_dynamic_players；檔內 season 欄位為查過的賽季清單（遞增整數 list）。
+    全部抓取失敗回傳 False（不覆寫舊檔）。
     missing_zh：動態名單中 settings 沒有中文名對照（且未被排除）的球員。"""
     path = path or WATCHLIST_PATH
     dynamic_path = dynamic_path or DYNAMIC_WATCHLIST_PATH
-    players = fetch_dynamic_players(season, dynamic_path)
+    players = fetch_dynamic_players(seasons, dynamic_path)
     if players is None:
-        print(f"Error: {season} 賽季的台日韓球員名單全部抓取失敗，保留既有檔案不覆寫。", file=sys.stderr)
+        print(f"Error: {planned_seasons(seasons)} 賽季的台日韓球員名單全部抓取失敗，保留既有檔案不覆寫。", file=sys.stderr)
         return False
     try:
         settings = _read_json(path)
@@ -165,7 +221,7 @@ def generate_watchlist(season, now=None, path=None, dynamic_path=None):
     players.sort(key=lambda p: (REGION_ORDER[p["region"]], LEVEL_ORDER[p["level"]], p["name_en"]))
     missing = [p for p in players if p["id"] not in known and p["id"] not in excluded]
     now = now or timeutil.get_taipei_now()
-    data = {"updatedAt": now.isoformat(timespec="seconds"), "season": season, "players": players, "missing_zh": missing}
+    data = {"updatedAt": now.isoformat(timespec="seconds"), "season": planned_seasons(seasons), "players": players, "missing_zh": missing}
     storage.write_json_atomic(dynamic_path, data)
     counts = {r: sum(1 for p in players if p["region"] == r) for r in REGION_NAMES}
     print(f"Successfully wrote {dynamic_path}：台灣 {counts['TW']}、日本 {counts['JP']}、韓國 {counts['KR']} 位。")

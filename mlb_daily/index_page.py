@@ -15,9 +15,20 @@ def _safe_call(label, fn, *args):
         return None
 
 
-def _fallback_roster_context(today):
-    """賽季判斷完全失敗時以月份推估（4–10 月視為賽季中；1–3 月的數據賽季是上一年，與 resolve_roster_context 一致）。"""
+def _month_roster_context(today):
     return {"rosterType": "active" if 4 <= today.month <= 10 else "40Man", "season": today.year - 1 if today.month <= 3 else today.year}
+
+
+def _fallback_roster_context(today):
+    """賽季判斷失敗時的後備：先試 resolve_roster_context(today, None)（會走快取的賽季日期與當日 context），
+    任何例外或失敗才以月份推估（4–10 月視為賽季中；1–3 月的數據賽季是上一年，與 resolve_roster_context 一致）。"""
+    try:
+        ctx = rosters.resolve_roster_context(today, None)
+        if isinstance(ctx, dict) and "rosterType" in ctx and "season" in ctx:
+            return {"rosterType": ctx["rosterType"], "season": ctx["season"]}
+    except Exception as e:  # noqa: BLE001 - 後備流程不得再失敗
+        print(f"Warning: 後備賽季判斷失敗（{type(e).__name__}: {e}），改以月份推估。", file=sys.stderr)
+    return _month_roster_context(today)
 
 
 def _leaders_card_html():

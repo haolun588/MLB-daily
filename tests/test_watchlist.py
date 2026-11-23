@@ -5,6 +5,7 @@ import io
 import json
 import sys
 import unittest
+from datetime import date
 from pathlib import Path
 from unittest import mock
 
@@ -146,7 +147,7 @@ class DynamicWatchlistTests(unittest.TestCase):
         self.assertEqual([p["id"] for p in data["missing_zh"]], [2])
         self.assertEqual(data["missing_zh"][0], {"id": 2, "name_en": "B Jp", "region": "JP", "level": "MLB",
                                                   "org_id": None, "current_level": None})
-        self.assertEqual(data["season"], 2026)
+        self.assertEqual(data["season"], [2026])
         self.assertIn("updatedAt", data)
 
     # ---- 母隊與層級
@@ -296,6 +297,156 @@ class DynamicWatchlistTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------- 比對
+# ---------------------------------------------------------------- 多賽季聯集
+class WatchlistSeasonsTests(unittest.TestCase):
+    def seasons(self, today, ctx, end=None):
+        return fetch_mlb.watchlist.watchlist_seasons(today, ctx, end)
+
+    def test_after_world_series_queries_next_year_optionally(self):
+        ctx = {"rosterType": "40Man", "season": 2026, "rosterSeason": 2026}
+        end = date(2026, 11, 4)
+        for today in (date(2026, 11, 23), date(2026, 12, 31)):
+            self.assertEqual(self.seasons(today, ctx, end), {
+                "mlb": {"required": [2026], "optional": [2027]}, "minor": {"required": [2026], "optional": []}})
+
+    def test_season_end_unknown_estimates_by_month(self):
+        ctx = {"rosterType": "40Man", "season": 2026, "rosterSeason": 2026}
+        self.assertEqual(self.seasons(date(2026, 11, 3), ctx)["mlb"]["optional"], [2027])
+        self.assertEqual(self.seasons(date(2026, 10, 31), ctx)["mlb"]["optional"], [])
+
+    def test_before_postseason_ends_has_no_optional_year(self):
+        ctx = {"rosterType": "active", "season": 2026, "rosterSeason": 2026}
+        self.assertEqual(self.seasons(date(2026, 10, 20), ctx, date(2026, 11, 4))["mlb"],
+                         {"required": [2026], "optional": []})
+
+    def test_new_year_before_opening_day(self):
+        ctx = {"rosterType": "40Man", "season": 2026, "rosterSeason": 2027}
+        self.assertEqual(self.seasons(date(2027, 1, 1), ctx, date(2027, 11, 4)), {
+            "mlb": {"required": [2026, 2027], "optional": []}, "minor": {"required": [2026], "optional": [2027]}})
+
+    def test_opening_day(self):
+        ctx = {"rosterType": "active", "season": 2027, "rosterSeason": 2027}
+        self.assertEqual(self.seasons(date(2027, 3, 25), ctx, date(2027, 11, 4)), {
+            "mlb": {"required": [2027], "optional": []}, "minor": {"required": [2027], "optional": []}})
+
+    def test_planned_seasons_and_int_compat(self):
+        w = fetch_mlb.watchlist
+        self.assertEqual(w.planned_seasons(2026), [2026])
+        plan = {"mlb": {"required": [2026], "optional": [2027]}, "minor": {"required": [2026], "optional": []}}
+        self.assertEqual(w.planned_seasons(plan), [2026, 2027])
+
+
+class MultiSeasonFetchTests(unittest.TestCase):
+    PLAN = {"mlb": {"required": [2026], "optional": [2027]}, "minor": {"required": [2026], "optional": [2027]}}
+
+    def setUp(self):
+        import tempfile
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.tmp = Path(tmp.name)
+        self.settings = self.tmp / "settings.json"
+        self.settings.write_text(json.dumps({"players": []}), encoding="utf-8")
+        self.dynamic = self.tmp / "dynamic.json"
+        self.w = fetch_mlb.watchlist
+        self.urls = []
+
+    def fetcher(self, data, teams=None):
+        """data: {(sportId, 賽季): people list 或 None（失敗）}；沒列出的組合視為失敗。teams: {賽季: [team dict]}。"""
+        def fetch(url, retries=3, delay=5):
+            self.urls.append(url)
+            if "/teams?" in url:
+                return None if teams is None else {"teams": teams.get(int(url.split("season=")[1]), [])}
+            sid = int(url.split("/sports/")[1].split("/")[0])
+            people = data.get((sid, int(url.split("season=")[1])))
+            return None if people is None else {"people": people}
+        return fetch
+
+    def gen(self, data, plan=None, teams=None):
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=self.fetcher(data, teams)):
+            return quiet(self.w.generate_watchlist, plan or self.PLAN, None, str(self.settings), str(self.dynamic))
+
+    def written(self):
+        return json.loads(self.dynamic.read_text(encoding="utf-8"))
+
+    def levels(self):
+        return {p["id"]: p["level"] for p in self.written()["players"]}
+
+    def test_mlb_union_across_seasons_dedup_and_season_field_is_list(self):
+        ok = self.gen({(1, 2026): [person(1, "A Tw", "Taiwan"), person(2, "B Jp", "Japan")],
+                       (1, 2027): [person(2, "B Jp", "Japan"), person(3, "C Kr", "Korea")],
+                       (11, 2026): [person(9, "Z Tw", "Taiwan")], (12, 2026): [person(9, "Z Tw", "Taiwan")]})
+        self.assertTrue(ok)
+        got = self.written()
+        self.assertEqual(sorted(p["id"] for p in got["players"]), [1, 2, 3, 9])
+        self.assertEqual(len([p for p in got["players"] if p["id"] == 2]), 1)
+        self.assertEqual(got["season"], [2026, 2027])
+
+    def test_minor_newer_season_level_wins_even_if_lower(self):
+        self.gen({(1, 2026): [person(8, "M Tw", "Taiwan")],
+                  (11, 2026): [person(1, "A Tw", "Taiwan")], (12, 2027): [person(1, "A Tw", "Taiwan")],
+                  (12, 2026): [person(2, "B Tw", "Taiwan")], (13, 2026): [person(2, "B Tw", "Taiwan")],
+                  (11, 2027): [person(8, "M Tw", "Taiwan")]})
+        got = self.levels()
+        self.assertEqual(got[1], "AA")     # 2027 的 AA 優先於 2026 的 AAA
+        self.assertEqual(got[2], "AA")     # 同賽季才比層級
+        self.assertEqual(got[8], "MLB")    # 大聯盟名單有的人一律 MLB
+
+    def test_required_failure_carries_old_level_but_keeps_successful_seasons(self):
+        self.dynamic.write_text(json.dumps({"players": [
+            {"id": 10, "name_en": "Old Aaa", "region": "TW", "level": "AAA"},
+            {"id": 11, "name_en": "Old Mlb", "region": "JP", "level": "MLB"}]}), encoding="utf-8")
+        # AAA 必查 2026 失敗，但選查 2027 成功；MLB 兩季都成功
+        self.gen({(1, 2026): [person(1, "A Tw", "Taiwan")], (1, 2027): [person(2, "B Tw", "Taiwan")],
+                  (11, 2027): [person(3, "C Tw", "Taiwan")], (12, 2026): [person(4, "D Tw", "Taiwan")]})
+        self.assertEqual(self.levels(), {1: "MLB", 2: "MLB", 3: "AAA", 4: "AA", 10: "AAA"})  # 10 沿用；11（MLB 層級）不沿用
+
+    def test_optional_failure_or_empty_is_not_a_failure(self):
+        self.dynamic.write_text(json.dumps({"players": [
+            {"id": 10, "name_en": "Old Aaa", "region": "TW", "level": "AAA"}]}), encoding="utf-8")
+        out = io.StringIO()
+        data = {(1, 2026): [person(1, "A Tw", "Taiwan")], (1, 2027): [],
+                (11, 2026): [person(3, "C Tw", "Taiwan")], (11, 2027): None,
+                (12, 2026): [person(4, "D Tw", "Taiwan")]}
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=self.fetcher(data)), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            self.assertTrue(self.w.generate_watchlist(self.PLAN, None, str(self.settings), str(self.dynamic)))
+        self.assertEqual(sorted(self.levels()), [1, 3, 4])  # 10 不沿用：AAA 必查賽季成功
+        self.assertIn("選查", out.getvalue())
+        self.assertNotIn("AAA 層級必查", out.getvalue())
+
+    def test_all_required_fail_returns_none_keeps_old_file(self):
+        self.dynamic.write_text('{"players": []}', encoding="utf-8")
+        before = self.dynamic.read_text(encoding="utf-8")
+        self.assertFalse(self.gen({}))
+        self.assertEqual(self.dynamic.read_text(encoding="utf-8"), before)
+
+    def test_affiliates_use_latest_minor_season_then_fall_back(self):
+        teams = {2027: [{"id": 400, "parentOrgId": 133, "sport": {"id": 11}}], 2026: []}
+        self.gen({(1, 2026): [person(1, "A Tw", "Taiwan", team=400)]}, teams=teams)
+        self.assertEqual(self.written()["players"][0]["org_id"], 133)
+        self.assertEqual([u.split("season=")[1] for u in self.urls if "/teams?" in u], ["2027"])
+        self.urls.clear()
+        teams = {2027: [], 2026: [{"id": 400, "parentOrgId": 109, "sport": {"id": 11}}]}
+        self.gen({(1, 2026): [person(1, "A Tw", "Taiwan", team=400)]}, teams=teams)
+        self.assertEqual(self.written()["players"][0]["org_id"], 109)
+        self.assertEqual([u.split("season=")[1] for u in self.urls if "/teams?" in u], ["2027", "2026"])
+
+    def test_cli_run_watchlist_passes_season_plan(self):
+        args = mock.Mock(date="2026-11-23")
+        ctx = {"rosterType": "40Man", "season": 2026, "rosterSeason": 2026}
+        with mock.patch("mlb_daily.rosters.resolve_roster_context", return_value=ctx), \
+                mock.patch("mlb_daily.season.get_season_dates", return_value=(date(2026, 3, 25), date(2026, 11, 4))), \
+                mock.patch("mlb_daily.watchlist.generate_watchlist", return_value=True) as gen:
+            fetch_mlb.cli._run_watchlist(args)
+        self.assertEqual(gen.call_args[0][0], {
+            "mlb": {"required": [2026], "optional": [2027]}, "minor": {"required": [2026], "optional": []}})
+        with mock.patch("mlb_daily.rosters.resolve_roster_context", return_value=ctx), \
+                mock.patch("mlb_daily.season.get_season_dates", return_value=None), \
+                mock.patch("mlb_daily.watchlist.generate_watchlist", return_value=True) as gen:
+            fetch_mlb.cli._run_watchlist(args)
+        self.assertEqual(gen.call_args[0][0]["mlb"]["optional"], [2027])  # 取不到賽季日期：以 11 月起推估
+
+
 class MatchingTests(unittest.TestCase):
     def setUp(self):
         self.wl = load_wl()

@@ -166,6 +166,9 @@ SCHEDULE_PREVIEW_URL = "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=
 PEOPLE_STATS_URL = ("https://statsapi.mlb.com/api/v1/people?personIds={ids}"
                     "&hydrate=stats(group=[pitching],type=[season],season={season})")
 SEASON_URL = "https://statsapi.mlb.com/api/v1/seasons/{year}?sportId=1"
+SEASON_CACHE_PATH = os.path.join("data", "season_cache.json")
+SEASON_SCHEDULE_URL = ("https://statsapi.mlb.com/api/v1/schedule?sportId=1&gameType=R&startDate={start}&endDate={end}"
+                       "&fields=dates,date,games,status,abstractGameState,detailedState")
 TRANSACTIONS_RANGE_URL = ("https://statsapi.mlb.com/api/v1/transactions?startDate={start}&endDate={end}"
                           "&sportId=1")
 
