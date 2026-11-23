@@ -90,6 +90,15 @@ NEWS_SOURCE = "MLB.com"
 ANALYSIS_RSS_URL = "https://blogs.fangraphs.com/feed/"
 ANALYSIS_SOURCE = "FanGraphs"
 ANALYSIS_LIMIT = 6
+ANALYSIS_MAX_PAGES = 5  # FanGraphs feed 每頁 10 篇；最多往後翻到第 5 頁（補產舊日期用）
+# RSS 累積快取（MLB RSS 固定 25 篇、不支援分頁，補產舊日期只能靠每日累積）
+FEED_CACHE_PATH = os.path.join("data", "feed_cache.json")
+FEED_CACHE_DAYS = 21
+FEED_CACHE_MAX_ITEMS = 3000
+FEED_CACHE_SCHEMA = 1
+# 漏跑日自動補產與週報補產
+BACKFILL_DAYS = 7
+WEEKLY_BACKFILL_WEEKS = 4
 TAIPEI_TZ = timezone(timedelta(hours=8))
 _UNSET = object()  # 「未提供參數」的哨兵值（None 代表呼叫端已取得但失敗）
 

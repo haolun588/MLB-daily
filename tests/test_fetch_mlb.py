@@ -29,6 +29,7 @@ if str(REPO_ROOT) not in sys.path:
 
 import fetch_mlb  # noqa: E402
 from mlb_daily import season as season_mod  # noqa: E402
+from mlb_daily import feed_cache as feed_cache_mod  # noqa: E402
 
 DATE = "2026-11-15"
 WINNER_ROW = '<tr class="is-win">'
@@ -170,6 +171,11 @@ class MlbTestBase(unittest.TestCase):
         self.enable_cache = enable.start()
         self.addCleanup(enable.stop)
         self.addCleanup(season_mod.disable_cache)
+        # RSS 累積快取同理：不得在 main() 測試中啟用而寫出 data/feed_cache.json 或跨測試殘留
+        feed_enable = mock.patch("mlb_daily.feed_cache.enable_cache")
+        feed_enable.start()
+        self.addCleanup(feed_enable.stop)
+        self.addCleanup(feed_cache_mod.disable_cache)
 
     # ---- helpers ----
     def games_of(self, schedule_name):

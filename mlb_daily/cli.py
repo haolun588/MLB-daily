@@ -6,8 +6,8 @@ import sys
 import time
 from datetime import datetime, timedelta
 
-from . import games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, season, storage, team_page, timeutil, watchlist, weekly
-from .config import MAX_WAIT_CHECKS, SEASON_CACHE_PATH, SITE_BASE_URL, WAIT_SLEEP_SECONDS
+from . import backfill, feed_cache, games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, season, storage, team_page, timeutil, watchlist, weekly
+from .config import BACKFILL_DAYS, FEED_CACHE_PATH, MAX_WAIT_CHECKS, SEASON_CACHE_PATH, SITE_BASE_URL, WAIT_SLEEP_SECONDS
 
 
 def _taipei_today(date_arg):
@@ -41,11 +41,16 @@ def _run_weekly(args):
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
-    if entry is None:
-        return
-    print(f"weekly_week={entry['week']}")
-    print(f"weekly_url={SITE_BASE_URL}{entry['path']}")
-    if os.path.exists("reports/metadata.json"):  # 讓首頁立即出現最新週報連結；失敗不影響週報
+    if entry is not None:
+        print(f"weekly_week={entry['week']}")
+        print(f"weekly_url={SITE_BASE_URL}{entry['path']}")
+    backfilled = []
+    if not args.week:  # 補產最近幾週缺漏的週報（不印 weekly_week／weekly_url，不觸發通知）
+        try:
+            backfilled = backfill.backfill_weekly_reports(today)
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - 補產失敗不影響正常週報流程
+            print(f"Warning: 週報補產失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
+    if (entry is not None or backfilled) and os.path.exists("reports/metadata.json"):  # 讓首頁立即出現最新週報連結；失敗不影響週報
         try:
             index_page.refresh_index_page()
         except (Exception, SystemExit) as e:  # noqa: BLE001 - metadata 損壞會 sys.exit；週報已產生，不應以非 0 結束
@@ -130,7 +135,20 @@ def main():
 
     parser.add_argument("--watchlist", action="store_true", help="Fetch Taiwan/Japan/Korea players from the MLB API (MLB: TW/JP/KR, minors: TW only) and write data/watchlist.json (no report, no notification)")
 
+    parser.add_argument("--backfill", action="store_true", help="Generate missing reports for the last --backfill-days days (excluding yesterday) and refresh the day-before-yesterday snapshot transactions; never sends notifications")
+    parser.add_argument("--backfill-days", type=int, default=None, help=f"With --backfill: how many days back to check (default {BACKFILL_DAYS}, must be >= 1)")
+
     args = parser.parse_args()
+    if args.backfill_days is not None and not args.backfill:
+        print("Error: --backfill-days requires --backfill", file=sys.stderr)
+        sys.exit(1)
+    if args.backfill and (args.rosters or args.notify_only or args.check_wait or args.no_notify or args.weekly or args.notify_weekly
+                          or args.week or args.force or args.leaders or args.playoffs or args.watchlist):
+        print("Error: --backfill cannot be combined with other modes or options (only --date and --backfill-days are allowed)", file=sys.stderr)
+        sys.exit(1)
+    if args.backfill and args.backfill_days is not None and args.backfill_days < 1:
+        print("Error: --backfill-days must be >= 1", file=sys.stderr)
+        sys.exit(1)
     if args.notify_only and (args.check_wait or args.no_notify):
         print("Error: --notify-only cannot be combined with --check-wait or --no-notify", file=sys.stderr)
         sys.exit(1)
@@ -165,6 +183,12 @@ def main():
     
     # 啟用賽季日期／單日 context 快取（各步驟為獨立 process，靠 data/season_cache.json 共用）
     season.enable_cache(SEASON_CACHE_PATH)
+    # 啟用 RSS 累積快取（data/feed_cache.json），補產舊日期時仍能取得當日新聞與深度分析
+    feed_cache.enable_cache(FEED_CACHE_PATH)
+
+    # --backfill：補產漏跑日（絕不發通知）
+    if args.backfill:
+        sys.exit(backfill.run_backfill(_taipei_today(args.date), args.backfill_days or BACKFILL_DAYS))
 
     # --watchlist：動態追蹤名單（不碰每日戰報流程與 metadata）
     if args.watchlist:
@@ -262,15 +286,7 @@ def main():
 
     # Check if there are games scheduled
     if not games:
-        kind, reason = season.classify_no_game_day(date_str)
-        if kind == "rest_day":
-            print(f"No games scheduled or found on {date_str}. Generating rest day report ({reason}).")
-            empty_meta = report.generate_rest_day_report(date_str, reason)
-            label = "休兵日快報"
-        else:
-            print(f"No games scheduled or found on {date_str}. Generating offseason report.")
-            empty_meta = report.generate_offseason_report(date_str)
-            label = "休賽季快報"
+        empty_meta, label = backfill.generate_no_game_report(date_str)
         index_page.update_index_page(empty_meta)
         if not args.no_notify:
             if notify.should_notify(empty_meta):

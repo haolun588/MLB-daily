@@ -115,6 +115,18 @@ def _iso(value):
     return value.isoformat() if hasattr(value, "isoformat") else (None if value is None else str(value))
 
 
+def snapshot_transaction(tx):
+    """單筆人事異動轉成每日快照的欄位（build_daily_snapshot 與 backfill 共用）。"""
+    return {
+        "type_code": tx.get("type_code"), "date": tx.get("date"),
+        "description": tx.get("description"), "description_zh": tx.get("description_zh"),
+        "person_id": tx.get("person_id"), "person_name": tx.get("person_name"),
+        "persons": [{"id": p.get("id"), "name": p.get("name")} for p in transactions_mod._tx_persons(tx)],
+        "to_team_id": tx.get("to_team_id"), "from_team_id": tx.get("from_team_id"),
+        "team_ids": tx.get("team_ids"), "legs": tx.get("legs"),
+    }
+
+
 def build_daily_snapshot(date_str, has_games, tx_list, news):
     """data/daily/YYYY-MM-DD.json 的內容（schema 1）：戰報實際顯示、已翻譯的大聯盟異動與新聞。
     news 為 None（抓取失敗）時存空清單。"""
@@ -122,17 +134,7 @@ def build_daily_snapshot(date_str, has_games, tx_list, news):
         "schema": DAILY_SNAPSHOT_SCHEMA,
         "date": date_str,
         "has_games": bool(has_games),
-        "transactions": [
-            {
-                "type_code": tx.get("type_code"), "date": tx.get("date"),
-                "description": tx.get("description"), "description_zh": tx.get("description_zh"),
-                "person_id": tx.get("person_id"), "person_name": tx.get("person_name"),
-                "persons": [{"id": p.get("id"), "name": p.get("name")} for p in transactions_mod._tx_persons(tx)],
-                "to_team_id": tx.get("to_team_id"), "from_team_id": tx.get("from_team_id"),
-                "team_ids": tx.get("team_ids"), "legs": tx.get("legs"),
-            }
-            for tx in tx_list
-        ],
+        "transactions": [snapshot_transaction(tx) for tx in tx_list],
         "news": [
             {
                 "title": n.get("title"), "title_zh": n.get("title_zh"), "link": n.get("link"),

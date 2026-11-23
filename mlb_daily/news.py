@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 from datetime import datetime, timedelta, timezone
 
-from . import htmlutil, net
+from . import feed_cache, htmlutil, net
 from .config import NEWS_RSS_URL, NEWS_SOURCE, TAIPEI_TZ
 
 
@@ -59,44 +59,68 @@ def _plain_text(raw):
     return re.sub(r"\s+", " ", html_lib.unescape(text)).strip()
 
 
+def _parse_news_rss(text):
+    """解析 MLB RSS，回傳全部有效項目（不依日期過濾）；結構不符拋例外。
+    每則為 {"title", "link", "published"（台北時間 datetime）, "image"（網址或 None）, "summary"}。
+    title／link／pubDate 缺漏或 link 不安全的項目捨棄；image 不安全則設為 None。"""
+    root = ET.fromstring(text)
+    if root.tag != "rss":
+        raise ValueError(f"unexpected root element: {root.tag}")
+    found = []
+    for item in root.iter("item"):
+        title = (item.findtext("title") or "").strip()
+        link = _safe_mlb_url(item.findtext("link"))
+        pub = (item.findtext("pubDate") or "").strip()
+        if not title or not link or not pub:
+            continue
+        try:
+            published = parsedate_to_datetime(pub)
+        except (TypeError, ValueError):
+            continue
+        if published.tzinfo is None:
+            published = published.replace(tzinfo=timezone.utc)
+        published = published.astimezone(TAIPEI_TZ)
+        image_el = item.find("image")
+        image = _safe_mlb_url(image_el.get("href")) if image_el is not None else None
+        summary = _plain_text(item.findtext("description"))
+        found.append({"title": title, "link": link, "published": published, "image": image, "summary": summary})
+    return found
+
+
+def _collect_news():
+    """抓取並解析 RSS，成功後併入 RSS 快取。回傳 (是否成功, 可供過濾的項目池)；
+    項目池在快取啟用時為「快取 ∪ 本次」，否則只有本次。快取啟用時同一 process 只實際抓一次。"""
+    st = feed_cache.memo("news")
+    if "result" in st:
+        return st["result"]
+    result = (False, [])
+    text = net.fetch_text(NEWS_RSS_URL)
+    if text:
+        try:
+            result = (True, feed_cache.merge("news", _parse_news_rss(text)))
+        except Exception as e:
+            print(f"Warning: Could not parse news RSS ({e}). Skipping news section.", file=sys.stderr)
+    st["result"] = result
+    return result
+
+
 def fetch_all_daily_news(date_str):
     """抓取 MLB 官方 RSS，回傳 date_str 當天（台北時間 00:00–24:00）發布的「全部」新聞，新到舊（不設上限）。
 
     每則為 {"title", "link", "published"（台北時間 datetime）, "image"（網址或 None）, "summary"（純文字，只供比對）}。
     link 不安全的新聞整則捨棄；image 不安全則設為 None。
-    抓取或解析失敗回傳 None（與「成功但 0 則」的 [] 區分）。"""
-    text = net.fetch_text(NEWS_RSS_URL)
-    if not text:
-        return None
-    try:
-        day_start = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=TAIPEI_TZ)
-        day_end = day_start + timedelta(days=1)
-        root = ET.fromstring(text)
-        if root.tag != "rss":
-            raise ValueError(f"unexpected root element: {root.tag}")
-        found = []
-        for item in root.iter("item"):
-            title = (item.findtext("title") or "").strip()
-            link = _safe_mlb_url(item.findtext("link"))
-            pub = (item.findtext("pubDate") or "").strip()
-            if not title or not link or not pub:
-                continue
-            try:
-                published = parsedate_to_datetime(pub)
-            except (TypeError, ValueError):
-                continue
-            if published.tzinfo is None:
-                published = published.replace(tzinfo=timezone.utc)
-            published = published.astimezone(TAIPEI_TZ)
-            if not (day_start <= published < day_end):
-                continue
-            image_el = item.find("image")
-            image = _safe_mlb_url(image_el.get("href")) if image_el is not None else None
-            summary = _plain_text(item.findtext("description"))
-            found.append({"title": title, "link": link, "published": published, "image": image, "summary": summary})
-    except Exception as e:
-        print(f"Warning: Could not parse news RSS ({e}). Skipping news section.", file=sys.stderr)
-        return None
+    RSS 快取啟用時，結果取自「快取 ∪ 本次抓取」，補產舊日期也能取得當時的新聞。
+    本次抓取或解析失敗：快取有當日項目則印 warning 並回傳快取項目，否則回傳 None（與「成功但 0 則」的 [] 區分）。"""
+    day_start = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=TAIPEI_TZ)
+    day_end = day_start + timedelta(days=1)
+    ok, pool = _collect_news()
+    if not ok:
+        pool = feed_cache.items("news")
+    found = [n for n in pool if day_start <= n["published"] < day_end]
+    if not ok:
+        if not found:
+            return None
+        print(f"Warning: 新聞 RSS 抓取失敗，改用快取中 {date_str} 的 {len(found)} 則新聞。", file=sys.stderr)
     found.sort(key=lambda n: n["published"], reverse=True)
     return found
 

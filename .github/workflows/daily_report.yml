@@ -3,9 +3,10 @@ name: Daily MLB Report Generator
 on:
   schedule:
     # 主要由外部 cron-job.org 於台北時間 13:00 以 workflow_dispatch 觸發；
-    # 此 GitHub schedule（04:17 UTC，約台北 12:17）僅作備援，常有延遲。
+    # 此 GitHub schedule（06:30 UTC = 台北 14:30，冬令美東 01:30／夏令 02:30）僅作備援，常有延遲，
+    # 刻意排在主排程之後，讓主排程先跑。
     # 當日戰報已存在於 gh-pages 時，自動觸發會由 check job 跳過，避免重複產生與通知。
-    - cron: '17 4 * * *'
+    - cron: '30 6 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
     inputs:
       date:
@@ -124,6 +125,12 @@ jobs:
             rm -f data/watchlist.json
             echo "::warning::gh-pages 尚無 data/watchlist.json"
           fi
+          # RSS 累積快取（補產舊日期用的新聞與深度分析）：取不到只警告，不中止
+          mkdir -p data
+          if ! git show origin/gh-pages:data/feed_cache.json > data/feed_cache.json 2>/dev/null; then
+            rm -f data/feed_cache.json
+            echo "::warning::gh-pages 尚無 data/feed_cache.json"
+          fi
           # 數據排行榜資料（首頁小卡來源）：取不到只警告，不中止
           mkdir -p data
           if ! git show origin/gh-pages:data/leaders.json > data/leaders.json 2>/dev/null; then
@@ -154,11 +161,19 @@ jobs:
         run: python fetch_mlb.py --playoffs
 
       - name: Generate Daily Report
+        id: daily
+        continue-on-error: true
         env:
           REPORT_DATE: ${{ steps.date.outputs.date }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python fetch_mlb.py --check-wait --no-notify --date "$REPORT_DATE"
+
+      - name: Backfill Missed Reports
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python fetch_mlb.py --backfill
 
       - name: Generate Weekly Report
         id: weekly
@@ -196,6 +211,7 @@ jobs:
           exclude_assets: '.github,.agents,docs,templates,tests,mlb_daily,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude,CLAUDE.md,settings'
 
       - name: Wait for GitHub Pages
+        if: steps.daily.outcome == 'success'
         env:
           REPORT_URL: ${{ steps.date.outputs.url }}
         run: |
@@ -229,7 +245,7 @@ jobs:
           exit 0
 
       - name: Send Discord Notification
-        if: github.event_name == 'schedule' || inputs.notify == true
+        if: steps.daily.outcome == 'success' && (github.event_name == 'schedule' || inputs.notify == true)
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           REPORT_DATE: ${{ steps.date.outputs.date }}
@@ -244,3 +260,9 @@ jobs:
           WEEKLY_WEEK: ${{ steps.weekly.outputs.weekly_week }}
         run: |
           python fetch_mlb.py --notify-weekly --week "$WEEKLY_WEEK"
+
+      - name: Fail if daily report failed
+        if: steps.daily.outcome == 'failure'
+        run: |
+          echo "::error::每日戰報產生失敗（部署與週報已照常進行）"
+          exit 1
