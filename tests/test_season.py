@@ -278,3 +278,106 @@ class CliCacheTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RegularSeasonEndedTests(SeasonTestBase):
+    def setUp(self):
+        super().setUp()
+        self.net.seasons[2026] = {"seasons": [{"regularSeasonStartDate": START, "postSeasonEndDate": END,
+                                               "regularSeasonEndDate": "2026-09-27", "springStartDate": "2026-02-20"}]}
+
+    def test_postseason_is_ended_regular_season_and_last_day_are_not(self):
+        self.assertTrue(season.regular_season_ended(2026, date(2026, 10, 15)))
+        self.assertFalse(season.regular_season_ended(2026, date(2026, 8, 1)))
+        self.assertFalse(season.regular_season_ended(2026, date(2026, 9, 27)))  # 當天不算超過
+        self.assertTrue(season.regular_season_ended(2026, date(2026, 9, 28)))
+
+    def test_api_failure_without_cache_is_false(self):
+        self.net.seasons.clear()
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertFalse(season.regular_season_ended(2026, date(2026, 10, 15)))
+
+    def test_exception_is_swallowed(self):
+        with mock.patch.object(season, "_season_lookup", side_effect=RuntimeError("boom")), \
+                contextlib.redirect_stderr(io.StringIO()):
+            self.assertFalse(season.regular_season_ended(2026, date(2026, 10, 15)))
+
+    def test_falls_back_to_cache(self):
+        self.enable()
+        season.regular_season_ended(2026, date(2026, 10, 15))  # 寫入快取
+        self.net.seasons.clear()
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertTrue(season.regular_season_ended(2026, date(2026, 10, 15)))
+
+    def test_given_season_data_skips_network(self):
+        data = {"seasons": [{"regularSeasonStartDate": START, "postSeasonEndDate": END, "regularSeasonEndDate": "2026-09-27"}]}
+        self.net.calls.clear()
+        self.assertTrue(season.regular_season_ended(2026, date(2026, 10, 15), data))
+        self.assertEqual(self.net.calls, [])
+
+    def test_rest_reason_unaffected_by_new_keys(self):
+        info = {"regularSeasonEndDate": "2026-09-27", "springStartDate": "2026-02-20"}
+        self.assertEqual(season._rest_reason(date(2026, 7, 1), season._parse_info(info)), "休兵日")
+
+
+class IndexTitleTests(SeasonTestBase):
+    """首頁戰績標題與排行標題在季後賽期間改為「例行賽最終」。"""
+
+    def setUp(self):
+        super().setUp()
+        self.net.seasons[2026] = {"seasons": [{"regularSeasonStartDate": START, "postSeasonEndDate": END,
+                                               "regularSeasonEndDate": "2026-09-27"}]}
+        self.net.schedule = sched(("2026-03-25", [("Final", "Final")]))  # 確認賽季已開打
+
+    def aside_for(self, today):
+        from datetime import datetime, timedelta, timezone
+        now = datetime(today.year, today.month, today.day, 12, 0, tzinfo=timezone(timedelta(hours=8)))
+        with contextlib.redirect_stderr(io.StringIO()), \
+                mock.patch("mlb_daily.standings.fetch_standings", return_value=None), \
+                mock.patch("mlb_daily.previews.fetch_game_previews", return_value=[]), \
+                mock.patch("mlb_daily.index_page._aside_extra_html", return_value=""):
+            return index_page.build_index_extras(now)["STANDINGS"]
+
+    def test_standings_title(self):
+        self.assertIn("2026 例行賽最終戰績", self.aside_for(date(2026, 10, 15)))
+        self.assertIn("2026 例行賽戰績", self.aside_for(date(2026, 8, 1)))
+        self.assertNotIn("最終", self.aside_for(date(2026, 8, 1)))
+        self.assertNotIn("最終", self.aside_for(date(2026, 9, 27)))  # 例行賽最後一天
+        # 以前一天判斷：最後一天的隔天（台北早上美國比賽可能仍在進行）仍非最終
+        self.assertIn("2026 例行賽戰績", self.aside_for(date(2026, 9, 28)))
+        self.assertNotIn("最終", self.aside_for(date(2026, 9, 28)))
+        self.assertIn("2026 例行賽最終戰績", self.aside_for(date(2026, 9, 29)))
+
+    def test_leaders_title(self):
+        from mlb_daily import leaders
+        final = leaders.build_leaders_data(2026, True, date(2026, 10, 14), {}, regular_final=True)
+        self.assertEqual(leaders.leaders_title(final), "2026 例行賽最終")
+        data = leaders.build_leaders_data(2026, True, date(2026, 8, 1), {})
+        self.assertFalse(data["regular_final"])
+        self.assertEqual(leaders.leaders_title(data), "2026 賽季・截至 8/1")
+        off = leaders.build_leaders_data(2026, False, date(2026, 11, 22), {})
+        self.assertEqual(leaders.leaders_title(off), "2026 賽季最終")
+        old = {"season": 2026, "in_season": True, "as_of": "2026-08-01"}  # 舊 JSON 缺 regular_final
+        self.assertEqual(leaders.leaders_title(old), "2026 賽季・截至 8/1")
+
+
+class SeasonCalendarEventsTests(SeasonTestBase):
+    def test_spring_and_opening_day(self):
+        self.net.seasons[2027] = {"seasons": [{"springStartDate": "2027-02-19", "regularSeasonStartDate": "2027-03-25",
+                                               "regularSeasonEndDate": "2027-09-26", "postSeasonEndDate": "2027-10-31"}]}
+        ev = season.season_calendar_events([2027])
+        self.assertEqual([(e["id"], e["date"], e["title_zh"]) for e in ev],
+                         [("spring_start", date(2027, 2, 19), "春訓熱身賽開打"),
+                          ("opening_day", date(2027, 3, 25), "例行賽開幕日")])
+
+    def test_unannounced_year_is_empty_and_silent(self):
+        self.net.seasons[2028] = {"seasons": []}
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(season.season_calendar_events([2028]), [])
+        self.assertEqual(err.getvalue(), "")
+
+    def test_network_exception_swallowed(self):
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=OSError("down")), \
+                contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(season.season_calendar_events([2027]), [])

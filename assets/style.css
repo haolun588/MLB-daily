@@ -785,6 +785,18 @@ img { max-width: 100%; height: auto; }
 
 .chip .num { margin-left: 8px; font-size: 0.75rem; color: var(--text-2); }
 
+.chip-year {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  margin-left: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.chip-year:first-child { margin-left: 0; }
+
 .month { margin-top: 32px; scroll-margin-top: 72px; }
 
 .days {

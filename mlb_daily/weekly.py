@@ -9,7 +9,7 @@ import re
 import sys
 from datetime import date, datetime, timedelta
 
-from . import htmlutil, news as news_mod, rosters, storage, timeutil, transactions as transactions_mod, watchlist
+from . import htmlutil, news as news_mod, rosters, season as season_mod, storage, timeutil, transactions as transactions_mod, watchlist
 from .config import (
     DAILY_SNAPSHOT_DIR,
     DAILY_SNAPSHOT_SCHEMA,
@@ -265,7 +265,7 @@ def build_week(label, snapshots, wl=None):
 
 # ---------------------------------------------------------------- 下週日程設定檔
 def load_calendar(path=None):
-    """讀取 settings/offseason_calendar.json，回傳 [{"date": date, "title_zh", "note"}]。
+    """讀取 settings/offseason_calendar.json，回傳 [{"date": date, "title_zh", "note", "id"}]（id 選填，沒有為 None）。
     讀檔失敗、格式錯誤只印警告並回傳 []；個別格式錯誤的事件略過。"""
     path = path or OFFSEASON_CALENDAR_PATH
     try:
@@ -285,8 +285,25 @@ def load_calendar(path=None):
             print(f"Warning: 休賽季日程中略過格式錯誤的項目：{str(ev)[:80]}", file=sys.stderr)
             continue
         note = ev.get("note")
-        events.append({"date": d, "title_zh": title.strip(), "note": note.strip() if isinstance(note, str) else ""})
+        ev_id = ev.get("id")
+        events.append({"date": d, "title_zh": title.strip(), "note": note.strip() if isinstance(note, str) else "",
+                       "id": ev_id.strip() if isinstance(ev_id, str) and ev_id.strip() else None})
     return events
+
+
+def merge_calendar(auto_events, manual_events):
+    """合併自動帶入與手動維護的日程：手動事件 id 與自動事件相同時以手動覆寫（移除該筆自動）；
+    同日期且同 title_zh 的重複只留一筆（手動優先）。回傳依日期排序的清單。"""
+    manual = list(manual_events or [])
+    manual_ids = {e.get("id") for e in manual if e.get("id")}
+    merged, seen = [], set()
+    for e in manual + [a for a in (auto_events or []) if a.get("id") not in manual_ids]:
+        key = (e["date"], e["title_zh"])
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(e)
+    return sorted(merged, key=lambda e: e["date"])
 
 
 def upcoming_events(events, week_end):
@@ -523,11 +540,12 @@ def make_index_entry(week, generated_at):
     }
 
 
-def generate_weekly_report(today, week=None, force=False, snapshot_dir=None, calendar_path=None, wl=None):
+def generate_weekly_report(today, week=None, force=False, snapshot_dir=None, calendar_path=None, wl=None, auto_events=None):
     """產生週報並更新 reports/weekly/index.json；回傳索引項目 dict，沒有產生（條件不符或無快照）回傳 None。
 
     today：台北今天（date）。week：'YYYY-Www'（格式錯誤拋 ValueError）；省略時整理「上一個」ISO 週，且只在週一執行。
-    條件：指定 week 時略過週一判斷；休賽季判斷（rosterType != "active"）則一律套用。force=True 兩項都略過。"""
+    條件：指定 week 時略過週一判斷；休賽季判斷（rosterType != "active"）則一律套用。force=True 兩項都略過。
+    auto_events：自動帶入的日程事件（測試可注入）；None 時由 MLB API 取得下週範圍涵蓋年份的春訓與開幕日。"""
     if week:
         label = week
         parse_week(label)  # 先驗證格式
@@ -548,6 +566,13 @@ def generate_weekly_report(today, week=None, force=False, snapshot_dir=None, cal
     wl = watchlist.load_watchlist() if wl is None else wl
     week_data = build_week(label, snapshots, wl)
     events = load_calendar(calendar_path)
+    try:
+        if auto_events is None:
+            nxt_start = week_data["end"] + timedelta(days=1)
+            auto_events = season_mod.season_calendar_events({nxt_start.year, (nxt_start + timedelta(days=6)).year})
+        events = merge_calendar(auto_events, events)
+    except Exception as e:  # noqa: BLE001 - 自動帶入失敗只用手動事件
+        print(f"Warning: 下週日程自動帶入失敗（{type(e).__name__}: {e}），僅使用手動事件。", file=sys.stderr)
     now = timeutil.get_taipei_now()
     storage.write_weekly_report(label, render_weekly(week_data, wl, events, now))
     entry = make_index_entry(week_data, now)

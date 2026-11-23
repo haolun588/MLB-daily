@@ -63,7 +63,11 @@ def _run_leaders(args):
     ctx = rosters.resolve_roster_context(today)
     as_of = today - timedelta(days=1)  # 資料截至「昨日」，與每日戰報預設日期一致
     try:
-        ok = leaders.generate_leaders(ctx["season"], ctx["rosterType"] == "active", as_of)
+        regular_final = bool(season.regular_season_ended(ctx["season"], as_of))
+    except Exception:  # noqa: BLE001 - 判斷失敗維持原本標題
+        regular_final = False
+    try:
+        ok = leaders.generate_leaders(ctx["season"], ctx["rosterType"] == "active", as_of, regular_final=regular_final)
     except OSError as e:
         print(f"Error: 寫入數據排行榜失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
         sys.exit(1)

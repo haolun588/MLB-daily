@@ -1,9 +1,10 @@
 """首頁的產生與更新。"""
 
 import sys
+from datetime import timedelta
 
-from . import htmlutil, leaders as leaders_mod, net, playoffs as playoffs_mod, previews, rosters, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
-from .config import DATE_KEY_RE, SEASON_URL, WEEK_KEY_RE
+from . import htmlutil, leaders as leaders_mod, net, playoffs as playoffs_mod, previews, rosters, season as season_mod, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
+from .config import _UNSET, DATE_KEY_RE, SEASON_URL, WEEK_KEY_RE
 
 
 def _safe_call(label, fn, *args):
@@ -46,6 +47,15 @@ def _playoffs_card_html(season):
     return _safe_call("季後賽小卡", playoffs_mod.render_playoffs_card, data) or ""
 
 
+def _regular_final(season_year, today, season_data=_UNSET):
+    """例行賽是否已結束（季後賽期間戰績表標題改「例行賽最終戰績」）；失敗視為 False。
+    season_data 為已取得的 today.year seasons 回應（None 代表已失敗，僅在 season_year 就是 today.year 時共用）。
+    以「前一天」判斷：台北時間例行賽最後一天的隔天早上，美國最後一天的比賽可能還在進行，
+    與 cli._run_leaders 用 as_of（昨日）一致。"""
+    sd = season_data if season_year == today.year else _UNSET
+    return bool(_safe_call("例行賽結束判斷", season_mod.regular_season_ended, season_year, today - timedelta(days=1), sd))
+
+
 def _aside_extra_html(season):
     """首頁側欄戰績表下方的小卡：數據排行在前、季後賽在後。"""
     cards = [c for c in (_leaders_card_html(), _playoffs_card_html(season)) if c]
@@ -58,7 +68,9 @@ def fallback_index_extras(now=None):
     ctx = _fallback_roster_context(now.date())
     return {
         "UPCOMING": "",
-        "STANDINGS": standings_mod.render_standings_aside(None, ctx["season"], ctx["rosterType"] == "active", now, _aside_extra_html(ctx["season"])),
+        "STANDINGS": standings_mod.render_standings_aside(
+            None, ctx["season"], ctx["rosterType"] == "active" and not _regular_final(ctx["season"], now.date()),
+            now, _aside_extra_html(ctx["season"])),
         "STANDINGS_UI": standings_mod.render_standings_fab(),
     }
 
@@ -92,9 +104,11 @@ def build_index_extras(now=None):
             _safe_call("人事異動渲染", transactions_mod.render_weekly_transactions, weekly) or "",
         ) if p)
     leaders_card = _aside_extra_html(season)
-    aside = _safe_call("戰績渲染", standings_mod.render_standings_aside, standings, season, in_season, now, leaders_card)
+    # 季後賽期間（今天已超過例行賽最後一天）戰績表標題改「例行賽最終戰績」；賽事預告仍以 in_season 為準
+    title_in_season = in_season and not (_regular_final(season, today, season_data) if in_season else False)
+    aside = _safe_call("戰績渲染", standings_mod.render_standings_aside, standings, season, title_in_season, now, leaders_card)
     if not aside:
-        aside = standings_mod.render_standings_aside(None, season, in_season, now, leaders_card)
+        aside = standings_mod.render_standings_aside(None, season, title_in_season, now, leaders_card)
     return {"UPCOMING": upcoming, "STANDINGS": aside, "STANDINGS_UI": standings_mod.render_standings_fab()}
 
 

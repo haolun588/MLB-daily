@@ -17,6 +17,7 @@ import test_fetch_mlb as base  # noqa: E402
 
 fetch_mlb = base.fetch_mlb
 weekly = fetch_mlb.weekly
+from mlb_daily import season as season_mod  # noqa: E402
 DATE = base.DATE
 SNAP_DIR = base.FIXTURES / "daily_snapshots"
 CAL_PATH = str(base.FIXTURES / "offseason_calendar_test.json")
@@ -629,6 +630,7 @@ class GenerateWeeklyTests(base.MlbTestBase):
     def gen(self, today, **kw):
         kw.setdefault("calendar_path", CAL_PATH)
         kw.setdefault("wl", self.wl)
+        kw.setdefault("auto_events", [])  # 不打 MLB API；自動帶入另有專屬測試
         return quiet(weekly.generate_weekly_report, today, **kw)
 
     def html_path(self, label=WEEK):
@@ -667,7 +669,7 @@ class GenerateWeeklyTests(base.MlbTestBase):
         self.assertFalse((self.tmp / "reports" / "weekly").exists())
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            weekly.generate_weekly_report(date(2026, 11, 23), week="2026-W41", calendar_path=CAL_PATH, wl=self.wl)
+            weekly.generate_weekly_report(date(2026, 11, 23), week="2026-W41", calendar_path=CAL_PATH, wl=self.wl, auto_events=[])
         self.assertIn("沒有任何每日快照", out.getvalue())
 
     def test_partial_week_is_generated_and_marked(self):
@@ -683,7 +685,7 @@ class GenerateWeeklyTests(base.MlbTestBase):
     def test_corrupt_snapshot_warns_but_generates(self):
         err = io.StringIO()
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
-            weekly.generate_weekly_report(date(2026, 11, 23), calendar_path=CAL_PATH, wl=self.wl)
+            weekly.generate_weekly_report(date(2026, 11, 23), calendar_path=CAL_PATH, wl=self.wl, auto_events=[])
         self.assertIn("2026-11-19", err.getvalue())
         self.assertTrue(self.html_path().exists())
 
@@ -991,3 +993,121 @@ class WorkflowAndImportTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ---------------------------------------------------------------- 下週日程自動帶入
+def _seasons_fetch(year_payloads):
+    """fetch_json 的替身：/seasons/{year} 依 year_payloads，其餘回 None；記錄呼叫的 URL。"""
+    calls = []
+
+    def fetch(url, retries=3, delay=5):
+        calls.append(url)
+        for y, payload in year_payloads.items():
+            if f"/seasons/{y}" in url:
+                return payload
+        return None
+    fetch.calls = calls
+    return fetch
+
+
+SEASON_2027 = {"seasons": [{"springStartDate": "2027-02-19", "regularSeasonStartDate": "2027-03-25",
+                            "regularSeasonEndDate": "2027-09-26", "postSeasonStartDate": "2027-09-27",
+                            "postSeasonEndDate": "2027-10-31"}]}
+
+
+def _write_snapshot(directory, day):
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / f"{day}.json").write_text(json.dumps(
+        {"schema": 1, "date": day, "has_games": False, "transactions": [], "news": []}), encoding="utf-8")
+
+
+class AutoCalendarTests(base.MlbTestBase):
+    def setUp(self):
+        super().setUp()
+        self.addCleanup(season_mod.disable_cache)
+        self.daily = self.tmp / "data" / "daily"
+        _write_snapshot(self.daily, "2027-02-09")  # 2027-W06（2/8～2/14）；其下週 W07 為 2/15～2/21，涵蓋 2/19
+        self.cal = self.tmp / "cal.json"
+        self.cal.write_text(json.dumps({"events": []}), encoding="utf-8")
+
+    def gen(self, payloads, week="2027-W06", today=date(2027, 2, 15)):
+        fetch = _seasons_fetch(payloads)
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=fetch):
+            entry = quiet(weekly.generate_weekly_report, today, week=week, force=True,
+                          calendar_path=str(self.cal), wl={})
+        self.assertIsNotNone(entry)
+        return (self.tmp / "reports" / "weekly" / f"{week}.html").read_text(encoding="utf-8"), fetch
+
+    def test_next_week_covers_spring_start(self):
+        self.assertEqual(weekly.week_days("2027-W07")[0], date(2027, 2, 15))
+        html, _ = self.gen({2027: SEASON_2027})
+        self.assertIn("春訓熱身賽開打", html)
+        self.assertIn("2/19", html)
+        self.assertNotIn("下週無排定重要日程", html)
+
+    def test_unannounced_season_does_not_fail(self):
+        self.cal.write_text(json.dumps({"events": [{"date": "2027-02-16", "title_zh": "手動事件"}]}), encoding="utf-8")
+        html, _ = self.gen({2027: {"seasons": []}})
+        self.assertIn("手動事件", html)
+        self.assertNotIn("春訓熱身賽開打", html)
+
+    def test_network_failure_falls_back_to_manual(self):
+        self.cal.write_text(json.dumps({"events": [{"date": "2027-02-16", "title_zh": "手動事件"}]}), encoding="utf-8")
+        html, _ = self.gen({})
+        self.assertIn("手動事件", html)
+
+    def test_manual_id_overrides_auto(self):
+        self.cal.write_text(json.dumps({"events": [
+            {"id": "spring_start", "date": "2027-02-18", "title_zh": "春訓提前", "note": "手動"}]}), encoding="utf-8")
+        html, _ = self.gen({2027: SEASON_2027})
+        self.assertIn("春訓提前", html)
+        self.assertNotIn("春訓熱身賽開打", html)
+
+    def test_injected_auto_events_skip_network(self):
+        with mock.patch("mlb_daily.net.fetch_json", side_effect=AssertionError("不得連網")):
+            quiet(weekly.generate_weekly_report, date(2027, 2, 15), week="2027-W06", force=True,
+                  calendar_path=str(self.cal), wl={}, auto_events=[])
+
+    def test_auto_failure_only_warns(self):
+        with mock.patch.object(season_mod, "season_calendar_events", side_effect=RuntimeError("boom")):
+            err = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+                entry = weekly.generate_weekly_report(date(2027, 2, 15), week="2027-W06", force=True,
+                                                      calendar_path=str(self.cal), wl={})
+        self.assertIsNotNone(entry)
+        self.assertIn("自動帶入失敗", err.getvalue())
+
+    def test_year_boundary_queries_both_years(self):
+        week = "2026-W52"  # 週日 2026-12-27，下週 12/28～1/3 跨年
+        self.assertEqual(weekly.week_days(week)[-1], date(2026, 12, 27))
+        _write_snapshot(self.daily, "2026-12-21")
+        _, fetch = self.gen({}, week=week, today=date(2026, 12, 28))
+        queried = {int(u.split("/seasons/")[1][:4]) for u in fetch.calls if "/seasons/" in u}
+        self.assertEqual(queried, {2026, 2027})
+
+
+class MergeCalendarTests(unittest.TestCase):
+    def ev(self, d, title, id=None):
+        return {"date": d, "title_zh": title, "note": "", "id": id}
+
+    def test_manual_id_removes_auto(self):
+        auto = [self.ev(date(2027, 2, 19), "春訓熱身賽開打", "spring_start")]
+        manual = [self.ev(date(2027, 2, 18), "春訓提前", "spring_start")]
+        self.assertEqual([e["title_zh"] for e in weekly.merge_calendar(auto, manual)], ["春訓提前"])
+
+    def test_same_date_and_title_deduped_and_sorted(self):
+        auto = [self.ev(date(2027, 3, 25), "例行賽開幕日", "opening_day"),
+                self.ev(date(2027, 2, 19), "春訓熱身賽開打", "spring_start")]
+        manual = [self.ev(date(2027, 3, 25), "例行賽開幕日")]
+        merged = weekly.merge_calendar(auto, manual)
+        self.assertEqual([(e["date"], e["title_zh"]) for e in merged],
+                         [(date(2027, 2, 19), "春訓熱身賽開打"), (date(2027, 3, 25), "例行賽開幕日")])
+
+    def test_load_calendar_keeps_optional_id(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "c.json"
+            p.write_text(json.dumps({"events": [{"date": "2027-02-18", "title_zh": "a", "id": "spring_start"},
+                                                {"date": "2027-02-19", "title_zh": "b"}]}), encoding="utf-8")
+            ev = weekly.load_calendar(str(p))
+        self.assertEqual([e["id"] for e in ev], ["spring_start", None])

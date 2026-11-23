@@ -33,6 +33,16 @@
 
   function isDate(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s); }
 
+  // months（YYYY-MM，新到舊）涵蓋的年份清單（新到舊、不重複）
+  function yearsOf(months) {
+    var years = [];
+    months.forEach(function (m) {
+      var y = m.slice(0, 4);
+      if (years.indexOf(y) === -1) years.push(y);
+    });
+    return years;
+  }
+
   // ---------- 狀態畫面 ----------
   function showLoading() {
     app.setAttribute('aria-busy', 'true');
@@ -90,8 +100,15 @@
     clear(nav);
     clear(content);
 
+    var multiYear = yearsOf(months).length > 1;
+    var lastYear = null;
+
     months.forEach(function (m) {
       var parts = m.split('-');
+      if (multiYear && parts[0] !== lastYear) {
+        nav.appendChild(el('span', { cls: 'chip-year', text: parts[0] })); // 跨年份時，每個年份第一顆月份按鈕前加年份標籤
+      }
+      lastYear = parts[0];
       var label = parts[0] + ' 年 ' + parts[1] + ' 月';
       var id = 'm-' + m;
 

@@ -145,19 +145,20 @@ def fetch_leaders(season):
     return cats
 
 
-def build_leaders_data(season, in_season, today, categories, now=None):
+def build_leaders_data(season, in_season, today, categories, now=None, regular_final=False):
     now = now or timeutil.get_taipei_now()
     return {
         "schema": LEADERS_SCHEMA,
         "season": htmlutil._int_id(season),
         "in_season": bool(in_season),
+        "regular_final": bool(regular_final),
         "as_of": today.isoformat(),
         "generated_at": now.isoformat(timespec="seconds"),
         "categories": categories,
     }
 
 
-def generate_leaders(season, in_season, today, now=None):
+def generate_leaders(season, in_season, today, now=None, regular_final=False):
     """抓取、寫 data/leaders.json 與 leaders.html。12 項全部失敗時不覆寫任何舊檔並回傳 False；否則 True。"""
     categories = fetch_leaders(season)
     if not any(categories.values()):
@@ -166,7 +167,7 @@ def generate_leaders(season, in_season, today, now=None):
     failed = [key for key, entries in categories.items() if not entries]
     if failed:
         print(f"Warning: 以下排行項目暫無資料：{', '.join(failed)}。", file=sys.stderr)
-    data = build_leaders_data(season, in_season, today, categories, now)
+    data = build_leaders_data(season, in_season, today, categories, now, regular_final)
     page = render_leaders_page(data)
     storage.write_json_atomic(LEADERS_PATH, data)
     with open(LEADERS_PAGE_PATH, "w", encoding="utf-8") as f:
@@ -177,9 +178,11 @@ def generate_leaders(season, in_season, today, now=None):
 
 # ---------------------------------------------------------------- 渲染
 def leaders_title(data):
-    """「2026 賽季最終」或賽季中的「2026 賽季・截至 M/D」。"""
+    """「2026 賽季最終」、賽季中的「2026 賽季・截至 M/D」，或季後賽期間（例行賽已結束）的「2026 例行賽最終」。"""
     season = htmlutil._int_id(data.get("season"))
     if data.get("in_season"):
+        if data.get("regular_final") is True:
+            return f"{season} 例行賽最終"
         as_of = timeutil._parse_iso_date(data.get("as_of"))
         return f"{season} 賽季・截至 {as_of.month}/{as_of.day}" if as_of else f"{season} 賽季"
     return f"{season} 賽季最終"

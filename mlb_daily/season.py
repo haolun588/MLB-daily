@@ -102,8 +102,8 @@ def _parse_dates(info):
     return start, end
 
 
-# 休兵日判斷用的 /seasons 欄位（存進快取 years[year]，API 失敗時從快取讀）
-_INFO_KEYS = ("lastDate1stHalf", "firstDate2ndHalf", "postSeasonStartDate")
+# /seasons 的額外日期欄位（存進快取 years[year]，API 失敗時從快取讀）：休兵日判斷、例行賽是否結束、春訓開打日
+_INFO_KEYS = ("lastDate1stHalf", "firstDate2ndHalf", "postSeasonStartDate", "regularSeasonEndDate", "springStartDate")
 REST_WINDOW_DAYS = 14
 
 
@@ -157,8 +157,36 @@ def get_season_dates(year, season_data=_UNSET):
 
 
 def get_season_info(year, season_data=_UNSET):
-    """回傳 {lastDate1stHalf, firstDate2ndHalf, postSeasonStartDate}（isoformat 字串，取不到的欄位省略）。"""
+    """回傳額外日期欄位 dict（_INFO_KEYS，isoformat 字串，取不到的欄位省略）。"""
     return _season_lookup(year, season_data)[1]
+
+
+def regular_season_ended(year, today, season_data=_UNSET):
+    """today 是否已超過該年例行賽最後一天（regularSeasonEndDate；當天本身不算超過）。
+    取不到日期（API 失敗且無快取）或任何例外一律回 False，維持原本顯示。"""
+    try:
+        end = timeutil._parse_iso_date(_season_lookup(year, season_data)[1].get("regularSeasonEndDate"))
+        return end is not None and today > end
+    except Exception as e:  # noqa: BLE001 - 顯示用判斷不得讓呼叫端崩潰
+        print(f"Warning: 無法判斷 {year} 例行賽是否結束（{type(e).__name__}: {e}）。", file=sys.stderr)
+        return False
+
+
+def season_calendar_events(years):
+    """各年份的 MLB 官方賽季日程事件（春訓熱身賽開打、例行賽開幕日），供週報「下週日程」自動帶入。
+    回傳 [{"id", "date", "title_zh", "note"}]；年份尚未公布（seasons: []）、網路或任何例外都吞掉，取不到的年份不產生事件。"""
+    events = []
+    for year in sorted(set(years)):
+        try:
+            dates, extra = _season_lookup(year)
+            spring = timeutil._parse_iso_date(extra.get("springStartDate"))
+            if spring is not None:
+                events.append({"id": "spring_start", "date": spring, "title_zh": "春訓熱身賽開打", "note": "MLB 官方賽季日程"})
+            if dates is not None:
+                events.append({"id": "opening_day", "date": dates[0], "title_zh": "例行賽開幕日", "note": "MLB 官方賽季日程"})
+        except Exception as e:  # noqa: BLE001 - 日程自動帶入失敗不得影響週報
+            print(f"Warning: 無法取得 {year} 賽季日程（{type(e).__name__}: {e}）。", file=sys.stderr)
+    return events
 
 
 # ---------------------------------------------------------------- 無比賽日分類

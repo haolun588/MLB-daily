@@ -336,10 +336,11 @@ class RenderPageTests(LeadersTestBase):
         self.assertEqual(self.run_cli("--leaders", "--date", "2026-08-15"), 0)
 
     def test_playoffs_title_is_as_of(self):
-        # 2026 例行賽 9/27 結束、季後賽到 10/28：10/10 仍視為賽季中
+        # 2026 例行賽 9/27 結束、季後賽到 10/28：10/10 仍視為賽季中，但例行賽已結束 → 標題為「例行賽最終」
         self.assertEqual(self.run_cli("--leaders", "--date", "2026-10-10"), 0)
         self.assertTrue(self.read_json()["in_season"])
-        self.assertIn("2026 賽季・截至 10/9", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
+        self.assertTrue(self.read_json()["regular_final"])
+        self.assertIn("2026 例行賽最終", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
 
     def test_seasons_api_failure_falls_back_to_month(self):
         self.api.seasons = None
