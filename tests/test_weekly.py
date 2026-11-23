@@ -235,6 +235,36 @@ class TeamActivityTests(unittest.TestCase):
         self.assertEqual(weekly.team_moves(it), [])
         self.assertEqual(weekly.build_team_activity([it]), [])
 
+    def test_multi_team_trade_with_legs(self):
+        raw = json.loads((base.FIXTURES / "transactions_three_team_trade.json").read_text(encoding="utf-8"))["transactions"]
+        tx = fetch_mlb.filter_major_league_transactions(raw)[0]
+        it = {"tx": tx, "category": weekly.classify_weekly_transaction(tx), "date": "2024-07-29"}
+        moves = weekly.team_moves(it)
+        self.assertEqual(sorted(moves), sorted([(119, "join"), (145, "join"), (138, "join")]))
+        self.assertEqual({t["team_id"] for t in weekly.build_team_activity([it])}, {119, 145, 138})
+
+    def test_cash_only_side_records_leave(self):
+        # 白襪送出球員、只收現金（person=None 的 leg 的 to）：記 leave；道奇收球員：join
+        tx = {"type_code": "TR", "date": "2026-11-18", "description": "LAD traded X to CWS... cash", "persons": [],
+              "to_team_id": LAD, "from_team_id": 145,
+              "team_ids": [LAD, 145],
+              "legs": [{"to_team_id": LAD, "from_team_id": 145, "person_id": 1},
+                       {"to_team_id": 145, "from_team_id": LAD, "person_id": None}]}
+        it = {"tx": tx, "category": "trade", "date": "2026-11-18"}
+        self.assertEqual(weekly.team_moves(it), [(LAD, "join"), (145, "leave")])
+
+    def test_non_trade_with_legs_ignores_legs(self):
+        tx = {"type_code": "SFA", "date": "2026-11-18", "description": "Los Angeles Dodgers signed free agent X.",
+              "persons": [], "to_team_id": LAD, "from_team_id": None,
+              "legs": [{"to_team_id": LAD, "from_team_id": None, "person_id": None}]}
+        it = {"tx": tx, "category": "signing", "date": "2026-11-18"}
+        self.assertEqual(weekly.team_moves(it), [(LAD, "join")])
+
+    def test_legacy_snapshot_without_legs_unchanged(self):
+        it = item("TR", "A traded B.", to=WSH, frm=SF)
+        self.assertNotIn("legs", it["tx"])
+        self.assertEqual(weekly.team_moves(it), [(WSH, "join"), (SF, "leave")])
+
     def test_busiest_badge_requires_at_least_two(self):
         one = [item("SFA", "Boston Red Sox signed free agent RHP A.", to=BOS),
                item("SFA", "Seattle Mariners signed free agent RHP F.", to=SEA)]
@@ -521,7 +551,7 @@ class DailySnapshotTests(base.MlbTestBase):
         self.assertGreater(len(snap["transactions"]), 0)
         for tx in snap["transactions"]:
             for key in ("type_code", "date", "description", "description_zh", "person_id", "person_name",
-                        "persons", "to_team_id", "from_team_id"):
+                        "persons", "to_team_id", "from_team_id", "team_ids", "legs"):
                 self.assertIn(key, tx)
         self.assertEqual(len(snap["news"]), meta["news_count"])
         for n in snap["news"]:

@@ -125,6 +125,7 @@ def build_daily_snapshot(date_str, has_games, tx_list, news):
                 "person_id": tx.get("person_id"), "person_name": tx.get("person_name"),
                 "persons": [{"id": p.get("id"), "name": p.get("name")} for p in transactions_mod._tx_persons(tx)],
                 "to_team_id": tx.get("to_team_id"), "from_team_id": tx.get("from_team_id"),
+                "team_ids": tx.get("team_ids"), "legs": tx.get("legs"),
             }
             for tx in tx_list
         ],

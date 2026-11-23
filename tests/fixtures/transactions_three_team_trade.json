@@ -1,0 +1,188 @@
+{
+  "transactions": [
+    {
+      "id": 990000,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": {
+        "id": 880001,
+        "fullName": "Tommy Edman"
+      },
+      "toTeam": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+      },
+      "fromTeam": {
+        "id": 138,
+        "name": "St. Louis Cardinals"
+      }
+    },
+    {
+      "id": 990001,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": {
+        "id": 880002,
+        "fullName": "Miguel Vargas"
+      },
+      "toTeam": {
+        "id": 145,
+        "name": "Chicago White Sox"
+      },
+      "fromTeam": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+      }
+    },
+    {
+      "id": 990002,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": null,
+      "toTeam": {
+        "id": 138,
+        "name": "St. Louis Cardinals"
+      },
+      "fromTeam": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+      }
+    },
+    {
+      "id": 990003,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": {
+        "id": 880003,
+        "fullName": "Erick Fedde"
+      },
+      "toTeam": {
+        "id": 138,
+        "name": "St. Louis Cardinals"
+      },
+      "fromTeam": {
+        "id": 145,
+        "name": "Chicago White Sox"
+      }
+    },
+    {
+      "id": 990004,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": null,
+      "toTeam": {
+        "id": 138,
+        "name": "St. Louis Cardinals"
+      },
+      "fromTeam": {
+        "id": 145,
+        "name": "Chicago White Sox"
+      }
+    },
+    {
+      "id": 990005,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": {
+        "id": 880004,
+        "fullName": "Oliver Gonzalez"
+      },
+      "toTeam": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+      },
+      "fromTeam": {
+        "id": 138,
+        "name": "St. Louis Cardinals"
+      }
+    },
+    {
+      "id": 990006,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": {
+        "id": 880005,
+        "fullName": "Tommy Pham"
+      },
+      "toTeam": {
+        "id": 138,
+        "name": "St. Louis Cardinals"
+      },
+      "fromTeam": {
+        "id": 145,
+        "name": "Chicago White Sox"
+      }
+    },
+    {
+      "id": 990007,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": {
+        "id": 880006,
+        "fullName": "Alexander Albertus"
+      },
+      "toTeam": {
+        "id": 145,
+        "name": "Chicago White Sox"
+      },
+      "fromTeam": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+      }
+    },
+    {
+      "id": 990008,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": {
+        "id": 880007,
+        "fullName": "Jeral Perez"
+      },
+      "toTeam": {
+        "id": 145,
+        "name": "Chicago White Sox"
+      },
+      "fromTeam": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+      }
+    },
+    {
+      "id": 990009,
+      "date": "2024-07-29",
+      "typeCode": "TR",
+      "typeDesc": "Trade",
+      "description": "Los Angeles Dodgers traded 3B Miguel Vargas, SS Alexander Albertus, SS Jeral Perez and a player to be named later or cash considerations to the Chicago White Sox for RHP Michael Kopech; Chicago White Sox traded RHP Erick Fedde, OF Tommy Pham and cash considerations to the St. Louis Cardinals; St. Louis Cardinals traded SS Tommy Edman and RHP Oliver Gonzalez to the Los Angeles Dodgers.",
+      "person": {
+        "id": 880008,
+        "fullName": "Michael Kopech"
+      },
+      "toTeam": {
+        "id": 119,
+        "name": "Los Angeles Dodgers"
+      },
+      "fromTeam": {
+        "id": 145,
+        "name": "Chicago White Sox"
+      }
+    }
+  ]
+}

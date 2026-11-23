@@ -355,6 +355,73 @@ class TransactionTests(MlbTestBase):
 
 
 # ---------------------------------------------------------------- 戰報產生
+class ThreeTeamTradeTests(unittest.TestCase):
+    """三方交易（道奇／白襪／紅雀）：API 每位球員一筆紀錄，方向各異，另有 person 為 null 的現金／PTBNL 紀錄。"""
+    LAD, CWS, STL = 119, 145, 138
+
+    def setUp(self):
+        raw = json.loads((FIXTURES / "transactions_three_team_trade.json").read_text(encoding="utf-8"))["transactions"]
+        self.raw = raw
+        self.txs = fetch_mlb.filter_major_league_transactions(raw)
+
+    def test_merged_into_one_with_all_teams(self):
+        self.assertEqual(len(self.txs), 1)
+        tx = self.txs[0]
+        self.assertEqual(len(tx["persons"]), 8)
+        self.assertEqual(set(tx["team_ids"]), {self.LAD, self.CWS, self.STL})
+        self.assertEqual(len(tx["team_ids"]), 3)
+
+    def test_first_record_direction_kept(self):
+        tx = self.txs[0]
+        self.assertEqual((tx["to_team_id"], tx["from_team_id"]), (self.LAD, self.STL))  # Edman：紅雀 -> 道奇
+        self.assertEqual(tx["person_name"], "Tommy Edman")
+
+    def test_legs_deduplicated_in_order(self):
+        legs = self.txs[0]["legs"]
+        self.assertEqual(len(legs), 10)  # 10 筆紀錄的 (to, from, person) 皆不同
+        self.assertEqual(legs[0], {"to_team_id": self.LAD, "from_team_id": self.STL, "person_id": legs[0]["person_id"]})
+        self.assertEqual(sum(lg["person_id"] is None for lg in legs), 2)
+        dup = fetch_mlb.filter_major_league_transactions(self.raw + self.raw)[0]
+        self.assertEqual(dup["legs"], legs)
+
+    def test_any_record_team_counts_for_filter(self):
+        desc = "X traded RHP A to Y."
+        raw = [{"description": desc, "person": {"id": 1, "fullName": "A"}, "toTeam": {"id": 2310}, "fromTeam": {"id": 2311}},
+               {"description": desc, "person": None, "toTeam": {"id": 147}, "fromTeam": {"id": 2311}}]
+        self.assertEqual(len(fetch_mlb.filter_major_league_transactions(raw)), 1)
+
+    def test_section_lists_in_every_team_group(self):
+        out = fetch_mlb.render_transactions_section(self.txs)
+        self.assertIn("1 筆", out)
+        self.assertEqual(out.count('class="tx-group'), 3)
+        self.assertNotIn("其他異動", out)
+        self.assertEqual(out.count("Tommy Edman"), 3)
+
+    def test_section_team_only_once_per_group(self):
+        tx = dict(self.txs[0], team_ids=[self.LAD, self.LAD, self.CWS])
+        out = fetch_mlb.render_transactions_section([tx])
+        self.assertEqual(out.count('class="tx-group'), 2)
+
+    def test_section_other_when_no_mlb_team(self):
+        tx = {"description": "x", "to_team_id": 2310, "from_team_id": None, "persons": []}
+        self.assertIn("其他異動", fetch_mlb.render_transactions_section([tx]))
+
+    def test_split_game_transactions_matches_third_team(self):
+        away = {"id": self.CWS, "abbr": "CWS", "name": "芝加哥白襪", "color": "#27251F"}
+        home = {"id": 147, "abbr": "NYY", "name": "紐約洋基", "color": "#003087"}
+        groups, remaining = fetch_mlb.split_game_transactions(self.txs, away, home)
+        self.assertEqual([g["team"]["id"] for g in groups], [self.CWS])
+        self.assertEqual(remaining, [])
+
+    def test_tx_team_ids_legacy_compat(self):
+        tid = fetch_mlb.transactions_mod.tx_team_ids
+        self.assertEqual(tid({"to_team_id": 1, "from_team_id": 2}), [1, 2])
+        self.assertEqual(tid({"to_team_id": 1, "from_team_id": 1}), [1])
+        self.assertEqual(tid({"to_team_id": None, "from_team_id": 2}), [2])
+        self.assertEqual(tid({"to_team_id": 1, "from_team_id": 2, "team_ids": [3, 4]}), [3, 4])
+        self.assertEqual(tid({}), [])
+
+
 class GenerateReportTests(MlbTestBase):
     def test_normal_day_meta_and_cards(self):
         meta, html = self.generate("schedule_normal")

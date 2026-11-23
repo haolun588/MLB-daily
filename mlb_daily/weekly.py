@@ -127,7 +127,10 @@ def _team_id(value):
 
 
 def team_moves(item):
-    """該筆異動對各隊的影響 [(team_id, 'join'|'leave')]（只含 30 隊；交易雙方各記一次）。"""
+    """該筆異動對各隊的影響 [(team_id, 'join'|'leave')]（只含 30 隊；交易各隊各記一次）。
+    離開類（DES／DFA／REL／OUT 等）取第一個 30 隊記離開。交易類：tx 有 legs（含多隊交易）時，team_ids 中每支 30 隊
+    各記一次——該隊是任一「有球員的 leg」的 to_team_id 記 join，否則（只送出球員或只收現金）記 leave；
+    其他類與舊快照依 to／from 欄位判斷。"""
     tx = item["tx"]
     to_id, from_id = _team_id(tx.get("to_team_id")), _team_id(tx.get("from_team_id"))
     if item["category"] in _LEAVE_CATEGORIES:
@@ -137,6 +140,21 @@ def team_moves(item):
             if tid is not None:
                 return [(tid, "leave")]
         return []
+    legs = tx.get("legs")
+    if item["category"] == "trade" and isinstance(legs, list) and legs:
+        legs = [lg for lg in legs if isinstance(lg, dict)]
+        receivers = {_team_id(lg.get("to_team_id")) for lg in legs if lg.get("person_id") is not None}
+        team_ids = tx.get("team_ids")
+        if not isinstance(team_ids, list) or not team_ids:
+            team_ids = [t for lg in legs for t in (lg.get("to_team_id"), lg.get("from_team_id"))]
+        moves, seen = [], set()
+        for raw in team_ids:
+            tid = _team_id(raw)
+            if tid is None or tid in seen:
+                continue
+            seen.add(tid)
+            moves.append((tid, "join" if tid in receivers else "leave"))
+        return moves
     moves = []
     if to_id is not None and to_id == from_id:  # 兩欄同一隊：只記一次
         return [(to_id, "join")]

@@ -194,9 +194,9 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 1. 不含 `minor league`。
 2. 含 `signed` 者須有大聯盟特徵詞（`free agent`、`major league`、`extension`、`arbitration`、`-year`）。
 3. `toTeam` 或 `fromTeam` 至少一方為 30 支大聯盟球隊之一（排除小聯盟球隊之間與冬季聯盟指派）。
-4. 相同描述去重。
+4. 相同描述合併為一筆：API 對一筆交易的每位球員各回一筆紀錄（description 相同、toTeam／fromTeam 方向各異，另有 person 為 null 的現金／PTBNL 紀錄），先依描述分組再整組過濾；第 3 點改為「整組任一紀錄」涉及 30 隊即可。合併後 `to_team_id`／`from_team_id`／`person_*` 取第一筆涉及 30 隊的紀錄，`persons` 收全部球員，另有 `legs`（每筆紀錄的 `{to_team_id, from_team_id, person_id}`，去重）與 `team_ids`（legs 中出現過的球隊 id，去重，不限 30 隊）；舊資料沒有 `team_ids` 時用 `tx_team_ids()` 退回 `[to_team_id, from_team_id]`。
 
-比賽球隊的異動放進該場卡片，其餘放在頁尾「其他球隊人事異動」；休賽季頁面標題為「大聯盟人事異動」。描述先 escape，再把球員姓名替換成 Savant 連結（`https://baseballsavant.mlb.com/savant-player/{playerId}`）。
+比賽球隊的異動放進該場卡片（兩隊任一在 `team_ids` 內即算相關），其餘放在頁尾「其他球隊人事異動」。頁尾依球隊分組時，多隊交易在 `team_ids` 的每支 30 隊分組都列出（同組只出現一次；標題筆數仍為異動筆數）；都不是 30 隊才進「其他異動」；休賽季頁面標題為「大聯盟人事異動」。描述先 escape，再把球員姓名替換成 Savant 連結（`https://baseballsavant.mlb.com/savant-player/{playerId}`）。
 
 ### 新聞
 
@@ -319,7 +319,7 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 `generate_report`（有賽事）與 `generate_offseason_report`（無賽事）在翻譯完成、寫出 HTML 後各寫一份（`storage.write_daily_snapshot`，暫存檔加 `os.replace`）。寫入或組裝失敗只印警告，不影響戰報。`schema: 1`：
 
 - `date`、`has_games`。
-- `transactions`：經大聯盟過濾、戰報實際顯示的異動（賽季日含各場卡片內的），每筆 `type_code`、`date`、`description`、`description_zh`（無譯文為 `null`）、`person_id`、`person_name`、`persons`（`[{id, name}]`）、`to_team_id`、`from_team_id`。
+- `transactions`：經大聯盟過濾、戰報實際顯示的異動（賽季日含各場卡片內的），每筆 `type_code`、`date`、`description`、`description_zh`（無譯文為 `null`）、`person_id`、`person_name`、`persons`（`[{id, name}]`）、`to_team_id`、`from_team_id`、`team_ids`、`legs`（後兩者見人事異動一節；舊快照沒有，讀取端需相容。週報 `team_moves` 有 `legs` 時，`team_ids` 中每支 30 隊各記一次：任一有球員的 leg 以該隊為 to 記加入，否則記離開）。
 - `news`：當天戰報實際顯示（最多 12 則）的新聞，每則 `title`、`title_zh`、`link`、`published`（ISO 字串）、`image`、`summary`（RSS 純文字，供名單比對）。新聞抓取失敗存空清單。
 - 不存台日韓比對結果；週報產生時用當下的合併名單（動態快取 + `settings/watchlist.json`）重新比對。
 

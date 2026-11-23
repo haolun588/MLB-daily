@@ -26,32 +26,21 @@ def filter_major_league_transactions(transactions):
     """對 transactions API 的 transactions 陣列套用大聯盟層級過濾，回傳整理後的 list（保持 API 順序）。description 為
     API 原文（未 escape），輸出 HTML 前一律經 render_tx_description() 處理。
 
-    過濾：排除 minor league 關鍵字；signed 類需有大聯盟特徵詞；toTeam／fromTeam 至少一方為 30 隊之一
-    （排除冬季聯盟指派、小聯盟球隊之間的異動）；描述去重。"""
-    tx_list = []
-    seen_descriptions = {}  # description -> 已收錄的 tx dict（重複描述的球員併入其 persons）
+    API 對一筆交易的每位球員各回一筆紀錄（description 相同，toTeam／fromTeam 方向各異；多隊交易尤其如此），
+    故先依 description 分組（保持首次出現順序），再對整組套用過濾：排除 minor league 關鍵字；signed 類需有大聯盟
+    特徵詞；整組任一紀錄的 toTeam／fromTeam 為 30 隊之一（排除冬季聯盟指派、小聯盟球隊之間的異動）。
 
-    def _add_person(entry, person):
-        pid, name = (person or {}).get("id"), (person or {}).get("fullName")
-        if pid is None or not name:
-            return
-        if all(p["id"] != pid for p in entry["persons"]):
-            entry["persons"].append({"id": pid, "name": name})
-
+    每筆輸出：to_team_id／from_team_id／person_id／person_name 取第一筆涉及 30 隊的紀錄（該筆無 person 時改採第一筆有
+    person 的紀錄）；persons 為全部球員；legs 為各紀錄的 {to_team_id, from_team_id, person_id}（去重）；team_ids 為 legs
+    依序出現過的球隊 id（去重、不限 30 隊）。"""
+    groups = {}  # description -> 該描述的所有紀錄（dict 保持首次出現順序）
     for tx in transactions or []:
         desc = tx.get("description")
-        if not desc:
-            continue
-        if desc in seen_descriptions:
-            kept = seen_descriptions[desc]
-            if kept["person_id"] is None and (tx.get("person") or {}).get("id") is not None:
-                # 先出現的是無 person 的反向紀錄時，改採有 person 的紀錄的球員與 to/from 方向
-                person = tx["person"]
-                kept.update(person_id=person.get("id"), person_name=person.get("fullName"),
-                            to_team_id=(tx.get("toTeam") or {}).get("id"),
-                            from_team_id=(tx.get("fromTeam") or {}).get("id"))
-            _add_person(kept, tx.get("person"))
-            continue
+        if desc:
+            groups.setdefault(desc, []).append(tx)
+
+    tx_list = []
+    for desc, records in groups.items():
         desc_lower = desc.lower()
         if re.search(r"\bminor league", desc_lower):
             continue
@@ -59,24 +48,63 @@ def filter_major_league_transactions(transactions):
             indicators = ["free agent", "major league", "extension", "arbitration", "-year"]
             if not any(ind in desc_lower for ind in indicators):
                 continue
-        if not (_is_mlb_team(tx.get("toTeam")) or _is_mlb_team(tx.get("fromTeam"))):
+        mlb_records = [r for r in records if _is_mlb_team(r.get("toTeam")) or _is_mlb_team(r.get("fromTeam"))]
+        if not mlb_records:
             continue
-        person_info = tx.get("person") or {}
+        lead = mlb_records[0]  # 第一筆涉及 30 隊的紀錄（與逐筆過濾時的行為一致）
+        if (lead.get("person") or {}).get("id") is None:
+            # 先出現的是無 person 的反向紀錄時，改採第一筆有 person 的紀錄的球員與 to/from 方向
+            lead = next((r for r in records if (r.get("person") or {}).get("id") is not None), lead)
+        person_info = lead.get("person") or {}
         entry = {
-            "to_team_id": (tx.get("toTeam") or {}).get("id"),
-            "from_team_id": (tx.get("fromTeam") or {}).get("id"),
+            "to_team_id": (lead.get("toTeam") or {}).get("id"),
+            "from_team_id": (lead.get("fromTeam") or {}).get("id"),
             "person_id": person_info.get("id"),
             "person_name": person_info.get("fullName"),
             "persons": [],
+            "legs": [],
+            "team_ids": [],
             "description": desc,
-            "date": tx.get("date"),
-            "type_code": tx.get("typeCode"),
+            "date": records[0].get("date"),
+            "type_code": records[0].get("typeCode"),
         }
-        _add_person(entry, person_info)
-        seen_descriptions[desc] = entry
+        seen_legs = set()
+        for r in records:
+            _add_person(entry, r.get("person"))
+            leg = {"to_team_id": (r.get("toTeam") or {}).get("id"),
+                   "from_team_id": (r.get("fromTeam") or {}).get("id"),
+                   "person_id": (r.get("person") or {}).get("id")}
+            key = (leg["to_team_id"], leg["from_team_id"], leg["person_id"])
+            if key in seen_legs:
+                continue
+            seen_legs.add(key)
+            entry["legs"].append(leg)
+            for tid in (leg["to_team_id"], leg["from_team_id"]):
+                if tid is not None and tid not in entry["team_ids"]:
+                    entry["team_ids"].append(tid)
         tx_list.append(entry)
 
     return tx_list
+
+
+def _add_person(entry, person):
+    pid, name = (person or {}).get("id"), (person or {}).get("fullName")
+    if pid is None or not name:
+        return
+    if all(p["id"] != pid for p in entry["persons"]):
+        entry["persons"].append({"id": pid, "name": name})
+
+
+def tx_team_ids(tx):
+    """tx 涉及的球隊 id 清單；有 team_ids 就用；舊快照（無 team_ids）退回 [to_team_id, from_team_id] 中非 None 且去重者。"""
+    ids = tx.get("team_ids")
+    if ids:
+        return list(ids)
+    out = []
+    for tid in (tx.get("to_team_id"), tx.get("from_team_id")):
+        if tid is not None and tid not in out:
+            out.append(tid)
+    return out
 
 
 def fetch_raw_transactions(date_str):
@@ -143,16 +171,13 @@ def render_tx_items(tx_list):
 
 
 def render_transactions_section(tx_list, heading="其他球隊人事異動", empty_text="本日無其他球隊人事異動。"):
-    """依球隊分組顯示人事異動（to_team 優先，其次 from_team，皆非 30 隊者歸入「其他異動」）。"""
+    """依球隊分組顯示人事異動：每筆放進 tx_team_ids(tx) 中每一支 30 隊的分組（多隊交易每隊都列出，同組只出現一次），
+    都不是 30 隊者歸入「其他異動」。標題筆數為異動數，不是分組內項目總數。"""
     grouped = {}
     for tx in tx_list:
-        if tx["to_team_id"] in TEAM_META:
-            key = tx["to_team_id"]
-        elif tx["from_team_id"] in TEAM_META:
-            key = tx["from_team_id"]
-        else:
-            key = "Other"
-        grouped.setdefault(key, []).append(tx)
+        keys = [t for t in dict.fromkeys(tx_team_ids(tx)) if t in TEAM_META] or ["Other"]
+        for key in keys:
+            grouped.setdefault(key, []).append(tx)
 
     head = (
         f'<div class="section-head"><h2 id="tx-h">{htmlutil.esc(heading)}</h2>'
@@ -188,7 +213,7 @@ def split_game_transactions(tx_list, away, home):
     groups = []
     matched = set()
     for side in (away, home):
-        items = [tx for tx in tx_list if side["id"] in (tx["to_team_id"], tx["from_team_id"])]
+        items = [tx for tx in tx_list if side["id"] in tx_team_ids(tx)]
         if items:
             groups.append({"team": side, "items": items})
             matched.update(tx["description"] for tx in items)
