@@ -1297,7 +1297,7 @@ class CandidateSelectionTests(unittest.TestCase):
         bench = make_player(3, "Bench Guy", "PH", batting={"atBats": 0, "runs": 0, "stolenBases": 0})
         self.assertEqual(fetch_mlb.collect_candidates(self.box({"ID3": bench}), "AAA", "BBB"), [])
 
-    def test_top_three_guaranteed_and_threshold(self):
+    def test_batter_cap_and_threshold(self):
         players = {}
         for i in range(2):  # 弱打者：各 1 分
             players[f"ID{i}"] = make_player(i + 1, f"Weak{i}", batting={"atBats": 4, "hits": 1, "runs": 0, "rbi": 0})
@@ -1306,17 +1306,17 @@ class CandidateSelectionTests(unittest.TestCase):
                                              batting={"atBats": 4, "hits": 3, "homeRuns": 2, "runs": 2, "rbi": 5})
         cands = fetch_mlb.collect_candidates(self.box(players), "AAA", "BBB")
         batters, pitchers, selected = fetch_mlb.select_performers(cands)
-        # 前 3 名保證入選，第 4 名（Slugger，>= 7 分）因達門檻入選；弱打者（1 分）不入選
+        # 4 名強打者（高分）入選達上限 4 人；弱打者（0.25 分）不入選
         self.assertEqual(len(selected), 4)
         self.assertTrue(all(b["name"].startswith("Slugger") for b in batters))
         self.assertEqual(pitchers, [])
 
     def test_L4_sb_pinch_runner_rendered_in_card(self):
-        # 整合：代跑者出現在卡片的打擊焦點（至少 3 名保證入選）
+        # 整合：代跑者（BB + SB + 0.5R*2 = 3 分，達前 2 名保底 3 分）出現在卡片的打擊焦點
         box = load_fixture("boxscore_1001")
         box["teams"]["away"]["players"] = {
             "ID70": make_player(70, "Pinch Runner Seven", "PR",
-                                batting={"atBats": 0, "runs": 1, "stolenBases": 1},
+                                batting={"atBats": 0, "runs": 2, "stolenBases": 1, "baseOnBalls": 1},
                                 season_batting={"stolenBases": 12}),
         }
         box["teams"]["away"]["pitchers"] = []
@@ -1326,6 +1326,140 @@ class CandidateSelectionTests(unittest.TestCase):
         html = fetch_mlb.render_batter(batters[0])
         self.assertIn("Pinch Runner Seven", html)
         self.assertIn("SB: 1(12)", html)
+
+
+def _pitcher_box(pitchers_by_side):
+    """pitchers_by_side: {"away": [(id, name, stats), ...], "home": [...]}；第一位為先發。"""
+    teams = {}
+    for side in ("away", "home"):
+        entries = pitchers_by_side.get(side, [])
+        teams[side] = {
+            "players": {f"ID{pid}": make_player(pid, name, "P", pitching=stats) for pid, name, stats in entries},
+            "pitchers": [pid for pid, _, _ in entries],
+        }
+    return {"teams": teams}
+
+
+def _batter_box(players):
+    return {"teams": {"away": {"players": players, "pitchers": []}, "home": {"players": {}, "pitchers": []}}}
+
+
+class FocusScoringTests(unittest.TestCase):
+    def batter_score(self, **bat):
+        box = _batter_box({"ID1": make_player(1, "B", batting=bat)})
+        return fetch_mlb.collect_candidates(box, "AAA", "BBB")[0]["score"]
+
+    def test_batter_solo_homer_four_ab(self):
+        # TB 4 - 0.25*3 + 0.5*(1 + 1) = 4.25
+        self.assertAlmostEqual(self.batter_score(atBats=4, hits=1, homeRuns=1, runs=1, rbi=1), 4.25)
+
+    def test_batter_big_game(self):
+        # H3(2B1, HR1) -> TB 1+2+4=7；0.5*(2 + 4)=3；-0.25*1 -> 9.75
+        self.assertAlmostEqual(
+            self.batter_score(atBats=4, hits=3, doubles=1, homeRuns=1, runs=2, rbi=4), 9.75)
+
+    def test_batter_prefers_total_bases_field_and_hbp_cs(self):
+        # totalBases=5 優先於 H 推算；5 + 1(BB) + 1(HBP) + 2(SB) - 1(CS) - 0.25*2 = 7.5
+        self.assertAlmostEqual(
+            self.batter_score(atBats=4, hits=2, totalBases=5, baseOnBalls=1, hitByPitch=1,
+                              stolenBases=2, caughtStealing=1), 7.5)
+
+    def pitchers(self, side_pitchers):
+        cands = fetch_mlb.collect_candidates(_pitcher_box({"away": side_pitchers}), "AAA", "BBB")
+        return {c["name"]: c for c in cands}
+
+    def test_starter_score_and_norm(self):
+        stats = {"inningsPitched": "7.0", "hits": 4, "runs": 1, "earnedRuns": 1, "baseOnBalls": 1,
+                 "strikeOuts": 8, "homeRuns": 0, "wins": 1}
+        c = self.pitchers([(1, "SP", stats)])["SP"]
+        # 42 + 8 - 2 - 8 - 3 = 37（勝投不加分）
+        self.assertAlmostEqual(c["score"], 37.0)
+        self.assertAlmostEqual(c["norm"], 37.0 / 20.0)
+
+    def test_reliever_bonus_only_when_scoreless(self):
+        sp = {"inningsPitched": "5.0", "hits": 3, "runs": 1, "strikeOuts": 4}
+        save = {"inningsPitched": "1.0", "strikeOuts": 3, "saves": 1}
+        blown = {"inningsPitched": "1.0", "strikeOuts": 3, "saves": 1, "runs": 1}
+        hold = {"inningsPitched": "1.0", "strikeOuts": 0, "holds": 1}
+        cands = self.pitchers([(1, "SP", sp), (2, "CL", save), (3, "BL", blown), (4, "HD", hold)])
+        self.assertAlmostEqual(cands["CL"]["score"], 11.0)  # 6 + 3 + 2
+        self.assertAlmostEqual(cands["CL"]["norm"], 1.1)
+        self.assertAlmostEqual(cands["BL"]["score"], 6.0)   # 6 + 3 - 3，失分則無加分
+        self.assertAlmostEqual(cands["HD"]["score"], 8.0)   # 6 + 2
+
+    def test_homer_allowed_penalty(self):
+        stats = {"inningsPitched": "6.0", "hits": 5, "runs": 3, "strikeOuts": 5, "homeRuns": 1}
+        c = self.pitchers([(1, "SP", stats)])["SP"]
+        self.assertAlmostEqual(c["score"], 36 + 5 - 10 - 9 - 6)
+
+    def test_batter_selection_cap_and_floors(self):
+        # 以 totalBases 直接控制分數（AB = H 不扣分）：第 3 名起須 >= 5，且最多 4 人
+        specs = [("A", 10), ("B", 8), ("C", 6), ("D", 5), ("E", 5), ("F", 4)]
+        players = {f"ID{i}": make_player(i, n, batting={"atBats": 4, "hits": 4, "totalBases": sc})
+                   for i, (n, sc) in enumerate(specs, 1)}
+        cands = fetch_mlb.collect_candidates(_batter_box(players), "AAA", "BBB")
+        batters, pitchers, _ = fetch_mlb.select_performers(cands)
+        self.assertEqual(len(batters), 4)
+        self.assertEqual([b["name"] for b in batters][:3], ["A", "B", "C"])
+        self.assertEqual(pitchers, [])
+
+    def test_batter_top_two_need_only_three_points(self):
+        players = {
+            "ID1": make_player(1, "A", batting={"atBats": 4, "hits": 4, "totalBases": 3.5}),
+            "ID2": make_player(2, "B", batting={"atBats": 4, "hits": 4, "totalBases": 3.0}),
+            "ID3": make_player(3, "C", batting={"atBats": 4, "hits": 4, "totalBases": 4.9}),
+            "ID4": make_player(4, "D", batting={"atBats": 4, "hits": 4, "totalBases": 2.9}),
+        }
+        batters, _, _ = fetch_mlb.select_performers(
+            fetch_mlb.collect_candidates(_batter_box(players), "AAA", "BBB"))
+        # C(4.9)、A(3.5) 為前 2 名；B(3.0) 為第 3 名須 >= 5，未入選
+        self.assertEqual([b["name"] for b in batters], ["C", "A"])
+
+    def test_no_batter_below_three(self):
+        players = {"ID1": make_player(1, "A", batting={"atBats": 4, "hits": 1, "totalBases": 1})}
+        _, _, selected = fetch_mlb.select_performers(
+            fetch_mlb.collect_candidates(_batter_box(players), "AAA", "BBB"))
+        self.assertEqual(selected, [])
+
+    def test_pitcher_selection_cap_and_thresholds(self):
+        def line(ip, so):
+            return {"inningsPitched": ip, "strikeOuts": so}
+        box = _pitcher_box({
+            "away": [(1, "SP1", line("7.0", 8)),   # 50 先發入選
+                     (2, "R1", line("1.0", 3)),    # 9 後援 < 10，不入選
+                     (3, "R2", line("2.0", 4))],   # 16 後援入選
+            "home": [(4, "SP2", line("5.0", 5)),   # 35 先發入選
+                     (5, "R3", line("2.0", 5))],   # 17 後援入選，但已達 3 人上限
+        })
+        _, pitchers, _ = fetch_mlb.select_performers(fetch_mlb.collect_candidates(box, "AAA", "BBB"))
+        self.assertEqual([p["name"] for p in pitchers], ["SP1", "SP2", "R3"])
+
+    def test_pitcher_top_floor_and_starter_twenty(self):
+        box = _pitcher_box({
+            "away": [(1, "SP1", {"inningsPitched": "2.0", "strikeOuts": 4})],  # 16，先發第 2 名須 >= 20
+            "home": [(2, "SP2", {"inningsPitched": "3.0", "strikeOuts": 5})],  # 23，第 1 名
+        })
+        _, pitchers, _ = fetch_mlb.select_performers(fetch_mlb.collect_candidates(box, "AAA", "BBB"))
+        self.assertEqual([p["name"] for p in pitchers], ["SP2"])
+
+    def test_pitcher_top_needs_eight(self):
+        box = _pitcher_box({"away": [(1, "SP", {"inningsPitched": "1.0", "strikeOuts": 1})]})  # 7 < 8
+        _, pitchers, _ = fetch_mlb.select_performers(fetch_mlb.collect_candidates(box, "AAA", "BBB"))
+        self.assertEqual(pitchers, [])
+
+    def test_selected_sorted_by_norm(self):
+        players = {
+            "ID1": make_player(1, "Bat", batting={"atBats": 4, "hits": 4, "totalBases": 10}),  # norm 2.0
+            "ID2": make_player(2, "Ace", "P", pitching={"inningsPitched": "9.0", "strikeOuts": 10, "hits": 2}),  # 60, norm 3.0
+            "ID3": make_player(3, "Rel", "P", pitching={"inningsPitched": "2.0", "strikeOuts": 4}),  # 16, norm 1.6
+        }
+        box = {"teams": {"away": {"players": players, "pitchers": [2, 3]},
+                         "home": {"players": {}, "pitchers": []}}}
+        batters, pit, selected = fetch_mlb.select_performers(fetch_mlb.collect_candidates(box, "AAA", "BBB"))
+        self.assertEqual([c["name"] for c in selected], ["Ace", "Bat", "Rel"])
+        self.assertAlmostEqual(fetch_mlb.top_focus_score(selected), 3.0)
+        self.assertEqual([b["name"] for b in batters], ["Bat"])
+        self.assertEqual([p["name"] for p in pit], ["Ace", "Rel"])
 
 
 class PageLinkTests(MlbTestBase):
@@ -2501,7 +2635,7 @@ class SummarySentenceTests(MlbTestBase):
 
     def test_top_focus_score(self):
         self.assertEqual(fetch_mlb.top_focus_score([]), 0.0)
-        self.assertEqual(fetch_mlb.top_focus_score([{"score": 3.5}, {"score": 12.0}]), 12.0)
+        self.assertEqual(fetch_mlb.top_focus_score([{"norm": 0.7}, {"norm": 2.4}]), 2.4)
 
     def test_L7_summary_uses_highest_scoring_games_not_first_three(self):
         g1, g2 = self.games_of("schedule_normal")

@@ -101,8 +101,70 @@ def get_team_info(team_id, english_name):
     return {"name": english_name, "abbr": english_name[:3].upper(), "color": "#6b7280"}
 
 
+# 焦點球員評分權重與入選門檻（集中於此，方便日後調整）
+BATTER_NORM_THRESHOLD = 5.0       # 打者 norm 基準（score / 此值）
+STARTER_NORM_THRESHOLD = 20.0     # 先發投手 norm 基準
+RELIEVER_NORM_THRESHOLD = 10.0    # 後援投手 norm 基準
+BATTER_MAX = 4                    # 每場打者入選上限
+BATTER_TOP_N = 2                  # 前 N 名只需達保底分數
+BATTER_TOP_MIN_SCORE = 3.0        # 打者前 N 名保底分數
+BATTER_REST_MIN_SCORE = 5.0       # 打者第 N+1 名起的最低分數
+PITCHER_MAX = 3                   # 每場投手入選上限
+PITCHER_TOP_MIN_SCORE = 8.0       # 投手第 1 名保底分數
+PITCHER_STARTER_MIN_SCORE = 20.0  # 其餘先發投手最低分數
+PITCHER_RELIEVER_MIN_SCORE = 10.0  # 其餘後援投手最低分數
+RELIEVER_CLEAN_BONUS = 2.0        # 後援 0 失分且救援／中繼成功的加分
+BATTER_MISS_AB_PENALTY = 0.25     # 每個未安打打數的扣分
+BATTER_RUN_RBI_WEIGHT = 0.5       # 得分、打點權重
+PITCHER_OUT_WEIGHT = 2.0          # 每個出局數
+PITCHER_BB_WEIGHT = 2.0
+PITCHER_H_WEIGHT = 2.0
+PITCHER_R_WEIGHT = 3.0            # 以總失分（runs）計，非自責分
+PITCHER_HR_WEIGHT = 6.0
+
+
+def batter_score(bat):
+    """打者分數 = TB + BB + HBP + SB - CS + 0.5*(R + RBI) - 0.25*(AB - H)。
+
+    TB 優先用 totalBases；缺少時以 H + 2B + 2*3B + 3*HR 計算。缺漏欄位視為 0。
+    """
+    ab, h = bat.get("atBats", 0), bat.get("hits", 0)
+    tb = bat.get("totalBases")
+    if tb is None:
+        tb = h + bat.get("doubles", 0) + 2 * bat.get("triples", 0) + 3 * bat.get("homeRuns", 0)
+    return (
+        tb + bat.get("baseOnBalls", 0) + bat.get("hitByPitch", 0)
+        + bat.get("stolenBases", 0) - bat.get("caughtStealing", 0)
+        + BATTER_RUN_RBI_WEIGHT * (bat.get("runs", 0) + bat.get("rbi", 0))
+        - BATTER_MISS_AB_PENALTY * (ab - h)
+    )
+
+
+def pitcher_score(pit, outs, is_starter, is_clean_close):
+    """投手分數 = 2*出局數 + K - 2*BB - 2*H - 3*R - 6*HR（R 為總失分）。
+
+    後援（非先發）0 失分且救援成功或中繼成功（is_clean_close）再 +2；勝投不加分。
+    """
+    runs = pit.get("runs", 0)
+    score = (
+        PITCHER_OUT_WEIGHT * outs + pit.get("strikeOuts", 0)
+        - PITCHER_BB_WEIGHT * pit.get("baseOnBalls", 0)
+        - PITCHER_H_WEIGHT * pit.get("hits", 0)
+        - PITCHER_R_WEIGHT * runs
+        - PITCHER_HR_WEIGHT * pit.get("homeRuns", 0)
+    )
+    if not is_starter and runs == 0 and is_clean_close:
+        score += RELIEVER_CLEAN_BONUS
+    return score
+
+
 def collect_candidates(boxscore, away_abbr, home_abbr):
-    """從 boxscore 取出打者／投手候選人並評分（分數由高到低）。"""
+    """從 boxscore 取出打者／投手候選人並評分（分數由高到低）。
+
+    打者資格：有打數、盜壘或得分；分數見 batter_score。
+    投手資格：有局數且不是 "0.0"；分數見 pitcher_score。先發為各隊 pitchers[0]。
+    每位候選人附 norm = score / 門檻（打者 5、先發 20、後援 10），供跨類型比較。
+    """
     teams = boxscore.get("teams", {})
     starters = {
         side: (teams.get(side, {}).get("pitchers") or [None])[0] for side in ("away", "home")
@@ -132,12 +194,11 @@ def collect_candidates(boxscore, away_abbr, home_abbr):
                 so = bat.get("strikeOuts", 0)
                 sb = bat.get("stolenBases", 0)
                 if ab > 0 or sb > 0 or r > 0:
-                    # Score = H*1 + 2B*2 + 3B*3 + HR*4 + RBI*1.5 + R*1 + SB*1 + BB*1
-                    score = h * 1.0 + d * 2.0 + t * 3.0 + hr * 4.0 + rbi * 1.5 + r * 1.0 + sb * 1.0 + bb * 1.0
+                    score = batter_score(bat)
                     season = p_info.get("seasonStats", {}).get("batting", {})
                     candidates.append({
                         "type": "batter", "id": p_id, "name": p_name, "team": team_abbr,
-                        "pos": pos, "score": score,
+                        "pos": pos, "score": score, "norm": score / BATTER_NORM_THRESHOLD,
                         "stats": {
                             "ab": ab, "r": r, "h": h, "rbi": rbi, "bb": bb, "so": so,
                             "d": d, "t": t, "hr": hr, "sb": sb,
@@ -161,13 +222,16 @@ def collect_candidates(boxscore, away_abbr, home_abbr):
                 ip_outs = int(parts[0]) * 3 + (int(parts[1]) if len(parts) > 1 else 0)
                 is_win = pit.get("wins", 0) > 0
                 is_save = pit.get("saves", 0) > 0
+                is_hold = pit.get("holds", 0) > 0
                 is_loss = pit.get("losses", 0) > 0
-                # Score = IP_outs + K*1 - ER*2 - H*1 - BB*1 + (Win ? 5 : 0) + (Save ? 4 : 0)
-                score = ip_outs + so * 1.0 - er * 2.0 - h * 1.0 - bb * 1.0 + (5.0 if is_win else 0.0) + (4.0 if is_save else 0.0)
+                is_starter = p_id == starters[side]
+                score = pitcher_score(pit, ip_outs, is_starter, is_save or is_hold)
+                threshold = STARTER_NORM_THRESHOLD if is_starter else RELIEVER_NORM_THRESHOLD
                 decision = "W" if is_win else ("S" if is_save else ("L" if is_loss else ""))
                 candidates.append({
                     "type": "pitcher", "id": p_id, "name": p_name, "team": team_abbr,
-                    "pos": pos, "score": score, "is_starter": p_id == starters[side],
+                    "pos": pos, "score": score, "norm": score / threshold,
+                    "is_starter": is_starter,
                     "decision": decision,
                     "stats": {
                         "ip": ip_str, "h": h, "r": r, "er": er, "bb": bb, "so": so,
@@ -180,22 +244,35 @@ def collect_candidates(boxscore, away_abbr, home_abbr):
 
 
 def select_performers(candidates):
-    """雙門檻：前 3 名保證入選；其餘打者 >= 7、先發 >= 15、後援 >= 8。回傳 (打者, 投手, 全部入選)。"""
-    selected = []
-    for idx, cand in enumerate(candidates):
-        if idx < 3:
-            selected.append(cand)
-        elif cand["type"] == "batter":
-            if cand["score"] >= 7.0:
-                selected.append(cand)
+    """打者、投手分開入選（兩隊合併，各依分數由高到低）。回傳 (打者, 投手, 全部入選)。
+
+    - 打者：最多 BATTER_MAX 人；前 BATTER_TOP_N 名分數 >= BATTER_TOP_MIN_SCORE，之後須 >= BATTER_REST_MIN_SCORE。
+    - 投手：最多 PITCHER_MAX 人；第 1 名分數 >= PITCHER_TOP_MIN_SCORE，其餘先發 >= 20、後援 >= 10。
+    - 全部入選依 norm 由高到低排序，selected[0] 為本場最突出球員。
+    """
+    ranked = sorted(candidates, key=lambda c: c["score"], reverse=True)
+
+    batters = []
+    for cand in (c for c in ranked if c["type"] == "batter"):
+        if len(batters) >= BATTER_MAX:
+            break
+        min_score = BATTER_TOP_MIN_SCORE if len(batters) < BATTER_TOP_N else BATTER_REST_MIN_SCORE
+        if cand["score"] >= min_score:
+            batters.append(cand)
+
+    pitchers = []
+    for idx, cand in enumerate(c for c in ranked if c["type"] == "pitcher"):
+        if len(pitchers) >= PITCHER_MAX:
+            break
+        if idx == 0:
+            min_score = PITCHER_TOP_MIN_SCORE
         else:
-            if cand["score"] >= (15.0 if cand["is_starter"] else 8.0):
-                selected.append(cand)
-    return (
-        [c for c in selected if c["type"] == "batter"],
-        [c for c in selected if c["type"] == "pitcher"],
-        selected,
-    )
+            min_score = PITCHER_STARTER_MIN_SCORE if cand["is_starter"] else PITCHER_RELIEVER_MIN_SCORE
+        if cand["score"] >= min_score:
+            pitchers.append(cand)
+
+    selected = sorted(batters + pitchers, key=lambda c: c["norm"], reverse=True)
+    return batters, pitchers, selected
 
 
 def build_decisions(dec_obj, players_away, players_home):
@@ -451,15 +528,15 @@ def build_game_view(game, boxscore, away_info, home_info):
     candidates = collect_candidates(boxscore, away_info["abbr"], home_info["abbr"])
     print(f"  Game {game['gamePk']} ({away_info['abbr']} @ {home_info['abbr']}) candidates score log:")
     for cand in candidates[:5]:
-        print(f"    - {cand['name']} ({cand['team']} - {cand['type']}): score={cand['score']:.1f}")
+        print(f"    - {cand['name']} ({cand['team']} - {cand['type']}): score={cand['score']:.2f} norm={cand['norm']:.2f}")
     batters, pitchers, selected = select_performers(candidates)
     view["batters"], view["pitchers"] = batters, pitchers
     return view, selected
 
 
 def top_focus_score(selected):
-    """該場焦點球員的最高積分（selected 已依積分由高到低）；無焦點球員為 0。"""
-    return max((c["score"] for c in selected), default=0.0)
+    """該場焦點球員的最高 norm（分數 / 門檻，打者與投手可比較）；無焦點球員為 0。"""
+    return max((c["norm"] for c in selected), default=0.0)
 
 
 def pick_summary_sentences(entries, limit=3):
