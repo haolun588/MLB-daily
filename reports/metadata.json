@@ -1236,5 +1236,15 @@
     "transactions_count": 1,
     "translated": true,
     "news_count": 10
+  },
+  "2026-11-24": {
+    "date": "2026-11-24",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "日本超級巨星 Sato 在大聯盟的表現展望；隨著先發輪值改組展開，小樹與左投 Rogers 達成複數年合約（消息來源）；從 8 次手部手術到全壘打與無安打比賽，認識受 Jim Abbott 啟發的青少年。",
+    "type": "offseason",
+    "transactions_count": 2,
+    "translated": true,
+    "news_count": 12
   }
 }
