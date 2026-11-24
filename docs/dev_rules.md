@@ -6,21 +6,23 @@
 
 ## 🚫 核心限制與開發順序
 
-1. **先規劃、後實作**：
-   - 在任何程式碼變更前，必須先與使用者討論，並確認 `docs/` 下的專案架構與進度表均已更新。
+1. **先規劃、後實作（核准關卡）**：
+   - **新功能與畫面改動**：實作前必須先給規劃或預覽，等使用者同意才能動手，並確認 `docs/` 下的專案架構與進度表已更新。
+   - **修 bug 與文件修正**：可直接進行，不需事先核准。
 2. **模組化開發 (One Feature at a Time)**：
    - 每次只開發一個模組或功能。禁止同時修改多個無關的模組。
    - 每個模組完成後，必須進行手動或自動驗證，確認無誤後才能進入下一個模組。
-3. **UI 優先 (UI-First Approach)**：
-   - **必須先做好 HTML/CSS 的靜態頁面架構與視覺設計**。
-   - 只有在使用者親自開啟網頁瀏覽、確認視覺效果（深色模式、響應式佈局、美感）滿意並批准後，才能開始撰寫 Python 抓取腳本與自動化功能。
+3. **UI 優先 (UI-First Approach)**（適用於新功能與畫面改動）：
+   - **必須先做好 HTML/CSS 的靜態頁面架構與視覺設計**（預覽）。
+   - 只有在使用者確認視覺效果（深色模式、響應式佈局、美感）滿意並同意後，才能開始撰寫 Python 抓取腳本與自動化功能。
 
 ---
 
 ## ⚙️ 系統設計守則
 
 4. **排程與開工檢查邏輯**：
-   - 排程時間為 04:17 UTC（約台北時間 12:17，刻意避開整點壅塞）；也可由 `workflow_dispatch` 手動觸發（`date`、`notify` 輸入）。
+   - 主要由外部 cron-job.org 於台北時間 13:00 以 `workflow_dispatch` 觸發；GitHub schedule（`cron: '30 6 * * *'`，即 06:30 UTC、台北 14:30）僅作備援，排在主排程之後。當日戰報已存在於 gh-pages 時，自動觸發由 `check` job 跳過（以 `daily_report.yml` 註解為準）。
+   - 手動觸發（`workflow_dispatch`）輸入：`date`（報表日期）、`notify`（是否發 Discord 通知）、`week`（補產指定週的休賽季每週總整理，ISO 週 `YYYY-Www`）。
    - **開工前置檢查**：腳本以 `--check-wait` 啟動後，先透過 API 檢查目標日（預設為台北時間昨日）所有比賽狀態。API 失敗不得當成「無賽事」：等待中視為未完成並重試，從未取得賽程則 `exit 1`；單次檢查失敗直接 `exit 1`，不寫任何檔案。
    - **延遲等待機制**：
      - 有比賽尚未結束（Preview／Live）時，休眠 **30 分鐘**後重新檢查，**最多檢查 8 次**（`--max-wait-checks`，預設 8）。
@@ -32,10 +34,10 @@
    - 金鑰（`DISCORD_WEBHOOK_URL`、`GEMINI_API_KEY`）只能放 GitHub Secrets 或本機環境變數，不得寫進程式、文件或測試。
    - 所有來自外部的字串輸出到 HTML 前一律經過 `esc()`。
 6. **通知與傳送及 GitHub Pages 發布架構**：
-   - `main` 主分頁僅保留程式碼、模板、共用資源（`assets/`）、文件，；`reports/metadata.json` 索引檔、首頁 `index.html` 與每日戰報 `.html` 皆只存在 gh-pages，由 `.gitignore` 忽略。
-   - workflow 步驟順序：單元測試 → 產生（`--check-wait --no-notify`）→ 將 metadata 與首頁推回 `main` → 以 `peaceiris/actions-gh-pages` 部署到 `gh-pages` → 等待 GitHub Pages 上線 → 以 `--notify-only` 發送 Discord 通知。
+   - `main` 主分支僅保留程式碼、模板、共用資源（`assets/`）、文件；`reports/metadata.json` 索引檔、首頁 `index.html` 與每日戰報 `.html` 皆只存在 gh-pages，由 `.gitignore` 忽略。workflow 產生前先從 gh-pages 取回 `metadata.json`，產生後隨 gh-pages 部署，不推回 `main`。
+   - workflow 步驟順序（完整步驟見 `docs/architecture.md`）：單元測試 → 取回歷史 → 產生（`--check-wait --no-notify`）→ 以 `peaceiris/actions-gh-pages` 部署到 `gh-pages` → 等待 GitHub Pages 上線 → 以 `--notify-only` 發送 Discord 通知。
    - **通知時機**：必須在部署完成且 Pages 回應 200 之後才發送，連結才能直接開啟。休賽季快報若新聞與人事異動皆為 0，不發通知。
-   - 部署時以 `exclude_assets` 排除程式、文件與 `.gitignore`；`.gitignore` 若被部署，會讓新戰報被忽略。
+   - 部署時以 `exclude_assets` 排除程式、文件、`CLAUDE.md`、`settings` 與 `.gitignore`（以 `daily_report.yml` 為準）；`.gitignore` 若被部署，會讓新戰報被忽略。
 7. **測試守則**：
    - 修改程式（`fetch_mlb.py` 或 `mlb_daily/`、模板渲染邏輯）必須附對應的單元測試，並確認 `python -m unittest discover -s tests` 全部通過後才算完成。
    - 測試只用標準庫 `unittest`，以 `tests/fixtures/*.json` 假資料執行，不得連網、不得呼叫真實 Gemini 或 Discord。
@@ -45,17 +47,16 @@
 
 ## 🚀 開工與收工工作流 (Session Commands Workflow)
 
-8. **「開工」指令流程**：
-   - 當使用者在任何對話說 **「開工」** 時，AI Agent 必須：
-     1. 檢查開發行為守則（`docs/dev_rules.md`）與當前進度表（`docs/progress.md`）。
-     2. 與使用者確認當次預計進行的工作內容。
-     3. 等待使用者確定同意後，方可開始進行程式碼修改或開發。
+摘要見根目錄 `CLAUDE.md`；本段為細節。
+
+8. **開工流程**：
+   - 先讀 `docs/progress.md`、本檔與 `docs/dev_logs/` 最新一份日誌，再向使用者提出本次規劃。
+   - 核准關卡依守則 1：新功能與畫面改動須先給規劃或預覽並等使用者同意；修 bug、文件修正可直接進行。
 9. **「收工」指令流程**：
-   - 當使用者在任何對話說 **「收工」** 時，代表該次工作結束，AI Agent 必須：
-     1. 根據該次工作實際變更內容，提供 push 至 GitHub 的 `summary` (標題) 與 `description` (詳細描述)。
-     2. 於 `docs/dev_logs/` 資料夾下生成一份該次開發日誌。
-     3. 日誌命名規則為：`YYYYMMDD_標題`（例如 `20260720_優化某某功能.md`）。
-     4. 日誌內容簡述本次新增與改動的項目。
+   - 當使用者說 **「收工」** 時，AI Agent 必須完成以下三件事，缺一不可：
+     1. 依 `docs/dev_logs/README.md` 新增開發日誌（命名與內容格式以該檔為準，此處不重複）。
+     2. 同步 `docs/progress.md`；若影響架構或規格，同步 `docs/architecture.md` 與本檔。
+     3. 由 AI 自行 commit 並 push 到 `origin main`，並在回覆中附上 commit 的 `summary`（標題）與 `description`（詳細描述）。
 
 ---
 

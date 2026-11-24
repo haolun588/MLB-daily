@@ -27,6 +27,19 @@
 4. 實作完成後由主會話或 `opus-reviewer` 檢查 diff 與測試結果；新增或修改的程式碼必須經過程式碼審查，不能只靠重跑檢查指令代替。
 5. 除錯時優先由 `opus-reviewer` 重現並分析根本原因，再決定修正方向。
 
+## 開工與收工（必做）
+
+- **開工**：先讀 `docs/progress.md`、`docs/dev_rules.md` 與 `docs/dev_logs/` 最新一份日誌，再提出本次規劃。
+- **核准關卡**：
+  - 新功能與畫面改動：先給規劃或預覽，等使用者同意才實作。
+  - 修 bug、文件修正：可直接進行。
+- **測試**：改程式（`fetch_mlb.py`、`mlb_daily/`、模板渲染邏輯）必須附對應單元測試，`python -m unittest discover -s tests` 全數通過才算完成。
+- **收工**：使用者說「收工」時必做三件事，缺一不可：
+  1. 依 `docs/dev_logs/README.md` 新增開發日誌 `docs/dev_logs/YYYYMMDD_標題.md`。
+  2. 同步 `docs/progress.md`；若影響架構或規格，同步 `docs/architecture.md`、`docs/dev_rules.md`。
+  3. commit 並 push 後，在回覆中附上 commit summary 與 description。
+- **規範來源**：細節規範以 `docs/dev_rules.md` 為唯一來源；日誌格式以 `docs/dev_logs/README.md` 為準。
+
 ## 省 token 原則
 
 - 子代理看不到對話上下文，任務描述必須自帶所需資訊（含本檔相關規範）。

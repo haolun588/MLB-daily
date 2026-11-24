@@ -40,7 +40,7 @@ Workflow（`.github/workflows/daily_report.yml`）步驟順序：
 9. **Send Discord Notification**：`python fetch_mlb.py --notify-only --date ...`，只讀既有 metadata，不呼叫 API。僅在排程觸發，或手動觸發且 `notify` 勾選時執行。
 10. **Send Weekly Discord Notification**（`continue-on-error`）：本次有產生週報、且為排程或 `notify` 勾選時，`python fetch_mlb.py --notify-weekly --week ...` 發週報獨立訊息。
 
-排程：主要由外部 cron-job.org 於台北時間 13:00 以 `workflow_dispatch` 觸發，GitHub schedule（每日 04:17 UTC，約台北時間 12:17）作為備援；自動觸發（未帶 `date`、`week`）時，若當日戰報已存在於 gh-pages，前置 `check` job 會跳過本次執行，避免重複產生與通知。`concurrency` 群組 `daily-report` 避免重疊執行，job 逾時上限 330 分鐘。
+排程：主要由外部 cron-job.org 於台北時間 13:00 以 `workflow_dispatch` 觸發，GitHub schedule（每日 06:30 UTC，約台北時間 14:30）作為備援；自動觸發（未帶 `date`、`week`）時，若當日戰報已存在於 gh-pages，前置 `check` job 會跳過本次執行，避免重複產生與通知。`concurrency` 群組 `daily-report` 避免重疊執行，job 逾時上限 330 分鐘。
 
 細節見 [docs/architecture.md](docs/architecture.md)。
 
@@ -181,7 +181,6 @@ docs/
   architecture.md         專案架構
   dev_rules.md            開發守則與規格
   progress.md             進度表
-  ai_collaboration_guide.md  AI 協作流程
   plans/                  修改計畫
   dev_logs/               開發日誌
   mockups/                UI 設計稿（歷史）
@@ -192,4 +191,4 @@ docs/
 
 ## 開發守則
 
-本專案採「先規劃、後實作」、「UI 優先」、「模組化循序漸進」，修改程式必須附單元測試。詳見 [docs/dev_rules.md](docs/dev_rules.md)，AI Agent 規則見 [.agents/AGENTS.md](.agents/AGENTS.md)。
+本專案採「先規劃、後實作」、「UI 優先」、「模組化循序漸進」，修改程式必須附單元測試。開發流程見 [CLAUDE.md](CLAUDE.md)；細節規範見 [docs/dev_rules.md](docs/dev_rules.md)；其他 AI 工具見 [.agents/AGENTS.md](.agents/AGENTS.md)。
