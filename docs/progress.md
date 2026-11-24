@@ -158,3 +158,11 @@
 - [x] 已完成：休兵日快報與延賽判斷修正（`48def1e`）
 - [x] 已完成：RSS 累積快取、`--backfill` 與週報自動補產（`c3c47e4`）
 - [x] 已完成：多隊交易歸類（`4e0432e`）、賽季快取與停擺防護（`85fced3`）、季後賽期間標示與跨年存檔分組（`511a78c`）
+
+### 📁 階段二十三：網站檔案集中到 site/（2026-11-24）
+動機：主資料夾混著網站頁面與本機產生檔；GitHub Pages 以 gh-pages 根目錄提供網站，故新增 `site/` 作為發佈根目錄，gh-pages 布局與線上網址不變。細節見 `docs/dev_logs/20261124_網站檔案集中到site資料夾.md`。
+
+- [x] 已完成（`114271f`，915 個測試全過；手動觸發 workflow 實測部署前後 gh-pages 檔案清單相同、線上各頁 200）：`archive.html`、`teams.html`、`assets/` 移到 `site/`；`mlb_daily/config.py` 新增 `SITE_DIR` 等常數，路徑一律由常數組出；workflow 改以 `publish_dir: ./site` 部署並移除 `exclude_assets`；`.gitignore` 與預覽設定同步；新增 `tests/test_site_layout.py`
+- [ ] 待辦：觀察新結構下的首次排程與 Discord 通知（cron-job.org 與 GitHub schedule 備援尚未跑過；手動實測時 `notify=false`）
+
+> 註：自階段二十三起，網站檔案（`index.html`、`archive.html`、`teams.html`、`leaders.html`、`playoffs.html`、`assets/`、`reports/`、`data/`）皆位於 `site/` 下；上述各階段提到的根目錄路徑為當時狀態，歷史內容不改寫。
