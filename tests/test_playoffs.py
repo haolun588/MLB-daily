@@ -16,6 +16,8 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import test_fetch_mlb as base  # noqa: E402
+import test_favicon as fav  # noqa: E402
+from mlb_daily import config  # noqa: E402
 
 fetch_mlb = base.fetch_mlb
 playoffs = fetch_mlb.playoffs
@@ -501,6 +503,7 @@ class RenderPageTests(PlayoffsTestBase):
                           ("playoffs.html", "季後賽"), ("archive.html", "歷史存檔")])
         self.assertEqual([t for a, _h, b, t in links if "aria-current" in a + b], ["季後賽"])
         self.assertIn('href="assets/style.css"', page)
+        fav.assert_favicon(self, page, fav.rel_to_site(config.PLAYOFFS_PAGE_PATH))
 
 
 # ---------------------------------------------------------------- 首頁小卡

@@ -14,6 +14,8 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import test_fetch_mlb as base  # noqa: E402
+import test_favicon as fav  # noqa: E402
+from mlb_daily import config  # noqa: E402
 
 fetch_mlb = base.fetch_mlb
 weekly = fetch_mlb.weekly
@@ -496,6 +498,7 @@ class RenderTests(unittest.TestCase):
         self.assertIn("MLB 每日戰報 - 休賽季每週總整理 2026-W47", html)
         self.assertIn("2026-W47　2026 年 11 月 16 日～11 月 22 日", html)
         self.assertIn("../../assets/style.css", html)
+        fav.assert_favicon(self, html, fav.rel_to_site(config.WEEKLY_INDEX_PATH))
         self.assertIn("../../index.html", html)
         self.assertIn("2026-11-23 12:17", html)
         self.assertEqual(html.count("本週最忙"), 5)  # 5 隊並列

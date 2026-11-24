@@ -15,6 +15,8 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import test_fetch_mlb as base  # noqa: E402
+import test_favicon as fav  # noqa: E402
+from mlb_daily import config  # noqa: E402
 
 fetch_mlb = base.fetch_mlb
 leaders = fetch_mlb.leaders
@@ -435,6 +437,7 @@ class RenderPageTests(LeadersTestBase):
     def test_nav_links_and_relative_paths(self):
         page = leaders.render_leaders_page(self.data())
         self.assertIn('href="assets/style.css"', page)
+        fav.assert_favicon(self, page, fav.rel_to_site(config.LEADERS_PAGE_PATH))
         self.assertIn('<a href="leaders.html" aria-current="page">數據排行</a>', page)
         self.assertIn('href="teams.html"', page)
         self.assertIn('href="archive.html"', page)
