@@ -241,7 +241,7 @@ class RestDayPageTests(base.MlbTestBase):
     def test_snapshot_has_games_false(self):
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             report.generate_rest_day_report(self.DAY, "季後賽休兵")
-        snap = json.loads((self.tmp / "data" / "daily" / f"{self.DAY}.json").read_text(encoding="utf-8"))
+        snap = json.loads((self.site / "data" / "daily" / f"{self.DAY}.json").read_text(encoding="utf-8"))
         self.assertIs(snap["has_games"], False)
 
     def test_offseason_report_unchanged(self):
@@ -328,7 +328,7 @@ class NotifyTests(base.MlbTestBase):
         self.assertEqual(self.send(self.entry())["description"], "休兵日快報已生成。")
 
     def test_notify_only_skips_empty_rest_day(self):
-        (self.tmp / "reports" / "metadata.json").write_text(
+        (self.site / "reports" / "metadata.json").write_text(
             json.dumps({self.DAY: self.entry(news_count=0, transactions_count=0)}), encoding="utf-8")
         with mock.patch.object(sys, "argv", ["fetch_mlb.py", "--date", self.DAY, "--notify-only"]), \
                 contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()):
@@ -359,7 +359,7 @@ class CliRoutingTests(base.MlbTestBase):
         meta = self.read_metadata()[self.DAY]
         self.assertEqual((meta["type"], meta["rest_reason"]), ("rest_day", "季後賽休兵"))
         self.assertIn("休兵日", self.read_report(self.DAY))
-        self.assertIn("休兵日", (self.tmp / "index.html").read_text(encoding="utf-8"))
+        self.assertIn("休兵日", (self.site / "index.html").read_text(encoding="utf-8"))
         self.discord.assert_called_once()
         self.assertIn("rest day", out)
 

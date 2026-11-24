@@ -393,7 +393,7 @@ class MakeExtrasTests(base.MlbTestBase):
         self.ctx = {"rosterType": "40Man", "season": 2026, "rosterSeason": 2026}
 
     def snap_dir(self):
-        d = self.tmp / "data" / "daily"
+        d = self.site / "data" / "daily"
         shutil.copytree(SNAP_DIR, d)
         return str(d)
 
@@ -402,13 +402,13 @@ class MakeExtrasTests(base.MlbTestBase):
         return extras(WSH, [])["recent"]["snapshotDays"]
 
     def test_window_ends_at_report_day_and_ignores_later_files(self):
-        shutil.copytree(SNAP_DIR, self.tmp / "data" / "daily")
+        shutil.copytree(SNAP_DIR, self.site / "data" / "daily")
         # 今天 11-19 -> 報表日 11-18 為終點；可用快照有 11-16、18、20、22（19 為壞檔），只有 11-16、11-18 在窗口內
         self.assertEqual(self.snapshot_days(date(2026, 11, 19)), 2)
         self.assertEqual(team_page.recent_window(date(2026, 11, 19))[1], date(2026, 11, 18))
 
     def test_window_covers_30_days_ending_yesterday_boundaries(self):
-        shutil.copytree(SNAP_DIR, self.tmp / "data" / "daily")
+        shutil.copytree(SNAP_DIR, self.site / "data" / "daily")
         # 今天 12-16 -> 窗口 11-16..12-15（共 30 天）：最早一天 11-16 計入
         self.assertEqual(team_page.recent_window(date(2026, 12, 16)), (date(2026, 11, 16), date(2026, 12, 15)))
         self.assertEqual(self.snapshot_days(date(2026, 12, 16)), 4)
@@ -416,7 +416,7 @@ class MakeExtrasTests(base.MlbTestBase):
         self.assertEqual(self.snapshot_days(date(2026, 12, 17)), 3)
 
     def snap_dir_again(self):
-        return str(self.tmp / "data" / "daily")
+        return str(self.site / "data" / "daily")
 
     def test_summary_fields_degrade_independently(self):
         extras = team_page.make_extras(date(2026, 11, 18), self.ctx, snapshot_dir=str(self.tmp / "nope"), wl={})
@@ -473,11 +473,11 @@ class RosterIntegrationTests(base.MlbTestBase):
         return None
 
     def read_team(self, tid):
-        return json.loads((self.tmp / "data" / "teams" / f"{tid}.json").read_text(encoding="utf-8"))
+        return json.loads((self.site / "data" / "teams" / f"{tid}.json").read_text(encoding="utf-8"))
 
     def test_team_json_has_extras(self):
         self.api.standings = "standings_2026"
-        shutil.copytree(SNAP_DIR, self.tmp / "data" / "daily")
+        shutil.copytree(SNAP_DIR, self.site / "data" / "daily")
         self.assertEqual(self.run_rosters(), 0)
         team = self.read_team(WSH)
         self.assertEqual(set(team), {"meta", "players", "summary", "recent", "leaders"})

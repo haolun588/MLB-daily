@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timedelta
 
 from . import backfill, feed_cache, games as games_mod, index_page, leaders, net, notify, playoffs, report, rosters, season, storage, team_page, timeutil, watchlist, weekly
-from .config import BACKFILL_DAYS, FEED_CACHE_PATH, MAX_WAIT_CHECKS, SEASON_CACHE_PATH, SITE_BASE_URL, WAIT_SLEEP_SECONDS
+from .config import BACKFILL_DAYS, FEED_CACHE_PATH, MAX_WAIT_CHECKS, METADATA_PATH, SEASON_CACHE_PATH, SITE_BASE_URL, WAIT_SLEEP_SECONDS
 
 
 def _taipei_today(date_arg):
@@ -50,7 +50,7 @@ def _run_weekly(args):
             backfilled = backfill.backfill_weekly_reports(today)
         except (Exception, SystemExit) as e:  # noqa: BLE001 - 補產失敗不影響正常週報流程
             print(f"Warning: 週報補產失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
-    if (entry is not None or backfilled) and os.path.exists("reports/metadata.json"):  # 讓首頁立即出現最新週報連結；失敗不影響週報
+    if (entry is not None or backfilled) and os.path.exists(METADATA_PATH):  # 讓首頁立即出現最新週報連結；失敗不影響週報
         try:
             index_page.refresh_index_page()
         except (Exception, SystemExit) as e:  # noqa: BLE001 - metadata 損壞會 sys.exit；週報已產生，不應以非 0 結束
@@ -73,13 +73,13 @@ def _run_leaders(args):
         sys.exit(1)
     if not ok:
         sys.exit(1)
-    if os.path.exists("reports/metadata.json"):  # 讓首頁小卡立即更新；失敗不影響排行榜
+    if os.path.exists(METADATA_PATH):  # 讓首頁小卡立即更新；失敗不影響排行榜
         try:
             index_page.refresh_index_page()
         except (Exception, SystemExit) as e:  # noqa: BLE001 - metadata 損壞會 sys.exit；排行榜已產生，不應以非 0 結束
             print(f"Warning: 排行榜產生後重新產生首頁失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
     else:
-        print("Note: 找不到 reports/metadata.json，未重新產生首頁（首頁將於下次每日產生時帶入小卡）。")
+        print(f"Note: 找不到 {METADATA_PATH}，未重新產生首頁（首頁將於下次每日產生時帶入小卡）。")
 
 
 def _run_watchlist(args):
@@ -109,13 +109,13 @@ def _run_playoffs(args):
         sys.exit(1)
     if not ok:
         sys.exit(1)
-    if os.path.exists("reports/metadata.json"):  # 讓首頁小卡立即更新；失敗不影響對戰樹
+    if os.path.exists(METADATA_PATH):  # 讓首頁小卡立即更新；失敗不影響對戰樹
         try:
             index_page.refresh_index_page()
         except (Exception, SystemExit) as e:  # noqa: BLE001 - metadata 損壞會 sys.exit；對戰樹已產生，不應以非 0 結束
             print(f"Warning: 對戰樹產生後重新產生首頁失敗（{type(e).__name__}: {e}）。", file=sys.stderr)
     else:
-        print("Note: 找不到 reports/metadata.json，未重新產生首頁（首頁將於下次每日產生時帶入小卡）。")
+        print(f"Note: 找不到 {METADATA_PATH}，未重新產生首頁（首頁將於下次每日產生時帶入小卡）。")
 
 
 def main():
@@ -242,9 +242,9 @@ def main():
 
     # --notify-only: 僅依既有 metadata 發送通知，不呼叫 API、不寫檔
     if args.notify_only:
-        entry = storage.load_metadata("reports/metadata.json").get(date_str)
+        entry = storage.load_metadata(METADATA_PATH).get(date_str)
         if not entry:
-            print(f"Error: reports/metadata.json 中找不到 {date_str} 的資料，無法發送通知。", file=sys.stderr)
+            print(f"Error: {METADATA_PATH} 中找不到 {date_str} 的資料，無法發送通知。", file=sys.stderr)
             sys.exit(1)
         if not notify.should_notify(entry):
             label = "休兵日快報" if storage.entry_type(entry) == "rest_day" else "休賽季快報"

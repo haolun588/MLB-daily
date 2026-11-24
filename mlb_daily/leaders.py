@@ -4,6 +4,7 @@
 index_page／cli。賽季與是否賽季中由呼叫端（cli）判斷後傳入；首頁小卡以 HTML 字串交給 index_page。"""
 
 import math
+import os
 import sys
 
 from . import htmlutil, net, storage, timeutil
@@ -293,5 +294,5 @@ def render_leaders_card(data):
             f'<span class="ld-mini-sub">{htmlutil.esc(leaders_title(data))}</span></div>\n'
             f'{_render_mini_group("hitting", "打者", categories)}\n'
             f'{_render_mini_group("pitching", "投手", categories)}\n'
-            f'    <a class="ld-mini-more" href="{LEADERS_PAGE_PATH}">完整排行 →</a>\n'
+            f'    <a class="ld-mini-more" href="{os.path.basename(LEADERS_PAGE_PATH)}">完整排行 →</a>\n'
             f'  </section>')

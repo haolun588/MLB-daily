@@ -106,45 +106,45 @@ jobs:
       - name: Restore history from gh-pages
         run: |
           git fetch --depth=1 origin gh-pages
-          mkdir -p reports reports/weekly
-          if ! git show origin/gh-pages:reports/metadata.json > reports/metadata.json; then
+          mkdir -p site/reports site/reports/weekly site/data
+          if ! git show origin/gh-pages:reports/metadata.json > site/reports/metadata.json; then
             echo "::error::無法從 gh-pages 取得 reports/metadata.json，中止以避免覆蓋歷史索引"
             exit 1
           fi
-          if ! python -c "import json,sys; d=json.load(open('reports/metadata.json',encoding='utf-8')); sys.exit(0 if isinstance(d, dict) else 1)"; then
-            echo "::error::reports/metadata.json 不是合法 JSON 物件，中止以避免覆蓋歷史索引"
+          if ! python -c "import json,sys; d=json.load(open('site/reports/metadata.json',encoding='utf-8')); sys.exit(0 if isinstance(d, dict) else 1)"; then
+            echo "::error::site/reports/metadata.json 不是合法 JSON 物件，中止以避免覆蓋歷史索引"
             exit 1
           fi
           # 每日資料快照（週報來源）與週報索引：取不到只警告，不中止
-          git archive origin/gh-pages data/daily | tar -x || echo "::warning::gh-pages 尚無 data/daily"
-          if ! git show origin/gh-pages:reports/weekly/index.json > reports/weekly/index.json 2>/dev/null; then
-            rm -f reports/weekly/index.json
+          git archive origin/gh-pages data/daily | tar -x -C site || echo "::warning::gh-pages 尚無 data/daily"
+          if ! git show origin/gh-pages:reports/weekly/index.json > site/reports/weekly/index.json 2>/dev/null; then
+            rm -f site/reports/weekly/index.json
           fi
           # 台日韓動態追蹤名單（--watchlist 失敗時沿用上次結果）：取不到只警告，不中止
-          if ! git show origin/gh-pages:data/watchlist.json > data/watchlist.json 2>/dev/null; then
-            rm -f data/watchlist.json
+          if ! git show origin/gh-pages:data/watchlist.json > site/data/watchlist.json 2>/dev/null; then
+            rm -f site/data/watchlist.json
             echo "::warning::gh-pages 尚無 data/watchlist.json"
           fi
           # RSS 累積快取（補產舊日期用的新聞與深度分析）：取不到只警告，不中止
-          mkdir -p data
-          if ! git show origin/gh-pages:data/feed_cache.json > data/feed_cache.json 2>/dev/null; then
-            rm -f data/feed_cache.json
+          mkdir -p site/data
+          if ! git show origin/gh-pages:data/feed_cache.json > site/data/feed_cache.json 2>/dev/null; then
+            rm -f site/data/feed_cache.json
             echo "::warning::gh-pages 尚無 data/feed_cache.json"
           fi
           # 數據排行榜資料（首頁小卡來源）：取不到只警告，不中止
-          mkdir -p data
-          if ! git show origin/gh-pages:data/leaders.json > data/leaders.json 2>/dev/null; then
-            rm -f data/leaders.json
+          mkdir -p site/data
+          if ! git show origin/gh-pages:data/leaders.json > site/data/leaders.json 2>/dev/null; then
+            rm -f site/data/leaders.json
             echo "::warning::gh-pages 尚無 data/leaders.json"
           fi
           # 賽季日期與當日賽季判斷快取（各步驟共用；取不到只警告，不中止）
-          if ! git show origin/gh-pages:data/season_cache.json > data/season_cache.json 2>/dev/null; then
-            rm -f data/season_cache.json
+          if ! git show origin/gh-pages:data/season_cache.json > site/data/season_cache.json 2>/dev/null; then
+            rm -f site/data/season_cache.json
             echo "::warning::gh-pages 尚無 data/season_cache.json"
           fi
           # 季後賽對戰樹資料（首頁小卡來源）：取不到只警告，不中止
-          if ! git show origin/gh-pages:data/playoffs.json > data/playoffs.json 2>/dev/null; then
-            rm -f data/playoffs.json
+          if ! git show origin/gh-pages:data/playoffs.json > site/data/playoffs.json 2>/dev/null; then
+            rm -f site/data/playoffs.json
             echo "::warning::gh-pages 尚無 data/playoffs.json"
           fi
 
@@ -200,15 +200,14 @@ jobs:
 
       - name: Stamp asset versions (cache busting)
         run: |
-          python -m mlb_daily.stamp_assets . "${GITHUB_SHA::7}"
+          python -m mlb_daily.stamp_assets site "${GITHUB_SHA::7}"
 
       - name: Deploy Site to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
+          publish_dir: ./site
           keep_files: true
-          exclude_assets: '.github,.agents,docs,templates,tests,mlb_daily,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude,CLAUDE.md,settings'
 
       - name: Wait for GitHub Pages
         if: steps.daily.outcome == 'success'

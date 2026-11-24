@@ -34,10 +34,10 @@
    - 金鑰（`DISCORD_WEBHOOK_URL`、`GEMINI_API_KEY`）只能放 GitHub Secrets 或本機環境變數，不得寫進程式、文件或測試。
    - 所有來自外部的字串輸出到 HTML 前一律經過 `esc()`。
 6. **通知與傳送及 GitHub Pages 發布架構**：
-   - `main` 主分支僅保留程式碼、模板、共用資源（`assets/`）、文件；`reports/metadata.json` 索引檔、首頁 `index.html` 與每日戰報 `.html` 皆只存在 gh-pages，由 `.gitignore` 忽略。workflow 產生前先從 gh-pages 取回 `metadata.json`，產生後隨 gh-pages 部署，不推回 `main`。
+   - 網站檔案集中在 `site/`，部署時以 `site/` 為發佈根目錄（gh-pages 布局與網址不變）。`main` 主分支保留程式碼、模板、文件與靜態網站檔（`site/archive.html`、`site/teams.html`、`site/assets/`）；`site/reports/metadata.json` 索引檔、首頁 `site/index.html`、`site/leaders.html`、`site/playoffs.html`、`site/data/` 與每日戰報 `.html` 皆為程式產生、只存在 gh-pages，由 `.gitignore` 忽略。workflow 產生前先從 gh-pages 取回 `metadata.json`，產生後隨 gh-pages 部署，不推回 `main`。
    - workflow 步驟順序（完整步驟見 `docs/architecture.md`）：單元測試 → 取回歷史 → 產生（`--check-wait --no-notify`）→ 以 `peaceiris/actions-gh-pages` 部署到 `gh-pages` → 等待 GitHub Pages 上線 → 以 `--notify-only` 發送 Discord 通知。
    - **通知時機**：必須在部署完成且 Pages 回應 200 之後才發送，連結才能直接開啟。休賽季快報若新聞與人事異動皆為 0，不發通知。
-   - 部署時以 `exclude_assets` 排除程式、文件、`CLAUDE.md`、`settings` 與 `.gitignore`（以 `daily_report.yml` 為準）；`.gitignore` 若被部署，會讓新戰報被忽略。
+   - 部署只發佈 `site/`（`publish_dir: ./site`），程式、文件、`settings` 不在其中，故不需 `exclude_assets`；`site/` 內不得放 `.gitignore`，否則會讓新戰報被忽略。網站路徑一律由 `mlb_daily/config.py` 的 `SITE_DIR` 等常數組出，不要寫死。
 7. **測試守則**：
    - 修改程式（`fetch_mlb.py` 或 `mlb_daily/`、模板渲染邏輯）必須附對應的單元測試，並確認 `python -m unittest discover -s tests` 全部通過後才算完成。
    - 測試只用標準庫 `unittest`，以 `tests/fixtures/*.json` 假資料執行，不得連網、不得呼叫真實 Gemini 或 Discord。

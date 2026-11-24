@@ -10,12 +10,12 @@
 
 - **賽季戰報**：前一日（台北時間）所有賽事的比分、R/H/E、投球決定（勝／敗／救援）、打擊與投球焦點球員（球員名連到 Baseball Savant）、賽後新聞、當日人事異動，加上當日 MLB.com 新聞，以及新聞下方的 FanGraphs 深度分析（進階數據文章標題，翻成中文並連到原文；無文章時不顯示）。頁面內有隊伍搜尋（中英文隊名或縮寫，可再按 Enter 跳到下一場）。
 - **休賽季快報**：昨日無賽事時，產出「新聞＋大聯盟層級人事異動」頁面，不會留白。
-- **歷史存檔**：[archive.html](archive.html) 以 JavaScript 讀取 `reports/metadata.json`，依月份分組；首頁顯示最新一期與近期清單。
+- **歷史存檔**：[archive.html](site/archive.html) 以 JavaScript 讀取 `reports/metadata.json`（網站根目錄為 `site/`），依月份分組；首頁顯示最新一期與近期清單。
 - **Gemini 翻譯**：新聞標題、單場賽後新聞（Headline／Blurb）與人事異動描述以 Gemini 翻成繁體中文；球員姓名維持英文原名，球隊名稱沿用程式內建譯名。沒有金鑰、額度用盡或回應格式錯誤時，自動改用英文原文，不會讓整次執行失敗。
-- **球隊專頁**：[teams.html](teams.html) 點選隊徽顯示該隊專頁：球隊摘要（戰績、季後賽成績、台日韓球員）、近 30 天動態（人事異動與相關新聞）、隊內數據王，以及名單（賽季中 26 人現役、休賽季 40 人；SP、RP、野手三張表並附本季數據與慣用手標籤），名單可排序，網址可帶球隊縮寫（如 `teams.html#NYY`）。名單資料由每日 workflow 更新。
-- **休賽季每週總整理**：休賽季每週一（台北時間）彙整上一個 ISO 週的人事異動與新聞，產出 `reports/weekly/YYYY-Www.html`：本週重點（交易、大聯盟簽約、延長合約）、分類整理、各隊動態（標出本週最忙球隊）、新聞精選 10 則、台日韓球員標註、下週日程（自動帶入 MLB API 的春訓開打與開幕日，另可手動維護 `settings/offseason_calendar.json`，詳見下方說明）。資料來自每日戰報存下的 `data/daily/*.json`，不重抓 API、不重新翻譯；不足 7 天時照產並標示涵蓋天數。首頁休賽季區塊、歷史存檔頁與 Discord 都附連結。
-- **數據排行榜**：[leaders.html](leaders.html) 列出打者與投手各 6 項前 10 名（`python fetch_mlb.py --leaders`），首頁側欄附小卡。
-- **季後賽對戰樹**：[playoffs.html](playoffs.html) 顯示整屆季後賽對戰樹（外卡、分區、聯盟冠軍賽、世界大賽），非季後賽期間顯示上一屆結果；桌面為對稱樹狀圖、手機為依輪次堆疊；首頁側欄附小卡（`python fetch_mlb.py --playoffs`）。
+- **球隊專頁**：[teams.html](site/teams.html) 點選隊徽顯示該隊專頁：球隊摘要（戰績、季後賽成績、台日韓球員）、近 30 天動態（人事異動與相關新聞）、隊內數據王，以及名單（賽季中 26 人現役、休賽季 40 人；SP、RP、野手三張表並附本季數據與慣用手標籤），名單可排序，網址可帶球隊縮寫（如 `teams.html#NYY`）。名單資料由每日 workflow 更新。
+- **休賽季每週總整理**：休賽季每週一（台北時間）彙整上一個 ISO 週的人事異動與新聞，產出 `site/reports/weekly/YYYY-Www.html`：本週重點（交易、大聯盟簽約、延長合約）、分類整理、各隊動態（標出本週最忙球隊）、新聞精選 10 則、台日韓球員標註、下週日程（自動帶入 MLB API 的春訓開打與開幕日，另可手動維護 `settings/offseason_calendar.json`，詳見下方說明）。資料來自每日戰報存下的 `site/data/daily/*.json`，不重抓 API、不重新翻譯；不足 7 天時照產並標示涵蓋天數。首頁休賽季區塊、歷史存檔頁與 Discord 都附連結。
+- **數據排行榜**：`leaders.html` 列出打者與投手各 6 項前 10 名（`python fetch_mlb.py --leaders`），首頁側欄附小卡。
+- **季後賽對戰樹**：`playoffs.html` 顯示整屆季後賽對戰樹（外卡、分區、聯盟冠軍賽、世界大賽），非季後賽期間顯示上一屆結果；桌面為對稱樹狀圖、手機為依輪次堆疊；首頁側欄附小卡（`python fetch_mlb.py --playoffs`）。
 - **Discord 通知**：頁面部署且 Pages 可開啟後才發送；休賽季快報若無新聞與人事異動則不發。週報另發一則獨立訊息。
 
 ---
@@ -24,18 +24,18 @@
 
 分支分工：
 
-- `main`：只存程式碼、模板、共用資源、文件。歷史索引 `reports/metadata.json`、首頁 `index.html` 與每日戰報 HTML 都不進 `main`（`.gitignore` 忽略）。
-- `gh-pages`：存放完整網頁（戰報、首頁、`archive.html`、`assets/`），由 workflow 部署，`keep_files: true` 保留歷史戰報。
+- `main`：存程式碼、模板、文件，以及靜態網站檔（`site/archive.html`、`site/teams.html`、`site/assets/`）。所有程式產生的網站檔案（`site/index.html`、`site/leaders.html`、`site/playoffs.html`、`site/reports/`、`site/data/`）都不進 `main`（`.gitignore` 忽略）。
+- `gh-pages`：只發佈 `site/` 資料夾的內容（網站根目錄即 `site/`，線上網址不含 `site`），由 workflow 部署，`keep_files: true` 保留歷史戰報。
 
 Workflow（`.github/workflows/daily_report.yml`）步驟順序：
 
 1. **Run Unit Tests**：`python -m unittest discover -s tests -v`，失敗即中止，不產生、不部署、不通知。
 2. **Resolve report date**：手動輸入的日期，或預設台北時間昨日。
-3. **Restore history from gh-pages**（位於產生報表之前）：從 `gh-pages` 取回 `reports/metadata.json`；取不到或不是合法 JSON 物件即失敗，避免以單筆 metadata 覆蓋歷史。另還原 `data/daily/`（每日快照）與 `reports/weekly/index.json`（週報索引），取不到只警告。
+3. **Restore history from gh-pages**（位於產生報表之前）：從 `gh-pages` 取回 `reports/metadata.json`（寫到 `site/reports/metadata.json`）；取不到或不是合法 JSON 物件即失敗，避免以單筆 metadata 覆蓋歷史。另還原 `data/daily/`（每日快照）與 `reports/weekly/index.json`（週報索引），取不到只警告。
 4. **Generate Daily Report**：`python fetch_mlb.py --check-wait --no-notify --date ...`。尚有未完賽場次時每 30 分鐘重新檢查，最多 8 次；達上限後照常產出並把未完成場次標示為「未完賽」。
 5. **Generate Weekly Report**（`continue-on-error`）：`python fetch_mlb.py --weekly`，只在台北週一且休賽季時產生；手動觸發可填 `week` 補產指定週（`--weekly --week ...`）。有產生時輸出 `weekly_url` 供後續通知步驟使用。
-6. **Update Team Rosters**：`python fetch_mlb.py --rosters`，更新 `data/teams/`。`continue-on-error`，失敗不影響戰報與通知。
-7. **Deploy Site to gh-pages**：`peaceiris/actions-gh-pages`，並以 `exclude_assets` 排除程式與文件；`data/teams/`、`data/daily/`、`reports/weekly/` 隨之部署。
+6. **Update Team Rosters**：`python fetch_mlb.py --rosters`，更新 `site/data/teams/`。`continue-on-error`，失敗不影響戰報與通知。
+7. **Deploy Site to gh-pages**：`peaceiris/actions-gh-pages`，`publish_dir: ./site`，只發佈網站資料夾（程式與文件不在其中，不需 exclude）；`data/teams/`、`data/daily/`、`reports/weekly/` 隨之部署。
 8. **Wait for GitHub Pages**：輪詢當日戰報網址直到回應 200（最多約 5 分鐘）；本次有產生週報時另有「Wait for Weekly Report」步驟等週報網址。
 9. **Send Discord Notification**：`python fetch_mlb.py --notify-only --date ...`，只讀既有 metadata，不呼叫 API。僅在排程觸發，或手動觸發且 `notify` 勾選時執行。
 10. **Send Weekly Discord Notification**（`continue-on-error`）：本次有產生週報、且為排程或 `notify` 勾選時，`python fetch_mlb.py --notify-weekly --week ...` 發週報獨立訊息。
@@ -158,19 +158,19 @@ templates/
   report.html             戰報與休賽季快報的頁面骨架（含 <!--SLOT:...--> 插槽）
   index.html              首頁骨架
   weekly.html             休賽季每週總整理骨架
-assets/
-  style.css               共用樣式表（部署到 gh-pages）
-  archive.js              歷史存檔頁的動態腳本
-  teams.js                球隊專頁的動態腳本
-index.html                首頁（由腳本依 metadata 全量重新產生）
-archive.html              歷史存檔頁（讀取 reports/metadata.json）
-teams.html                球隊專頁（讀取 data/teams/*.json）
-data/teams/               名單 JSON（index.json、{teamId}.json；僅部署於 gh-pages，main 忽略）
-data/daily/               每日資料快照 YYYY-MM-DD.json（週報來源；僅部署於 gh-pages，main 忽略）
 settings/                 watchlist.json（台日韓追蹤名單）、offseason_calendar.json（休賽季日程，手動維護）
-reports/
-  metadata.json           每日索引（僅存在 gh-pages；workflow 每次先取回）
-  weekly/                 週報 YYYY-Www.html 與 index.json（僅存在 gh-pages）
+site/                     網站根目錄（部署時只發佈此資料夾）
+  assets/
+    style.css             共用樣式表
+    archive.js            歷史存檔頁的動態腳本
+    teams.js              球隊專頁的動態腳本
+  archive.html            歷史存檔頁（讀取 reports/metadata.json）
+  teams.html              球隊專頁（讀取 data/teams/*.json）
+  index.html              首頁（腳本依 metadata 全量產生；gitignore，僅存在 gh-pages）
+  leaders.html            數據排行頁（腳本產生；gitignore）
+  playoffs.html           季後賽對戰樹頁（腳本產生；gitignore）
+  data/                   teams/（名單 JSON）、daily/（每日資料快照）等（gitignore，僅存在 gh-pages）
+  reports/                metadata.json（每日索引，workflow 每次先取回）、weekly/、YYYY/MM/ 戰報（gitignore，僅存在 gh-pages）
 tests/
   test_fetch_mlb.py       單元測試（unittest）
   test_weekly.py          休賽季每週總整理測試

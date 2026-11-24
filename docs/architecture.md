@@ -16,21 +16,22 @@ templates/index.html      首頁骨架
 templates/weekly.html     休賽季每週總整理頁面骨架
 templates/leaders.html    數據排行頁骨架
 templates/playoffs.html   季後賽對戰樹頁骨架
-assets/style.css          共用樣式表
-assets/archive.js         歷史存檔頁腳本
-assets/teams.js           球隊專頁腳本（球隊摘要、近期動態、隊內數據王、名單）
-teams.html                球隊專頁（執行時以 JS 讀取 data/teams/*.json）
-data/teams/               名單 JSON（僅存在於 gh-pages，main 以 .gitignore 忽略）
-data/leaders.json        數據排行榜資料（僅存在於 gh-pages）
-data/playoffs.json       季後賽對戰樹資料（僅存在於 gh-pages）
-leaders.html／playoffs.html   數據排行頁與季後賽對戰樹頁（腳本產生；僅存在於 gh-pages，main 以 .gitignore 的 /leaders.html、/playoffs.html 忽略）
-data/daily/YYYY-MM-DD.json   每日資料快照（已翻譯的大聯盟異動與新聞，供週報使用；僅存在於 gh-pages）
-reports/weekly/YYYY-Www.html 休賽季每週總整理（僅存在於 gh-pages）
-reports/weekly/index.json    週報索引（僅存在於 gh-pages，workflow 先取回）
-index.html                首頁（腳本全量重新產生；僅存在於 gh-pages，main 忽略）
-archive.html              歷史存檔頁（靜態檔，執行時以 JS 讀取 metadata）
-reports/metadata.json     每日索引（僅存在於 gh-pages，workflow 先取回）
-reports/YYYY/MM/YYYY-MM-DD.html   戰報（僅存在於 gh-pages，main 忽略）
+以下 `site/` 為網站根目錄（部署時只發佈此資料夾，線上網址不含 `site`）；標註「產生」者不進 main，由 `.gitignore` 的 `/site/index.html`、`/site/leaders.html`、`/site/playoffs.html`、`/site/reports/`、`/site/data/` 忽略，僅存在於 gh-pages。
+site/assets/style.css          共用樣式表
+site/assets/archive.js         歷史存檔頁腳本
+site/assets/teams.js           球隊專頁腳本（球隊摘要、近期動態、隊內數據王、名單）
+site/teams.html                球隊專頁（執行時以 JS 讀取 data/teams/*.json）
+site/archive.html              歷史存檔頁（靜態檔，執行時以 JS 讀取 metadata）
+site/index.html                首頁（腳本全量重新產生；產生）
+site/leaders.html／site/playoffs.html   數據排行頁與季後賽對戰樹頁（產生）
+site/data/teams/               名單 JSON（產生）
+site/data/leaders.json         數據排行榜資料（產生）
+site/data/playoffs.json        季後賽對戰樹資料（產生）
+site/data/daily/YYYY-MM-DD.json   每日資料快照（已翻譯的大聯盟異動與新聞，供週報使用；產生）
+site/reports/metadata.json     每日索引（產生，workflow 先取回）
+site/reports/weekly/YYYY-Www.html 休賽季每週總整理（產生）
+site/reports/weekly/index.json    週報索引（產生，workflow 先取回）
+site/reports/YYYY/MM/YYYY-MM-DD.html   戰報（產生）
 tests/test_fetch_mlb.py   單元測試
 tests/test_watchlist.py   台日韓球員專區測試
 tests/test_weekly.py      休賽季每週總整理測試
@@ -70,8 +71,8 @@ graph TD
 3. **產生**：`python fetch_mlb.py --check-wait --no-notify --date <日期>`，環境變數帶入 `GEMINI_API_KEY`。
 4. **更新名單**：`python fetch_mlb.py --rosters`（`continue-on-error: true`），見「球隊專頁」一節。
 5. **歷史只在 gh-pages**：`index.html` 與 `reports/metadata.json` 不進 main；workflow 在產生報表前先從 gh-pages 取回 `metadata.json`（取不到或非 JSON 物件即失敗），產生後隨 gh-pages 部署。
-6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,mlb_daily,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude,CLAUDE.md,settings`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
-6a. **資源版本號**：部署前執行 `python -m mlb_daily.stamp_assets . "${GITHUB_SHA::7}"`，把工作目錄內 HTML 引用的本站 `assets/*.js`、`assets/*.css`（含 `../assets/` 等相對路徑）加上或替換成 `?v=<commit 前 7 碼>`，避免瀏覽器快取舊版 JS／CSS 搭配新資料。只改 runner 工作目錄、不 commit 回 main，repo 內原始 HTML／模板不含版本號；略過 `docs`、`templates`、`tests` 等不部署的目錄；外部網址不動。gh-pages 上只靠 `keep_files` 保留的舊戰報不在本次處理範圍，仍引用無版本號的資源（下次重產時才會更新）。
+6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./site`、`keep_files: true`。只發佈 `site/`，程式、模板、文件、設定都不在其中，所以不需要 `exclude_assets`；`site/` 內不得放 `.gitignore`，否則其規則會讓新戰報不被部署。gh-pages 上的檔案布局與網址維持原樣（`site/` 的內容即 gh-pages 根目錄）。
+6a. **資源版本號**：部署前執行 `python -m mlb_daily.stamp_assets site "${GITHUB_SHA::7}"`，把 `site/` 內 HTML 引用的本站 `assets/*.js`、`assets/*.css`（含 `../assets/` 等相對路徑）加上或替換成 `?v=<commit 前 7 碼>`，避免瀏覽器快取舊版 JS／CSS 搭配新資料。只改 runner 工作目錄、不 commit 回 main，repo 內原始 HTML／模板不含版本號；略過 `docs`、`templates`、`tests` 等不部署的目錄；外部網址不動。gh-pages 上只靠 `keep_files` 保留的舊戰報不在本次處理範圍，仍引用無版本號的資源（下次重產時才會更新）。
 7. **等待 Pages**：每 15 秒檢查當日戰報網址，最多 20 次（約 5 分鐘），逾時只警告、仍繼續下一步。
 8. **通知**：`python fetch_mlb.py --notify-only --date <日期>`，僅排程觸發或手動勾選 `notify` 時執行。
 9. **每週總整理**（休賽季，見「休賽季每週總整理」一節）：Restore 步驟額外還原 `data/daily/` 與 `reports/weekly/index.json`；`Generate Weekly Report`（`continue-on-error: true`）緊接在 Generate Daily Report 之後；部署後若本次有產生週報，另有「等待週報網址 200」與「`--notify-weekly`」兩個步驟（條件同每日通知）。`workflow_dispatch` 新增 `week` 輸入（手動補產指定週）。
@@ -103,8 +104,8 @@ graph TD
 | `translate` | Gemini 翻譯、`apply_translations`、`LAST_TRANSLATION`、`TX_TRANSLATION_CACHE`、`translate_weekly_transactions` |
 | `games` | `check_all_games_finalized`（API 失敗拋 `ApiError`，只有 `totalGames == 0` 才視為無賽事）、`classify_game_status`、焦點球員評分、決定、比賽卡片與 view、摘要句 |
 | `standings` | 戰績側欄（`render_standings_aside` 的 `extra_html` 可接首頁小卡 HTML，不 import `leaders`） |
-| `leaders` | 數據排行榜（與 `standings` 同層，賽季與是否賽季中由 `cli` 傳入）：`fetch_leaders`（5 個請求）、`generate_leaders`（寫 `data/leaders.json` 與根目錄 `leaders.html`，12 項全失敗不覆寫）、`render_leaders_page`（`templates/leaders.html`）、`render_leaders_card`（首頁側欄小卡，`index_page` 讀 `storage.load_leaders` 後渲染） |
-| `playoffs` | 季後賽對戰樹（與 `leaders` 同層，只依賴 `config`、`timeutil`、`net`、`htmlutil`、`storage`）：`fetch_postseason`（單一請求）、`parse_postseason`（純函式，含 `feedsInto`／`byeIds`）、`generate_playoffs`（寫 `data/playoffs.json` 與根目錄 `playoffs.html`，抓取失敗不覆寫）、`render_playoffs_page`（`templates/playoffs.html`）、`render_playoffs_card`（首頁側欄小卡，`index_page` 讀 `storage.load_playoffs` 後渲染） |
+| `leaders` | 數據排行榜（與 `standings` 同層，賽季與是否賽季中由 `cli` 傳入）：`fetch_leaders`（5 個請求）、`generate_leaders`（寫 `site/data/leaders.json` 與 `site/leaders.html`，12 項全失敗不覆寫）、`render_leaders_page`（`templates/leaders.html`）、`render_leaders_card`（首頁側欄小卡，`index_page` 讀 `storage.load_leaders` 後渲染） |
+| `playoffs` | 季後賽對戰樹（與 `leaders` 同層，只依賴 `config`、`timeutil`、`net`、`htmlutil`、`storage`）：`fetch_postseason`（單一請求）、`parse_postseason`（純函式，含 `feedsInto`／`byeIds`）、`generate_playoffs`（寫 `site/data/playoffs.json` 與 `site/playoffs.html`，抓取失敗不覆寫）、`render_playoffs_page`（`templates/playoffs.html`）、`render_playoffs_card`（首頁側欄小卡，`index_page` 讀 `storage.load_playoffs` 後渲染） |
 | `previews` | 賽事預告、先發投手、開季倒數 |
 | `rosters` | 球隊專頁（`--rosters`）；`fetch_rosters(today, extras_factory)` 可把球隊專頁附加資料併入各隊 JSON |
 | `team_page` | 球隊專頁附加資料：`compute_leaders`（隊內數據王）、`build_recent`（近 30 天動態）、`postseason_result`、`build_record`、`tracked_names`、`make_extras`（`cli` 的 `--rosters` 傳給 `fetch_rosters`） |
@@ -122,7 +123,7 @@ graph TD
 
 ### 共用資源與連結
 
-CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `reports/YYYY/MM/`，以 `../../../assets/style.css`、`../../../index.html`、`../../../archive.html` 相對連結回到網站根目錄；週報頁位於 `reports/weekly/`，用 `../../assets/style.css` 等兩層相對連結；首頁使用 `assets/style.css`、`archive.html`。
+CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `reports/YYYY/MM/`，以 `../../../assets/style.css`、`../../../index.html`、`../../../archive.html` 相對連結回到網站根目錄（即 `site/`；網站內連結一律相對於網站根目錄，不含 `site/`）；週報頁位於 `reports/weekly/`，用 `../../assets/style.css` 等兩層相對連結；首頁使用 `assets/style.css`、`archive.html`。
 
 ---
 
@@ -254,7 +255,7 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 2. 對 `TEAM_META` 的 30 隊逐隊呼叫 `teams/{id}/roster?rosterType=...&season=...&hydrate=person(stats(type=[season,sabermetrics],group=[hitting,pitching],season=...))`，每隊間隔 0.5 秒。
 3. `build_team_players` 精簡成球員清單，以 `write_json_atomic`（暫存檔加 `os.replace`）寫入 `data/teams/{id}.json`，最後寫 `data/teams/index.json`。
 4. 單隊失敗保留舊檔且在 index 標 `ok: false`，其餘隊照常；至少一隊成功才 `exit 0`，全數失敗 `exit 1`（workflow 以 `continue-on-error` 吸收）。
-5. `data/` 被 `.gitignore` 忽略（不進 main），由 gh-pages 部署帶出。
+5. `site/data/` 被 `.gitignore` 忽略（不進 main），由 gh-pages 部署帶出。
 
 ### 名單類型與數據賽季
 
@@ -307,7 +308,7 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 ## 台日韓球員專區
 
 - **名單來源**：動態名單 + 本地覆寫。`python fetch_mlb.py --watchlist [--date]`（不可與其他模式併用）呼叫 `/sports/{sportId}/players?season=`：sportId=1（大聯盟）收 `birthCountry` 為 Taiwan／Japan／Republic of Korea（容錯 South Korea、Korea）的球員，region 為 `TW`／`JP`／`KR`；小聯盟（11=AAA、12=AA、13=A+、14=A、16=ROK）只收 Taiwan。依 id 去重並記錄最高層級 `level`（MLB > AAA > AA > A+ > A > ROK）。另抓一次 `/teams?sportIds=11,12,13,14,16&season=` 建立附屬隊 → (母隊 `parentOrgId`、層級) 對照，每位球員存 `org_id`（母隊 MLB id）與 `current_level`（currentTeam 所在層級，30 隊之一為 MLB；對不到或 teams 端點失敗為 null）。單一 sportId 失敗或回傳空陣列時警告，並沿用舊 `data/watchlist.json` 中該層級的球員（新資料有同 id 者以新資料為準，印出沿用人數）；全部失敗不覆寫舊檔並以非 0 結束。球季沿用 `rosters.resolve_roster_context`。結果寫 `data/watchlist.json`：`{"updatedAt","season","players":[{id,name_en,region,level,org_id,current_level}],"missing_zh":[...]}`；`missing_zh` 為沒有中文名對照的球員，執行時也會印出（id、英文名、層級、region），方便補進 settings。
-- **本地覆寫**：`settings/watchlist.json`（納入版控；`data/` 被忽略，部署時 `exclude_assets` 排除 `settings`）。格式 `{"exclude_ids": [], "players": [{"id", "name_zh", "name_en", "region", "aliases"?}]}`：`players` 提供中文名與別名（姓氏常見如 Lee、Kim 者不要加姓氏），其欄位覆寫動態值，也可補入 API 抓不到的球員（例如海外出生的台日韓球員）；`exclude_ids` 手動排除（例如出生地是台灣但非台灣籍）。
+- **本地覆寫**：`settings/watchlist.json`（納入版控；`data/` 被忽略，`settings/` 不在發佈目錄 `site/` 內，不會部署）。格式 `{"exclude_ids": [], "players": [{"id", "name_zh", "name_en", "region", "aliases"?}]}`：`players` 提供中文名與別名（姓氏常見如 Lee、Kim 者不要加姓氏），其欄位覆寫動態值，也可補入 API 抓不到的球員（例如海外出生的台日韓球員）；`exclude_ids` 手動排除（例如出生地是台灣但非台灣籍）。
 - **讀取與合併**：`load_watchlist(path=None, dynamic_path=None)` 合併動態快取與 settings 後移除 `exclude_ids`，回傳 `{person id: {id, name_zh, name_en, region, aliases, level, org_id, current_level, has_zh}}`；沒有中文名時 `name_zh` 填 `name_en`、`has_zh` 為 False，`level` 可為 None（settings 獨有的球員）。排序：地區（台→日→韓）→ settings 內球員依檔案順序 → 其餘依層級再依英文名。動態快取缺失或損毀：印警告、只用 settings；settings 讀檔失敗、JSON 錯誤或格式不符：印警告、視為空名單、專區不顯示，不中斷執行；個別格式錯誤的球員略過。明確傳 `path` 而未傳 `dynamic_path` 時不讀動態快取（供測試）。
 - **workflow**：Restore 步驟額外還原 `data/watchlist.json`（取不到只警告）；`Update Tracked Players Watchlist`（`--watchlist`，`continue-on-error: true`）在 `--leaders` 之前執行，失敗時沿用上次結果；`data/watchlist.json` 與 `data/leaders.json` 相同，只存在 gh-pages。
 - **補中文名／新增球員**：在 settings 的 `players` 加一筆（id 可由 `--watchlist` 的缺中文名清單取得，或用 `statsapi.mlb.com/api/v1/people/search` 查），不需改程式。
@@ -332,7 +333,7 @@ CSS 一律放在 `assets/style.css`，不內嵌在各頁。戰報頁位於 `repo
 - `news`：當天戰報實際顯示（最多 12 則）的新聞，每則 `title`、`title_zh`、`link`、`published`（ISO 字串）、`image`、`summary`（RSS 純文字，供名單比對）。新聞抓取失敗存空清單。
 - 不存台日韓比對結果；週報產生時用當下的合併名單（動態快取 + `settings/watchlist.json`）重新比對。
 
-`data/` 在 `.gitignore`、不在 `exclude_assets`，隨部署累積在 gh-pages；workflow 每次從 gh-pages 還原 `data/daily/`（`git archive origin/gh-pages data/daily | tar -x`，失敗只警告）。
+`site/data/` 在 `.gitignore`、位於發佈目錄 `site/` 內，隨部署累積在 gh-pages；workflow 每次從 gh-pages 還原 `data/daily/`（`git archive origin/gh-pages data/daily | tar -x -C site`，失敗只警告）。
 
 ### 產生條件與 CLI
 

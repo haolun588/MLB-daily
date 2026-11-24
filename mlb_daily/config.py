@@ -76,6 +76,11 @@ GAME_TYPE_LABELS = {
 }
 
 # 渲染用常數
+# 網站發佈根目錄：所有要部署到 gh-pages 的檔案（含程式產生的）都放在這裡
+SITE_DIR = "site"
+REPORTS_DIR = os.path.join(SITE_DIR, "reports")
+METADATA_PATH = os.path.join(REPORTS_DIR, "metadata.json")
+INDEX_PAGE_PATH = os.path.join(SITE_DIR, "index.html")
 TEMPLATE_DIR = "templates"
 SAVANT_URL = "https://baseballsavant.mlb.com/savant-player/{}"
 LOGO_URL = "https://www.mlbstatic.com/team-logos/team-cap-on-{}/{}.svg"
@@ -92,7 +97,7 @@ ANALYSIS_SOURCE = "FanGraphs"
 ANALYSIS_LIMIT = 6
 ANALYSIS_MAX_PAGES = 5  # FanGraphs feed 每頁 10 篇；最多往後翻到第 5 頁（補產舊日期用）
 # RSS 累積快取（MLB RSS 固定 25 篇、不支援分頁，補產舊日期只能靠每日累積）
-FEED_CACHE_PATH = os.path.join("data", "feed_cache.json")
+FEED_CACHE_PATH = os.path.join(SITE_DIR, "data", "feed_cache.json")
 FEED_CACHE_DAYS = 21
 FEED_CACHE_MAX_ITEMS = 3000
 FEED_CACHE_SCHEMA = 1
@@ -175,7 +180,7 @@ SCHEDULE_PREVIEW_URL = "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=
 PEOPLE_STATS_URL = ("https://statsapi.mlb.com/api/v1/people?personIds={ids}"
                     "&hydrate=stats(group=[pitching],type=[season],season={season})")
 SEASON_URL = "https://statsapi.mlb.com/api/v1/seasons/{year}?sportId=1"
-SEASON_CACHE_PATH = os.path.join("data", "season_cache.json")
+SEASON_CACHE_PATH = os.path.join(SITE_DIR, "data", "season_cache.json")
 SEASON_SCHEDULE_URL = ("https://statsapi.mlb.com/api/v1/schedule?sportId=1&gameType=R&startDate={start}&endDate={end}"
                        "&fields=dates,date,games,status,abstractGameState,detailedState,codedGameState")
 SEASON_RANGE_SCHEDULE_URL = ("https://statsapi.mlb.com/api/v1/schedule?sportId=1&gameType=R,F,D,L,W&startDate={start}&endDate={end}"
@@ -210,20 +215,20 @@ DATE_KEY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 # ---------------------------------------------------------------- 球隊專頁（--rosters）
-ROSTER_DIR = os.path.join("data", "teams")
+ROSTER_DIR = os.path.join(SITE_DIR, "data", "teams")
 ROSTER_FETCH_INTERVAL = 0.5
 
 
 # ---------------------------------------------------------------- 台日韓球員專區
 WATCHLIST_PATH = os.path.join("settings", "watchlist.json")
-DYNAMIC_WATCHLIST_PATH = os.path.join("data", "watchlist.json")  # --watchlist 從 MLB API 抓取的快取
+DYNAMIC_WATCHLIST_PATH = os.path.join(SITE_DIR, "data", "watchlist.json")  # --watchlist 從 MLB API 抓取的快取
 
 
 # ---------------------------------------------------------------- 休賽季每週總整理
 SITE_BASE_URL = "https://haolun588.github.io/MLB-daily/"
-DAILY_SNAPSHOT_DIR = os.path.join("data", "daily")
+DAILY_SNAPSHOT_DIR = os.path.join(SITE_DIR, "data", "daily")
 DAILY_SNAPSHOT_SCHEMA = 1
-WEEKLY_DIR = os.path.join("reports", "weekly")
+WEEKLY_DIR = os.path.join(REPORTS_DIR, "weekly")
 WEEKLY_INDEX_PATH = os.path.join(WEEKLY_DIR, "index.json")
 OFFSEASON_CALENDAR_PATH = os.path.join("settings", "offseason_calendar.json")
 WEEK_KEY_RE = re.compile(r"^(\d{4})-W(\d{2})$")
@@ -259,8 +264,8 @@ WEEKLY_HIGHLIGHT_CATEGORIES = ("trade", "signing", "extension")
 
 
 # ---------------------------------------------------------------- 數據排行榜
-LEADERS_PATH = os.path.join("data", "leaders.json")
-LEADERS_PAGE_PATH = "leaders.html"
+LEADERS_PATH = os.path.join(SITE_DIR, "data", "leaders.json")
+LEADERS_PAGE_PATH = os.path.join(SITE_DIR, "leaders.html")
 LEADERS_SCHEMA = 1
 LEADERS_LIMIT = 10
 LEADERS_TOP_VISIBLE = 5  # 排行頁每張卡直接顯示的名次；其餘放進 <details>
@@ -291,8 +296,8 @@ LEADERS_CATEGORIES = (
 
 # ---------------------------------------------------------------- 季後賽對戰樹
 POSTSEASON_SERIES_URL = "https://statsapi.mlb.com/api/v1/schedule/postseason/series?season={season}&sportId=1"
-PLAYOFFS_PATH = os.path.join("data", "playoffs.json")
-PLAYOFFS_PAGE_PATH = "playoffs.html"
+PLAYOFFS_PATH = os.path.join(SITE_DIR, "data", "playoffs.json")
+PLAYOFFS_PAGE_PATH = os.path.join(SITE_DIR, "playoffs.html")
 PLAYOFFS_SCHEMA = 1
 
 # ---- 球隊專頁（近期動態與隊內數據王）

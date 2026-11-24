@@ -888,7 +888,7 @@ class SpotlightIntegrationTests(base.MlbTestBase):
         meta, _ = self.season()
         self.quiet_update_index(meta)
         self.assertEqual(self.read_metadata()[DATE]["spotlight"], meta["spotlight"])
-        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertIn('id="spot-h"', index)
         self.assertLess(index.index('id="latest-h"'), index.index('id="spot-h"'))
         self.assertIn("大谷翔平", index)
@@ -944,18 +944,18 @@ class SpotlightIntegrationTests(base.MlbTestBase):
                 self.assertNotIn("spot-h", html)
                 self.assertNotIn("spotlight", meta)
                 self.assertEqual(meta["total_games"], 2)
-                self.assertNotIn("spot-h", (self.tmp / "index.html").read_text(encoding="utf-8"))
+                self.assertNotIn("spot-h", (self.site / "index.html").read_text(encoding="utf-8"))
 
     def test_home_empty_state_and_hidden_cases(self):
         plain = {"date": DATE, "total_games": 2, "postponed": 0, "summary": "s", "type": "season"}
         self.quiet_update_index(plain)
-        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertIn("近 7 天無台日韓球員動態。", index)
         self.assertLess(index.index('id="latest-h"'), index.index('id="spot-h"'))
         # 名單失敗：不顯示
         with mock.patch("mlb_daily.watchlist.WATCHLIST_PATH", str(self.tmp / "nope.json")):
             self.quiet_update_index(plain)
-        self.assertNotIn("spot-h", (self.tmp / "index.html").read_text(encoding="utf-8"))
+        self.assertNotIn("spot-h", (self.site / "index.html").read_text(encoding="utf-8"))
         # 尚無任何戰報：不顯示
         self.assertNotIn("spot-h", quiet(fetch_mlb.render_index, {}))
 
@@ -963,7 +963,7 @@ class SpotlightIntegrationTests(base.MlbTestBase):
         meta = {"date": DATE, "total_games": 1, "postponed": 0, "summary": "s", "type": "season", "spotlight": [
             {"player_id": OHTANI, "kind": "news", "text": "<script>alert('X')</script>", "link": "https://www.mlb.com/news/\"><x", "date": DATE}]}
         self.quiet_update_index(meta)
-        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertNotIn("<script>alert('X')", index)
         self.assertIn("&lt;script&gt;alert(&#x27;X&#x27;)", index)
         self.assertNotIn('"><x', index)
@@ -1004,7 +1004,7 @@ class TemplateSlotTests(unittest.TestCase):
         self.assertLess(index.index("<!--SLOT:LATEST-->"), index.index("<!--SLOT:SPOTLIGHT-->"))
 
     def test_css_has_spotlight_styles_without_horizontal_overflow_rules(self):
-        css = (base.REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        css = (base.REPO_ROOT / "site" / "assets" / "style.css").read_text(encoding="utf-8")
         self.assertIn(".spot-group", css)
         self.assertRegex(css, r"\.spot-group h3[^}]*overflow-wrap: anywhere")
 

@@ -134,8 +134,11 @@ class MlbTestBase(unittest.TestCase):
         self.tmp = Path(tmp.name)
         shutil.copytree(REPO_ROOT / "templates", self.tmp / "templates")
         # index.html 只存在 gh-pages；以模板骨架模擬 gh-pages 上既有的首頁
-        shutil.copy(REPO_ROOT / "templates" / "index.html", self.tmp / "index.html")
-        (self.tmp / "reports").mkdir()
+        # 網站檔案一律放在 site/（SITE_DIR），與程式的輸出路徑一致
+        self.site = self.tmp / "site"
+        self.site.mkdir()
+        shutil.copy(REPO_ROOT / "templates" / "index.html", self.site / "index.html")
+        (self.site / "reports").mkdir()
         old_cwd = os.getcwd()
         os.chdir(self.tmp)
         self.addCleanup(os.chdir, old_cwd)
@@ -192,7 +195,7 @@ class MlbTestBase(unittest.TestCase):
 
     def read_report(self, date=DATE):
         y, m, _ = date.split("-")
-        return (self.tmp / "reports" / y / m / f"{date}.html").read_text(encoding="utf-8")
+        return (self.site / "reports" / y / m / f"{date}.html").read_text(encoding="utf-8")
 
     def run_main(self, schedule_name):
         self.api.schedule = schedule_name
@@ -205,7 +208,7 @@ class MlbTestBase(unittest.TestCase):
         return None
 
     def read_metadata(self):
-        return json.loads((self.tmp / "reports" / "metadata.json").read_text(encoding="utf-8"))
+        return json.loads((self.site / "reports" / "metadata.json").read_text(encoding="utf-8"))
 
     def quiet_update_index(self, meta):
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
@@ -453,7 +456,7 @@ class GenerateReportTests(MlbTestBase):
 
     def test_report_file_location_and_date_replaced(self):
         _, html = self.generate("schedule_normal")
-        self.assertTrue((self.tmp / "reports" / "2026" / "11" / f"{DATE}.html").exists())
+        self.assertTrue((self.site / "reports" / "2026" / "11" / f"{DATE}.html").exists())
         self.assertIn("2026 年 11 月 15 日（日）賽事結果", html)
         self.assertNotIn("2026 年 07 月 19 日", html)
         self.assertNotIn("<!--SLOT:", html)
@@ -528,7 +531,7 @@ class IndexAndMetadataTests(MlbTestBase):
 
     def test_metadata_written_format(self):
         self.quiet_update_index(self.make_meta(DATE))
-        text = (self.tmp / "reports" / "metadata.json").read_text(encoding="utf-8")
+        text = (self.site / "reports" / "metadata.json").read_text(encoding="utf-8")
         self.assertTrue(text.startswith('{\n  "2026-11-15": {\n    "date": "2026-11-15",'))
         self.assertIn("摘要 2026-11-15", text)  # ensure_ascii=False
         self.assertEqual(json.loads(text)[DATE]["total_games"], 3)
@@ -539,11 +542,11 @@ class IndexAndMetadataTests(MlbTestBase):
         self.assertEqual(sorted(self.read_metadata()), ["2026-11-14", DATE])
 
     def read_index(self):
-        return (self.tmp / "index.html").read_text(encoding="utf-8")
+        return (self.site / "index.html").read_text(encoding="utf-8")
 
     def test_index_is_regenerated_from_template_not_patched(self):
         """首頁每次全量重新產生：原檔內容（即使被破壞）不影響輸出。"""
-        (self.tmp / "index.html").write_text("garbage without markers", encoding="utf-8")
+        (self.site / "index.html").write_text("garbage without markers", encoding="utf-8")
         self.quiet_update_index(self.make_meta(DATE))
         index = self.read_index()
         self.assertNotIn("garbage", index)
@@ -682,24 +685,24 @@ class MetadataFieldsTests(MlbTestBase):
 
     def test_existing_legacy_entries_are_preserved(self):
         legacy = {"2026-11-14": {"date": "2026-11-14", "total_games": 3, "postponed": 0, "summary": "舊"}}
-        (self.tmp / "reports" / "metadata.json").write_text(json.dumps(legacy, ensure_ascii=False), encoding="utf-8")
+        (self.site / "reports" / "metadata.json").write_text(json.dumps(legacy, ensure_ascii=False), encoding="utf-8")
         self.assertIsNone(self.run_main("schedule_normal"))
         db = self.read_metadata()
         self.assertEqual(db["2026-11-14"], legacy["2026-11-14"])  # 舊項目不被改寫
-        self.assertIn("2026-11-14", (self.tmp / "index.html").read_text(encoding="utf-8"))
+        self.assertIn("2026-11-14", (self.site / "index.html").read_text(encoding="utf-8"))
 
 
 class ArchivePageTests(unittest.TestCase):
     """archive.html / assets 為靜態檔，直接檢查 repo 內的檔案。"""
 
     def test_archive_page_references(self):
-        html = (REPO_ROOT / "archive.html").read_text(encoding="utf-8")
+        html = (REPO_ROOT / "site" / "archive.html").read_text(encoding="utf-8")
         self.assertIn('href="assets/style.css"', html)
         self.assertIn('src="assets/archive.js"', html)
         self.assertIn('href="index.html"', html)
 
     def test_archive_js_reads_metadata_and_has_no_simulation_params(self):
-        js = (REPO_ROOT / "assets" / "archive.js").read_text(encoding="utf-8")
+        js = (REPO_ROOT / "site" / "assets" / "archive.js").read_text(encoding="utf-8")
         self.assertIn("reports/metadata.json", js)
         self.assertNotIn("metadata.sample.json", js)
         self.assertNotIn("URLSearchParams", js)
@@ -708,7 +711,7 @@ class ArchivePageTests(unittest.TestCase):
             self.assertIn(state, js)
 
     def test_style_sheet_has_dark_stripe_rule(self):
-        css = (REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        css = (REPO_ROOT / "site" / "assets" / "style.css").read_text(encoding="utf-8")
         self.assertIn(".team-stripe--dark", css)
 
 
@@ -718,7 +721,7 @@ class MainFlowTests(MlbTestBase):
         self.api.transactions = "transactions_default"
         code = self.run_main("schedule_normal")
         self.assertIsNone(code)  # 正常結束，未呼叫 sys.exit
-        self.assertTrue((self.tmp / "reports" / "2026" / "11" / f"{DATE}.html").exists())
+        self.assertTrue((self.site / "reports" / "2026" / "11" / f"{DATE}.html").exists())
         self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
         self.discord.assert_called_once()
         self.assertEqual(self.discord.call_args[0][0]["total_games"], 2)
@@ -754,19 +757,19 @@ class FailureHandlingTests(MlbTestBase):
         return None
 
     def html_files(self):
-        return list((self.tmp / "reports").rglob("*.html"))
+        return list((self.site / "reports").rglob("*.html"))
 
     def test_schedule_failure_without_check_wait_writes_nothing(self):
-        meta_path = self.tmp / "reports" / "metadata.json"
+        meta_path = self.site / "reports" / "metadata.json"
         original_meta = json.dumps({"2026-11-14": {"date": "2026-11-14", "total_games": 3,
                                                    "postponed": 0, "summary": "舊"}}, ensure_ascii=False)
         meta_path.write_text(original_meta, encoding="utf-8")
-        index_before = (self.tmp / "index.html").read_bytes()
+        index_before = (self.site / "index.html").read_bytes()
         self.api.schedule = None
         code = self.run_main_args()
         self.assertEqual(code, 1)
         self.assertEqual(meta_path.read_text(encoding="utf-8"), original_meta)
-        self.assertEqual((self.tmp / "index.html").read_bytes(), index_before)
+        self.assertEqual((self.site / "index.html").read_bytes(), index_before)
         self.assertEqual(self.html_files(), [])
         self.discord.assert_not_called()
 
@@ -780,7 +783,7 @@ class FailureHandlingTests(MlbTestBase):
         code = self.run_main_args("--check-wait")
         self.assertIsNone(code)
         fetch_mlb.time.sleep.assert_called_once_with(1800)
-        self.assertTrue((self.tmp / "reports" / "2026" / "11" / f"{DATE}.html").exists())
+        self.assertTrue((self.site / "reports" / "2026" / "11" / f"{DATE}.html").exists())
         self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
         self.discord.assert_called_once()
 
@@ -814,29 +817,29 @@ class FailureHandlingTests(MlbTestBase):
         self.assertIn("打擊焦點", normal)
 
     def test_corrupt_metadata_aborts_without_overwrite(self):
-        meta_path = self.tmp / "reports" / "metadata.json"
+        meta_path = self.site / "reports" / "metadata.json"
         meta_path.write_text("{bad json", encoding="utf-8")
-        index_before = (self.tmp / "index.html").read_bytes()
+        index_before = (self.site / "index.html").read_bytes()
         code = self.run_main("schedule_normal")
         self.assertEqual(code, 1)
         self.assertEqual(meta_path.read_text(encoding="utf-8"), "{bad json")
-        self.assertEqual((self.tmp / "index.html").read_bytes(), index_before)
+        self.assertEqual((self.site / "index.html").read_bytes(), index_before)
         self.discord.assert_not_called()
 
     def test_missing_metadata_is_created(self):
-        meta_path = self.tmp / "reports" / "metadata.json"
+        meta_path = self.site / "reports" / "metadata.json"
         self.assertFalse(meta_path.exists())
         code = self.run_main("schedule_normal")
         self.assertIsNone(code)
         self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
-        self.assertFalse((self.tmp / "reports" / "metadata.json.tmp").exists())
+        self.assertFalse((self.site / "reports" / "metadata.json.tmp").exists())
 
     def test_metadata_write_failure_exits_nonzero(self):
         with mock.patch.object(fetch_mlb.os, "replace", side_effect=OSError("disk full")):
             code = self.run_main("schedule_normal")
         self.assertEqual(code, 1)
-        self.assertFalse((self.tmp / "reports" / "metadata.json").exists())
-        self.assertFalse((self.tmp / "reports" / "metadata.json.tmp").exists())
+        self.assertFalse((self.site / "reports" / "metadata.json").exists())
+        self.assertFalse((self.site / "reports" / "metadata.json.tmp").exists())
         self.discord.assert_not_called()
 
 
@@ -862,7 +865,7 @@ class NotifyFlagTests(MlbTestBase):
         self.api.schedule = "schedule_normal"
         code = self.run_flags("--no-notify")
         self.assertIsNone(code)
-        self.assertTrue((self.tmp / "reports" / "2026" / "11" / f"{DATE}.html").exists())
+        self.assertTrue((self.site / "reports" / "2026" / "11" / f"{DATE}.html").exists())
         self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
         self.discord.assert_not_called()
 
@@ -876,7 +879,7 @@ class NotifyFlagTests(MlbTestBase):
 
     def test_notify_only_sends_existing_entry(self):
         entry = {"date": DATE, "total_games": 4, "postponed": 1, "summary": "既有摘要"}
-        (self.tmp / "reports" / "metadata.json").write_text(
+        (self.site / "reports" / "metadata.json").write_text(
             json.dumps({DATE: entry}, ensure_ascii=False), encoding="utf-8")
         before = self.snapshot()
         code = self.run_flags("--notify-only")
@@ -886,7 +889,7 @@ class NotifyFlagTests(MlbTestBase):
         self.assertEqual(self.snapshot(), before)
 
     def test_notify_only_missing_entry_exits_1(self):
-        (self.tmp / "reports" / "metadata.json").write_text("{}", encoding="utf-8")
+        (self.site / "reports" / "metadata.json").write_text("{}", encoding="utf-8")
         code = self.run_flags("--notify-only")
         self.assertEqual(code, 1)
         self.discord.assert_not_called()
@@ -908,7 +911,7 @@ class KnownBugTests(MlbTestBase):
     def test_H1_api_failure_must_not_overwrite_metadata(self):
         """H1: schedule 抓取失敗（fetch_json 回 None）時，應以非零碼結束，且不得改寫 metadata、不得通知。"""
         original = {DATE: {"date": DATE, "total_games": 5, "postponed": 0, "summary": "原本的摘要"}}
-        (self.tmp / "reports" / "metadata.json").write_text(
+        (self.site / "reports" / "metadata.json").write_text(
             json.dumps(original, ensure_ascii=False), encoding="utf-8")
         code = self.run_main(None)  # schedule=None -> fetch_json 回 None
         self.assertNotIn(code, (None, 0))
@@ -1097,7 +1100,7 @@ class WaitLoopTests(MlbTestBase):
         return None
 
     def html_files(self):
-        return list((self.tmp / "reports").rglob("*.html"))
+        return list((self.site / "reports").rglob("*.html"))
 
     def test_default_cap_sleeps_seven_times_then_reports(self):
         self.api.schedule = "schedule_live_timeout"
@@ -1128,7 +1131,7 @@ class WaitLoopTests(MlbTestBase):
         self.assertEqual(code, 1)
         self.assertEqual(fetch_mlb.time.sleep.call_count, 7)
         self.assertEqual(self.html_files(), [])
-        self.assertFalse((self.tmp / "reports" / "metadata.json").exists())
+        self.assertFalse((self.site / "reports" / "metadata.json").exists())
         self.discord.assert_not_called()
 
     def test_suspended_does_not_wait(self):
@@ -1483,7 +1486,7 @@ class PageLinkTests(MlbTestBase):
 
     def test_index_links(self):
         self.run_main("schedule_normal")
-        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index = (self.site / "index.html").read_text(encoding="utf-8")
         refs = self.hrefs(index)
         self.assertIn("assets/style.css", refs)
         self.assertIn("archive.html", refs)
@@ -1491,12 +1494,12 @@ class PageLinkTests(MlbTestBase):
 
     def test_relative_links_resolve_from_report_location(self):
         """戰報位於 reports/YYYY/MM/，'../../../' 應解析到網站根目錄（此處為暫存目錄）。"""
-        (self.tmp / "assets").mkdir()
-        (self.tmp / "assets" / "style.css").write_text("/* css */", encoding="utf-8")
-        (self.tmp / "index.html").write_text("x", encoding="utf-8")
-        (self.tmp / "archive.html").write_text("x", encoding="utf-8")
+        (self.site / "assets").mkdir()
+        (self.site / "assets" / "style.css").write_text("/* css */", encoding="utf-8")
+        (self.site / "index.html").write_text("x", encoding="utf-8")
+        (self.site / "archive.html").write_text("x", encoding="utf-8")
         self.generate("schedule_normal")
-        report_dir = self.tmp / "reports" / "2026" / "11"
+        report_dir = self.site / "reports" / "2026" / "11"
         for ref in ("../../../assets/style.css", "../../../index.html", "../../../archive.html"):
             self.assertTrue((report_dir / ref).resolve().exists(), ref)
 
@@ -2019,7 +2022,7 @@ class NewsPageTests(MlbTestBase):
     def test_index_shows_news_count_for_offseason(self):
         self.api.news = "news_rss.xml"
         self.run_main("schedule_empty")
-        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertIn("新聞", index)
         self.assertIn("3 則", index)
 
@@ -2104,7 +2107,7 @@ class NotifyContentTests(MlbTestBase):
         super().setUp()
 
     def run_notify_only(self, entry):
-        (self.tmp / "reports" / "metadata.json").write_text(
+        (self.site / "reports" / "metadata.json").write_text(
             json.dumps({DATE: entry}, ensure_ascii=False), encoding="utf-8")
         with mock.patch.object(sys, "argv", ["fetch_mlb.py", "--date", DATE, "--notify-only"]), \
                 contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()):
@@ -2147,7 +2150,7 @@ class NotifyContentTests(MlbTestBase):
         out = self.run_main_empty_day()  # 新聞抓取失敗且無異動
         self.discord.assert_not_called()
         self.assertIn("不發送", out)
-        self.assertTrue((self.tmp / "reports" / "2026" / "11" / f"{DATE}.html").exists())
+        self.assertTrue((self.site / "reports" / "2026" / "11" / f"{DATE}.html").exists())
 
     def test_main_normal_path_sends_offseason_with_content(self):
         self.run_main_empty_day(news="news_rss.xml")
@@ -2672,7 +2675,7 @@ class SummarySentenceTests(MlbTestBase):
     def test_offseason_summary_is_escaped_on_index(self):
         self.api.news = "news_rss.xml"
         self.assertEqual(self.run_main("schedule_empty"), 0)
-        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertNotIn("<script>alert('XSS_MARKER')", index)
         self.assertIn("&lt;script&gt;alert(&#x27;XSS_MARKER&#x27;)&lt;/script&gt;", index)
 
@@ -2922,24 +2925,24 @@ class RosterFlowTests(MlbTestBase):
         return None, out.getvalue(), err.getvalue()
 
     def read_team(self, tid):
-        return json.loads((self.tmp / "data" / "teams" / f"{tid}.json").read_text(encoding="utf-8"))
+        return json.loads((self.site / "data" / "teams" / f"{tid}.json").read_text(encoding="utf-8"))
 
     def read_index(self):
-        return json.loads((self.tmp / "data" / "teams" / "index.json").read_text(encoding="utf-8"))
+        return json.loads((self.site / "data" / "teams" / "index.json").read_text(encoding="utf-8"))
 
     def snapshot(self):
         files = {}
-        for sub in ("reports", "templates"):
+        for sub in ("site/reports", "templates"):
             for f in (self.tmp / sub).rglob("*"):
                 if f.is_file():
                     files[str(f.relative_to(self.tmp))] = f.read_bytes()
-        files["index.html"] = (self.tmp / "index.html").read_bytes()
+        files["index.html"] = (self.site / "index.html").read_bytes()
         return files
 
     def test_writes_all_teams_and_index(self):
         code, out, _ = self.run_rosters()
         self.assertEqual(code, 0)
-        files = sorted(p.name for p in (self.tmp / "data" / "teams").iterdir())
+        files = sorted(p.name for p in (self.site / "data" / "teams").iterdir())
         self.assertEqual(len(files), 31)
         self.assertNotIn("index.json.tmp", files)
         self.assertFalse(any(n.endswith(".tmp") for n in files))
@@ -3026,8 +3029,8 @@ class RosterFlowTests(MlbTestBase):
         self.api.fail_roster = {147}
         code, _, err = self.run_rosters()
         self.assertEqual(code, 0)
-        self.assertFalse((self.tmp / "data" / "teams" / "147.json").exists())
-        self.assertTrue((self.tmp / "data" / "teams" / "119.json").exists())
+        self.assertFalse((self.site / "data" / "teams" / "147.json").exists())
+        self.assertTrue((self.site / "data" / "teams" / "119.json").exists())
         index = self.read_index()
         nyy = next(t for t in index["teams"] if t["id"] == 147)
         self.assertFalse(nyy["ok"])
@@ -3037,10 +3040,10 @@ class RosterFlowTests(MlbTestBase):
 
     def test_failure_keeps_previous_file(self):
         self.run_rosters()
-        before = (self.tmp / "data" / "teams" / "147.json").read_bytes()
+        before = (self.site / "data" / "teams" / "147.json").read_bytes()
         self.api.fail_roster = {147}
         self.run_rosters()
-        self.assertEqual((self.tmp / "data" / "teams" / "147.json").read_bytes(), before)
+        self.assertEqual((self.site / "data" / "teams" / "147.json").read_bytes(), before)
 
     def test_all_failures_exit_1(self):
         self.api.fail_roster = "all"
@@ -3051,7 +3054,7 @@ class RosterFlowTests(MlbTestBase):
 
     def test_empty_roster_counts_as_failure_and_keeps_old_file(self):
         self.run_rosters()
-        before = (self.tmp / "data" / "teams" / "147.json").read_bytes()
+        before = (self.site / "data" / "teams" / "147.json").read_bytes()
         orig = self.api.fetch
 
         def fetch(url, retries=3, delay=5):
@@ -3062,20 +3065,20 @@ class RosterFlowTests(MlbTestBase):
         with mock.patch("mlb_daily.net.fetch_json", side_effect=fetch):
             code, _, err = self.run_rosters()
         self.assertEqual(code, 0)  # 其餘球隊仍成功
-        self.assertEqual((self.tmp / "data" / "teams" / "147.json").read_bytes(), before)
+        self.assertEqual((self.site / "data" / "teams" / "147.json").read_bytes(), before)
         entry = next(t for t in self.read_index()["teams"] if t["id"] == 147)
         self.assertFalse(entry["ok"])
         self.assertIn("回傳 0 人", err)
 
     def test_all_empty_rosters_exit_1_and_keep_old_index(self):
         self.run_rosters()
-        before_index = (self.tmp / "data" / "teams" / "index.json").read_bytes()
-        before_team = (self.tmp / "data" / "teams" / "147.json").read_bytes()
+        before_index = (self.site / "data" / "teams" / "index.json").read_bytes()
+        before_team = (self.site / "data" / "teams" / "147.json").read_bytes()
         self.api.roster_override = {"roster": []}
         code, _, _ = self.run_rosters()
         self.assertEqual(code, 1)
-        self.assertEqual((self.tmp / "data" / "teams" / "index.json").read_bytes(), before_index)
-        self.assertEqual((self.tmp / "data" / "teams" / "147.json").read_bytes(), before_team)
+        self.assertEqual((self.site / "data" / "teams" / "index.json").read_bytes(), before_index)
+        self.assertEqual((self.site / "data" / "teams" / "147.json").read_bytes(), before_team)
 
     def test_malformed_roster_response_counts_as_failure(self):
         self.api.roster_override = {"unexpected": True}
@@ -3086,7 +3089,7 @@ class RosterFlowTests(MlbTestBase):
         before = self.snapshot()
         self.run_rosters()
         self.assertEqual(self.snapshot(), before)
-        self.assertFalse((self.tmp / "reports" / "metadata.json").exists())
+        self.assertFalse((self.site / "reports" / "metadata.json").exists())
         self.discord.assert_not_called()
         self.assertFalse(any("/schedule" in u for u in self.api.calls))
 
@@ -3100,7 +3103,7 @@ class RosterFlowTests(MlbTestBase):
             code, _, err = self.run_rosters(flag)
             self.assertEqual(code, 1, flag)
             self.assertIn("--rosters", err)
-        self.assertFalse((self.tmp / "data").exists())
+        self.assertFalse((self.site / "data").exists())
 
     def test_invalid_date_exits_1(self):
         code, _, _ = self.run_rosters(date_arg="2026/11/18")
@@ -3168,9 +3171,9 @@ class SiteNavTests(MlbTestBase):
 
     def make_site_files(self):
         for name in ("archive.html", "teams.html"):
-            shutil.copy(REPO_ROOT / name, self.tmp / name)
+            shutil.copy(REPO_ROOT / "site" / name, self.site / name)
         for name in ("leaders.html", "playoffs.html"):
-            (self.tmp / name).write_text("", encoding="utf-8")  # 產出物（只存在 gh-pages），測試以空檔代替
+            (self.site / name).write_text("", encoding="utf-8")  # 產出物（只存在 gh-pages），測試以空檔代替
 
     def assert_nav_resolves(self, html, page_dir, expected):
         links = self.nav_links(html)
@@ -3182,7 +3185,7 @@ class SiteNavTests(MlbTestBase):
     def test_season_report_nav(self):
         self.make_site_files()
         _, html = self.generate("schedule_normal")
-        report_dir = self.tmp / "reports" / "2026" / "11"
+        report_dir = self.site / "reports" / "2026" / "11"
         links = self.assert_nav_resolves(html, report_dir, ["← 首頁", "球隊專頁", "數據排行", "季後賽", "歷史存檔"])
         self.assertEqual([h for h, _, _ in links], ["../../../index.html", "../../../teams.html", "../../../leaders.html", "../../../playoffs.html", "../../../archive.html"])
         self.assertFalse(any(cur for _, _, cur in links))
@@ -3191,19 +3194,19 @@ class SiteNavTests(MlbTestBase):
         self.make_site_files()
         self.run_main("schedule_empty")
         html = self.read_report()
-        report_dir = self.tmp / "reports" / "2026" / "11"
+        report_dir = self.site / "reports" / "2026" / "11"
         self.assert_nav_resolves(html, report_dir, ["← 首頁", "球隊專頁", "數據排行", "季後賽", "歷史存檔"])
 
     def test_index_nav_and_teams_entry(self):
         self.make_site_files()
         self.run_main("schedule_normal")
-        html = (self.tmp / "index.html").read_text(encoding="utf-8")
-        links = self.assert_nav_resolves(html, self.tmp, ["球隊專頁", "數據排行", "季後賽", "歷史存檔"])
+        html = (self.site / "index.html").read_text(encoding="utf-8")
+        links = self.assert_nav_resolves(html, self.site, ["球隊專頁", "數據排行", "季後賽", "歷史存檔"])
         self.assertEqual([h for h, _, _ in links], ["teams.html", "leaders.html", "playoffs.html", "archive.html"])
         # 首頁入口卡：連到 teams.html，且位於最新一期卡片之後、近期區塊之前
         entry = re.search(r'<a class="teams-entry" href="([^"]+)">.*?30 隊名單', html, re.S)
         self.assertIsNotNone(entry)
-        self.assertTrue((self.tmp / entry.group(1)).exists())
+        self.assertTrue((self.site / entry.group(1)).exists())
         self.assertLess(html.index('class="latest"'), html.index('class="teams-entry"'))
         self.assertLess(html.index('class="teams-entry"'), html.index('aria-labelledby="recent-h"'))
 
@@ -3216,26 +3219,26 @@ class SiteNavTests(MlbTestBase):
             ("archive.html", "歷史存檔", ["index.html", "teams.html", "leaders.html", "playoffs.html", "archive.html"]),
             ("teams.html", "球隊專頁", ["index.html", "teams.html", "leaders.html", "playoffs.html", "archive.html"]),
         ):
-            html = (REPO_ROOT / name).read_text(encoding="utf-8")
+            html = (REPO_ROOT / "site" / name).read_text(encoding="utf-8")
             links = self.nav_links(html)
             self.assertEqual([h for h, _, _ in links], hrefs, name)
             self.assertEqual([t for _, t, cur in links if cur], [current], name)
             for href, _, _ in links:
                 if href in ("index.html", "leaders.html", "playoffs.html"):
                     continue  # 首頁、排行頁與季後賽頁為產生檔，只存在 gh-pages，main 上不存在
-                self.assertTrue((REPO_ROOT / href).exists(), href)
+                self.assertTrue((REPO_ROOT / "site" / href).exists(), href)
 
     def test_teams_page_files(self):
-        html = (REPO_ROOT / "teams.html").read_text(encoding="utf-8")
+        html = (REPO_ROOT / "site" / "teams.html").read_text(encoding="utf-8")
         self.assertIn('href="assets/style.css"', html)
         self.assertIn('src="assets/teams.js"', html)
-        self.assertTrue((REPO_ROOT / "assets" / "teams.js").exists())
+        self.assertTrue((REPO_ROOT / "site" / "assets" / "teams.js").exists())
         self.assertNotIn("site.css", html)
         for el_id in ("dateline", "teamSelect", "picker", "content"):
             self.assertIn(f'id="{el_id}"', html)
 
     def test_teams_js_safety_and_paths(self):
-        js = (REPO_ROOT / "assets" / "teams.js").read_text(encoding="utf-8")
+        js = (REPO_ROOT / "site" / "assets" / "teams.js").read_text(encoding="utf-8")
         self.assertNotIn("innerHTML", js)
         self.assertNotIn("insertAdjacentHTML", js)
         self.assertNotIn("document.write", js)
@@ -3245,8 +3248,8 @@ class SiteNavTests(MlbTestBase):
             self.assertRegex(js, rf'{old}:\s*"{new}"')
 
     def test_teams_js_renders_hand_tag(self):
-        js = (REPO_ROOT / "assets" / "teams.js").read_text(encoding="utf-8")
-        css = (REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        js = (REPO_ROOT / "site" / "assets" / "teams.js").read_text(encoding="utf-8")
+        css = (REPO_ROOT / "site" / "assets" / "style.css").read_text(encoding="utf-8")
         self.assertIn('"class": "hand', js)
         self.assertIn('"hand hand-"', js)
         for sel in (".hand-L", ".hand-R", ".hand-S"):
@@ -3257,7 +3260,7 @@ class SiteNavTests(MlbTestBase):
         self.assertIn(".hand {", css)
 
     def test_style_has_nav_and_teams_rules(self):
-        css = (REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        css = (REPO_ROOT / "site" / "assets" / "style.css").read_text(encoding="utf-8")
         for selector in (".nav-links", ".teams-entry", ".picker-select", ".roster", ".team-title", ".sort-btn"):
             self.assertIn(selector, css)
         self.assertEqual(css.count('.nav-links a + a'), 1)
@@ -3763,7 +3766,7 @@ class ReviewFixTests(SidebarBase):
         self.assertNotIn("凌晨", text)
 
     def test_drawer_js_marks_intro_inert_too(self):
-        js = (REPO_ROOT / "assets" / "standings.js").read_text(encoding="utf-8")
+        js = (REPO_ROOT / "site" / "assets" / "standings.js").read_text(encoding="utf-8")
         self.assertIn(".intro-wrap", js)
         tpl = (REPO_ROOT / "templates" / "index.html").read_text(encoding="utf-8")
         self.assertIn('class="wrap intro-wrap"', tpl)
@@ -3788,7 +3791,7 @@ class SidebarFailureIsolationTests(SidebarBase):
             code = self.run_flags()
         self.assertIsNone(code)
         self.assertEqual(self.read_metadata()[DATE]["total_games"], 2)
-        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertIn("戰績暫時無法取得", index)
         self.assertIn('class="latest"', index)
         self.discord.assert_called_once()
@@ -3801,15 +3804,15 @@ class SidebarFailureIsolationTests(SidebarBase):
                 mock.patch("mlb_daily.timeutil.get_taipei_now", return_value=OFFSEASON_NOW):
             code = self.run_flags()
         self.assertIsNone(code)
-        self.assertTrue((self.tmp / "reports" / "metadata.json").exists())
-        self.assertIn("戰績暫時無法取得", (self.tmp / "index.html").read_text(encoding="utf-8"))
+        self.assertTrue((self.site / "reports" / "metadata.json").exists())
+        self.assertIn("戰績暫時無法取得", (self.site / "index.html").read_text(encoding="utf-8"))
 
     def test_build_index_extras_total_failure_still_writes_index(self):
         self.api.schedule = "schedule_normal"
         with mock.patch("mlb_daily.index_page.build_index_extras", side_effect=RuntimeError("boom")):
             code = self.run_flags()
         self.assertIsNone(code)
-        index = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertIn('class="latest"', index)
         self.assertNotIn("<!--SLOT:", index)
         # 仍輸出側欄錯誤版與手機按鈕，桌機右側不會是空欄
@@ -3835,7 +3838,7 @@ class SidebarFailureIsolationTests(SidebarBase):
 
 class SidebarAssetsTests(unittest.TestCase):
     def test_standings_js_has_no_innerhtml_and_no_design_only_switches(self):
-        js = (REPO_ROOT / "assets" / "standings.js").read_text(encoding="utf-8")
+        js = (REPO_ROOT / "site" / "assets" / "standings.js").read_text(encoding="utf-8")
         self.assertNotIn("innerHTML", js)
         self.assertNotIn("outerHTML", js)
         self.assertNotIn("insertAdjacentHTML", js)
@@ -3846,7 +3849,7 @@ class SidebarAssetsTests(unittest.TestCase):
         self.assertIn("Escape", js)
 
     def test_style_css_has_sidebar_rules(self):
-        css = (REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        css = (REPO_ROOT / "site" / "assets" / "style.css").read_text(encoding="utf-8")
         for needle in (".standings", ".st-panel", ".st-table", ".st-fab", ".st-rail", ".gp-game", ".countdown",
                        ".wk-tx", "html.standings-collapsed", "html.st-drawer-open", ".layout"):
             self.assertIn(needle, css)

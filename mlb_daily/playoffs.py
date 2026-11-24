@@ -3,6 +3,7 @@
 層級與 leaders 同層：只依賴 config、timeutil、net、htmlutil、storage，不 import rosters／standings／
 index_page／cli。首頁小卡以 HTML 字串交給 index_page。"""
 
+import os
 import re
 import sys
 
@@ -492,5 +493,5 @@ def render_playoffs_card(data):
             f'    <div class="po-mini-head"><h3 id="po-mini-h">季後賽</h3>'
             f'<span class="po-mini-sub">{htmlutil.esc(playoffs_title(data))}</span></div>\n'
             f'{body}'
-            f'    <a class="po-mini-more" href="{PLAYOFFS_PAGE_PATH}">完整對戰樹 →</a>\n'
+            f'    <a class="po-mini-more" href="{os.path.basename(PLAYOFFS_PAGE_PATH)}">完整對戰樹 →</a>\n'
             f'  </section>')

@@ -23,12 +23,9 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Generated 首頁與歷史報表（reports/ 含 metadata.json 與每日 HTML）：僅存在 gh-pages 分支
-/index.html
-/leaders.html
-/playoffs.html
-reports/
-
-
-# Team roster JSON (deployed to gh-pages only)
-data/
+# Generated 網站產出（首頁、排行、季後賽、歷史報表與資料）：僅存在 gh-pages 分支
+/site/index.html
+/site/leaders.html
+/site/playoffs.html
+/site/reports/
+/site/data/

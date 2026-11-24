@@ -26,7 +26,7 @@ def quiet_call(fn, *a, **kw):
 
 
 def write_metadata(*days):
-    storage.save_metadata("reports/metadata.json", {d: {"date": d, "type": "season"} for d in days})
+    storage.save_metadata("site/reports/metadata.json", {d: {"date": d, "type": "season"} for d in days})
 
 
 class MissingDatesTests(unittest.TestCase):
@@ -197,7 +197,7 @@ class RefreshSnapshotTests(base.MlbTestBase):
                 "news": [{"title": "N", "title_zh": "新聞", "link": "https://www.mlb.com/news/n",
                           "published": "2026-11-17T10:00:00+08:00", "image": None, "summary": ""}]}
         snap.update(over)
-        path = Path("data/daily") / f"{self.DAY}.json"
+        path = Path("site/data/daily") / f"{self.DAY}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(snap, ensure_ascii=False), encoding="utf-8")
         return path
@@ -241,7 +241,7 @@ class RefreshSnapshotTests(base.MlbTestBase):
 
     def test_missing_snapshot_skipped(self):
         self.assertEqual(self.refresh([raw_tx(self.NEW_DESC, 2, "B Two")]), 0)
-        self.assertFalse(Path("data/daily").exists())
+        self.assertFalse(Path("site/data/daily").exists())
 
     def test_bad_format_skipped(self):
         for over in ({"schema": 99}, {"date": "2026-11-16"}, {"transactions": "x"}):
@@ -265,7 +265,7 @@ class RefreshSnapshotTests(base.MlbTestBase):
             added = self.refresh([raw_tx(self.OLD_DESC, 1, "A One"), raw_tx(self.NEW_DESC, 2, "B Two")])
         self.assertEqual(added, 1)
         self.assertEqual([t["description"] for t in tr.call_args.args[2]], [self.NEW_DESC])
-        txs = json.loads(Path(f"data/daily/{self.DAY}.json").read_text(encoding="utf-8"))["transactions"]
+        txs = json.loads(Path(f"site/data/daily/{self.DAY}.json").read_text(encoding="utf-8"))["transactions"]
         self.assertEqual(txs[0]["description_zh"], "洋基簽下自由球員 A One")
         self.assertEqual(txs[1]["description_zh"], "譯:" + self.NEW_DESC)
 

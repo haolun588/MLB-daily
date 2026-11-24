@@ -272,7 +272,7 @@ class CliCacheTests(unittest.TestCase):
                 mock.patch("mlb_daily.cli._run_leaders") as run, \
                 contextlib.redirect_stdout(io.StringIO()):
             fetch_mlb.main()
-        enable.assert_called_once_with(os.path.join("data", "season_cache.json"))
+        enable.assert_called_once_with(os.path.join("site", "data", "season_cache.json"))
         run.assert_called_once()
 
 

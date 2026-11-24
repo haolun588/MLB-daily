@@ -13,9 +13,8 @@ import sys
 from datetime import timedelta
 
 from . import games as games_mod, index_page, net, report, rosters, season, storage, transactions as transactions_mod, translate, weekly
-from .config import BACKFILL_DAYS, DAILY_SNAPSHOT_DIR, DAILY_SNAPSHOT_SCHEMA, DATE_KEY_RE, WEEKLY_BACKFILL_WEEKS
+from .config import BACKFILL_DAYS, DAILY_SNAPSHOT_DIR, DAILY_SNAPSHOT_SCHEMA, DATE_KEY_RE, METADATA_PATH, WEEKLY_BACKFILL_WEEKS
 
-METADATA_PATH = "reports/metadata.json"
 
 
 def generate_no_game_report(date_str):

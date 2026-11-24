@@ -13,8 +13,8 @@ from mlb_daily import stamp_assets  # noqa: E402
 class ArchiveJsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.js = (ROOT / "assets" / "archive.js").read_text(encoding="utf-8")
-        cls.css = (ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        cls.js = (ROOT / "site" / "assets" / "archive.js").read_text(encoding="utf-8")
+        cls.css = (ROOT / "site" / "assets" / "style.css").read_text(encoding="utf-8")
 
     def test_year_grouping_logic_present(self):
         self.assertIn("function yearsOf(", self.js)
@@ -40,7 +40,7 @@ class ArchiveJsTests(unittest.TestCase):
 
 class ArchiveStampTests(unittest.TestCase):
     def test_archive_html_asset_refs_get_version(self):
-        html = (ROOT / "archive.html").read_text(encoding="utf-8")
+        html = (ROOT / "site" / "archive.html").read_text(encoding="utf-8")
         self.assertIn('src="assets/archive.js"', html)
         self.assertIn('href="assets/style.css"', html)
         stamped = stamp_assets.stamp_html(html, "abc1234")

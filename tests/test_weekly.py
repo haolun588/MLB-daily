@@ -541,7 +541,7 @@ class RenderTests(unittest.TestCase):
 # ---------------------------------------------------------------- 每日快照寫入
 class DailySnapshotTests(base.MlbTestBase):
     def snapshot(self, date_str=DATE):
-        return json.loads((self.tmp / "data" / "daily" / f"{date_str}.json").read_text(encoding="utf-8"))
+        return json.loads((self.site / "data" / "daily" / f"{date_str}.json").read_text(encoding="utf-8"))
 
     def test_season_report_writes_snapshot(self):
         self.api.news = "news_rss.xml"
@@ -599,9 +599,9 @@ class DailySnapshotTests(base.MlbTestBase):
                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
             meta = fetch_mlb.generate_offseason_report(DATE)
         self.assertEqual(meta["type"], "offseason")
-        self.assertTrue((self.tmp / "reports" / "2026" / "11" / f"{DATE}.html").exists())
+        self.assertTrue((self.site / "reports" / "2026" / "11" / f"{DATE}.html").exists())
         self.assertIn("無法寫入每日資料快照", err.getvalue())
-        self.assertFalse((self.tmp / "data" / "daily" / f"{DATE}.json").exists())
+        self.assertFalse((self.site / "data" / "daily" / f"{DATE}.json").exists())
 
     def test_build_failure_only_warns(self):
         err = io.StringIO()
@@ -624,7 +624,7 @@ class DailySnapshotTests(base.MlbTestBase):
 class GenerateWeeklyTests(base.MlbTestBase):
     def setUp(self):
         super().setUp()
-        shutil.copytree(SNAP_DIR, self.tmp / "data" / "daily")
+        shutil.copytree(SNAP_DIR, self.site / "data" / "daily")
         self.wl = load_wl()
 
     def gen(self, today, **kw):
@@ -634,7 +634,7 @@ class GenerateWeeklyTests(base.MlbTestBase):
         return quiet(weekly.generate_weekly_report, today, **kw)
 
     def html_path(self, label=WEEK):
-        return self.tmp / "reports" / "weekly" / f"{label}.html"
+        return self.site / "reports" / "weekly" / f"{label}.html"
 
     def test_monday_in_offseason_generates_previous_week(self):
         entry = self.gen(date(2026, 11, 23))
@@ -655,7 +655,7 @@ class GenerateWeeklyTests(base.MlbTestBase):
         today = date(2026, 7, 20)  # 週一、賽季中
         self.assertEqual(today.isoweekday(), 1)
         self.assertIsNone(self.gen(today))
-        self.assertFalse((self.tmp / "reports" / "weekly").exists())
+        self.assertFalse((self.site / "reports" / "weekly").exists())
         self.assertIsNone(self.gen(date(2026, 7, 22), week=WEEK))  # --week 也套用休賽季判斷
         self.assertEqual(self.gen(date(2026, 7, 22), week=WEEK, force=True)["week"], WEEK)  # --force 略過
 
@@ -666,7 +666,7 @@ class GenerateWeeklyTests(base.MlbTestBase):
 
     def test_zero_snapshots_means_no_output(self):
         self.assertIsNone(self.gen(date(2026, 11, 23), week="2026-W41"))  # 沒有任何快照
-        self.assertFalse((self.tmp / "reports" / "weekly").exists())
+        self.assertFalse((self.site / "reports" / "weekly").exists())
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             weekly.generate_weekly_report(date(2026, 11, 23), week="2026-W41", calendar_path=CAL_PATH, wl=self.wl, auto_events=[])
@@ -691,7 +691,7 @@ class GenerateWeeklyTests(base.MlbTestBase):
 
     def test_index_entry_and_dedup_newest_first(self):
         entry = self.gen(date(2026, 11, 23))
-        index = json.loads((self.tmp / "reports" / "weekly" / "index.json").read_text(encoding="utf-8"))
+        index = json.loads((self.site / "reports" / "weekly" / "index.json").read_text(encoding="utf-8"))
         self.assertEqual(index["weeks"], [entry])
         for key in ("week", "start", "end", "days", "tx_count", "trade_count", "signing_count", "path", "generated_at"):
             self.assertIn(key, entry)
@@ -705,7 +705,7 @@ class GenerateWeeklyTests(base.MlbTestBase):
         self.assertEqual(fetch_mlb.latest_weekly_entry()["week"], "2026-W48")
 
     def test_load_weekly_index_tolerates_bad_files(self):
-        path = self.tmp / "reports" / "weekly" / "index.json"
+        path = self.site / "reports" / "weekly" / "index.json"
         path.parent.mkdir(parents=True)
         self.assertEqual(fetch_mlb.load_weekly_index(), {"weeks": []})  # 不存在
         for text in ("{oops", "[]", '{"weeks": 5}'):
@@ -772,7 +772,7 @@ class IndexLinkTests(base.MlbTestBase):
         self.assertNotIn("最新週報", extras["UPCOMING"])
 
     def test_archive_js_reads_weekly_index_safely(self):
-        js = (base.REPO_ROOT / "assets" / "archive.js").read_text(encoding="utf-8")
+        js = (base.REPO_ROOT / "site" / "assets" / "archive.js").read_text(encoding="utf-8")
         self.assertIn("reports/weekly/index.json", js)
         self.assertIn("每週總整理", js)
         self.assertNotIn("innerHTML", js.split("*/", 1)[1])  # 外部資料一律 textContent（檔頭註解提到不算）
@@ -784,9 +784,9 @@ class IndexLinkTests(base.MlbTestBase):
 class WeeklyCliTests(base.MlbTestBase):
     def setUp(self):
         super().setUp()
-        shutil.copytree(SNAP_DIR, self.tmp / "data" / "daily")
+        shutil.copytree(SNAP_DIR, self.site / "data" / "daily")
         shutil.copytree(base.REPO_ROOT / "settings", self.tmp / "settings")
-        (self.tmp / "reports" / "metadata.json").write_text(json.dumps({DATE: {
+        (self.site / "reports" / "metadata.json").write_text(json.dumps({DATE: {
             "date": DATE, "total_games": 3, "postponed": 0, "summary": "s", "type": "season"}}), encoding="utf-8")
 
     def run_cli(self, *args):
@@ -803,10 +803,10 @@ class WeeklyCliTests(base.MlbTestBase):
     def test_weekly_with_week_and_force_generates_and_refreshes_index_page(self):
         code, out, _ = self.run_cli("--weekly", "--week", WEEK, "--force", "--date", "2026-11-23")
         self.assertIn(code, (None, 0))
-        self.assertTrue((self.tmp / "reports" / "weekly" / f"{WEEK}.html").exists())
+        self.assertTrue((self.site / "reports" / "weekly" / f"{WEEK}.html").exists())
         self.assertIn(f"weekly_week={WEEK}", out)
         self.assertIn(f"weekly_url=https://haolun588.github.io/MLB-daily/reports/weekly/{WEEK}.html", out)
-        index_html = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index_html = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertIn("最新週報：2026-W47", index_html)
         self.assertIn("休賽季", index_html)
 
@@ -819,13 +819,13 @@ class WeeklyCliTests(base.MlbTestBase):
         code, out, _ = self.run_cli("--weekly", "--date", "2026-11-24")  # 週二
         self.assertIn(code, (None, 0))
         self.assertNotIn("weekly_url=", out)
-        self.assertFalse((self.tmp / "reports" / "weekly").exists())
-        self.assertNotIn("最新週報", (self.tmp / "index.html").read_text(encoding="utf-8"))
+        self.assertFalse((self.site / "reports" / "weekly").exists())
+        self.assertNotIn("最新週報", (self.site / "index.html").read_text(encoding="utf-8"))
 
     def test_weekly_never_touches_metadata_or_daily_flow(self):
-        before = (self.tmp / "reports" / "metadata.json").read_text(encoding="utf-8")
+        before = (self.site / "reports" / "metadata.json").read_text(encoding="utf-8")
         self.run_cli("--weekly", "--week", WEEK, "--force", "--date", "2026-11-23")
-        self.assertEqual((self.tmp / "reports" / "metadata.json").read_text(encoding="utf-8"), before)
+        self.assertEqual((self.site / "reports" / "metadata.json").read_text(encoding="utf-8"), before)
         self.discord.assert_not_called()
         self.assertFalse([u for u in self.api.calls if "/schedule" in u or "transactions?date=" in u or "/boxscore" in u])
 
@@ -950,11 +950,11 @@ class WorkflowAndImportTests(unittest.TestCase):
         self.yml = (base.REPO_ROOT / ".github" / "workflows" / "daily_report.yml").read_text(encoding="utf-8")
 
     def test_restore_step_restores_daily_snapshots_and_weekly_index(self):
-        self.assertIn("mkdir -p reports reports/weekly", self.yml)
-        self.assertIn("git archive origin/gh-pages data/daily | tar -x", self.yml)
+        self.assertIn("mkdir -p site/reports site/reports/weekly", self.yml)
+        self.assertIn("git archive origin/gh-pages data/daily | tar -x -C site", self.yml)
         self.assertIn("::warning::gh-pages 尚無 data/daily", self.yml)
-        self.assertIn("git show origin/gh-pages:reports/weekly/index.json > reports/weekly/index.json", self.yml)
-        self.assertIn("rm -f reports/weekly/index.json", self.yml)
+        self.assertIn("git show origin/gh-pages:reports/weekly/index.json > site/reports/weekly/index.json", self.yml)
+        self.assertIn("rm -f site/reports/weekly/index.json", self.yml)
 
     def test_weekly_steps_and_order(self):
         y = self.yml
@@ -1025,7 +1025,7 @@ class AutoCalendarTests(base.MlbTestBase):
     def setUp(self):
         super().setUp()
         self.addCleanup(season_mod.disable_cache)
-        self.daily = self.tmp / "data" / "daily"
+        self.daily = self.site / "data" / "daily"
         _write_snapshot(self.daily, "2027-02-09")  # 2027-W06（2/8～2/14）；其下週 W07 為 2/15～2/21，涵蓋 2/19
         self.cal = self.tmp / "cal.json"
         self.cal.write_text(json.dumps({"events": []}), encoding="utf-8")
@@ -1036,7 +1036,7 @@ class AutoCalendarTests(base.MlbTestBase):
             entry = quiet(weekly.generate_weekly_report, today, week=week, force=True,
                           calendar_path=str(self.cal), wl={})
         self.assertIsNotNone(entry)
-        return (self.tmp / "reports" / "weekly" / f"{week}.html").read_text(encoding="utf-8"), fetch
+        return (self.site / "reports" / "weekly" / f"{week}.html").read_text(encoding="utf-8"), fetch
 
     def test_next_week_covers_spring_start(self):
         self.assertEqual(weekly.week_days("2027-W07")[0], date(2027, 2, 15))

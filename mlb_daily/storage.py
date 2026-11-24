@@ -4,12 +4,12 @@ import json
 import os
 import sys
 
-from .config import DAILY_SNAPSHOT_DIR, LEADERS_PATH, LEADERS_SCHEMA, PLAYOFFS_PATH, PLAYOFFS_SCHEMA, WEEKLY_DIR, WEEKLY_INDEX_PATH
+from .config import DAILY_SNAPSHOT_DIR, LEADERS_PATH, LEADERS_SCHEMA, PLAYOFFS_PATH, PLAYOFFS_SCHEMA, REPORTS_DIR, WEEKLY_DIR, WEEKLY_INDEX_PATH
 
 
 def write_report(date_str, html_content):
     year, month, _ = date_str.split("-")
-    output_dir = os.path.join("reports", year, month)
+    output_dir = os.path.join(REPORTS_DIR, year, month)
     os.makedirs(output_dir, exist_ok=True)
     path = os.path.join(output_dir, f"{date_str}.html")
     with open(path, "w", encoding="utf-8") as f:

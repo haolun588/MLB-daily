@@ -99,7 +99,7 @@ class PlayoffsTestBase(base.MlbTestBase):
                 return e.code
         return 0
 
-    def read_json(self, path="data/playoffs.json"):
+    def read_json(self, path="site/data/playoffs.json"):
         return json.loads((self.tmp / path).read_text(encoding="utf-8"))
 
 
@@ -311,7 +311,7 @@ class GeneratePlayoffsTests(PlayoffsTestBase):
         self.assertEqual(set(data["rounds"]), {"AL", "NL", "WS"})
         self.assertEqual(set(data["rounds"]["AL"]), {"F", "D", "L"})
         self.assertIn("updatedAt", data)
-        page = (self.tmp / "playoffs.html").read_text(encoding="utf-8")
+        page = (self.site / "playoffs.html").read_text(encoding="utf-8")
         self.assertIn("2026 季後賽結果", page)
 
     def test_this_year_without_games_falls_back_to_last_year(self):
@@ -319,7 +319,7 @@ class GeneratePlayoffsTests(PlayoffsTestBase):
         self.assertTrue(quiet(playoffs.generate_playoffs, date(2027, 6, 1)))
         self.assertEqual(self.calls, [2027, 2026])
         self.assertEqual(self.read_json()["season"], 2026)
-        self.assertIn("2026 季後賽結果", (self.tmp / "playoffs.html").read_text(encoding="utf-8"))
+        self.assertIn("2026 季後賽結果", (self.site / "playoffs.html").read_text(encoding="utf-8"))
 
     def test_this_year_with_only_unplayed_games_falls_back(self):
         raw = copy.deepcopy(real_2026())
@@ -335,29 +335,29 @@ class GeneratePlayoffsTests(PlayoffsTestBase):
         self.assertTrue(quiet(playoffs.generate_playoffs, TODAY))
         self.assertEqual(self.calls, [2026])
         self.assertEqual(self.read_json()["status"], "進行中")
-        self.assertIn("2026 季後賽・截至 11/18", (self.tmp / "playoffs.html").read_text(encoding="utf-8"))
+        self.assertIn("2026 季後賽・截至 11/18", (self.site / "playoffs.html").read_text(encoding="utf-8"))
 
     def test_fetch_failure_does_not_overwrite_existing_files(self):
         self.assertTrue(quiet(playoffs.generate_playoffs, TODAY))
-        json_before = (self.tmp / "data" / "playoffs.json").read_bytes()
-        page_before = (self.tmp / "playoffs.html").read_bytes()
+        json_before = (self.site / "data" / "playoffs.json").read_bytes()
+        page_before = (self.site / "playoffs.html").read_bytes()
         self.series = {2026: None}
         self.assertFalse(quiet(playoffs.generate_playoffs, TODAY))
-        self.assertEqual((self.tmp / "data" / "playoffs.json").read_bytes(), json_before)
-        self.assertEqual((self.tmp / "playoffs.html").read_bytes(), page_before)
+        self.assertEqual((self.site / "data" / "playoffs.json").read_bytes(), json_before)
+        self.assertEqual((self.site / "playoffs.html").read_bytes(), page_before)
 
     def test_fallback_year_fetch_failure_does_not_overwrite(self):
         self.assertTrue(quiet(playoffs.generate_playoffs, TODAY))
-        before = (self.tmp / "data" / "playoffs.json").read_bytes()
+        before = (self.site / "data" / "playoffs.json").read_bytes()
         self.series = {2027: {"series": []}, 2026: None}
         self.assertFalse(quiet(playoffs.generate_playoffs, date(2027, 6, 1)))
-        self.assertEqual((self.tmp / "data" / "playoffs.json").read_bytes(), before)
+        self.assertEqual((self.site / "data" / "playoffs.json").read_bytes(), before)
 
     def test_no_data_in_either_year_creates_nothing(self):
         self.series = {2027: {"series": []}, 2026: {"series": []}}
         self.assertFalse(quiet(playoffs.generate_playoffs, date(2027, 6, 1)))
-        self.assertFalse((self.tmp / "data" / "playoffs.json").exists())
-        self.assertFalse((self.tmp / "playoffs.html").exists())
+        self.assertFalse((self.site / "data" / "playoffs.json").exists())
+        self.assertFalse((self.site / "playoffs.html").exists())
 
     def test_malformed_response_is_a_failure(self):
         for bad in ({"oops": 1}, [], {"series": "x"}):
@@ -508,7 +508,7 @@ class HomeCardTests(PlayoffsTestBase):
     META = {"date": DATE, "total_games": 3, "postponed": 0, "summary": "測試摘要", "type": "season"}
 
     def index_html(self):
-        return (self.tmp / "index.html").read_text(encoding="utf-8")
+        return (self.site / "index.html").read_text(encoding="utf-8")
 
     def test_complete_card_shows_champion_and_link(self):
         card = playoffs.render_playoffs_card(self.data())
@@ -538,11 +538,11 @@ class HomeCardTests(PlayoffsTestBase):
         self.assertIn('href="playoffs.html">季後賽</a>', html)
 
     def test_card_below_leaders_card(self):
-        (self.tmp / "data").mkdir(exist_ok=True)
+        (self.site / "data").mkdir(exist_ok=True)
         leaders_data = {"schema": fetch_mlb.config.LEADERS_SCHEMA, "season": 2026, "in_season": False,
                         "as_of": "2026-11-17", "generated_at": "2026-11-18T12:00:00+08:00",
                         "categories": {"homeRuns": [{"rank": 1, "id": 1, "name": "A B", "team_id": 147, "value": "50"}]}}
-        (self.tmp / "data" / "leaders.json").write_text(json.dumps(leaders_data), encoding="utf-8")
+        (self.site / "data" / "leaders.json").write_text(json.dumps(leaders_data), encoding="utf-8")
         quiet(playoffs.generate_playoffs, TODAY)
         self.quiet_update_index(self.META)
         aside = re.search(r'<aside class="standings.*?</aside>', self.index_html(), re.S).group(0)
@@ -589,16 +589,16 @@ class HomeCardTests(PlayoffsTestBase):
         self.assertIn("po-card-mini", aside)
 
     def test_corrupt_or_wrong_schema_file_is_ignored(self):
-        (self.tmp / "data").mkdir()
+        (self.site / "data").mkdir()
         good = json.loads(json.dumps(self.data()))
         bad_season = dict(good, season="2026")
         for content in ("{not json", json.dumps({"schema": 99, "rounds": {}}), json.dumps([1, 2]),
                         json.dumps(dict(good, rounds="x")), json.dumps(bad_season), json.dumps(dict(good, season=True))):
-            (self.tmp / "data" / "playoffs.json").write_text(content, encoding="utf-8")
+            (self.site / "data" / "playoffs.json").write_text(content, encoding="utf-8")
             self.assertIsNone(fetch_mlb.storage.load_playoffs(), content[:40])
             self.quiet_update_index(self.META)
             self.assertNotIn("po-card-mini", self.index_html())
-        (self.tmp / "data" / "playoffs.json").write_text(json.dumps(good), encoding="utf-8")
+        (self.site / "data" / "playoffs.json").write_text(json.dumps(good), encoding="utf-8")
         self.assertIsNotNone(fetch_mlb.storage.load_playoffs())
 
     def test_index_generation_does_not_hit_network_for_playoffs(self):
@@ -611,38 +611,38 @@ class HomeCardTests(PlayoffsTestBase):
 # ---------------------------------------------------------------- CLI
 class CliTests(PlayoffsTestBase):
     def test_cli_playoffs_writes_files_without_metadata_and_skips_index(self):
-        index_before = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index_before = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertEqual(self.run_cli("--playoffs"), 0)
-        self.assertTrue((self.tmp / "playoffs.html").exists())
+        self.assertTrue((self.site / "playoffs.html").exists())
         self.assertEqual(self.read_json()["season"], 2026)
-        self.assertEqual((self.tmp / "index.html").read_text(encoding="utf-8"), index_before)
-        self.assertFalse((self.tmp / "reports" / "metadata.json").exists())
+        self.assertEqual((self.site / "index.html").read_text(encoding="utf-8"), index_before)
+        self.assertFalse((self.site / "reports" / "metadata.json").exists())
 
     def test_cli_as_of_is_yesterday_in_taipei(self):
         self.series = {2026: in_progress_2026()}
         self.assertEqual(self.run_cli("--playoffs"), 0)  # 時鐘固定 2026-11-18 → 截至 11/17
         self.assertEqual(self.read_json()["asOf"], "2026-11-17")
-        self.assertIn("截至 11/17", (self.tmp / "playoffs.html").read_text(encoding="utf-8"))
+        self.assertIn("截至 11/17", (self.site / "playoffs.html").read_text(encoding="utf-8"))
         self.assertEqual(self.run_cli("--playoffs", "--date", "2026-10-20"), 0)
         self.assertEqual(self.read_json()["asOf"], "2026-10-19")
 
     def test_cli_refreshes_index_when_metadata_exists(self):
-        (self.tmp / "reports" / "metadata.json").write_text(json.dumps({DATE: HomeCardTests.META}), encoding="utf-8")
+        (self.site / "reports" / "metadata.json").write_text(json.dumps({DATE: HomeCardTests.META}), encoding="utf-8")
         self.assertEqual(self.run_cli("--playoffs"), 0)
-        self.assertIn("po-card-mini", (self.tmp / "index.html").read_text(encoding="utf-8"))
+        self.assertIn("po-card-mini", (self.site / "index.html").read_text(encoding="utf-8"))
         self.assertEqual(self.discord.call_count, 0)
 
     def test_cli_index_refresh_failure_does_not_fail_playoffs(self):
-        (self.tmp / "reports" / "metadata.json").write_text("{broken", encoding="utf-8")
+        (self.site / "reports" / "metadata.json").write_text("{broken", encoding="utf-8")
         self.assertEqual(self.run_cli("--playoffs"), 0)
-        self.assertTrue((self.tmp / "playoffs.html").exists())
+        self.assertTrue((self.site / "playoffs.html").exists())
 
     def test_cli_fetch_failure_exits_nonzero_and_keeps_old_files(self):
         self.assertEqual(self.run_cli("--playoffs"), 0)
-        before = (self.tmp / "data" / "playoffs.json").read_bytes()
+        before = (self.site / "data" / "playoffs.json").read_bytes()
         self.series = {2026: None}
         self.assertEqual(self.run_cli("--playoffs"), 1)
-        self.assertEqual((self.tmp / "data" / "playoffs.json").read_bytes(), before)
+        self.assertEqual((self.site / "data" / "playoffs.json").read_bytes(), before)
 
     def test_cli_rejects_combination_with_other_modes(self):
         for extra in (["--rosters"], ["--check-wait"], ["--notify-only"], ["--no-notify"], ["--weekly"],
@@ -664,10 +664,10 @@ class StaticChecksTests(unittest.TestCase):
 
     def test_workflow_restores_playoffs_json_without_failing(self):
         restore = self.yml[self.yml.index("- name: Restore history from gh-pages"):self.yml.index("- name: Update Stat Leaders")]
-        self.assertIn("git show origin/gh-pages:data/playoffs.json > data/playoffs.json 2>/dev/null", restore)
-        self.assertIn("rm -f data/playoffs.json", restore)
+        self.assertIn("git show origin/gh-pages:data/playoffs.json > site/data/playoffs.json 2>/dev/null", restore)
+        self.assertIn("rm -f site/data/playoffs.json", restore)
         self.assertIn("::warning::gh-pages 尚無 data/playoffs.json", restore)
-        self.assertIn("mkdir -p data", restore)
+        self.assertIn("mkdir -p site/data", restore)
 
     def test_workflow_playoffs_step_after_leaders_before_daily_report_and_non_blocking(self):
         y = self.yml
@@ -677,9 +677,9 @@ class StaticChecksTests(unittest.TestCase):
         self.assertIn("continue-on-error: true", step)
         self.assertIn("python fetch_mlb.py --playoffs", step)
 
-    def test_workflow_does_not_exclude_playoffs_from_deploy(self):
-        exclude = re.search(r"exclude_assets: '([^']*)'", self.yml).group(1)
-        self.assertNotIn("playoffs", exclude)
+    def test_workflow_deploys_only_site_dir(self):
+        self.assertIn("publish_dir: ./site", self.yml)
+        self.assertNotIn("exclude_assets", self.yml)
 
     def test_every_page_nav_links_to_playoffs(self):
         expected = {
@@ -688,15 +688,15 @@ class StaticChecksTests(unittest.TestCase):
             "templates/weekly.html": 'href="../../playoffs.html">季後賽</a>',
             "templates/leaders.html": 'href="playoffs.html">季後賽</a>',
             "templates/playoffs.html": 'href="playoffs.html" aria-current="page">季後賽</a>',
-            "teams.html": 'href="playoffs.html">季後賽</a>',
-            "archive.html": 'href="playoffs.html">季後賽</a>',
+            "site/teams.html": 'href="playoffs.html">季後賽</a>',
+            "site/archive.html": 'href="playoffs.html">季後賽</a>',
         }
         for rel, needle in expected.items():
             self.assertIn(needle, (base.REPO_ROOT / rel).read_text(encoding="utf-8"), rel)
 
     def test_root_generated_page_is_gitignored_with_anchored_rule(self):
         lines = (base.REPO_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
-        self.assertIn("/playoffs.html", lines)
+        self.assertIn("/site/playoffs.html", lines)
         self.assertNotIn("playoffs.html", lines)  # 不帶 / 會連 templates/ 內的模板一起忽略
         self.assertTrue((base.REPO_ROOT / "templates" / "playoffs.html").exists())
 
@@ -704,8 +704,8 @@ class StaticChecksTests(unittest.TestCase):
         for rel in ("templates/playoffs.html", "tests/fixtures/postseason_series_2026.json", "mlb_daily/playoffs.py"):
             r = subprocess.run(["git", "check-ignore", "-q", rel], cwd=base.REPO_ROOT, capture_output=True)
             self.assertEqual(r.returncode, 1, f"{rel} 被 .gitignore 忽略")  # 1 = 未被忽略
-        r = subprocess.run(["git", "check-ignore", "-q", "playoffs.html"], cwd=base.REPO_ROOT, capture_output=True)
-        self.assertEqual(r.returncode, 0)  # 根目錄產出物則被忽略
+        r = subprocess.run(["git", "check-ignore", "-q", "site/playoffs.html"], cwd=base.REPO_ROOT, capture_output=True)
+        self.assertEqual(r.returncode, 0)  # site/ 下的產出物則被忽略
 
     def test_playoffs_module_respects_layering(self):
         def imported(name):
@@ -721,7 +721,7 @@ class StaticChecksTests(unittest.TestCase):
             self.assertNotIn("playoffs", imported(lower), lower)
 
     def test_css_has_bracket_rules_without_horizontal_scroll(self):
-        css = (base.REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        css = (base.REPO_ROOT / "site" / "assets" / "style.css").read_text(encoding="utf-8")
         self.assertIn("repeat(7, minmax(0, 1fr))", css)
         self.assertIn("@media (min-width: 1024px)", css)
         block = css[css.index("季後賽對戰樹（playoffs.html"):]
@@ -729,7 +729,7 @@ class StaticChecksTests(unittest.TestCase):
         self.assertNotIn("overflow-x: scroll", block)
 
     def test_css_tree_hides_advance_mark_and_has_no_class_clash_with_wins(self):
-        css = (base.REPO_ROOT / "assets" / "style.css").read_text(encoding="utf-8")
+        css = (base.REPO_ROOT / "site" / "assets" / "style.css").read_text(encoding="utf-8")
         block = css[css.index("季後賽對戰樹（playoffs.html"):]
         self.assertRegex(block, r"\.po-tree \.po-adv[^{]*\{[^}]*display:\s*none")
         self.assertRegex(block, r"\.po-tree \.po-nm\s*\{[^}]*white-space:\s*nowrap")

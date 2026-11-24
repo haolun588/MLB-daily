@@ -85,7 +85,7 @@ class LeadersTestBase(base.MlbTestBase):
                 return e.code
         return 0
 
-    def read_json(self, path="data/leaders.json"):
+    def read_json(self, path="site/data/leaders.json"):
         return json.loads((self.tmp / path).read_text(encoding="utf-8"))
 
 
@@ -279,25 +279,25 @@ class GenerateLeadersTests(LeadersTestBase):
         self.assertEqual(data["schema"], 1)
         self.assertEqual((data["season"], data["in_season"], data["as_of"]), (2026, False, "2026-11-18"))
         self.assertEqual(set(data["categories"]), set(ALL_KEYS))
-        page = (self.tmp / "leaders.html").read_text(encoding="utf-8")
+        page = (self.site / "leaders.html").read_text(encoding="utf-8")
         self.assertIn("2026 賽季最終", page)
 
     def test_all_failed_does_not_overwrite_existing_files(self):
         quiet(leaders.generate_leaders, 2026, False, TODAY)
-        before_json = (self.tmp / "data" / "leaders.json").read_bytes()
-        before_html = (self.tmp / "leaders.html").read_bytes()
+        before_json = (self.site / "data" / "leaders.json").read_bytes()
+        before_html = (self.site / "leaders.html").read_bytes()
         for key in self.lead:
             self.lead[key] = None
         self.assertFalse(quiet(leaders.generate_leaders, 2027, False, TODAY))
-        self.assertEqual((self.tmp / "data" / "leaders.json").read_bytes(), before_json)
-        self.assertEqual((self.tmp / "leaders.html").read_bytes(), before_html)
+        self.assertEqual((self.site / "data" / "leaders.json").read_bytes(), before_json)
+        self.assertEqual((self.site / "leaders.html").read_bytes(), before_html)
 
     def test_all_failed_creates_nothing(self):
         for key in self.lead:
             self.lead[key] = None
         self.assertFalse(quiet(leaders.generate_leaders, 2026, False, TODAY))
-        self.assertFalse((self.tmp / "data" / "leaders.json").exists())
-        self.assertFalse((self.tmp / "leaders.html").exists())
+        self.assertFalse((self.site / "data" / "leaders.json").exists())
+        self.assertFalse((self.site / "leaders.html").exists())
 
     def test_partial_failure_still_writes_with_null_items(self):
         self.lead["war_hitting"] = None
@@ -305,7 +305,7 @@ class GenerateLeadersTests(LeadersTestBase):
         data = self.read_json()
         self.assertIsNone(data["categories"]["war_hitting"])
         self.assertTrue(data["categories"]["homeRuns"])
-        self.assertIn("暫無資料", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
+        self.assertIn("暫無資料", (self.site / "leaders.html").read_text(encoding="utf-8"))
 
 
 # ---------------------------------------------------------------- 標題與排行頁
@@ -319,20 +319,20 @@ class RenderPageTests(LeadersTestBase):
 
     def test_offseason_title_via_cli_uses_final(self):
         self.assertEqual(self.run_cli("--leaders"), 0)
-        self.assertIn("2026 賽季最終", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
+        self.assertIn("2026 賽季最終", (self.site / "leaders.html").read_text(encoding="utf-8"))
 
     def test_before_opening_uses_last_season_final(self):
         self.api.seasons = "seasons_2027"
         with mock.patch("mlb_daily.timeutil.get_taipei_now", return_value=base.datetime(2027, 1, 10, 12, 0, tzinfo=base.timezone.utc)):
             self.assertEqual(self.run_cli("--leaders", "--date", "2027-01-10"), 0)
         self.assertTrue(any("season=2026" in u for u in self.lead_calls))
-        self.assertIn("2026 賽季最終", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
+        self.assertIn("2026 賽季最終", (self.site / "leaders.html").read_text(encoding="utf-8"))
 
     def test_in_season_title_uses_yesterday_in_taipei(self):
         self.assertEqual(self.run_cli("--leaders", "--date", "2026-08-01"), 0)
         data = self.read_json()
         self.assertEqual(data["as_of"], "2026-07-31")  # 跨月
-        self.assertIn("2026 賽季・截至 7/31", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
+        self.assertIn("2026 賽季・截至 7/31", (self.site / "leaders.html").read_text(encoding="utf-8"))
         self.assertEqual(self.run_cli("--leaders", "--date", "2026-08-15"), 0)
 
     def test_playoffs_title_is_as_of(self):
@@ -340,22 +340,22 @@ class RenderPageTests(LeadersTestBase):
         self.assertEqual(self.run_cli("--leaders", "--date", "2026-10-10"), 0)
         self.assertTrue(self.read_json()["in_season"])
         self.assertTrue(self.read_json()["regular_final"])
-        self.assertIn("2026 例行賽最終", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
+        self.assertIn("2026 例行賽最終", (self.site / "leaders.html").read_text(encoding="utf-8"))
 
     def test_seasons_api_failure_falls_back_to_month(self):
         self.api.seasons = None
         self.assertEqual(self.run_cli("--leaders", "--date", "2026-03-10"), 0)  # 3 月：開季前 → 去年最終
         self.assertEqual(self.read_json()["season"], 2025)
         self.assertFalse(self.read_json()["in_season"])
-        self.assertIn("2025 賽季最終", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
+        self.assertIn("2025 賽季最終", (self.site / "leaders.html").read_text(encoding="utf-8"))
         self.assertEqual(self.run_cli("--leaders", "--date", "2026-11-18"), 0)  # 11 月：休賽季 → 今年最終
         self.assertEqual(self.read_json()["season"], 2026)
-        self.assertIn("2026 賽季最終", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
+        self.assertIn("2026 賽季最終", (self.site / "leaders.html").read_text(encoding="utf-8"))
 
     def test_in_season_cli_title_and_data(self):
         self.assertEqual(self.run_cli("--leaders", "--date", "2026-08-15"), 0)
         self.assertTrue(self.read_json()["in_season"])
-        self.assertIn("2026 賽季・截至 8/14", (self.tmp / "leaders.html").read_text(encoding="utf-8"))
+        self.assertIn("2026 賽季・截至 8/14", (self.site / "leaders.html").read_text(encoding="utf-8"))
 
     def test_page_structure_two_sections_six_cards_each(self):
         page = leaders.render_leaders_page(self.data())
@@ -447,7 +447,7 @@ class HomeCardTests(LeadersTestBase):
     META = {"date": DATE, "total_games": 3, "postponed": 0, "summary": "測試摘要", "type": "season"}
 
     def index_html(self):
-        return (self.tmp / "index.html").read_text(encoding="utf-8")
+        return (self.site / "index.html").read_text(encoding="utf-8")
 
     def test_card_has_twelve_rows_title_and_link(self):
         card = leaders.render_leaders_card(self.data())
@@ -498,7 +498,7 @@ class HomeCardTests(LeadersTestBase):
         self.assertIn("ld-card-mini", aside)
 
     def test_missing_or_non_integer_season_is_rejected(self):
-        (self.tmp / "data").mkdir()
+        (self.site / "data").mkdir()
         good = json.loads(json.dumps(self.data()))
         for season in (None, "2026", True, 2026.5, "missing"):
             doc = dict(good)
@@ -506,17 +506,17 @@ class HomeCardTests(LeadersTestBase):
                 doc.pop("season")
             else:
                 doc["season"] = season
-            (self.tmp / "data" / "leaders.json").write_text(json.dumps(doc), encoding="utf-8")
+            (self.site / "data" / "leaders.json").write_text(json.dumps(doc), encoding="utf-8")
             self.assertIsNone(fetch_mlb.storage.load_leaders(), season)
             self.quiet_update_index(self.META)
             self.assertNotIn("ld-card-mini", self.index_html())
-        (self.tmp / "data" / "leaders.json").write_text(json.dumps(good), encoding="utf-8")
+        (self.site / "data" / "leaders.json").write_text(json.dumps(good), encoding="utf-8")
         self.assertIsNotNone(fetch_mlb.storage.load_leaders())
 
     def test_corrupt_or_wrong_schema_file_is_ignored(self):
-        (self.tmp / "data").mkdir()
+        (self.site / "data").mkdir()
         for content in ("{not json", json.dumps({"schema": 99, "categories": {}}), json.dumps([1, 2])):
-            (self.tmp / "data" / "leaders.json").write_text(content, encoding="utf-8")
+            (self.site / "data" / "leaders.json").write_text(content, encoding="utf-8")
             self.assertIsNone(fetch_mlb.storage.load_leaders())
             self.quiet_update_index(self.META)
             self.assertNotIn("ld-card-mini", self.index_html())
@@ -538,31 +538,31 @@ class HomeCardTests(LeadersTestBase):
 # ---------------------------------------------------------------- CLI
 class CliTests(LeadersTestBase):
     def test_cli_leaders_writes_files_without_metadata_and_skips_index(self):
-        index_before = (self.tmp / "index.html").read_text(encoding="utf-8")
+        index_before = (self.site / "index.html").read_text(encoding="utf-8")
         self.assertEqual(self.run_cli("--leaders"), 0)
-        self.assertTrue((self.tmp / "leaders.html").exists())
-        self.assertTrue((self.tmp / "data" / "leaders.json").exists())
-        self.assertEqual((self.tmp / "index.html").read_text(encoding="utf-8"), index_before)
-        self.assertFalse((self.tmp / "reports" / "metadata.json").exists())  # 不碰 metadata
+        self.assertTrue((self.site / "leaders.html").exists())
+        self.assertTrue((self.site / "data" / "leaders.json").exists())
+        self.assertEqual((self.site / "index.html").read_text(encoding="utf-8"), index_before)
+        self.assertFalse((self.site / "reports" / "metadata.json").exists())  # 不碰 metadata
 
     def test_cli_leaders_refreshes_index_when_metadata_exists(self):
-        (self.tmp / "reports" / "metadata.json").write_text(json.dumps({DATE: HomeCardTests.META}), encoding="utf-8")
+        (self.site / "reports" / "metadata.json").write_text(json.dumps({DATE: HomeCardTests.META}), encoding="utf-8")
         self.assertEqual(self.run_cli("--leaders"), 0)
-        self.assertIn("ld-card-mini", (self.tmp / "index.html").read_text(encoding="utf-8"))
+        self.assertIn("ld-card-mini", (self.site / "index.html").read_text(encoding="utf-8"))
         self.assertEqual(self.discord.call_count, 0)
 
     def test_cli_index_refresh_failure_does_not_fail_leaders(self):
-        (self.tmp / "reports" / "metadata.json").write_text("{broken", encoding="utf-8")
+        (self.site / "reports" / "metadata.json").write_text("{broken", encoding="utf-8")
         self.assertEqual(self.run_cli("--leaders"), 0)
-        self.assertTrue((self.tmp / "leaders.html").exists())
+        self.assertTrue((self.site / "leaders.html").exists())
 
     def test_cli_all_failed_exits_nonzero_and_keeps_old_files(self):
         self.assertEqual(self.run_cli("--leaders"), 0)
-        before = (self.tmp / "data" / "leaders.json").read_bytes()
+        before = (self.site / "data" / "leaders.json").read_bytes()
         for key in self.lead:
             self.lead[key] = None
         self.assertEqual(self.run_cli("--leaders"), 1)
-        self.assertEqual((self.tmp / "data" / "leaders.json").read_bytes(), before)
+        self.assertEqual((self.site / "data" / "leaders.json").read_bytes(), before)
 
     def test_cli_rejects_combination_with_other_modes(self):
         for extra in (["--rosters"], ["--check-wait"], ["--notify-only"], ["--no-notify"], ["--weekly"],
@@ -581,10 +581,10 @@ class StaticChecksTests(unittest.TestCase):
 
     def test_workflow_restores_leaders_json_without_failing(self):
         restore = self.yml[self.yml.index("- name: Restore history from gh-pages"):self.yml.index("- name: Update Stat Leaders")]
-        self.assertIn("git show origin/gh-pages:data/leaders.json > data/leaders.json 2>/dev/null", restore)
-        self.assertIn("rm -f data/leaders.json", restore)
+        self.assertIn("git show origin/gh-pages:data/leaders.json > site/data/leaders.json 2>/dev/null", restore)
+        self.assertIn("rm -f site/data/leaders.json", restore)
         self.assertIn("::warning::gh-pages 尚無 data/leaders.json", restore)
-        self.assertIn("mkdir -p data", restore)
+        self.assertIn("mkdir -p site/data", restore)
 
     def test_workflow_leaders_step_before_daily_report_and_non_blocking(self):
         y = self.yml
@@ -594,9 +594,9 @@ class StaticChecksTests(unittest.TestCase):
         self.assertIn("continue-on-error: true", step)
         self.assertIn("python fetch_mlb.py --leaders", step)
 
-    def test_workflow_does_not_exclude_leaders_from_deploy(self):
-        exclude = re.search(r"exclude_assets: '([^']*)'", self.yml).group(1)
-        self.assertNotIn("leaders", exclude)
+    def test_workflow_deploys_only_site_dir(self):
+        self.assertIn("publish_dir: ./site", self.yml)
+        self.assertNotIn("exclude_assets", self.yml)
 
     def test_every_page_nav_links_to_leaders(self):
         expected = {
@@ -604,16 +604,16 @@ class StaticChecksTests(unittest.TestCase):
             "templates/report.html": 'href="../../../leaders.html">數據排行</a>',
             "templates/weekly.html": 'href="../../leaders.html">數據排行</a>',
             "templates/leaders.html": 'href="leaders.html" aria-current="page">數據排行</a>',
-            "teams.html": 'href="leaders.html">數據排行</a>',
-            "archive.html": 'href="leaders.html">數據排行</a>',
+            "site/teams.html": 'href="leaders.html">數據排行</a>',
+            "site/archive.html": 'href="leaders.html">數據排行</a>',
         }
         for rel, needle in expected.items():
             self.assertIn(needle, (base.REPO_ROOT / rel).read_text(encoding="utf-8"), rel)
 
     def test_root_generated_pages_are_gitignored_with_anchored_rules(self):
         lines = (base.REPO_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
-        self.assertIn("/leaders.html", lines)
-        self.assertIn("/index.html", lines)
+        self.assertIn("/site/leaders.html", lines)
+        self.assertIn("/site/index.html", lines)
         # 不帶 / 的規則會連 templates/ 內同名模板一起忽略（CI 找不到模板）
         self.assertNotIn("leaders.html", lines)
         self.assertNotIn("index.html", lines)

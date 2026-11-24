@@ -4,7 +4,7 @@ import sys
 from datetime import timedelta
 
 from . import htmlutil, leaders as leaders_mod, net, playoffs as playoffs_mod, previews, rosters, season as season_mod, standings as standings_mod, storage, timeutil, transactions as transactions_mod, translate, watchlist
-from .config import _UNSET, DATE_KEY_RE, SEASON_URL, WEEK_KEY_RE
+from .config import _UNSET, DATE_KEY_RE, INDEX_PAGE_PATH, METADATA_PATH, SEASON_URL, WEEK_KEY_RE
 
 
 def _safe_call(label, fn, *args):
@@ -256,7 +256,7 @@ def render_index(metadata, extras=None):
 
 
 def update_index_page(new_metadata):
-    metadata_path = "reports/metadata.json"
+    metadata_path = METADATA_PATH
     metadata_db = storage.load_metadata(metadata_path)
     metadata_db[new_metadata["date"]] = new_metadata
     storage.save_metadata(metadata_path, metadata_db)
@@ -264,8 +264,8 @@ def update_index_page(new_metadata):
 
 
 def refresh_index_page():
-    """不新增 metadata，僅依既有 reports/metadata.json 重新產生首頁（週報產生後讓首頁立即出現週報連結）。"""
-    _write_index(storage.load_metadata("reports/metadata.json"))
+    """不新增 metadata，僅依既有 site/reports/metadata.json 重新產生首頁（週報產生後讓首頁立即出現週報連結）。"""
+    _write_index(storage.load_metadata(METADATA_PATH))
 
 
 def _write_index(metadata_db):
@@ -273,6 +273,6 @@ def _write_index(metadata_db):
     extras = _safe_call("首頁補充區塊", build_index_extras) or _safe_call("首頁側欄錯誤版", fallback_index_extras)
 
     # 首頁每次由模板與 metadata 全量重新產生
-    with open("index.html", "w", encoding="utf-8") as f:
+    with open(INDEX_PAGE_PATH, "w", encoding="utf-8") as f:
         f.write(render_index(metadata_db, extras))
     print("Successfully updated index.html index page.")
