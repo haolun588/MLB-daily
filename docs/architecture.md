@@ -46,9 +46,12 @@ tests/fixtures/           API 假資料（schedule、boxscore、content、transa
 
 ```mermaid
 graph TD
-    A[排程 04:17 UTC / 手動觸發] --> T[單元測試]
+    A[外部 cron-job.org 台北 13:00 以 workflow_dispatch 觸發；GitHub schedule 06:30 UTC 備援；手動觸發] --> K{check：當日戰報已在 gh-pages?}
+    K -->|是，自動觸發| S[跳過本次執行]
+    K -->|否，或手動帶 date/week| T[單元測試]
     T -->|失敗| X[中止]
-    T --> W[Update Watchlist：--watchlist，失敗不中止]
+    T --> R[從 gh-pages 取回 metadata.json 與各資料檔]
+    R --> W[Update Watchlist：--watchlist，失敗不中止]
     W --> L[Update Stat Leaders：--leaders，失敗不中止]
     L --> P[Update Postseason Bracket：--playoffs，失敗不中止]
     P --> B[產生：--check-wait --no-notify]
@@ -56,18 +59,18 @@ graph TD
     C -->|否，未達 8 次| D[睡 30 分鐘後重查]
     D --> C
     C -->|是，或達上限| E[抓取、渲染、更新 metadata 與 index.html]
-    E --> F[commit 並 push 到 main]
-    F --> G[部署到 gh-pages]
+    E --> F[補產漏跑日、週報、球隊名單、資源版本號]
+    F --> G[部署到 gh-pages，不推回 main]
     G --> H[等待 Pages 回應 200]
     H --> I[--notify-only 發 Discord]
 ```
 
-1. **觸發**：cron `17 4 * * *`（約台北 12:17）或 `workflow_dispatch`（輸入 `date`、`notify`）。`concurrency` 群組 `daily-report`（不取消進行中），job `timeout-minutes: 330`。
+1. **觸發**：主要由外部 cron-job.org 於台北時間 13:00 以 `workflow_dispatch` 觸發；GitHub schedule（`cron: '30 6 * * *'`，即 06:30 UTC、台北 14:30）僅作備援，刻意排在主排程之後。當日戰報已存在於 gh-pages 時，自動觸發由 `check` job 跳過，避免重複產生與通知（手動帶 `date` 或 `week` 時不跳過）。`workflow_dispatch` 輸入：`date`（報表日期 YYYY-MM-DD，留空為台北時間昨日）、`notify`（是否發 Discord，預設 false）、`week`（手動補產指定週的休賽季每週總整理，ISO 週 YYYY-Www，例 2026-W47；留空則依排程規則，週一且休賽季才產生）。`concurrency` 群組 `daily-report`（不取消進行中），job `timeout-minutes: 330`。
 2. **測試**：`python -m unittest discover -s tests -v`。
 3. **產生**：`python fetch_mlb.py --check-wait --no-notify --date <日期>`，環境變數帶入 `GEMINI_API_KEY`。
 4. **更新名單**：`python fetch_mlb.py --rosters`（`continue-on-error: true`），見「球隊專頁」一節。
 5. **歷史只在 gh-pages**：`index.html` 與 `reports/metadata.json` 不進 main；workflow 在產生報表前先從 gh-pages 取回 `metadata.json`（取不到或非 JSON 物件即失敗），產生後隨 gh-pages 部署。
-6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,mlb_daily,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
+6. **部署**：`peaceiris/actions-gh-pages@v4`，`publish_dir: ./`、`keep_files: true`，`exclude_assets` 排除 `.github,.agents,docs,templates,tests,mlb_daily,fetch_mlb.py,README.md,.gitignore,__pycache__,.claude,CLAUDE.md,settings`。必須排除 `.gitignore`，否則其中的 `reports/*/*/*.html` 規則會讓新戰報不被部署。
 6a. **資源版本號**：部署前執行 `python -m mlb_daily.stamp_assets . "${GITHUB_SHA::7}"`，把工作目錄內 HTML 引用的本站 `assets/*.js`、`assets/*.css`（含 `../assets/` 等相對路徑）加上或替換成 `?v=<commit 前 7 碼>`，避免瀏覽器快取舊版 JS／CSS 搭配新資料。只改 runner 工作目錄、不 commit 回 main，repo 內原始 HTML／模板不含版本號；略過 `docs`、`templates`、`tests` 等不部署的目錄；外部網址不動。gh-pages 上只靠 `keep_files` 保留的舊戰報不在本次處理範圍，仍引用無版本號的資源（下次重產時才會更新）。
 7. **等待 Pages**：每 15 秒檢查當日戰報網址，最多 20 次（約 5 分鐘），逾時只警告、仍繼續下一步。
 8. **通知**：`python fetch_mlb.py --notify-only --date <日期>`，僅排程觸發或手動勾選 `notify` 時執行。
