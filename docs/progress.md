@@ -99,7 +99,7 @@
 - [x] **模組 R1**（`b8de886`、`843b383`）：球隊名單頁靜態設計稿與全站導覽，使用者核准；野手合併為單一表格並顯示守位
 - [x] **模組 R2**（`96192e8`）：`python fetch_mlb.py --rosters`，賽季判斷、分組與欄位計算、JSON 輸出與單元測試
 - [x] **模組 R3**（`ae0e1fd`）：正式 `teams.html`、`assets/teams.js` 與全站導覽
-- [x] **模組 R4**（本 commit）：workflow 加入 Update Team Rosters 步驟（`continue-on-error`），文件同步
+- [x] **模組 R4**（`a796054`）：workflow 加入 Update Team Rosters 步驟（`continue-on-error`），文件同步
 - [ ] 待辦：GitHub 實測（手動觸發 workflow，確認 `data/teams/` 部署與 `teams.html` 可用）
 
 - [x] 已完成：補產 2026-07-19、2026-08-01 至 2026-11-15 的戰報（gh-pages commit 0b627c5，2026-11-18；已核對 08-01～11-17 無缺漏）
@@ -147,3 +147,14 @@
 - [x] 已完成（635 個測試全過；本機以真實 API 實跑 `--rosters` 並於瀏覽器實測四區塊、換隊、L/R 標籤、375px 無水平捲動）：`mlb_daily/team_page.py`、`fetch_rosters` 的 `extras_factory`、`assets/teams.js` 與 `assets/style.css` 新區塊、`teams.html` 標題改為「球隊專頁」；各隊 JSON 新增 `summary`／`recent`／`leaders`；測試 `tests/test_team_page.py`
 - [ ] 待辦：GitHub 實測（手動觸發 workflow，確認 gh-pages 的 `data/teams/*.json` 含新欄位、近期動態有資料）
 - [ ] 待辦：2027 賽季中確認摘要「截至 M/D」標籤、季後賽行與數據王門檻是否合適
+
+### 🔧 階段二十二：後續功能與修正（2026-11-18 至 11-23，事後補記）
+各項細節見 `docs/dev_logs/` 對應日誌（事後補寫）。
+
+- [x] 已完成：首頁戰績側邊欄、今日賽事預告與休賽季區塊（模組 S1 `18d75e3`、S2 `76a403f`）
+- [x] 已完成：台日韓追蹤名單改為從 MLB API 動態抓取，含小聯盟台灣球員（`0d124a7`、`c9104a2`、`f523b28`、`7a332e9`）
+- [x] 已完成：部署時替 JS／CSS 加版本號（`a2261d8`）；自動觸發時當日戰報已存在則跳過（`9563ffc`）
+- [x] 已完成：FanGraphs 深度分析區塊（`0386441`）
+- [x] 已完成：休兵日快報與延賽判斷修正（`48def1e`）
+- [x] 已完成：RSS 累積快取、`--backfill` 與週報自動補產（`c3c47e4`）
+- [x] 已完成：多隊交易歸類（`4e0432e`）、賽季快取與停擺防護（`85fced3`）、季後賽期間標示與跨年存檔分組（`511a78c`）
