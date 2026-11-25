@@ -6,6 +6,8 @@ on:
     # 此 GitHub schedule（06:30 UTC = 台北 14:30，冬令美東 01:30／夏令 02:30）僅作備援，常有延遲，
     # 刻意排在主排程之後，讓主排程先跑。
     # 當日戰報已存在於 gh-pages 時，自動觸發會由 check job 跳過，避免重複產生與通知。
+    # 若 schedule 被延遲到跨過台北午夜（台北小時 < 13），以「昨天」算出的日期會往後推一天，
+    # 該日資料尚未就緒，check job 一律跳過。
     - cron: '30 6 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
     inputs:
@@ -49,6 +51,13 @@ jobs:
           if [ -n "$INPUT_DATE" ] || [ -n "$INPUT_WEEK" ]; then
             echo "手動指定 date 或 week，不檢查是否跳過"
             echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # schedule 備援被延遲到跨過台北午夜時，「昨天」會往後推一天、該日資料尚未就緒，一律跳過
+          TPE_HOUR="$(TZ=Asia/Taipei date +%H)"
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ] && [ "$((10#$TPE_HOUR))" -lt 13 ]; then
+            echo "::notice::schedule 排程被延遲到台北 ${TPE_HOUR} 點，當日資料尚未就緒，跳過本次執行"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           DATE="$(TZ=Asia/Taipei date -d yesterday +%F)"
