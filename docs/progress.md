@@ -166,3 +166,11 @@
 - [ ] 待辦：觀察新結構下的首次排程與 Discord 通知（cron-job.org 與 GitHub schedule 備援尚未跑過；手動實測時 `notify=false`）
 
 > 註：自階段二十三起，網站檔案（`index.html`、`archive.html`、`teams.html`、`leaders.html`、`playoffs.html`、`assets/`、`reports/`、`data/`）皆位於 `site/` 下；上述各階段提到的根目錄路徑為當時狀態，歷史內容不改寫。
+
+### 🛡️ 階段二十四：延遲排程防護與 favicon 補部署（2026-11-25）
+GitHub schedule 備援（台北 14:30）被延遲約 11.5 小時，台北 11/25 02:09 才執行，`check` job 以「昨日」算成 11/24，當時 11/24 戰報尚不存在，因此提前產報並發 Discord 通知。細節見 `docs/dev_logs/20261125_延遲排程防護與favicon補部署.md`。
+
+- [x] 已完成（`3daebb9`，923 個測試全過；僅以單元測試確認，尚未在真實延遲情境驗證）：`.github/workflows/daily_report.yml` 的 `check` step 新增防護，`GITHUB_EVENT_NAME=schedule` 且台北小時 < 13 時 `skip=true`，`workflow_dispatch`（cron-job.org 主排程）不受影響；新增 `tests/test_workflow_schedule_guard.py`（3 個測試）
+- [x] 已完成（已驗證線上 `assets/favicon.svg` 回 200、首頁含 icon link）：favicon（`7908007`）因 push 晚於當日部署、13:00 主排程又因戰報已存在而跳過，線上曾為 404；以手動 `workflow_dispatch`（`date=2026-11-24`、`notify=false`）重新部署補上
+- [ ] 待辦：觀察下一次真實延遲的備援排程是否正確跳過
+- [ ] 構想（未實作）：push 到 `site/` 時自動部署，避免當日戰報已產生時網站改動無法上線

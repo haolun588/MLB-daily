@@ -21,7 +21,7 @@
 ## ⚙️ 系統設計守則
 
 4. **排程與開工檢查邏輯**：
-   - 主要由外部 cron-job.org 於台北時間 13:00 以 `workflow_dispatch` 觸發；GitHub schedule（`cron: '30 6 * * *'`，即 06:30 UTC、台北 14:30）僅作備援，排在主排程之後。當日戰報已存在於 gh-pages 時，自動觸發由 `check` job 跳過（以 `daily_report.yml` 註解為準）。
+   - 主要由外部 cron-job.org 於台北時間 13:00 以 `workflow_dispatch` 觸發；GitHub schedule（`cron: '30 6 * * *'`，即 06:30 UTC、台北 14:30）僅作備援，排在主排程之後。當日戰報已存在於 gh-pages 時，自動觸發由 `check` job 跳過（以 `daily_report.yml` 註解為準）。另外 `schedule` 事件於台北時間 13 點前執行時也跳過（防止備援排程被 GitHub 延遲跨過台北午夜而提前產報）；`workflow_dispatch` 不受影響。
    - 手動觸發（`workflow_dispatch`）輸入：`date`（報表日期）、`notify`（是否發 Discord 通知）、`week`（補產指定週的休賽季每週總整理，ISO 週 `YYYY-Www`）。
    - **開工前置檢查**：腳本以 `--check-wait` 啟動後，先透過 API 檢查目標日（預設為台北時間昨日）所有比賽狀態。API 失敗不得當成「無賽事」：等待中視為未完成並重試，從未取得賽程則 `exit 1`；單次檢查失敗直接 `exit 1`，不寫任何檔案。
    - **延遲等待機制**：

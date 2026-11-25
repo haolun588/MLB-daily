@@ -66,7 +66,7 @@ graph TD
     H --> I[--notify-only 發 Discord]
 ```
 
-1. **觸發**：主要由外部 cron-job.org 於台北時間 13:00 以 `workflow_dispatch` 觸發；GitHub schedule（`cron: '30 6 * * *'`，即 06:30 UTC、台北 14:30）僅作備援，刻意排在主排程之後。當日戰報已存在於 gh-pages 時，自動觸發由 `check` job 跳過，避免重複產生與通知（手動帶 `date` 或 `week` 時不跳過）。`workflow_dispatch` 輸入：`date`（報表日期 YYYY-MM-DD，留空為台北時間昨日）、`notify`（是否發 Discord，預設 false）、`week`（手動補產指定週的休賽季每週總整理，ISO 週 YYYY-Www，例 2026-W47；留空則依排程規則，週一且休賽季才產生）。`concurrency` 群組 `daily-report`（不取消進行中），job `timeout-minutes: 330`。
+1. **觸發**：主要由外部 cron-job.org 於台北時間 13:00 以 `workflow_dispatch` 觸發；GitHub schedule（`cron: '30 6 * * *'`，即 06:30 UTC、台北 14:30）僅作備援，刻意排在主排程之後。當日戰報已存在於 gh-pages 時，自動觸發由 `check` job 跳過，避免重複產生與通知（手動帶 `date` 或 `week` 時不跳過）。此外，`schedule` 事件若在台北時間 13 點前執行（備援排程被 GitHub 延遲跨過台北午夜時，日期會算錯一天、提前產報）也由 `check` job 跳過；`workflow_dispatch` 不受影響。`workflow_dispatch` 輸入：`date`（報表日期 YYYY-MM-DD，留空為台北時間昨日）、`notify`（是否發 Discord，預設 false）、`week`（手動補產指定週的休賽季每週總整理，ISO 週 YYYY-Www，例 2026-W47；留空則依排程規則，週一且休賽季才產生）。`concurrency` 群組 `daily-report`（不取消進行中），job `timeout-minutes: 330`。
 2. **測試**：`python -m unittest discover -s tests -v`。
 3. **產生**：`python fetch_mlb.py --check-wait --no-notify --date <日期>`，環境變數帶入 `GEMINI_API_KEY`。
 4. **更新名單**：`python fetch_mlb.py --rosters`（`continue-on-error: true`），見「球隊專頁」一節。
