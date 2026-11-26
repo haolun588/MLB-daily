@@ -1246,5 +1246,31 @@
     "transactions_count": 5,
     "translated": true,
     "news_count": 12
+  },
+  "2026-11-25": {
+    "date": "2026-11-25",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "一份1.2億美元合約與一座MVP獎項？對Sato來說只是日常工作；在大手筆簽下Peralta之後，金鶯還會為先發輪值陣容補強嗎？；澳洲職棒大聯盟現在可在MLB.TV觀看。",
+    "type": "offseason",
+    "transactions_count": 12,
+    "translated": true,
+    "news_count": 12,
+    "spotlight": [
+      {
+        "player_id": 831664,
+        "kind": "transaction",
+        "text": "芝加哥小熊簽下自由球員三壘手 Teruaki Sato。",
+        "date": "2026-11-25",
+        "persons": [
+          {
+            "id": 831664,
+            "name": "Teruaki Sato"
+          }
+        ],
+        "to_team_id": 112,
+        "from_team_id": null
+      }
+    ]
   }
 }
