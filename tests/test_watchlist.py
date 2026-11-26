@@ -805,15 +805,15 @@ class BuildAndRenderTests(unittest.TestCase):
         self.assertIsNone(self.w.home_window_entries({}))
         self.assertEqual(self.w.render_spotlight_home(None, self.wl), "")
         self.assertEqual(self.w.render_spotlight_home([], {}), "")
-        self.assertIn("近 7 天無台日韓球員動態。", self.w.render_spotlight_home([], self.wl))
-        self.assertIn("近 7 天無台日韓球員動態。", self.w.render_spotlight_home(
-            self.w.home_window_entries({"2026-11-15": {"date": "2026-11-15"}}), self.wl))
+        self.assertEqual(self.w.render_spotlight_home([], self.wl), "")
+        self.assertEqual(self.w.render_spotlight_home(
+            self.w.home_window_entries({"2026-11-15": {"date": "2026-11-15"}}), self.wl), "")
 
     def test_home_tolerates_malformed_metadata(self):
         meta = {"2026-11-15": {"spotlight": "oops"}, "2026-11-14": {"spotlight": [1, None, {"player_id": "x"}, {"player_id": OHTANI, "kind": "bad"}]},
                 "bad": {"spotlight": []}}
         html = self.w.render_spotlight_home(self.w.home_window_entries(meta), self.wl)
-        self.assertIn("近 7 天無台日韓球員動態。", html)
+        self.assertEqual(html, "")
 
 
 # ---------------------------------------------------------------- 整合：戰報與首頁
@@ -950,8 +950,8 @@ class SpotlightIntegrationTests(base.MlbTestBase):
         plain = {"date": DATE, "total_games": 2, "postponed": 0, "summary": "s", "type": "season"}
         self.quiet_update_index(plain)
         index = (self.site / "index.html").read_text(encoding="utf-8")
-        self.assertIn("近 7 天無台日韓球員動態。", index)
-        self.assertLess(index.index('id="latest-h"'), index.index('id="spot-h"'))
+        self.assertNotIn("spot-h", index)
+        self.assertNotIn("台日韓球員動態", index)
         # 名單失敗：不顯示
         with mock.patch("mlb_daily.watchlist.WATCHLIST_PATH", str(self.tmp / "nope.json")):
             self.quiet_update_index(plain)

@@ -14,7 +14,6 @@ REGION_NAMES = {"TW": "台灣", "JP": "日本", "KR": "韓國"}
 REGION_ORDER = {"TW": 0, "JP": 1, "KR": 2}
 HEADING = "台日韓球員動態"
 HOME_WINDOW_DAYS = 7
-HOME_EMPTY_TEXT = "近 7 天無台日韓球員動態。"
 
 
 # ---------------------------------------------------------------- 動態名單抓取（MLB API）
@@ -760,12 +759,12 @@ def _parse(date_str):
 
 def render_spotlight_home(entries, wl):
     """首頁區塊 HTML。entries 為 home_window_entries 的結果（None 代表沒有任何戰報，不顯示）。
-    名單為空不顯示；有名單但近 7 天無條目則顯示空狀態訊息。"""
+    名單為空、近 7 天無條目時整區隱藏（回傳空字串）。"""
     if not wl or entries is None:
         return ""
     groups = _render_groups(entries, wl, show_date=True)
     if not groups:
-        return htmlutil._section_message("spot-h", HEADING, HOME_EMPTY_TEXT)
+        return ""
     return (
         '  <section class="section" aria-labelledby="spot-h">\n'
         f'    <div class="section-head"><h2 id="spot-h">{HEADING}</h2><span class="count">近 {HOME_WINDOW_DAYS} 天 · {len(groups)} 位球員</span></div>\n'
