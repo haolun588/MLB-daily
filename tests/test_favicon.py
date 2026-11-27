@@ -2,6 +2,7 @@
 
 import os
 import re
+import struct
 import sys
 import unittest
 from pathlib import Path
@@ -13,6 +14,8 @@ from mlb_daily import config  # noqa: E402
 
 REPO_ROOT = base.REPO_ROOT
 FAVICON = REPO_ROOT / config.SITE_DIR / "assets" / "favicon.svg"
+APPLE_ICON = REPO_ROOT / config.SITE_DIR / "assets" / "apple-touch-icon.png"
+APPLE_RE = re.compile(r'<link rel="apple-touch-icon" href="([^"]+)">')
 LINK_RE = re.compile(r'<link rel="icon" type="image/svg\+xml" href="([^"]+)">')
 
 
@@ -29,6 +32,13 @@ def assert_favicon(tc, html, out_dir):
     target = os.path.normpath(os.path.join(REPO_ROOT / config.SITE_DIR, out_dir, href))
     tc.assertEqual(Path(target), FAVICON)
     tc.assertTrue(Path(target).is_file())
+    # apple-touch-icon（iOS 不支援 SVG）
+    m = APPLE_RE.search(html)
+    tc.assertIsNotNone(m, "缺少 apple-touch-icon link")
+    tc.assertTrue(html.index("<title>") < html.index(m.group(1)) < html.index("</head>"))
+    apple = os.path.normpath(os.path.join(REPO_ROOT / config.SITE_DIR, out_dir, m.group(1)))
+    tc.assertEqual(Path(apple), APPLE_ICON)
+    tc.assertTrue(Path(apple).is_file())
 
 
 def rel_to_site(path):
@@ -42,6 +52,12 @@ class FaviconStaticTests(unittest.TestCase):
         svg = FAVICON.read_text(encoding="utf-8")
         self.assertIn('viewBox="0 0 64 64"', svg)
         self.assertIn("#e5484d", svg)
+
+    def test_apple_touch_icon_is_180_png(self):
+        data = APPLE_ICON.read_bytes()
+        self.assertEqual(data[:8], bytes([137, 80, 78, 71, 13, 10, 26, 10]))
+        self.assertEqual(data[12:16], b"IHDR")
+        self.assertEqual(struct.unpack(">II", data[16:24]), (180, 180))
 
     def test_static_pages(self):
         site = REPO_ROOT / config.SITE_DIR
