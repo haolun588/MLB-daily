@@ -180,3 +180,9 @@ iPhone Safari「加入主畫面」沒有 logo：網站只有 SVG favicon，iOS �
 
 - [x] 已完成（`4399a31`，924 個測試全過）：新增 `site/assets/apple-touch-icon.png`（180x180 不透明 PNG）；7 個頁面／模板 `<head>` 補 `apple-touch-icon` link；`tests/test_favicon.py` 擴充檢查並新增 PNG 尺寸測試
 - [x] 已完成（已驗證線上圖示回 200 `image/png`、使用者重加主畫面後 logo 出現）：第一次修完仍沒圖示，原因是新圖示尚未部署；手動 `workflow_dispatch`（`date=2026-11-26`、`notify=false`，run 45963030747）補部署
+
+### 🙈 階段二十六：台日韓動態空區隱藏與追蹤名單補名（2026-11-26 至 11-27，事後補記）
+首頁台日韓球員動態近 7 天無內容時改為整區隱藏，並補上佐藤輝明中文名。兩項當時未寫日誌，於 11/27 補記；因時間早於階段二十五的 `4399a31`，為避免重編既有編號而列為階段二十六。細節見 `docs/dev_logs/20261127_台日韓動態空區隱藏與追蹤名單補名.md`。
+
+- [x] 已完成（`e17c232`，2026-11-26）：`render_spotlight_home` 無條目時回傳空字串，移除 `HOME_EMPTY_TEXT`；更新 `tests/test_watchlist.py` 首頁空狀態測試；同步 `docs/architecture.md` 與台日韓專區設計文件
+- [x] 已完成（`87cecb9`，2026-11-27）：`settings/watchlist.json` 新增佐藤輝明（id 831664，JP）
