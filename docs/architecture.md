@@ -19,6 +19,8 @@ templates/playoffs.html   季後賽對戰樹頁骨架
 以下 `site/` 為網站根目錄（部署時只發佈此資料夾，線上網址不含 `site`）；標註「產生」者不進 main，由 `.gitignore` 的 `/site/index.html`、`/site/leaders.html`、`/site/playoffs.html`、`/site/reports/`、`/site/data/` 忽略，僅存在於 gh-pages。
 site/assets/style.css          共用樣式表
 site/assets/archive.js         歷史存檔頁腳本
+site/assets/favicon.svg        網站 favicon（SVG，供桌面瀏覽器）
+site/assets/apple-touch-icon.png  iOS 加入主畫面圖示（180x180 不透明 PNG；iOS 不支援 SVG）
 site/assets/teams.js           球隊專頁腳本（球隊摘要、近期動態、隊內數據王、名單）
 site/teams.html                球隊專頁（執行時以 JS 讀取 data/teams/*.json）
 site/archive.html              歷史存檔頁（靜態檔，執行時以 JS 讀取 metadata）

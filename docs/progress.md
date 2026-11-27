@@ -174,3 +174,9 @@ GitHub schedule 備援（台北 14:30）被延遲約 11.5 小時，台北 11/25 
 - [x] 已完成（已驗證線上 `assets/favicon.svg` 回 200、首頁含 icon link）：favicon（`7908007`）因 push 晚於當日部署、13:00 主排程又因戰報已存在而跳過，線上曾為 404；以手動 `workflow_dispatch`（`date=2026-11-24`、`notify=false`）重新部署補上
 - [ ] 待辦：觀察下一次真實延遲的備援排程是否正確跳過
 - [ ] 構想（未實作）：push 到 `site/` 時自動部署，避免當日戰報已產生時網站改動無法上線
+
+### 📱 階段二十五：iPhone 主畫面圖示（2026-11-27）
+iPhone Safari「加入主畫面」沒有 logo：網站只有 SVG favicon，iOS 不支援，需 PNG apple-touch-icon。細節見 `docs/dev_logs/20261127_iPhone主畫面圖示.md`。
+
+- [x] 已完成（`4399a31`，924 個測試全過）：新增 `site/assets/apple-touch-icon.png`（180x180 不透明 PNG）；7 個頁面／模板 `<head>` 補 `apple-touch-icon` link；`tests/test_favicon.py` 擴充檢查並新增 PNG 尺寸測試
+- [x] 已完成（已驗證線上圖示回 200 `image/png`、使用者重加主畫面後 logo 出現）：第一次修完仍沒圖示，原因是新圖示尚未部署；手動 `workflow_dispatch`（`date=2026-11-26`、`notify=false`，run 45963030747）補部署

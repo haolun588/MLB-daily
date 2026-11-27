@@ -38,6 +38,8 @@
    - workflow 步驟順序（完整步驟見 `docs/architecture.md`）：單元測試 → 取回歷史 → 產生（`--check-wait --no-notify`）→ 以 `peaceiris/actions-gh-pages` 部署到 `gh-pages` → 等待 GitHub Pages 上線 → 以 `--notify-only` 發送 Discord 通知。
    - **通知時機**：必須在部署完成且 Pages 回應 200 之後才發送，連結才能直接開啟。休賽季快報若新聞與人事異動皆為 0，不發通知。
    - 部署只發佈 `site/`（`publish_dir: ./site`），程式、文件、`settings` 不在其中，故不需 `exclude_assets`；`site/` 內不得放 `.gitignore`，否則會讓新戰報被忽略。網站路徑一律由 `mlb_daily/config.py` 的 `SITE_DIR` 等常數組出，不要寫死。
+   - 所有頁面（`site/archive.html`、`site/teams.html`、`templates/` 下各頁面模板）的 `<head>` 需同時含 `favicon.svg` 與 `apple-touch-icon.png` 兩個 icon link（iOS Safari 加入主畫面不支援 SVG，須有 PNG）；由 `tests/test_favicon.py` 檢查。
+   - 網站只在 workflow 執行時部署到 gh-pages；修改 `site/assets/` 或模板等靜態資源後，需等下次排程或手動 `workflow_dispatch`（`notify=false`）補部署才會上線。iOS 主畫面圖示會快取，需刪除舊捷徑重新加入。
 7. **測試守則**：
    - 修改程式（`fetch_mlb.py` 或 `mlb_daily/`、模板渲染邏輯）必須附對應的單元測試，並確認 `python -m unittest discover -s tests` 全部通過後才算完成。
    - 測試只用標準庫 `unittest`，以 `tests/fixtures/*.json` 假資料執行，不得連網、不得呼叫真實 Gemini 或 Discord。
