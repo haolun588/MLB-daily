@@ -160,7 +160,7 @@
 - [x] 已完成：多隊交易歸類（`4e0432e`）、賽季快取與停擺防護（`85fced3`）、季後賽期間標示與跨年存檔分組（`511a78c`）
 
 ### 📁 階段二十三：網站檔案集中到 site/（2026-11-24）
-動機：主資料夾混著網站頁面與本機產生檔；GitHub Pages 以 gh-pages 根目錄提供網站，故新增 `site/` 作為發佈根目錄，gh-pages 布局與線上網址不變。細節見 `docs/dev_logs/20261124_網站檔案集中到site資料夾.md`。
+動機：主資料夾混著網站頁面與本機產生檔；GitHub Pages 以 gh-pages 根目錄提供網站，故新增 `site/` 作為發佈根目錄，gh-pages 布局與線上網址不變。細節見 `docs/dev_logs/202611/20261124_網站檔案集中到site資料夾.md`。
 
 - [x] 已完成（`114271f`，915 個測試全過；手動觸發 workflow 實測部署前後 gh-pages 檔案清單相同、線上各頁 200）：`archive.html`、`teams.html`、`assets/` 移到 `site/`；`mlb_daily/config.py` 新增 `SITE_DIR` 等常數，路徑一律由常數組出；workflow 改以 `publish_dir: ./site` 部署並移除 `exclude_assets`；`.gitignore` 與預覽設定同步；新增 `tests/test_site_layout.py`
 - [ ] 待辦：觀察新結構下的首次排程與 Discord 通知（cron-job.org 與 GitHub schedule 備援尚未跑過；手動實測時 `notify=false`）
@@ -168,7 +168,7 @@
 > 註：自階段二十三起，網站檔案（`index.html`、`archive.html`、`teams.html`、`leaders.html`、`playoffs.html`、`assets/`、`reports/`、`data/`）皆位於 `site/` 下；上述各階段提到的根目錄路徑為當時狀態，歷史內容不改寫。
 
 ### 🛡️ 階段二十四：延遲排程防護與 favicon 補部署（2026-11-25）
-GitHub schedule 備援（台北 14:30）被延遲約 11.5 小時，台北 11/25 02:09 才執行，`check` job 以「昨日」算成 11/24，當時 11/24 戰報尚不存在，因此提前產報並發 Discord 通知。細節見 `docs/dev_logs/20261125_延遲排程防護與favicon補部署.md`。
+GitHub schedule 備援（台北 14:30）被延遲約 11.5 小時，台北 11/25 02:09 才執行，`check` job 以「昨日」算成 11/24，當時 11/24 戰報尚不存在，因此提前產報並發 Discord 通知。細節見 `docs/dev_logs/202611/20261125_延遲排程防護與favicon補部署.md`。
 
 - [x] 已完成（`3daebb9`，923 個測試全過；僅以單元測試確認，尚未在真實延遲情境驗證）：`.github/workflows/daily_report.yml` 的 `check` step 新增防護，`GITHUB_EVENT_NAME=schedule` 且台北小時 < 13 時 `skip=true`，`workflow_dispatch`（cron-job.org 主排程）不受影響；新增 `tests/test_workflow_schedule_guard.py`（3 個測試）
 - [x] 已完成（已驗證線上 `assets/favicon.svg` 回 200、首頁含 icon link）：favicon（`7908007`）因 push 晚於當日部署、13:00 主排程又因戰報已存在而跳過，線上曾為 404；以手動 `workflow_dispatch`（`date=2026-11-24`、`notify=false`）重新部署補上
@@ -176,13 +176,13 @@ GitHub schedule 備援（台北 14:30）被延遲約 11.5 小時，台北 11/25 
 - [ ] 構想（未實作）：push 到 `site/` 時自動部署，避免當日戰報已產生時網站改動無法上線
 
 ### 📱 階段二十五：iPhone 主畫面圖示（2026-11-27）
-iPhone Safari「加入主畫面」沒有 logo：網站只有 SVG favicon，iOS 不支援，需 PNG apple-touch-icon。細節見 `docs/dev_logs/20261127_iPhone主畫面圖示.md`。
+iPhone Safari「加入主畫面」沒有 logo：網站只有 SVG favicon，iOS 不支援，需 PNG apple-touch-icon。細節見 `docs/dev_logs/202611/20261127_iPhone主畫面圖示.md`。
 
 - [x] 已完成（`4399a31`，924 個測試全過）：新增 `site/assets/apple-touch-icon.png`（180x180 不透明 PNG）；7 個頁面／模板 `<head>` 補 `apple-touch-icon` link；`tests/test_favicon.py` 擴充檢查並新增 PNG 尺寸測試
 - [x] 已完成（已驗證線上圖示回 200 `image/png`、使用者重加主畫面後 logo 出現）：第一次修完仍沒圖示，原因是新圖示尚未部署；手動 `workflow_dispatch`（`date=2026-11-26`、`notify=false`，run 45963030747）補部署
 
 ### 🙈 階段二十六：台日韓動態空區隱藏與追蹤名單補名（2026-11-26 至 11-27，事後補記）
-首頁台日韓球員動態近 7 天無內容時改為整區隱藏，並補上佐藤輝明中文名。兩項當時未寫日誌，於 11/27 補記；因時間早於階段二十五的 `4399a31`，為避免重編既有編號而列為階段二十六。細節見 `docs/dev_logs/20261127_台日韓動態空區隱藏與追蹤名單補名.md`。
+首頁台日韓球員動態近 7 天無內容時改為整區隱藏，並補上佐藤輝明中文名。兩項當時未寫日誌，於 11/27 補記；因時間早於階段二十五的 `4399a31`，為避免重編既有編號而列為階段二十六。細節見 `docs/dev_logs/202611/20261127_台日韓動態空區隱藏與追蹤名單補名.md`。
 
 - [x] 已完成（`e17c232`，2026-11-26）：`render_spotlight_home` 無條目時回傳空字串，移除 `HOME_EMPTY_TEXT`；更新 `tests/test_watchlist.py` 首頁空狀態測試；同步 `docs/architecture.md` 與台日韓專區設計文件
 - [x] 已完成（`87cecb9`，2026-11-27）：`settings/watchlist.json` 新增佐藤輝明（id 831664，JP）

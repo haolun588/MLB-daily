@@ -182,7 +182,7 @@ docs/
   dev_rules.md            開發守則與規格
   progress.md             進度表
   plans/                  修改計畫
-  dev_logs/               開發日誌
+  dev_logs/               開發日誌（依月份 YYYYMM/ 分資料夾）
   mockups/                UI 設計稿（歷史）
 .agents/AGENTS.md         AI Agent 工作區規則
 ```
