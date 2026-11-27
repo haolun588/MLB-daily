@@ -1277,7 +1277,7 @@
     "date": "2026-11-26",
     "total_games": 0,
     "postponed": 0,
-    "summary": "資深捕手 Sánchez 加盟馬林魚，雙方簽下1年合約（消息來源）；Sarah Langs 感恩 2026 年棒球賽季的 26 件事情（這真的是最棒的一季！）；雙城以2年合約網羅右投手後援 Ginkel（消息來源）。",
+    "summary": "資深捕手 Sánchez 加盟馬林魚，簽下1年合約（消息來源）；Sarah Langs 對2026年棒球賽季（真是最棒的一年！）感恩的26件事；雙城以2年合約網羅右中繼投手 Ginkel（消息來源）。",
     "type": "offseason",
     "transactions_count": 1,
     "translated": true,
@@ -1286,7 +1286,7 @@
       {
         "player_id": 660271,
         "kind": "news",
-        "text": "Ohtani 計畫繼續維持二刀流球員身份，並彌補「今年的遺憾」",
+        "text": "Ohtani 計畫繼續擔任二刀流球員，以彌補「今年的沮喪」",
         "link": "https://www.mlb.com/news/shohei-ohtani-intends-to-remain-a-two-way-player",
         "date": "2026-11-26"
       }
