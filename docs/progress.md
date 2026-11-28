@@ -186,3 +186,11 @@ iPhone Safari「加入主畫面」沒有 logo：網站只有 SVG favicon，iOS �
 
 - [x] 已完成（`e17c232`，2026-11-26）：`render_spotlight_home` 無條目時回傳空字串，移除 `HOME_EMPTY_TEXT`；更新 `tests/test_watchlist.py` 首頁空狀態測試；同步 `docs/architecture.md` 與台日韓專區設計文件
 - [x] 已完成（`87cecb9`，2026-11-27）：`settings/watchlist.json` 新增佐藤輝明（id 831664，JP）
+
+### 🈶 階段二十七：追蹤名單補佐藤輝明與平良海馬中文名（2026-11-27 至 11-28）
+兩人由 MLB API 動態名單自動抓入，但 `settings/watchlist.json` 沒有中文名，網站顯示英文名。細節見 `docs/dev_logs/202611/20261128_追蹤名單補佐藤輝明與平良海馬中文名.md`。
+
+- [x] 已完成（`15cb467`，924 個測試全過、JSON 驗證通過；網站尚未重新產生，畫面上的中文名未實際確認）：`settings/watchlist.json` 補上平良海馬（id 838343，JP）；佐藤輝明（id 831664）已於 `87cecb9` 補入，記錄於階段二十六
+- [x] 已記錄為已知限制：目前沒有自動中文化機制，動態名單中 settings 沒有的球員 `name_zh` 直接用 `name_en` 並標 `has_zh=False`，但 `has_zh` 除測試外無人使用，缺中文名不會有警告
+- [ ] 候選待辦：產生戰報時列出缺中文名的球員作提醒（使用者決定先不做）
+- [ ] 待辦：網站下次產生後確認兩位球員顯示中文名
