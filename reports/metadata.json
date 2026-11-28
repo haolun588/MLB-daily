@@ -1291,5 +1291,59 @@
         "date": "2026-11-26"
       }
     ]
+  },
+  "2026-11-27": {
+    "date": "2026-11-27",
+    "total_games": 0,
+    "postponed": 0,
+    "summary": "紐約大都會完成與 Ewing 的 8 年 9500 萬美元延長合約；感覺身體健康，自由球員 Woodruff 放眼 2027 年重返投手丘；Shaw 在 2026 年的外野試煉可能為重返小熊先發打線鋪路。",
+    "type": "offseason",
+    "transactions_count": 12,
+    "translated": true,
+    "news_count": 12,
+    "spotlight": [
+      {
+        "player_id": 838343,
+        "kind": "transaction",
+        "text": "多倫多藍鳥簽下自由球員右投手 Kaima Taira。",
+        "date": "2026-11-27",
+        "persons": [
+          {
+            "id": 838343,
+            "name": "Kaima Taira"
+          }
+        ],
+        "to_team_id": 141,
+        "from_team_id": null
+      },
+      {
+        "player_id": 673490,
+        "kind": "transaction",
+        "text": "底特律老虎簽下自由球員游擊手 Ha-Seong Kim。",
+        "date": "2026-11-27",
+        "persons": [
+          {
+            "id": 673490,
+            "name": "Ha-Seong Kim"
+          }
+        ],
+        "to_team_id": 116,
+        "from_team_id": null
+      },
+      {
+        "player_id": 691907,
+        "kind": "transaction",
+        "text": "底特律老虎將游擊手 Tsung-Che Cheng 指定為指定讓渡。",
+        "date": "2026-11-27",
+        "persons": [
+          {
+            "id": 691907,
+            "name": "Tsung-Che Cheng"
+          }
+        ],
+        "to_team_id": 116,
+        "from_team_id": null
+      }
+    ]
   }
 }
